@@ -358,34 +358,29 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
       <!-- NEW PROJECT -->
       <div class="page" id="page-new-project">
 
-        <!-- BUSINESS INFO -->
+        <!-- PASTE CLIENT BRIEF -->
         <div class="form-card">
-          <div class="form-card-title"><span>🏢</span> Business info</div>
-          <div class="form-grid">
-            <div class="form-field"><label class="form-label">Client name</label><input class="form-input" id="f-client" placeholder="e.g. Cosmetic Cocoon PH"/></div>
-            <div class="form-field"><label class="form-label">Business type</label><select class="form-select" id="f-biztype"><option value="">Select type...</option><option>E-Commerce</option><option>Service-Based</option><option>Hybrid</option></select></div>
-            <div class="form-field"><label class="form-label">FB Page URL <span class="opt">(optional)</span></label><input class="form-input" id="f-fb" placeholder="https://facebook.com/yourpage"/></div>
-            <div class="form-field"><label class="form-label">Website URL <span class="opt">(optional)</span></label><input class="form-input" id="f-website" placeholder="https://yourwebsite.com"/></div>
-            <div class="form-field full"><label class="form-label">Core product / service</label><textarea class="form-textarea" id="f-product" placeholder="Describe what you're selling or offering in detail..."></textarea></div>
-            <div class="form-field"><label class="form-label">Brand primary color</label><input class="form-input" id="f-color1" placeholder="e.g. Deep Rose #C2447A"/></div>
-            <div class="form-field"><label class="form-label">Brand secondary color</label><input class="form-input" id="f-color2" placeholder="e.g. Cream White #FDF6F0"/></div>
+          <div class="form-card-title"><span>📋</span> Client brief <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">— paste the complete client form submission here</span></div>
+          <div class="form-field">
+            <label class="form-label">Paste client brief here <span class="opt">(copy-paste from Google Form, email, chat, etc.)</span></label>
+            <textarea class="form-textarea" id="f-brief" placeholder="Paste the entire client brief here...
+
+Example:
+Client Name: Cosmetic Cocoon PH
+FB Page: https://facebook.com/cosmeticcocoonph
+Website: cosmeticcocoonph.com
+Business Type: Service-Based
+Product: Hair loss treatment — 5-step proven process
+Brand Colors: Rose Pink #C2447A / Cream White #FDF6F0
+Target Audience: Women 25-45, Metro Manila, beauty-conscious
+Pain Point: Nagtatanggal ng buhok, may dandruff, low confidence
+USP: Only clinic with FDA-approved 5-step treatment, results in 30 days
+Goal: Lead Generation
+..." style="min-height:280px;font-family:inherit;font-size:13px"></textarea>
           </div>
         </div>
 
-        <!-- TARGET & CREATIVE -->
-        <div class="form-card">
-          <div class="form-card-title"><span>🎯</span> Target & creative direction</div>
-          <div class="form-grid">
-            <div class="form-field"><label class="form-label">Target audience</label><input class="form-input" id="f-audience" placeholder="e.g. Women 25–45, Metro Manila, beauty-conscious"/></div>
-            <div class="form-field"><label class="form-label">Main goal</label><select class="form-select" id="f-goal"><option value="">Select goal...</option><option>Awareness</option><option>Lead Generation</option><option>Sales / Conversion</option><option>Bookings / Appointments</option></select></div>
-            <div class="form-field full"><label class="form-label">Key pain point</label><textarea class="form-textarea" id="f-pain" placeholder="What problem does this product/service solve?" style="min-height:60px"></textarea></div>
-            <div class="form-field full"><label class="form-label">Core USP</label><textarea class="form-textarea" id="f-usp" placeholder="Why should they choose you over competitors?" style="min-height:60px"></textarea></div>
-            <div class="form-field full"><label class="form-label">Intro / opening line idea <span class="opt">(optional)</span></label><input class="form-input" id="f-intro" placeholder="e.g. Tired of falling hair? We have the solution..."/></div>
-            <div class="form-field full"><label class="form-label">Things to emphasize</label><textarea class="form-textarea" id="f-emphasize" placeholder="Key messages, offers, promos, treatments, features to highlight..." style="min-height:60px"></textarea></div>
-          </div>
-        </div>
-
-        <!-- VIDEO SPECS -->
+        <!-- VIDEO SPECS + SCRIPT -->
         <div class="form-card">
           <div class="form-card-title"><span>🎬</span> Video specs</div>
           <div class="form-grid-3">
@@ -393,7 +388,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
             <div class="form-field"><label class="form-label">Language</label><select class="form-select" id="f-lang"><option>Taglish</option><option>Pure Tagalog</option><option>English</option></select></div>
             <div class="form-field"><label class="form-label">Video duration</label><select class="form-select" id="f-duration"><option>30 seconds</option><option>45 seconds</option><option>60 seconds</option></select></div>
           </div>
-          <div style="margin-top:10px">
+          <div style="margin-top:12px">
             <label class="form-label" style="margin-bottom:8px;display:block">Tone of voice</label>
             <div class="tone-grid">
               <div class="tone-opt" onclick="selectTone(this)">⚡ Energetic &amp; hype</div>
@@ -405,44 +400,33 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
           </div>
         </div>
 
-        <!-- TALENT / AVATAR -->
+        <!-- SCRIPT (OPTIONAL) -->
         <div class="form-card">
-          <div class="form-card-title"><span>🎭</span> Talent / avatar</div>
-          <div class="form-grid">
-            <div class="form-field"><label class="form-label">Voice actor / avatar style</label><input class="form-input" id="f-voice" placeholder="e.g. AI avatar, real talent, voiceover only"/></div>
-            <div class="form-field"><label class="form-label">Model description</label><input class="form-input" id="f-avatar" placeholder="e.g. Women, 25, white Pinay, 5'5, professional"/></div>
+          <div class="form-card-title"><span>🎙️</span> Script <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(optional — if client has existing script)</span></div>
+          <div class="form-field">
+            <label class="form-label">Existing script or script notes <span class="opt">(optional)</span></label>
+            <textarea class="form-textarea" id="f-script" placeholder="Paste existing script here if any, or leave blank to auto-generate..." style="min-height:100px"></textarea>
           </div>
-        </div>
-
-        <!-- BRAND IMAGES -->
-        <div class="form-card">
-          <div class="form-card-title"><span>🖼️</span> Brand images <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(optional — upload product/brand photos)</span></div>
-          <div class="upload-area" onclick="document.getElementById('img-upload').click()">
-            <input type="file" id="img-upload" multiple accept="image/*" onchange="handleImageUpload(event)" style="display:none"/>
-            <div class="upload-icon">📁</div>
-            <div class="upload-label">Click to upload images or drag &amp; drop<br><span>PNG, JPG, WEBP up to 10MB each</span></div>
-          </div>
-          <div class="uploaded-images" id="uploaded-images-preview"></div>
         </div>
 
         <!-- NOTES -->
         <div class="form-card">
-          <div class="form-card-title"><span>📝</span> Notes</div>
+          <div class="form-card-title"><span>📝</span> Internal notes</div>
           <div class="form-grid">
             <div class="form-field">
               <label class="form-label">Admin notes <span class="opt">(internal only)</span></label>
               <div class="notes-list" id="admin-notes-list"></div>
               <div class="note-input-row">
                 <input class="note-input" id="admin-note-input" placeholder="Add admin note..." onkeydown="if(event.key==='Enter')addNote('admin')"/>
-                <button class="note-add-btn" onclick="addNote('admin')">+ Add note</button>
+                <button class="note-add-btn" onclick="addNote('admin')">+ Add</button>
               </div>
             </div>
             <div class="form-field">
-              <label class="form-label">Client notes / requests</label>
+              <label class="form-label">Client requests / special instructions</label>
               <div class="notes-list" id="client-notes-list"></div>
               <div class="note-input-row">
-                <input class="note-input" id="client-note-input" placeholder="Add client note..." onkeydown="if(event.key==='Enter')addNote('client')"/>
-                <button class="note-add-btn" onclick="addNote('client')">+ Add note</button>
+                <input class="note-input" id="client-note-input" placeholder="Add client request..." onkeydown="if(event.key==='Enter')addNote('client')"/>
+                <button class="note-add-btn" onclick="addNote('client')">+ Add</button>
               </div>
             </div>
           </div>
@@ -776,45 +760,48 @@ async function deleteUser(id){
 
 // BLUEPRINT GENERATOR
 async function generateBlueprint(){
-  const client=document.getElementById('f-client').value.trim();
-  const biztype=document.getElementById('f-biztype').value;
-  const product=document.getElementById('f-product').value.trim();
-  const pain=document.getElementById('f-pain').value.trim();
-  const usp=document.getElementById('f-usp').value.trim();
-  if(!client||!biztype||!product||!pain||!usp){showNotif('Fill in required fields: Client, Type, Product, Pain Point, USP.','error');return;}
+  const brief=document.getElementById('f-brief').value.trim();
+  if(!brief){showNotif('Please paste the client brief first.','error');return;}
   const btn=document.getElementById('generate-btn');
   const status=document.getElementById('gen-status');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Generating...';
-  status.textContent='AI is building your blueprint...';
+  status.textContent='AI is reading brief and building blueprint...';
   document.getElementById('blueprint-output').style.display='none';
 
   const allNotes=[...adminNotes.map(n=>'[Admin] '+n),...clientNotes.map(n=>'[Client] '+n)].join(' | ');
+  const script=document.getElementById('f-script').value.trim();
 
-  const systemPrompt=`ROLE: Elite AI Creative Director for high-performance Filipino Video Ads Agency. Generate hyper-optimized, high-converting scene-by-scene advertising blueprint. Output requires ZERO manual rewrites.
-RULES: 8-12 scenes, 3-5 second visual reset per scene, append "9:16 vertical aspect ratio, mobile-optimized composition, portrait orientation" to EVERY image prompt, establish Visual Anchor in Scene 1 and inject to ALL subsequent scenes, photorealistic studio commercial photography prompts with no text/logos, cinematic video motion commands, conversational Taglish ElevenLabs script with tone cues in brackets.
-OUTPUT FORMAT: ### 📊 AUTOMATED PROJECT OVERVIEW\n### 🎙️ ELEVENLABS AUDIO SCRIPT\n### 🎬 SCENE-BY-SCENE PRODUCTION BLUEPRINT`;
+  const systemPrompt=`ROLE: Elite AI Creative Director for high-performance Filipino Video Ads Agency.
 
-  const userPrompt=`Generate full video ad blueprint for:
-- Client: ${client}
-- FB Page: ${document.getElementById('f-fb').value||'N/A'}
-- Website: ${document.getElementById('f-website').value||'N/A'}
-- Business Type: ${biztype}
-- Product/Service: ${product}
-- Brand Colors: ${document.getElementById('f-color1').value||'N/A'} / ${document.getElementById('f-color2').value||'N/A'}
-- Target Audience: ${document.getElementById('f-audience').value||'N/A'}
-- Pain Point: ${pain}
-- USP: ${usp}
-- Intro Idea: ${document.getElementById('f-intro').value||'N/A'}
-- Things to Emphasize: ${document.getElementById('f-emphasize').value||'N/A'}
-- Goal: ${document.getElementById('f-goal').value||'N/A'}
+STEP 1 - EXTRACT: Read the pasted client brief and extract ALL details including client name, business type, FB page, website, product/service, brand colors, target audience, pain points, USP, goals, and any other relevant info.
+
+STEP 2 - GENERATE: Create a hyper-optimized, high-converting scene-by-scene advertising blueprint. Output requires ZERO manual rewrites.
+
+RULES:
+- 8-12 scenes with 3-5 second visual reset per scene
+- Append "9:16 vertical aspect ratio, mobile-optimized composition, portrait orientation" to EVERY image prompt
+- Establish Visual Anchor in Scene 1, inject to ALL subsequent scenes
+- Photorealistic studio commercial photography, no text/logos in images
+- Cinematic video motion commands with physics terminology
+- Conversational Taglish ElevenLabs script with tone cues in brackets
+
+OUTPUT FORMAT:
+### 📊 AUTOMATED PROJECT OVERVIEW
+### 🎙️ ELEVENLABS AUDIO SCRIPT
+### 🎬 SCENE-BY-SCENE PRODUCTION BLUEPRINT`;
+
+  const userPrompt=`CLIENT BRIEF (extract all details from this):
+${brief}
+
+ADDITIONAL SPECS:
 - Video Size: ${document.getElementById('f-size').value}
 - Duration: ${document.getElementById('f-duration').value}
 - Language: ${document.getElementById('f-lang').value}
-- Tone: ${selectedToneVal||'N/A'}
-- Voice/Avatar: ${document.getElementById('f-voice').value||'N/A'}
-- Model Description: ${document.getElementById('f-avatar').value||'N/A'}
-- Notes: ${allNotes||'None'}
-- Images uploaded: ${uploadedImages.length} image(s)`;
+- Tone of Voice: ${selectedToneVal||'Not specified — choose best fit'}
+${script?'- Existing Script/Notes: '+script:''}
+${allNotes?'- Internal Notes: '+allNotes:''}
+
+Generate the complete blueprint now.`;
 
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
@@ -833,25 +820,21 @@ OUTPUT FORMAT: ### 📊 AUTOMATED PROJECT OVERVIEW\n### 🎙️ ELEVENLABS AUDIO
 // SAVE PROJECT
 async function saveProject(){
   const blueprint=document.getElementById('blueprint-text').textContent;
+  const brief=document.getElementById('f-brief').value.trim();
   if(!blueprint)return;
   const btn=document.getElementById('save-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Saving...';
+  // Extract client name from brief (first line or "Client Name:" field)
+  let clientName='New Project';
+  const nameMatch=brief.match(/client\s*name\s*[:\-]\s*(.+)/i);
+  if(nameMatch)clientName=nameMatch[1].trim().split('\n')[0].trim();
   const{error}=await sb.from('projects').insert({
-    client_name:document.getElementById('f-client').value.trim(),
-    business_type:document.getElementById('f-biztype').value,
-    product:document.getElementById('f-product').value.trim(),
-    color_primary:document.getElementById('f-color1').value,
-    color_secondary:document.getElementById('f-color2').value,
-    audience:document.getElementById('f-audience').value,
-    pain_point:document.getElementById('f-pain').value.trim(),
-    usp:document.getElementById('f-usp').value.trim(),
-    goal:document.getElementById('f-goal').value,
+    client_name:clientName,
+    product:brief.substring(0,500),
     video_size:document.getElementById('f-size').value,
     language:document.getElementById('f-lang').value,
-    voice_actor:document.getElementById('f-voice').value,
-    avatar_desc:document.getElementById('f-avatar').value,
-    emphasize:document.getElementById('f-emphasize').value,
     tone:selectedToneVal,
+    emphasize:document.getElementById('f-script').value||'',
     status:'Ready for Editor',
     blueprint,
     created_by:currentUser?.id
@@ -861,6 +844,12 @@ async function saveProject(){
   showNotif('Project saved! Ready for editor ✓','success');
   document.getElementById('blueprint-output').style.display='none';
   document.getElementById('gen-status').textContent='';
+  document.getElementById('f-brief').value='';
+  document.getElementById('f-script').value='';
+  adminNotes=[];clientNotes=[];
+  renderNotes('admin');renderNotes('client');
+  selectedToneVal='';
+  document.querySelectorAll('.tone-opt').forEach(t=>t.classList.remove('selected'));
   showPage('dashboard');
 }
 
