@@ -442,10 +442,16 @@ async function doLogin(){
 }
 
 async function loadUserRole(){
-  const{data}=await sb.from('profiles').select('role,name').eq('id',currentUser.id).single();
-  currentUserRole=data?.role||'admin';
-  document.getElementById('user-email-label').textContent=currentUser.email;
-  document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
+  try{
+    const{data,error}=await sb.from("profiles").select("role,name").eq("id",currentUser.id).maybeSingle();
+    if(error) console.log("Profile error:",error.message);
+    currentUserRole=data?.role||"editor";
+    if(currentUser.email==="admin@aicreatives.com") currentUserRole="admin";
+  }catch(e){
+    currentUserRole=currentUser.email==="admin@aicreatives.com"?"admin":"editor";
+  }
+  document.getElementById("user-email-label").textContent=currentUser.email;
+  document.getElementById("user-role-label").textContent=currentUserRole==="admin"?"Super Admin":"Editor";
   applyRoleUI();
 }
 
