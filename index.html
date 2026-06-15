@@ -437,22 +437,29 @@ async function doLogin(){
   btn.textContent='Sign in';btn.disabled=false;
   if(error){err.textContent=error.message;err.style.display='block';return;}
   currentUser=data.user;
-  await loadUserRole();
+  loadUserRole(currentUser);
   showApp();
 }
 
-async function loadUserRole(){
-  try{
-    const{data,error}=await sb.from("profiles").select("role,name").eq("id",currentUser.id).maybeSingle();
-    if(error) console.log("Profile error:",error.message);
-    currentUserRole=data?.role||"editor";
-    if(currentUser.email==="admin@aicreatives.com") currentUserRole="admin";
-  }catch(e){
-    currentUserRole=currentUser.email==="admin@aicreatives.com"?"admin":"editor";
+function loadUserRole(user){
+  // Determine role without DB query to avoid schema cache errors
+  const email=user?.email||'';
+  if(email==='admin@aicreatives.com'){
+    currentUserRole='admin';
+  } else {
+    currentUserRole='editor';
   }
-  document.getElementById("user-email-label").textContent=currentUser.email;
-  document.getElementById("user-role-label").textContent=currentUserRole==="admin"?"Super Admin":"Editor";
+  document.getElementById('user-email-label').textContent=email;
+  document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
   applyRoleUI();
+  // Load role from DB in background (non-blocking)
+  sb.from('profiles').select('role,name').eq('id',user.id).maybeSingle().then(({data})=>{
+    if(data?.role && email!=='admin@aicreatives.com'){
+      currentUserRole=data.role;
+      document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
+      applyRoleUI();
+    }
+  }).catch(e=>console.log('Profile bg load:',e));
 }
 
 function applyRoleUI(){
@@ -750,7 +757,7 @@ function showNotif(msg,type){
 }
 
 sb.auth.getSession().then(({data})=>{
-  if(data.session){currentUser=data.session.user;loadUserRole().then(showApp);}
+  if(data.session){currentUser=data.session.user;loadUserRole(currentUser);showApp();}
 });
 
 document.getElementById('project-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
