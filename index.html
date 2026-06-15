@@ -6,187 +6,238 @@
 <title>AI Creatives Engine</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root {
-  --bg: #0d0d0d;
-  --bg2: #141414;
-  --bg3: #1c1c1c;
-  --bg4: #242424;
-  --border: #252525;
-  --border2: #2e2e2e;
-  --yellow: #FACC15;
-  --yellow-dim: #1c1800;
-  --yellow-text: #a88a00;
-  --text: #ebebeb;
-  --text2: #888;
-  --text3: #4a4a4a;
-  --purple: #7F77DD;
-  --purple-dim: #1a1a2e;
-  --green: #1D9E75;
-  --green-dim: #0a2a1a;
-  --amber: #EF9F27;
-  --amber-dim: #2a1a00;
-  --red: #E24B4A;
-  --red-dim: #2a0a0a;
-  --radius: 8px;
-  --radius-lg: 12px;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+:root{
+  --bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--bg4:#1e1e1e;--bg5:#242424;
+  --border:#1f1f1f;--border2:#2a2a2a;--border3:#333;
+  --yellow:#FACC15;--yellow2:#FDE047;--yellow-dim:#1c1800;--yellow-glow:rgba(250,204,21,0.15);
+  --text:#f0f0f0;--text2:#888;--text3:#444;--text4:#2a2a2a;
+  --purple:#7F77DD;--purple-dim:#1a1a2e;
+  --green:#22c55e;--green-dim:#0a2a1a;
+  --amber:#f59e0b;--amber-dim:#2a1a00;
+  --red:#ef4444;--red-dim:#2a0a0a;
+  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow:0 1px 3px rgba(0,0,0,0.5);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.6);
+  --shadow-yellow:0 0 20px rgba(250,204,21,0.08);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;font-size:14px;line-height:1.6;min-height:100vh}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border3);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--yellow)}
 
 /* AUTH */
-#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
-.auth-box{background:var(--bg2);border:0.5px solid var(--border2);border-radius:16px;padding:2.5rem;width:380px}
-.auth-logo{font-size:18px;font-weight:600;color:var(--yellow);margin-bottom:4px;letter-spacing:-0.3px}
-.auth-sub{font-size:12px;color:var(--text3);margin-bottom:2rem}
-.auth-label{font-size:12px;color:var(--text2);margin-bottom:5px;display:block}
-.auth-input{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 12px;color:var(--text);font-size:14px;margin-bottom:12px;outline:none;transition:border 0.15s}
-.auth-input:focus{border-color:var(--yellow)}
-.auth-btn{width:100%;background:var(--yellow);color:#111;border:none;border-radius:var(--radius);padding:12px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;letter-spacing:0.01em}
-.auth-btn:hover{opacity:0.92}
-.auth-err{color:var(--red);font-size:12px;margin-top:8px;display:none}
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);background-image:radial-gradient(ellipse at 20% 50%,rgba(250,204,21,0.03) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(250,204,21,0.02) 0%,transparent 50%)}
+.auth-box{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-xl);padding:2.5rem;width:400px;box-shadow:var(--shadow-lg),var(--shadow-yellow);animation:fadeUp 0.4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.auth-logo{font-size:20px;font-weight:700;color:var(--yellow);margin-bottom:4px;letter-spacing:-0.5px}
+.auth-logo span{color:var(--text3);}
+.auth-sub{font-size:12px;color:var(--text3);margin-bottom:2rem;letter-spacing:0.02em}
+.auth-divider{height:0.5px;background:var(--border);margin:1.5rem 0}
+.auth-label{font-size:11px;color:var(--text2);margin-bottom:5px;display:block;letter-spacing:0.05em;text-transform:uppercase;font-weight:500}
+.auth-input{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:11px 13px;color:var(--text);font-size:14px;margin-bottom:12px;outline:none;transition:all 0.2s;font-family:'Inter',sans-serif}
+.auth-input:focus{border-color:var(--yellow);background:var(--bg4);box-shadow:0 0 0 3px var(--yellow-glow)}
+.auth-btn{width:100%;background:var(--yellow);color:#111;border:none;border-radius:var(--radius);padding:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;letter-spacing:0.01em;transition:all 0.2s;font-family:'Inter',sans-serif}
+.auth-btn:hover{background:var(--yellow2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(250,204,21,0.3)}
+.auth-btn:active{transform:translateY(0)}
+.auth-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.auth-err{color:var(--red);font-size:12px;margin-top:8px;display:none;padding:8px 12px;background:var(--red-dim);border-radius:var(--radius);border:0.5px solid rgba(239,68,68,0.2)}
 
-/* APP LAYOUT */
+/* APP */
 #app{display:none;min-height:100vh}
 .layout{display:flex;min-height:100vh}
 
 /* SIDEBAR */
-.sidebar{width:220px;background:#080808;border-right:0.5px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh}
-.sidebar-logo{padding:1.25rem 1.25rem 1rem;border-bottom:0.5px solid var(--border)}
-.logo-mark{font-size:16px;font-weight:700;color:var(--yellow);letter-spacing:-0.5px}
-.logo-sub{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:0.05em;text-transform:uppercase}
-.sidebar-nav{padding:8px 0;flex:1;overflow-y:auto}
-.nav-section{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;padding:12px 14px 4px}
-.nav-item{display:flex;align-items:center;gap:9px;padding:8px 14px;font-size:13px;color:var(--text3);cursor:pointer;transition:all 0.12s;border-left:2px solid transparent;margin:1px 0}
-.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:0.6}
-.nav-item:hover{color:var(--text2);background:var(--bg2)}
-.nav-item.active{color:var(--yellow);background:var(--yellow-dim);border-left-color:var(--yellow)}
-.nav-item.active svg{opacity:1}
-.sidebar-footer{padding:12px 14px;border-top:0.5px solid var(--border)}
-.user-role{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em}
-.user-email{font-size:12px;color:var(--yellow);margin-top:3px;font-weight:500}
-.logout-btn{font-size:11px;color:var(--text3);cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;gap:4px}
+.sidebar{width:224px;background:var(--bg2);border-right:0.5px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;transition:width 0.2s}
+.sidebar-logo{padding:1.25rem;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px}
+.logo-icon{width:30px;height:30px;background:var(--yellow);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{width:16px;height:16px}
+.logo-text{flex:1}
+.logo-mark{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-0.3px;line-height:1.2}
+.logo-sub{font-size:9px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-top:1px}
+.sidebar-nav{padding:8px 8px;flex:1;overflow-y:auto}
+.nav-section{font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:0.12em;padding:12px 8px 5px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;font-size:12.5px;color:var(--text3);cursor:pointer;transition:all 0.15s;border-radius:var(--radius);margin:1px 0;font-weight:500}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.nav-item:hover{color:var(--text2);background:var(--bg3)}
+.nav-item.active{color:var(--yellow);background:var(--yellow-dim);font-weight:600}
+.nav-badge{margin-left:auto;background:var(--yellow);color:#111;font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;line-height:1.6}
+.sidebar-footer{padding:10px 8px;border-top:0.5px solid var(--border)}
+.user-card{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px;cursor:pointer;transition:all 0.15s}
+.user-card:hover{background:var(--bg4)}
+.user-role{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;font-weight:600}
+.user-email{font-size:11px;color:var(--yellow);margin-top:2px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logout-btn{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;margin-top:8px;padding:4px 2px;transition:color 0.15s}
 .logout-btn:hover{color:var(--red)}
 
 /* MAIN */
-.main-content{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:56px;border-bottom:0.5px solid var(--border);background:var(--bg);flex-shrink:0}
-.topbar-title{font-size:14px;font-weight:500;color:var(--text)}
-.yellow-btn{background:var(--yellow);color:#111;border:none;border-radius:var(--radius);padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:opacity 0.15s}
-.yellow-btn:hover{opacity:0.9}
-.yellow-btn:disabled{opacity:0.5;cursor:not-allowed}
+.main-content{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:54px;border-bottom:0.5px solid var(--border);background:var(--bg);flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-title{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-0.2px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.yellow-btn{background:var(--yellow);color:#111;border:none;border-radius:var(--radius);padding:8px 16px;font-size:12.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;font-family:'Inter',sans-serif;letter-spacing:0.01em}
+.yellow-btn:hover{background:var(--yellow2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(250,204,21,0.25)}
+.yellow-btn:active{transform:translateY(0)}
+.yellow-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
 .content{flex:1;overflow-y:auto;padding:1.5rem}
 
 /* PAGES */
-.page{display:none}
+.page{display:none;animation:fadeIn 0.2s ease}
 .page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* STATS */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
-.stat-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem 1.25rem}
-.stat-label{font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em}
-.stat-val{font-size:26px;font-weight:500;color:var(--text);letter-spacing:-1px}
+.stat-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem 1.25rem;transition:all 0.2s;cursor:default;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:transparent;transition:background 0.2s}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.stat-card.yellow::before{background:var(--yellow)}
+.stat-card.green::before{background:var(--green)}
+.stat-card.purple::before{background:var(--purple)}
+.stat-card.amber::before{background:var(--amber)}
+.stat-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.stat-icon svg{width:14px;height:14px}
+.stat-label{font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.07em;font-weight:600}
+.stat-val{font-size:28px;font-weight:700;color:var(--text);letter-spacing:-1.5px;line-height:1}
 .stat-val.yellow{color:var(--yellow)}
+.stat-val.green{color:var(--green)}
+.stat-val.purple{color:var(--purple)}
+.stat-val.amber{color:var(--amber)}
 
 /* PIPELINE */
 .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1.5rem}
-.pipe-col{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px;min-height:130px}
+.pipe-col{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px;min-height:140px;transition:border-color 0.2s}
+.pipe-col:hover{border-color:var(--border2)}
 .pipe-col-head{display:flex;align-items:center;gap:6px;margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px solid var(--border)}
 .pipe-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.pipe-col-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em}
-.pipe-card{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:9px 10px;margin-bottom:6px;cursor:pointer;transition:border-color 0.12s}
-.pipe-card:hover{border-color:var(--yellow)}
-.pipe-card-name{font-size:12px;color:var(--text);font-weight:500;margin-bottom:2px}
-.pipe-card-type{font-size:10px;color:var(--text3)}
-.pipe-empty{font-size:11px;color:var(--text3);text-align:center;padding:1.5rem 0;opacity:0.5}
+.pipe-col-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;font-weight:600}
+.pipe-count{margin-left:auto;font-size:9px;color:var(--text3);font-weight:600}
+.pipe-card{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:9px 10px;margin-bottom:6px;cursor:pointer;transition:all 0.15s}
+.pipe-card:hover{border-color:var(--yellow);background:var(--bg4);transform:translateX(2px)}
+.pipe-card-name{font-size:11.5px;color:var(--text);font-weight:600;margin-bottom:2px;line-height:1.3}
+.pipe-card-type{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em}
+.pipe-empty{font-size:11px;color:var(--text4);text-align:center;padding:1.5rem 0}
 
 /* SECTION */
-.section-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px}
+.section-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;font-weight:600}
 .section-divider{height:0.5px;background:var(--border);margin:1.25rem 0}
 
 /* TABLE */
 .data-table{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
 .table-head{display:grid;padding:10px 16px;border-bottom:0.5px solid var(--border);background:var(--bg3)}
-.table-head span{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;font-weight:500}
-.table-row{display:grid;padding:11px 16px;border-bottom:0.5px solid var(--border);align-items:center;cursor:pointer;transition:background 0.1s}
+.table-head span{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;font-weight:600}
+.table-row{display:grid;padding:11px 16px;border-bottom:0.5px solid var(--border);align-items:center;cursor:pointer;transition:all 0.12s}
 .table-row:last-child{border-bottom:none}
 .table-row:hover{background:var(--bg3)}
 .projects-cols{grid-template-columns:2.5fr 1fr 1.2fr 0.8fr 40px}
-.row-name{font-size:13px;color:var(--text);font-weight:500;margin-bottom:1px}
+.row-name{font-size:13px;color:var(--text);font-weight:600;margin-bottom:1px;letter-spacing:-0.1px}
 .row-sub{font-size:10px;color:var(--text3)}
-.row-meta{font-size:12px;color:var(--text2)}
-.row-date{font-size:11px;color:var(--text3)}
-.table-empty{text-align:center;padding:2.5rem;color:var(--text3);font-size:13px}
+.row-meta{font-size:11.5px;color:var(--text2)}
+.row-date{font-size:10px;color:var(--text3)}
+.table-empty{text-align:center;padding:3rem;color:var(--text3);font-size:13px}
+.table-empty-icon{font-size:32px;margin-bottom:8px;opacity:0.3}
 
 /* BADGES */
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:500;white-space:nowrap}
-.badge-new{background:var(--bg4);color:var(--text2);border:0.5px solid var(--border2)}
-.badge-ai{background:var(--purple-dim);color:var(--purple)}
-.badge-ready{background:var(--green-dim);color:var(--green)}
-.badge-prod{background:var(--amber-dim);color:var(--amber)}
-.badge-done{background:#0f2a0f;color:#4caf50}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;padding:3px 9px;border-radius:20px;font-weight:600;white-space:nowrap;letter-spacing:0.02em}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.badge-new{background:var(--bg4);color:var(--text2);border:0.5px solid var(--border3)}
+.badge-new::before{background:var(--text3)}
+.badge-ai{background:var(--purple-dim);color:var(--purple);border:0.5px solid rgba(127,119,221,0.2)}
+.badge-ai::before{background:var(--purple)}
+.badge-ready{background:var(--green-dim);color:var(--green);border:0.5px solid rgba(34,197,94,0.2)}
+.badge-ready::before{background:var(--green)}
+.badge-prod{background:var(--amber-dim);color:var(--amber);border:0.5px solid rgba(245,158,11,0.2)}
+.badge-prod::before{background:var(--amber)}
+.badge-done{background:#0f2a0f;color:#4caf50;border:0.5px solid rgba(76,175,80,0.2)}
+.badge-done::before{background:#4caf50}
 
 /* FORM */
+.form-section{margin-bottom:1.5rem}
+.form-section-title{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.form-section-title::after{content:'';flex:1;height:0.5px;background:var(--border)}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-field{display:flex;flex-direction:column;gap:5px}
 .form-field.full{grid-column:1/-1}
-.form-label{font-size:12px;color:var(--text2);font-weight:500}
-.form-input,.form-select,.form-textarea{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;width:100%;transition:border 0.15s}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--yellow)}
+.form-label{font-size:11px;color:var(--text2);font-weight:500;letter-spacing:0.02em}
+.form-input,.form-select,.form-textarea{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:9px 12px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;width:100%;transition:all 0.2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--yellow);background:var(--bg4);box-shadow:0 0 0 3px var(--yellow-glow)}
 .form-select option{background:var(--bg3)}
-.form-textarea{resize:vertical;min-height:72px;line-height:1.5}
+.form-textarea{resize:vertical;min-height:80px;line-height:1.6}
 .tone-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-.tone-opt{padding:9px 6px;font-size:11px;text-align:center;border:0.5px solid var(--border2);border-radius:var(--radius);cursor:pointer;color:var(--text3);background:var(--bg3);transition:all 0.12s;line-height:1.3}
-.tone-opt:hover{color:var(--text2);border-color:var(--border2)}
-.tone-opt.selected{background:var(--yellow-dim);color:var(--yellow);border-color:var(--yellow)}
+.tone-opt{padding:10px 6px;font-size:11px;text-align:center;border:0.5px solid var(--border2);border-radius:var(--radius);cursor:pointer;color:var(--text3);background:var(--bg3);transition:all 0.15s;line-height:1.4;font-weight:500}
+.tone-opt:hover{color:var(--text2);border-color:var(--border3);background:var(--bg4)}
+.tone-opt.selected{background:var(--yellow-dim);color:var(--yellow);border-color:var(--yellow);font-weight:600}
 
 /* BLUEPRINT */
-.blueprint-box{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:1.25rem;font-size:12px;line-height:1.9;color:var(--text2);white-space:pre-wrap;max-height:480px;overflow-y:auto;font-family:'Courier New',monospace}
-.blueprint-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.ghost-btn{background:transparent;border:0.5px solid var(--border2);border-radius:var(--radius);padding:7px 14px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.12s;font-family:inherit}
-.ghost-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--border2)}
+.blueprint-box{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:1.25rem;font-size:12px;line-height:1.9;color:var(--text2);white-space:pre-wrap;max-height:480px;overflow-y:auto;font-family:'Courier New',monospace;letter-spacing:0.01em}
+.blueprint-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ghost-btn{background:transparent;border:0.5px solid var(--border2);border-radius:var(--radius);padding:8px 14px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s;font-family:'Inter',sans-serif;font-weight:500}
+.ghost-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--border3)}
+
+/* PROGRESS BAR */
+.progress-bar{height:3px;background:var(--border2);border-radius:4px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;background:var(--yellow);border-radius:4px;transition:width 0.3s ease}
 
 /* SPINNER */
 .spinner{display:inline-block;width:13px;height:13px;border:2px solid var(--border2);border-top-color:var(--yellow);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* PULSE DOT */
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+
 /* MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;padding:1rem}
-.modal-overlay.open{display:flex}
-.modal{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);width:100%;max-width:740px;max-height:90vh;overflow-y:auto;padding:1.5rem}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex;animation:fadeIn 0.2s ease}
+.modal{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-xl);width:100%;max-width:760px;max-height:90vh;overflow-y:auto;padding:1.5rem;box-shadow:var(--shadow-lg)}
 .modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;gap:1rem}
-.modal-title{font-size:16px;font-weight:600;color:var(--text)}
-.modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;flex-shrink:0}
-.modal-close:hover{color:var(--text)}
+.modal-title{font-size:17px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
+.modal-close{background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);font-size:16px;cursor:pointer;line-height:1;flex-shrink:0;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.modal-close:hover{background:var(--bg4);color:var(--text)}
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
-.detail-item{background:var(--bg3);border-radius:var(--radius);padding:10px 12px}
-.detail-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px}
-.detail-val{font-size:13px;color:var(--text)}
-.status-select{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none}
+.detail-item{background:var(--bg3);border-radius:var(--radius);padding:10px 12px;border:0.5px solid var(--border)}
+.detail-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;font-weight:600}
+.detail-val{font-size:13px;color:var(--text);font-weight:500}
+.status-select{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:7px 10px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border 0.15s}
 .status-select:focus{border-color:var(--yellow)}
 
-/* EDITOR PORTAL */
-.editor-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:10px;transition:border-color 0.12s}
-.editor-card:hover{border-color:var(--border2)}
+/* EDITOR CARDS */
+.editor-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:10px;transition:all 0.2s}
+.editor-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
 .editor-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:1rem}
-.editor-card-info{flex:1}
-.editor-card-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px}
-.editor-card-meta{font-size:11px;color:var(--text3)}
-.editor-card-desc{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5}
+.editor-card-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;letter-spacing:-0.2px}
+.editor-card-meta{font-size:10px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:0.05em}
+.editor-card-desc{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6}
 .editor-card-actions{display:flex;gap:8px}
 
 /* USER MANAGEMENT */
 .user-table-cols{grid-template-columns:2fr 1fr 1fr 80px}
-.user-role-badge{display:inline-block;font-size:10px;padding:3px 8px;border-radius:20px;font-weight:500}
-.role-admin{background:var(--yellow-dim);color:var(--yellow)}
-.role-editor{background:var(--purple-dim);color:var(--purple)}
+.user-role-badge{display:inline-block;font-size:9.5px;padding:3px 9px;border-radius:20px;font-weight:600;letter-spacing:0.02em}
+.role-admin{background:var(--yellow-dim);color:var(--yellow);border:0.5px solid rgba(250,204,21,0.2)}
+.role-editor{background:var(--purple-dim);color:var(--purple);border:0.5px solid rgba(127,119,221,0.2)}
 .add-user-form{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.25rem}
-.add-user-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:1rem}
+.add-user-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:1rem;letter-spacing:-0.1px}
 
 /* NOTIFICATION */
-.notif{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius);padding:12px 18px;font-size:13px;color:var(--text);z-index:999;display:none;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
-.notif.show{display:block}
-.notif.success{border-color:var(--green);color:var(--green)}
-.notif.error{border-color:var(--red);color:var(--red)}
+.notif{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:12px 18px;font-size:13px;color:var(--text);z-index:999;display:none;box-shadow:var(--shadow-lg);animation:slideIn 0.3s ease;max-width:320px;font-weight:500}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.notif.show{display:flex;align-items:center;gap:8px}
+.notif.success{border-color:rgba(34,197,94,0.3);color:var(--green)}
+.notif.error{border-color:rgba(239,68,68,0.3);color:var(--red)}
+
+/* CHART BARS */
+.mini-chart{display:flex;align-items:flex-end;gap:3px;height:32px;margin-top:8px}
+.mini-bar{flex:1;background:var(--yellow-dim);border-radius:2px 2px 0 0;transition:height 0.3s ease;min-height:2px}
+
+/* TOOLTIP */
+.tip{position:relative}
+.tip:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg4);color:var(--text);font-size:11px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;border:0.5px solid var(--border2);z-index:100}
 </style>
 </head>
 <body>
@@ -194,13 +245,14 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 <!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-box">
-    <div class="auth-logo">AI Creatives Engine</div>
+    <div class="auth-logo">AI Creatives <span>Engine</span></div>
     <div class="auth-sub">Production system — authorized access only</div>
-    <label class="auth-label">Email</label>
-    <input class="auth-input" type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doLogin()" />
+    <div class="auth-divider"></div>
+    <label class="auth-label">Email address</label>
+    <input class="auth-input" type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
     <label class="auth-label">Password</label>
-    <input class="auth-input" type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
-    <button class="auth-btn" onclick="doLogin()" id="login-btn">Sign in</button>
+    <input class="auth-input" type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="auth-btn" onclick="doLogin()" id="login-btn">Sign in →</button>
     <div class="auth-err" id="auth-err"></div>
   </div>
 </div>
@@ -208,17 +260,18 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 <!-- APP -->
 <div id="app">
 <div class="layout">
-
-  <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-mark">AI Creatives</div>
-      <div class="logo-sub">Production Engine</div>
+      <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+      <div class="logo-text">
+        <div class="logo-mark">AI Creatives</div>
+        <div class="logo-sub">Production Engine</div>
+      </div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">Main</div>
       <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
         Dashboard
       </div>
       <div class="nav-item admin-only" onclick="showPage('new-project')" id="nav-new-project">
@@ -229,20 +282,23 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 10h16M4 14h10"/></svg>
         All projects
       </div>
-      <div class="nav-section">Editor</div>
+      <div class="nav-section">Workspace</div>
       <div class="nav-item editor-nav" onclick="showPage('editor-portal')" id="nav-editor-portal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-3-3v6M5 21h14a2 2 0 002-2V7l-5-5H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
         My tasks
+        <span class="nav-badge" id="tasks-badge" style="display:none">0</span>
       </div>
       <div class="nav-section admin-only">Admin</div>
       <div class="nav-item admin-only" onclick="showPage('users')" id="nav-users">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-        User management
+        Team members
       </div>
     </nav>
     <div class="sidebar-footer">
-      <div class="user-role" id="user-role-label">—</div>
-      <div class="user-email" id="user-email-label">—</div>
+      <div class="user-card">
+        <div class="user-role" id="user-role-label">—</div>
+        <div class="user-email" id="user-email-label">—</div>
+      </div>
       <div class="logout-btn" onclick="doLogout()">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
         Sign out
@@ -250,13 +306,17 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     </div>
   </div>
 
-  <!-- MAIN -->
   <div class="main-content">
     <div class="topbar">
-      <div class="topbar-title" id="topbar-title">Dashboard</div>
-      <div id="topbar-actions">
-        <button class="yellow-btn admin-only" onclick="showPage('new-project')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)">
+          <span class="pulse-dot"></span> Live
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="yellow-btn admin-only" onclick="showPage('new-project')" id="new-project-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New project
         </button>
       </div>
@@ -267,19 +327,52 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-label">Total projects</div><div class="stat-val" id="stat-total">0</div></div>
-          <div class="stat-card"><div class="stat-label">Generating AI</div><div class="stat-val yellow" id="stat-ai">0</div></div>
-          <div class="stat-card"><div class="stat-label">Ready for editor</div><div class="stat-val" id="stat-ready">0</div></div>
-          <div class="stat-card"><div class="stat-label">Approved / done</div><div class="stat-val" id="stat-done">0</div></div>
+          <div class="stat-card yellow">
+            <div class="stat-icon" style="background:var(--yellow-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+            <div class="stat-label">Total projects</div>
+            <div class="stat-val" id="stat-total">0</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-icon" style="background:var(--purple-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+            <div class="stat-label">Generating AI</div>
+            <div class="stat-val purple" id="stat-ai">0</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon" style="background:var(--green-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+            <div class="stat-label">Ready for editor</div>
+            <div class="stat-val green" id="stat-ready">0</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-icon" style="background:var(--amber-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <div class="stat-label">Approved / done</div>
+            <div class="stat-val amber" id="stat-done">0</div>
+          </div>
         </div>
+
         <div class="section-label">Pipeline tracker</div>
         <div class="pipeline">
-          <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#444"></div><span class="pipe-col-label">New input</span></div><div id="pipe-new"></div></div>
-          <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#7F77DD"></div><span class="pipe-col-label">Generating AI</span></div><div id="pipe-ai"></div></div>
-          <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#1D9E75"></div><span class="pipe-col-label">Ready for editor</span></div><div id="pipe-ready"></div></div>
-          <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#EF9F27"></div><span class="pipe-col-label">In production</span></div><div id="pipe-prod"></div></div>
-          <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#4caf50"></div><span class="pipe-col-label">Done</span></div><div id="pipe-done"></div></div>
+          <div class="pipe-col">
+            <div class="pipe-col-head"><div class="pipe-dot" style="background:#444"></div><span class="pipe-col-label">New input</span><span class="pipe-count" id="count-new">0</span></div>
+            <div id="pipe-new"><div class="pipe-empty">Empty</div></div>
+          </div>
+          <div class="pipe-col">
+            <div class="pipe-col-head"><div class="pipe-dot" style="background:#7F77DD"></div><span class="pipe-col-label">Generating AI</span><span class="pipe-count" id="count-ai">0</span></div>
+            <div id="pipe-ai"><div class="pipe-empty">Empty</div></div>
+          </div>
+          <div class="pipe-col">
+            <div class="pipe-col-head"><div class="pipe-dot" style="background:#22c55e"></div><span class="pipe-col-label">Ready</span><span class="pipe-count" id="count-ready">0</span></div>
+            <div id="pipe-ready"><div class="pipe-empty">Empty</div></div>
+          </div>
+          <div class="pipe-col">
+            <div class="pipe-col-head"><div class="pipe-dot" style="background:#f59e0b"></div><span class="pipe-col-label">In production</span><span class="pipe-count" id="count-prod">0</span></div>
+            <div id="pipe-prod"><div class="pipe-empty">Empty</div></div>
+          </div>
+          <div class="pipe-col">
+            <div class="pipe-col-head"><div class="pipe-dot" style="background:#4caf50"></div><span class="pipe-col-label">Done</span><span class="pipe-count" id="count-done">0</span></div>
+            <div id="pipe-done"><div class="pipe-empty">Empty</div></div>
+          </div>
         </div>
+
         <div class="section-label">Recent projects</div>
         <div class="data-table">
           <div class="table-head projects-cols">
@@ -291,61 +384,74 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
       <!-- NEW PROJECT -->
       <div class="page" id="page-new-project">
-        <div class="section-label">Business info</div>
-        <div class="form-grid" style="margin-bottom:12px">
-          <div class="form-field"><label class="form-label">Client name / FB page / website</label><input class="form-input" id="f-client" placeholder="e.g. Cosmetic Cocoon PH"/></div>
-          <div class="form-field"><label class="form-label">Business type</label><select class="form-select" id="f-biztype"><option value="">Select...</option><option>E-Commerce</option><option>Service-Based</option><option>Hybrid</option></select></div>
-          <div class="form-field full"><label class="form-label">Core product / service</label><textarea class="form-textarea" id="f-product" placeholder="What are you selling or offering?"></textarea></div>
-          <div class="form-field"><label class="form-label">Brand primary color</label><input class="form-input" id="f-color1" placeholder="e.g. Deep Rose #C2447A"/></div>
-          <div class="form-field"><label class="form-label">Brand secondary color</label><input class="form-input" id="f-color2" placeholder="e.g. Cream White #FDF6F0"/></div>
-          <div class="form-field full"><label class="form-label">Target audience</label><input class="form-input" id="f-audience" placeholder="e.g. Women 25–45, Metro Manila, beauty-conscious"/></div>
-          <div class="form-field full"><label class="form-label">Key pain point</label><textarea class="form-textarea" id="f-pain" placeholder="What problem does this solve?"></textarea></div>
-          <div class="form-field full"><label class="form-label">Core USP</label><textarea class="form-textarea" id="f-usp" placeholder="Why should they buy from you?"></textarea></div>
-        </div>
-        <div class="section-divider"></div>
-        <div class="section-label">Video specs</div>
-        <div class="form-grid" style="margin-bottom:12px">
-          <div class="form-field"><label class="form-label">Main goal</label><select class="form-select" id="f-goal"><option value="">Select...</option><option>Awareness</option><option>Lead Generation</option><option>Sales / Conversion</option><option>Bookings / Appointments</option></select></div>
-          <div class="form-field"><label class="form-label">Language</label><select class="form-select" id="f-lang"><option>Taglish</option><option>Pure Tagalog</option><option>English</option></select></div>
-          <div class="form-field full"><label class="form-label">Video size format</label><select class="form-select" id="f-size"><option>9:16 Vertical — TikTok / Reels / Shorts</option><option>1:1 Square — Feed</option><option>16:9 Landscape — YouTube</option></select></div>
-        </div>
-        <div class="section-divider"></div>
-        <div class="section-label">Avatar / talent</div>
-        <div class="form-grid" style="margin-bottom:12px">
-          <div class="form-field"><label class="form-label">Preferred voice actor / avatar style</label><input class="form-input" id="f-voice" placeholder="e.g. AI avatar, voiceover only"/></div>
-          <div class="form-field"><label class="form-label">Avatar model description</label><input class="form-input" id="f-avatar" placeholder="e.g. Women, 25, white Pinay, professional"/></div>
-        </div>
-        <div class="section-divider"></div>
-        <div class="section-label">Creative direction</div>
-        <div class="form-field" style="margin-bottom:12px">
-          <label class="form-label">Things to emphasize</label>
-          <textarea class="form-textarea" id="f-emphasize" placeholder="Key messages, offers, promos, treatments..."></textarea>
-        </div>
-        <div class="form-field" style="margin-bottom:1.5rem">
-          <label class="form-label" style="margin-bottom:8px">Tone of voice</label>
-          <div class="tone-grid">
-            <div class="tone-opt" onclick="selectTone(this)">Energetic &amp; hype</div>
-            <div class="tone-opt" onclick="selectTone(this)">Calm &amp; trustworthy</div>
-            <div class="tone-opt" onclick="selectTone(this)">Luxurious &amp; aspirational</div>
-            <div class="tone-opt" onclick="selectTone(this)">Urgent &amp; direct</div>
-            <div class="tone-opt" onclick="selectTone(this)">Friendly &amp; relatable</div>
+        <div class="form-section">
+          <div class="form-section-title">Business info</div>
+          <div class="form-grid">
+            <div class="form-field"><label class="form-label">Client name / FB page / website</label><input class="form-input" id="f-client" placeholder="e.g. Cosmetic Cocoon PH"/></div>
+            <div class="form-field"><label class="form-label">Business type</label><select class="form-select" id="f-biztype"><option value="">Select type...</option><option>E-Commerce</option><option>Service-Based</option><option>Hybrid</option></select></div>
+            <div class="form-field full"><label class="form-label">Core product / service</label><textarea class="form-textarea" id="f-product" placeholder="What are you selling or offering?"></textarea></div>
+            <div class="form-field"><label class="form-label">Brand primary color</label><input class="form-input" id="f-color1" placeholder="e.g. Deep Rose #C2447A"/></div>
+            <div class="form-field"><label class="form-label">Brand secondary color</label><input class="form-input" id="f-color2" placeholder="e.g. Cream White #FDF6F0"/></div>
+            <div class="form-field full"><label class="form-label">Target audience</label><input class="form-input" id="f-audience" placeholder="e.g. Women 25–45, Metro Manila, beauty-conscious"/></div>
+            <div class="form-field full"><label class="form-label">Key pain point</label><textarea class="form-textarea" id="f-pain" placeholder="What problem does this solve?"></textarea></div>
+            <div class="form-field full"><label class="form-label">Core USP</label><textarea class="form-textarea" id="f-usp" placeholder="Why should they choose you?"></textarea></div>
           </div>
         </div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="form-section">
+          <div class="form-section-title">Video specs</div>
+          <div class="form-grid">
+            <div class="form-field"><label class="form-label">Main goal</label><select class="form-select" id="f-goal"><option value="">Select goal...</option><option>Awareness</option><option>Lead Generation</option><option>Sales / Conversion</option><option>Bookings / Appointments</option></select></div>
+            <div class="form-field"><label class="form-label">Language</label><select class="form-select" id="f-lang"><option>Taglish</option><option>Pure Tagalog</option><option>English</option></select></div>
+            <div class="form-field full"><label class="form-label">Video size format</label><select class="form-select" id="f-size"><option>9:16 Vertical — TikTok / Reels / Shorts</option><option>1:1 Square — Feed</option><option>16:9 Landscape — YouTube</option></select></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Avatar / talent</div>
+          <div class="form-grid">
+            <div class="form-field"><label class="form-label">Preferred voice actor / avatar style</label><input class="form-input" id="f-voice" placeholder="e.g. AI avatar, voiceover only"/></div>
+            <div class="form-field"><label class="form-label">Avatar model description</label><input class="form-input" id="f-avatar" placeholder="e.g. Women, 25, white Pinay, professional"/></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Creative direction</div>
+          <div class="form-field" style="margin-bottom:12px"><label class="form-label">Things to emphasize</label><textarea class="form-textarea" id="f-emphasize" placeholder="Key messages, offers, promos, treatments..."></textarea></div>
+          <div class="form-field">
+            <label class="form-label" style="margin-bottom:8px">Tone of voice</label>
+            <div class="tone-grid">
+              <div class="tone-opt" onclick="selectTone(this)">⚡ Energetic &amp; hype</div>
+              <div class="tone-opt" onclick="selectTone(this)">🤝 Calm &amp; trustworthy</div>
+              <div class="tone-opt" onclick="selectTone(this)">💎 Luxurious &amp; aspirational</div>
+              <div class="tone-opt" onclick="selectTone(this)">🔥 Urgent &amp; direct</div>
+              <div class="tone-opt" onclick="selectTone(this)">😊 Friendly &amp; relatable</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:1rem 0">
           <button class="yellow-btn" id="generate-btn" onclick="generateBlueprint()">⚡ Generate blueprint</button>
           <span id="gen-status" style="font-size:12px;color:var(--text3)"></span>
         </div>
-        <div id="blueprint-output" style="display:none;margin-top:1.25rem">
+        <div id="blueprint-output" style="display:none">
           <div class="blueprint-box" id="blueprint-text"></div>
           <div class="blueprint-actions">
-            <button class="ghost-btn" onclick="copyBlueprint()">Copy blueprint</button>
-            <button class="yellow-btn" onclick="saveProject()" id="save-btn">Save &amp; send to editor</button>
+            <button class="ghost-btn" onclick="copyBlueprint()">📋 Copy blueprint</button>
+            <button class="yellow-btn" onclick="saveProject()" id="save-btn">💾 Save &amp; send to editor</button>
           </div>
         </div>
       </div>
 
       <!-- ALL PROJECTS -->
       <div class="page" id="page-all-projects">
+        <div style="display:flex;gap:8px;margin-bottom:1rem">
+          <input class="form-input" id="search-projects" placeholder="Search projects..." oninput="filterProjects()" style="max-width:280px"/>
+          <select class="form-select" id="filter-status" onchange="filterProjects()" style="max-width:180px">
+            <option value="">All statuses</option>
+            <option>New Input</option>
+            <option>Generating AI</option>
+            <option>Ready for Editor</option>
+            <option>In Production</option>
+            <option>Approved / Done</option>
+          </select>
+        </div>
         <div class="data-table">
           <div class="table-head projects-cols">
             <span>Client / project</span><span>Type</span><span>Status</span><span>Date</span><span></span>
@@ -360,23 +466,21 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         <div id="editor-projects-body"></div>
       </div>
 
-      <!-- USER MANAGEMENT -->
+      <!-- USERS -->
       <div class="page" id="page-users">
         <div class="add-user-form">
-          <div class="add-user-title">Add new editor</div>
+          <div class="add-user-title">Add new team member</div>
           <div class="form-grid">
             <div class="form-field"><label class="form-label">Full name</label><input class="form-input" id="new-user-name" placeholder="e.g. Juan dela Cruz"/></div>
             <div class="form-field"><label class="form-label">Email</label><input class="form-input" id="new-user-email" placeholder="editor@email.com"/></div>
-            <div class="form-field"><label class="form-label">Password</label><input class="form-input" type="password" id="new-user-pass" placeholder="Minimum 6 characters"/></div>
+            <div class="form-field"><label class="form-label">Password</label><input class="form-input" type="password" id="new-user-pass" placeholder="Min. 6 characters"/></div>
             <div class="form-field"><label class="form-label">Role</label><select class="form-select" id="new-user-role"><option value="editor">Editor</option><option value="admin">Admin</option></select></div>
           </div>
-          <button class="yellow-btn" style="margin-top:1rem" onclick="addUser()" id="add-user-btn">Add user</button>
+          <button class="yellow-btn" style="margin-top:1rem" onclick="addUser()" id="add-user-btn">Add team member</button>
         </div>
         <div class="section-label">Team members</div>
         <div class="data-table">
-          <div class="table-head user-table-cols">
-            <span>Name / email</span><span>Role</span><span>Joined</span><span></span>
-          </div>
+          <div class="table-head user-table-cols"><span>Name / email</span><span>Role</span><span>Joined</span><span></span></div>
           <div id="users-body"></div>
         </div>
       </div>
@@ -386,7 +490,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 </div>
 </div>
 
-<!-- PROJECT MODAL -->
+<!-- MODAL -->
 <div class="modal-overlay" id="project-modal">
   <div class="modal">
     <div class="modal-head">
@@ -399,19 +503,16 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     <div class="detail-grid" id="modal-detail-grid"></div>
     <div class="section-divider"></div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap">
-      <span style="font-size:12px;color:var(--text2)">Status:</span>
+      <span style="font-size:11px;color:var(--text2);font-weight:500">Update status:</span>
       <select class="status-select" id="modal-status-select" onchange="updateProjectStatus()">
-        <option>New Input</option>
-        <option>Generating AI</option>
-        <option>Ready for Editor</option>
-        <option>In Production</option>
-        <option>Approved / Done</option>
+        <option>New Input</option><option>Generating AI</option><option>Ready for Editor</option><option>In Production</option><option>Approved / Done</option>
       </select>
+      <button class="ghost-btn" onclick="deleteProject()" style="margin-left:auto;color:var(--red);border-color:rgba(239,68,68,0.2)">Delete project</button>
     </div>
     <div class="section-label">Blueprint</div>
     <div class="blueprint-box" id="modal-blueprint" style="max-height:320px"></div>
     <div class="blueprint-actions" style="margin-top:10px">
-      <button class="ghost-btn" onclick="copyModalBlueprint()">Copy blueprint</button>
+      <button class="ghost-btn" onclick="copyModalBlueprint()">📋 Copy blueprint</button>
     </div>
   </div>
 </div>
@@ -423,7 +524,6 @@ const SUPABASE_URL='https://csyrwvimhvhqurqlrkkw.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzeXJ3dmltaHZocXVycWxya2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0MDE1ODUsImV4cCI6MjA5Njk3NzU4NX0.APMpi2u9sbzuWNJ1-y__FDMCxYb1KPoe11K_Xjnl4p0';
 const{createClient}=supabase;
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY);
-
 let currentUser=null,currentUserRole='editor',selectedToneVal='',currentProjectId=null,allProjects=[];
 
 async function doLogin(){
@@ -434,7 +534,7 @@ async function doLogin(){
   err.style.display='none';
   btn.textContent='Signing in...';btn.disabled=true;
   const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
-  btn.textContent='Sign in';btn.disabled=false;
+  btn.textContent='Sign in →';btn.disabled=false;
   if(error){err.textContent=error.message;err.style.display='block';return;}
   currentUser=data.user;
   loadUserRole(currentUser);
@@ -442,33 +542,24 @@ async function doLogin(){
 }
 
 function loadUserRole(user){
-  // Determine role without DB query to avoid schema cache errors
   const email=user?.email||'';
-  if(email==='admin@aicreatives.com'){
-    currentUserRole='admin';
-  } else {
-    currentUserRole='editor';
-  }
+  currentUserRole=email==='admin@aicreatives.com'?'admin':'editor';
   document.getElementById('user-email-label').textContent=email;
   document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
   applyRoleUI();
-  // Load role from DB in background (non-blocking)
   sb.from('profiles').select('role,name').eq('id',user.id).maybeSingle().then(({data})=>{
-    if(data?.role && email!=='admin@aicreatives.com'){
+    if(data?.role&&email!=='admin@aicreatives.com'){
       currentUserRole=data.role;
       document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
       applyRoleUI();
     }
-  }).catch(e=>console.log('Profile bg load:',e));
+  }).catch(e=>console.log('Profile:',e));
 }
 
 function applyRoleUI(){
   const isAdmin=currentUserRole==='admin';
   document.querySelectorAll('.admin-only').forEach(el=>el.style.display=isAdmin?'':'none');
-  document.querySelectorAll('.editor-nav').forEach(el=>el.style.display='flex');
-  if(!isAdmin){
-    showPage('editor-portal');
-  }
+  if(!isAdmin)showPage('editor-portal');
 }
 
 async function doLogout(){
@@ -481,7 +572,7 @@ async function doLogout(){
 function showApp(){
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app').style.display='block';
-  loadDashboard();
+  if(currentUserRole==='admin'){loadDashboard();}else{loadEditorPortal();}
 }
 
 function showPage(page){
@@ -491,11 +582,12 @@ function showPage(page){
   if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);
   if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'User management'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   if(page==='all-projects')loadAllProjects();
   if(page==='editor-portal')loadEditorPortal();
   if(page==='users')loadUsers();
+  if(page==='dashboard')loadDashboard();
 }
 
 function statusBadge(s){
@@ -508,14 +600,19 @@ function fmtDate(d){return new Date(d).toLocaleDateString('en-PH',{month:'short'
 async function loadDashboard(){
   const{data}=await sb.from('projects').select('*').order('created_at',{ascending:false});
   allProjects=data||[];
-  document.getElementById('stat-total').textContent=allProjects.length;
-  document.getElementById('stat-ai').textContent=allProjects.filter(p=>p.status==='Generating AI').length;
-  document.getElementById('stat-ready').textContent=allProjects.filter(p=>p.status==='Ready for Editor').length;
-  document.getElementById('stat-done').textContent=allProjects.filter(p=>p.status==='Approved / Done').length;
-  const pipes=[['pipe-new','New Input'],['pipe-ai','Generating AI'],['pipe-ready','Ready for Editor'],['pipe-prod','In Production'],['pipe-done','Approved / Done']];
-  pipes.forEach(([id,status])=>{
+  const total=allProjects.length,ai=allProjects.filter(p=>p.status==='Generating AI').length;
+  const ready=allProjects.filter(p=>p.status==='Ready for Editor').length,done=allProjects.filter(p=>p.status==='Approved / Done').length;
+  document.getElementById('stat-total').textContent=total;
+  document.getElementById('stat-ai').textContent=ai;
+  document.getElementById('stat-ready').textContent=ready;
+  document.getElementById('stat-done').textContent=done;
+  const tasksBadge=document.getElementById('tasks-badge');
+  if(ready>0){tasksBadge.textContent=ready;tasksBadge.style.display='';}else{tasksBadge.style.display='none';}
+  const pipes=[['pipe-new','New Input','count-new'],['pipe-ai','Generating AI','count-ai'],['pipe-ready','Ready for Editor','count-ready'],['pipe-prod','In Production','count-prod'],['pipe-done','Approved / Done','count-done']];
+  pipes.forEach(([id,status,countId])=>{
     const items=allProjects.filter(p=>p.status===status);
-    document.getElementById(id).innerHTML=items.length?items.map(p=>`<div class="pipe-card" onclick="openModal('${p.id}')"><div class="pipe-card-name">${p.client_name}</div><div class="pipe-card-type">${p.business_type||''}</div></div>`).join(''):'<div class="pipe-empty">Empty</div>';
+    document.getElementById(countId).textContent=items.length;
+    document.getElementById(id).innerHTML=items.length?items.map(p=>`<div class="pipe-card" onclick="openModal('${p.id}')"><div class="pipe-card-name">${p.client_name}</div><div class="pipe-card-type">${p.business_type||''}</div></div>`).join(''):'<div class="pipe-empty">—</div>';
   });
   const recent=allProjects.slice(0,10);
   document.getElementById('recent-projects-body').innerHTML=recent.length?recent.map(p=>`
@@ -525,29 +622,46 @@ async function loadDashboard(){
       <div>${statusBadge(p.status)}</div>
       <div class="row-date">${fmtDate(p.created_at)}</div>
       <div></div>
-    </div>`).join(''):'<div class="table-empty">No projects yet — create your first one!</div>';
+    </div>`).join(''):'<div class="table-empty"><div class="table-empty-icon">📋</div>No projects yet — create your first one!</div>';
 }
 
 async function loadAllProjects(){
   const{data}=await sb.from('projects').select('*').order('created_at',{ascending:false});
   allProjects=data||[];
-  document.getElementById('all-projects-body').innerHTML=allProjects.length?allProjects.map(p=>`
+  renderProjectsTable(allProjects);
+}
+
+function filterProjects(){
+  const q=document.getElementById('search-projects').value.toLowerCase();
+  const s=document.getElementById('filter-status').value;
+  const filtered=allProjects.filter(p=>{
+    const matchQ=!q||p.client_name?.toLowerCase().includes(q)||p.business_type?.toLowerCase().includes(q);
+    const matchS=!s||p.status===s;
+    return matchQ&&matchS;
+  });
+  renderProjectsTable(filtered);
+}
+
+function renderProjectsTable(projects){
+  document.getElementById('all-projects-body').innerHTML=projects.length?projects.map(p=>`
     <div class="table-row projects-cols" onclick="openModal('${p.id}')">
       <div><div class="row-name">${p.client_name}</div><div class="row-sub">${p.video_size||''} · ${p.language||''}</div></div>
       <div class="row-meta">${p.business_type||'—'}</div>
       <div>${statusBadge(p.status)}</div>
       <div class="row-date">${fmtDate(p.created_at)}</div>
       <div></div>
-    </div>`).join(''):'<div class="table-empty">No projects yet.</div>';
+    </div>`).join(''):'<div class="table-empty"><div class="table-empty-icon">🔍</div>No projects found.</div>';
 }
 
 async function loadEditorPortal(){
   const{data}=await sb.from('projects').select('*').eq('status','Ready for Editor').order('created_at',{ascending:false});
   const projects=data||[];
+  const tasksBadge=document.getElementById('tasks-badge');
+  if(projects.length>0){tasksBadge.textContent=projects.length;tasksBadge.style.display='';}else{tasksBadge.style.display='none';}
   document.getElementById('editor-projects-body').innerHTML=projects.length?projects.map(p=>`
     <div class="editor-card">
       <div class="editor-card-top">
-        <div class="editor-card-info">
+        <div>
           <div class="editor-card-name">${p.client_name}</div>
           <div class="editor-card-meta">${p.business_type||''} · ${p.goal||''} · ${p.video_size||''} · ${p.language||''}</div>
         </div>
@@ -555,15 +669,15 @@ async function loadEditorPortal(){
       </div>
       ${p.emphasize?`<div class="editor-card-desc">${p.emphasize}</div>`:''}
       <div class="editor-card-actions">
-        <button class="ghost-btn" onclick="openModal('${p.id}')">View blueprint</button>
-        <button class="yellow-btn" onclick="markInProduction('${p.id}')">Mark in production</button>
+        <button class="ghost-btn" onclick="openModal('${p.id}')">📄 View blueprint</button>
+        <button class="yellow-btn" onclick="markInProduction('${p.id}')">🎬 Mark in production</button>
       </div>
-    </div>`).join(''):'<div style="color:var(--text3);font-size:13px;padding:2rem 0;text-align:center">No projects ready for production yet.</div>';
+    </div>`).join(''):'<div class="table-empty"><div class="table-empty-icon">✅</div>No projects ready for production yet.</div>';
 }
 
 async function markInProduction(id){
   await sb.from('projects').update({status:'In Production',updated_at:new Date().toISOString()}).eq('id',id);
-  showNotif('Marked as In Production!','success');
+  showNotif('Marked as In Production! 🎬','success');
   loadEditorPortal();
 }
 
@@ -575,7 +689,7 @@ async function loadUsers(){
       <div><div class="row-name">${u.name||'—'}</div><div class="row-sub">${u.email||''}</div></div>
       <div><span class="user-role-badge ${u.role==='admin'?'role-admin':'role-editor'}">${u.role}</span></div>
       <div class="row-date">${fmtDate(u.created_at)}</div>
-      <div><button class="ghost-btn" style="font-size:11px;padding:4px 10px;color:var(--red)" onclick="deleteUser('${u.id}')">Remove</button></div>
+      <div><button class="ghost-btn" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:rgba(239,68,68,0.2)" onclick="deleteUser('${u.id}')">Remove</button></div>
     </div>`).join(''):'<div class="table-empty">No team members yet.</div>';
 }
 
@@ -588,29 +702,18 @@ async function addUser(){
   if(pass.length<6){showNotif('Password must be at least 6 characters.','error');return;}
   const btn=document.getElementById('add-user-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Adding...';
-  const{data,error}=await sb.rpc('create_user_with_profile',{
-    user_email:email,
-    user_password:pass,
-    user_name:name,
-    user_role:role
-  });
-  if(error||!data?.success){
-    showNotif('Error: '+(error?.message||data?.error||'Unknown error'),'error');
-    btn.disabled=false;btn.textContent='Add user';
-    return;
-  }
-  showNotif('User added successfully! They can now login.','success');
-  document.getElementById('new-user-name').value='';
-  document.getElementById('new-user-email').value='';
-  document.getElementById('new-user-pass').value='';
-  btn.disabled=false;btn.textContent='Add user';
+  const{data,error}=await sb.rpc('create_user_with_profile',{user_email:email,user_password:pass,user_name:name,user_role:role});
+  if(error||!data?.success){showNotif('Error: '+(error?.message||data?.error||'Unknown'),'error');btn.disabled=false;btn.textContent='Add team member';return;}
+  showNotif('Team member added! ✓','success');
+  document.getElementById('new-user-name').value='';document.getElementById('new-user-email').value='';document.getElementById('new-user-pass').value='';
+  btn.disabled=false;btn.textContent='Add team member';
   loadUsers();
 }
 
 async function deleteUser(id){
-  if(!confirm('Remove this user?'))return;
+  if(!confirm('Remove this team member?'))return;
   await sb.from('profiles').delete().eq('id',id);
-  showNotif('User removed.','success');
+  showNotif('Team member removed.','success');
   loadUsers();
 }
 
@@ -626,70 +729,32 @@ async function generateBlueprint(){
   const product=document.getElementById('f-product').value.trim();
   const pain=document.getElementById('f-pain').value.trim();
   const usp=document.getElementById('f-usp').value.trim();
-  if(!client||!biztype||!product||!pain||!usp){showNotif('Fill in client name, type, product, pain point, and USP first.','error');return;}
+  if(!client||!biztype||!product||!pain||!usp){showNotif('Fill in required fields first.','error');return;}
   const btn=document.getElementById('generate-btn');
   const status=document.getElementById('gen-status');
-  btn.disabled=true;
-  btn.innerHTML='<span class="spinner"></span> Generating...';
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Generating...';
   status.textContent='AI is building your blueprint...';
   document.getElementById('blueprint-output').style.display='none';
-
-  const systemPrompt=`ROLE & SYSTEM OBJECTIVE: You are the Elite AI Creative Director for a high-performance Filipino Video Ads Agency. Generate a hyper-optimized scene-by-scene advertising blueprint. Output requires ZERO manual rewrites and must be machine-readable.
-
-RULES:
-1. 8-12 scenes with 3-5 second visual reset per scene
-2. Append "9:16 vertical aspect ratio, mobile-optimized composition, portrait orientation" to EVERY image prompt
-3. Establish Visual Anchor in Scene 1, inject into ALL subsequent scenes
-4. Image prompts: "Photorealistic studio commercial photography, dramatic high-contrast studio box lighting, crisp micro-textures, shot on 35mm lens, f/2.8, professional color grading. No text, no logos, no unnatural hand distortions."
-5. Video commands: use cinematic physics terminology
-6. ElevenLabs script: conversational Taglish with tone cues in brackets
-
-OUTPUT STRUCTURE:
-### 📊 AUTOMATED PROJECT OVERVIEW
-### 🎙️ ELEVENLABS AUDIO SCRIPT
-### 🎬 SCENE-BY-SCENE PRODUCTION BLUEPRINT`;
-
-  const userPrompt=`Generate full video ad blueprint:
-- Client: ${client}
-- Business Type: ${biztype}
-- Product/Service: ${product}
-- Brand Colors: ${document.getElementById('f-color1').value||'not specified'} / ${document.getElementById('f-color2').value||'not specified'}
-- Audience: ${document.getElementById('f-audience').value||'not specified'}
-- Pain Point: ${pain}
-- USP: ${usp}
-- Goal: ${document.getElementById('f-goal').value||'not specified'}
-- Video Size: ${document.getElementById('f-size').value}
-- Language: ${document.getElementById('f-lang').value}
-- Voice/Avatar: ${document.getElementById('f-voice').value||'not specified'}
-- Avatar Description: ${document.getElementById('f-avatar').value||'not specified'}
-- Emphasize: ${document.getElementById('f-emphasize').value||'not specified'}
-- Tone: ${selectedToneVal||'not specified'}`;
-
+  const systemPrompt=`ROLE: Elite AI Creative Director for Filipino Video Ads Agency. Generate hyper-optimized scene-by-scene ad blueprint. ZERO manual rewrites needed.
+RULES: 8-12 scenes, 3-5s visual reset, 9:16 on every image prompt, Visual Anchor in Scene 1 injected to ALL scenes, photorealistic studio prompts, no text/logos in images, cinematic video commands, Taglish ElevenLabs script with tone cues.
+OUTPUT: ### 📊 AUTOMATED PROJECT OVERVIEW\n### 🎙️ ELEVENLABS AUDIO SCRIPT\n### 🎬 SCENE-BY-SCENE PRODUCTION BLUEPRINT`;
+  const userPrompt=`Client:${client}|Type:${biztype}|Product:${product}|Colors:${document.getElementById('f-color1').value||'N/A'}/${document.getElementById('f-color2').value||'N/A'}|Audience:${document.getElementById('f-audience').value||'N/A'}|Pain:${pain}|USP:${usp}|Goal:${document.getElementById('f-goal').value||'N/A'}|Size:${document.getElementById('f-size').value}|Lang:${document.getElementById('f-lang').value}|Voice:${document.getElementById('f-voice').value||'N/A'}|Avatar:${document.getElementById('f-avatar').value||'N/A'}|Emphasize:${document.getElementById('f-emphasize').value||'N/A'}|Tone:${selectedToneVal||'N/A'}`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,system:systemPrompt,messages:[{role:'user',content:userPrompt}]})
-    });
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,system:systemPrompt,messages:[{role:'user',content:userPrompt}]})});
     const d=await res.json();
-    const text=d.content?.map(i=>i.text||'').join('')||'Error generating blueprint.';
+    const text=d.content?.map(i=>i.text||'').join('')||'Error generating.';
     document.getElementById('blueprint-text').textContent=text;
     document.getElementById('blueprint-output').style.display='block';
-    status.textContent='✓ Blueprint ready — review and save!';
-  }catch(e){
-    showNotif('Error: '+e.message,'error');
-    status.textContent='';
-  }finally{
-    btn.disabled=false;
-    btn.innerHTML='⚡ Generate blueprint';
-  }
+    status.textContent='✓ Blueprint ready!';
+  }catch(e){showNotif('Error: '+e.message,'error');status.textContent='';}
+  finally{btn.disabled=false;btn.innerHTML='⚡ Generate blueprint';}
 }
 
 async function saveProject(){
   const blueprint=document.getElementById('blueprint-text').textContent;
   if(!blueprint)return;
   const btn=document.getElementById('save-btn');
-  btn.disabled=true;btn.textContent='Saving...';
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Saving...';
   const{error}=await sb.from('projects').insert({
     client_name:document.getElementById('f-client').value.trim(),
     business_type:document.getElementById('f-biztype').value,
@@ -705,18 +770,14 @@ async function saveProject(){
     voice_actor:document.getElementById('f-voice').value,
     avatar_desc:document.getElementById('f-avatar').value,
     emphasize:document.getElementById('f-emphasize').value,
-    tone:selectedToneVal,
-    status:'Ready for Editor',
-    blueprint,
-    created_by:currentUser?.id
+    tone:selectedToneVal,status:'Ready for Editor',blueprint,created_by:currentUser?.id
   });
-  btn.disabled=false;btn.textContent='Save & send to editor';
+  btn.disabled=false;btn.innerHTML='💾 Save &amp; send to editor';
   if(error){showNotif('Save error: '+error.message,'error');return;}
-  showNotif('Project saved! Status: Ready for Editor ✓','success');
+  showNotif('Project saved! Ready for editor ✓','success');
   document.getElementById('blueprint-output').style.display='none';
   document.getElementById('gen-status').textContent='';
   showPage('dashboard');
-  loadDashboard();
 }
 
 function openModal(id){
@@ -726,13 +787,8 @@ function openModal(id){
   document.getElementById('modal-client-name').textContent=p.client_name;
   document.getElementById('modal-date').textContent=fmtDate(p.created_at)+' · '+p.business_type;
   document.getElementById('modal-status-select').value=p.status;
-  document.getElementById('modal-blueprint').textContent=p.blueprint||'No blueprint generated yet.';
-  document.getElementById('modal-detail-grid').innerHTML=[
-    ['Goal',p.goal],['Language',p.language],
-    ['Video size',p.video_size],['Tone',p.tone],
-    ['Audience',p.audience],['Colors',p.color_primary+(p.color_secondary?' / '+p.color_secondary:'')],
-    ['Pain point',p.pain_point],['USP',p.usp]
-  ].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-val">${v||'—'}</div></div>`).join('');
+  document.getElementById('modal-blueprint').textContent=p.blueprint||'No blueprint yet.';
+  document.getElementById('modal-detail-grid').innerHTML=[['Goal',p.goal],['Language',p.language],['Video size',p.video_size],['Tone',p.tone],['Audience',p.audience],['Colors',(p.color_primary||'')+(p.color_secondary?' / '+p.color_secondary:'')],['Pain point',p.pain_point],['USP',p.usp]].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-val">${v||'—'}</div></div>`).join('');
   document.getElementById('project-modal').classList.add('open');
 }
 
@@ -743,12 +799,20 @@ async function updateProjectStatus(){
   const status=document.getElementById('modal-status-select').value;
   await sb.from('projects').update({status,updated_at:new Date().toISOString()}).eq('id',currentProjectId);
   allProjects=allProjects.map(p=>p.id===currentProjectId?{...p,status}:p);
-  showNotif('Status updated to: '+status,'success');
+  showNotif('Status: '+status,'success');
   loadDashboard();
 }
 
-function copyBlueprint(){navigator.clipboard.writeText(document.getElementById('blueprint-text').textContent);showNotif('Blueprint copied!','success');}
-function copyModalBlueprint(){navigator.clipboard.writeText(document.getElementById('modal-blueprint').textContent);showNotif('Blueprint copied!','success');}
+async function deleteProject(){
+  if(!currentProjectId||!confirm('Delete this project permanently?'))return;
+  await sb.from('projects').delete().eq('id',currentProjectId);
+  showNotif('Project deleted.','success');
+  closeModal();
+  loadDashboard();
+}
+
+function copyBlueprint(){navigator.clipboard.writeText(document.getElementById('blueprint-text').textContent);showNotif('Copied! ✓','success');}
+function copyModalBlueprint(){navigator.clipboard.writeText(document.getElementById('modal-blueprint').textContent);showNotif('Copied! ✓','success');}
 
 function showNotif(msg,type){
   const n=document.getElementById('notif');
@@ -759,7 +823,6 @@ function showNotif(msg,type){
 sb.auth.getSession().then(({data})=>{
   if(data.session){currentUser=data.session.user;loadUserRole(currentUser);showApp();}
 });
-
 document.getElementById('project-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 </script>
 </body>
