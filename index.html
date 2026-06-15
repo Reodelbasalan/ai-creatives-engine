@@ -890,12 +890,14 @@ async function saveProject(){
   let clientName='New Project',product='',emphasize='';
   if(isPaste){
     const brief=document.getElementById('f-brief').value.trim();
-    const nm=brief.match(/client\s*name\s*[:\-]\s*(.+)/i);
-    if(nm)clientName=nm[1].trim().split('\n')[0].trim();
+    // Try multiple patterns to extract client name
+    const nm=brief.match(/(?:client\s*name|business\s*name|brand\s*name|company|client)[\s]*[:\-][\s]*([^\n]+)/i);
+    if(nm)clientName=nm[1].trim().replace(/[*_]/g,'').trim();
+    else clientName='Client '+new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric'});
     product=brief.substring(0,500);
     emphasize=document.getElementById('f-script').value||'';
   } else {
-    clientName=document.getElementById('f-client').value.trim()||'New Project';
+    clientName=document.getElementById('f-client').value.trim()||'Client '+new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric'});
     product=document.getElementById('f-product').value.trim();
     emphasize=document.getElementById('f-emphasize').value||'';
   }
