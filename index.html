@@ -294,6 +294,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Analytics
       </div>
+      <div class="nav-item admin-only" onclick="showPage('submission')" id="nav-submission">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Client form
+      </div>
     </nav>
     <div class="sidebar-footer">
       <div class="user-card">
@@ -315,7 +319,14 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
           <span class="pulse-dot"></span> Live
         </div>
       </div>
-      <div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="admin-only" style="position:relative;cursor:pointer" onclick="toggleNotifPanel()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <div id="notif-bell-count" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:8px;font-weight:700;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center">0</div>
+        </div>
+        <div id="notif-panel" style="display:none;position:absolute;top:54px;right:80px;width:300px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:100;overflow:hidden">
+          <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);font-size:11px;font-weight:600;color:var(--text2)">Active projects</div>
+        </div>
         <button class="yellow-btn admin-only" onclick="showPage('new-project')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New project
@@ -512,6 +523,43 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <div id="editor-projects-body"></div>
       </div>
 
+      <!-- CLIENT SUBMISSION FORM -->
+      <div class="page" id="page-submission">
+        <div style="max-width:700px;margin:0 auto">
+          <div style="text-align:center;margin-bottom:2rem">
+            <div style="font-size:20px;font-weight:700;color:var(--yellow);margin-bottom:6px">📋 Client Submission Form</div>
+            <div style="font-size:12px;color:var(--text3)">Share this link with your clients to submit their brief</div>
+            <div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 14px;margin-top:12px;display:flex;align-items:center;gap:10px">
+              <code style="font-size:11px;color:var(--yellow);flex:1" id="form-link-display">https://ai-creatives-engine.vercel.app/client-form</code>
+              <button class="ghost-btn" style="font-size:11px" onclick="navigator.clipboard.writeText('https://ai-creatives-engine.vercel.app/client-form');showNotif('Link copied! ✓','success')">Copy link</button>
+            </div>
+          </div>
+          <div class="form-card">
+            <div class="form-card-title"><span>👁️</span> Form preview</div>
+            <div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:1.5rem">
+              <div style="font-size:16px;font-weight:700;color:var(--yellow);margin-bottom:4px">Video Ad Brief</div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:1.5rem">Fill this out completely for best results</div>
+              <div class="form-grid" style="gap:12px">
+                <div class="form-field"><label class="form-label">Business / Brand name</label><input class="form-input" placeholder="e.g. Cosmetic Cocoon PH" disabled/></div>
+                <div class="form-field"><label class="form-label">Business type</label><input class="form-input" placeholder="Service / E-commerce / Hybrid" disabled/></div>
+                <div class="form-field"><label class="form-label">FB Page URL</label><input class="form-input" placeholder="https://facebook.com/yourpage" disabled/></div>
+                <div class="form-field"><label class="form-label">Website URL</label><input class="form-input" placeholder="https://yourwebsite.com" disabled/></div>
+                <div class="form-field full"><label class="form-label">Product / Service description</label><textarea class="form-textarea" placeholder="Describe what you're selling..." disabled></textarea></div>
+                <div class="form-field full"><label class="form-label">Target audience</label><input class="form-input" placeholder="e.g. Women 25-45, Metro Manila" disabled/></div>
+                <div class="form-field full"><label class="form-label">Main pain point you solve</label><textarea class="form-textarea" placeholder="What problem does your product solve?" disabled style="min-height:60px"></textarea></div>
+                <div class="form-field full"><label class="form-label">Your unique advantage (USP)</label><textarea class="form-textarea" placeholder="Why should they choose you?" disabled style="min-height:60px"></textarea></div>
+                <div class="form-field full"><label class="form-label">Key messages to emphasize</label><textarea class="form-textarea" placeholder="Promos, features, CTAs..." disabled style="min-height:60px"></textarea></div>
+                <div class="form-field"><label class="form-label">Brand primary color</label><input class="form-input" placeholder="e.g. Rose Pink #C2447A" disabled/></div>
+                <div class="form-field"><label class="form-label">Brand secondary color</label><input class="form-input" placeholder="e.g. Cream White #FDF6F0" disabled/></div>
+              </div>
+              <div style="margin-top:1rem;padding:12px;background:var(--yellow-dim);border:0.5px solid var(--yellow);border-radius:var(--radius);font-size:11px;color:var(--yellow)">
+                ⚠️ This is a preview only — the actual client form is coming soon! For now, clients can email their brief or use the Paste Brief tab.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ANALYTICS -->
       <div class="page" id="page-analytics">
         <div class="stats-grid" id="analytics-stats"></div>
@@ -584,6 +632,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <option>New Input</option><option>Generating AI</option><option>Ready for Editor</option><option>In Production</option><option>Approved / Done</option>
       </select>
       <button class="ghost-btn" onclick="deleteProject()" style="margin-left:auto;color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap" id="modal-deadline-row">
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--text2);font-weight:500">Assign to:</span>
