@@ -477,14 +477,15 @@ function exportPDF(){
 
 // ANALYTICS
 async function loadAnalytics(){
-  const{data}=await sb.from('projects').select('*').order('created_at',{ascending:false});
-  const projects=data||[];
+  const[{data:projects},{data:members}]=await Promise.all([
+    sb.from('projects').select('*').order('created_at',{ascending:false}),
+    sb.from('profiles').select('*').eq('role','editor')
+  ]);
+  const all=projects||[];const eds=members||[];
   
-  // Stats
-  const total=projects.length;
-  const done=projects.filter(p=>p.status==='Approved / Done').length;
-  const inProd=projects.filter(p=>p.status==='In Production').length;
-  const ready=projects.filter(p=>p.status==='Ready for Editor').length;
+  const total=all.length;
+  const done=all.filter(p=>p.status==='Approved / Done').length;
+  const inProd=all.filter(p=>p.status==='In Production').length;
   const rate=total>0?Math.round((done/total)*100):0;
   
   document.getElementById('analytics-stats').innerHTML=`
@@ -498,7 +499,7 @@ async function loadAnalytics(){
   const statuses=['New Input','Generating AI','Ready for Editor','In Production','Approved / Done'];
   const colors={'New Input':'var(--text2)','Generating AI':'var(--purple)','Ready for Editor':'var(--green)','In Production':'var(--amber)','Approved / Done':'#4caf50'};
   document.getElementById('analytics-status').innerHTML=statuses.map(s=>{
-    const count=projects.filter(p=>p.status===s).length;
+    const count=all.filter(p=>p.status===s).length;
     const pct=total>0?Math.round((count/total)*100):0;
     return`<div style="padding:10px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px">
       <div style="flex:1;font-size:12px;color:var(--text2)">${s}</div>
@@ -510,22 +511,37 @@ async function loadAnalytics(){
     </div>`;
   }).join('');
 
-  // Recent activity
-  const recent=projects.slice(0,8);
-  document.getElementById('analytics-activity').innerHTML=recent.map(p=>`
-    <div style="padding:10px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px">
-      <div style="flex:1"><div style="font-size:12px;color:var(--text);font-weight:500">${p.client_name}</div><div style="font-size:10px;color:var(--text3)">${fmtDate(p.created_at)}</div></div>
-      ${statusBadge(p.status)}
-    </div>`).join('');
+  // Per-editor stats
+  const editorStats=eds.map(e=>{
+    const assigned=all.filter(p=>p.assigned_to===e.id);
+    const edDone=assigned.filter(p=>p.status==='Approved / Done').length;
+    const edProd=assigned.filter(p=>p.status==='In Production').length;
+    const edReady=assigned.filter(p=>p.status==='Ready for Editor').length;
+    return`<div style="padding:12px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:12px">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--yellow-dim);border:0.5px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--yellow);flex-shrink:0">${(e.name||e.email||'?')[0].toUpperCase()}</div>
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--text);font-weight:600">${e.name||e.email}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${assigned.length} assigned · ${edProd} in prod · ${edDone} done</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <span style="font-size:9px;padding:2px 7px;border-radius:20px;background:var(--green-dim);color:var(--green);font-weight:600">${edReady} ready</span>
+        <span style="font-size:9px;padding:2px 7px;border-radius:20px;background:var(--amber-dim);color:var(--amber);font-weight:600">${edProd} active</span>
+      </div>
+    </div>`;
+  }).join('')||'<div style="padding:2rem;text-align:center;font-size:12px;color:var(--text3)">No editors yet.</div>';
+
+  document.getElementById('analytics-activity').innerHTML=editorStats;
 
   // All projects table
-  document.getElementById('analytics-projects').innerHTML=projects.map(p=>`
-    <div class="table-row" style="grid-template-columns:2fr 1fr 1fr 1fr" onclick="openModal('${p.id}')">
-      <div><div class="row-name">${p.client_name}</div><div class="row-sub">${p.video_size||''}</div></div>
+  document.getElementById('analytics-projects').innerHTML=all.map(p=>{
+    const editor=eds.find(e=>e.id===p.assigned_to);
+    return`<div class="table-row" style="grid-template-columns:2fr 1fr 1fr 1fr" onclick="openModal('${p.id}')">
+      <div><div class="row-name">${p.client_name}</div><div class="row-sub">${p.video_size||''} · ${p.language||''}</div></div>
       <div>${statusBadge(p.status)}</div>
-      <div class="row-meta">${p.language||'—'}</div>
+      <div class="row-meta" style="font-size:11px">${editor?editor.name||editor.email:'Unassigned'}</div>
       <div class="row-date">${fmtDate(p.created_at)}</div>
-    </div>`).join('')||'<div class="table-empty">No projects yet.</div>';
+    </div>`;
+  }).join('')||'<div class="table-empty">No projects yet.</div>';
 }
 
 function showNotif(msg,type){
