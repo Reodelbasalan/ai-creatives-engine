@@ -290,6 +290,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         Team members
       </div>
+      <div class="nav-item admin-only" onclick="showPage('analytics')" id="nav-analytics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analytics
+      </div>
     </nav>
     <div class="sidebar-footer">
       <div class="user-card">
@@ -508,6 +512,32 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <div id="editor-projects-body"></div>
       </div>
 
+      <!-- ANALYTICS -->
+      <div class="page" id="page-analytics">
+        <div class="stats-grid" id="analytics-stats"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem">
+          <div class="data-table">
+            <div style="padding:12px 16px;border-bottom:0.5px solid var(--border);background:var(--bg3)">
+              <div class="section-label" style="margin:0">Projects by status</div>
+            </div>
+            <div id="analytics-status"></div>
+          </div>
+          <div class="data-table">
+            <div style="padding:12px 16px;border-bottom:0.5px solid var(--border);background:var(--bg3)">
+              <div class="section-label" style="margin:0">Recent activity</div>
+            </div>
+            <div id="analytics-activity"></div>
+          </div>
+        </div>
+        <div class="section-label">All projects overview</div>
+        <div class="data-table">
+          <div class="table-head" style="grid-template-columns:2fr 1fr 1fr 1fr">
+            <span>Client</span><span>Status</span><span>Language</span><span>Date</span>
+          </div>
+          <div id="analytics-projects"></div>
+        </div>
+      </div>
+
       <!-- USERS -->
       <div class="page" id="page-users">
         <div class="add-user-form">
@@ -555,10 +585,17 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       </select>
       <button class="ghost-btn" onclick="deleteProject()" style="margin-left:auto;color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button>
     </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--text2);font-weight:500">Assign to:</span>
+      <select class="status-select" id="modal-assign-select" onchange="assignProject()">
+        <option value="">Unassigned</option>
+      </select>
+    </div>
     <div class="section-label">Blueprint</div>
     <div class="blueprint-box" id="modal-blueprint" style="max-height:320px"></div>
     <div class="blueprint-actions" style="margin-top:10px">
       <button class="ghost-btn" onclick="copyModalBlueprint()">📋 Copy blueprint</button>
+      <button class="ghost-btn" onclick="exportPDF()">📄 Export PDF</button>
     </div>
   </div>
 </div>
@@ -660,6 +697,7 @@ function showPage(page){
   if(page==='editor-portal')loadEditorPortal();
   if(page==='users')loadUsers();
   if(page==='dashboard')loadDashboard();
+  if(page==='analytics')loadAnalytics();
 }
 
 // NOTES
@@ -946,6 +984,7 @@ async function saveProject(){
     avatar_desc:isPaste?'':document.getElementById('f-avatar').value,
     emphasize,tone:selectedToneVal,
     status:'Ready for Editor',blueprint,
+    assigned_to:null,
     created_by:currentUser?.id
   });
   btn.disabled=false;btn.innerHTML='💾 Save &amp; send to editor';
@@ -963,7 +1002,7 @@ async function saveProject(){
 }
 
 // MODAL
-function openModal(id){
+async function openModal(id){
   const p=allProjects.find(x=>x.id===id);if(!p)return;
   currentProjectId=id;
   document.getElementById('modal-client-name').textContent=p.client_name;
@@ -977,6 +1016,11 @@ function openModal(id){
     ['Audience',p.audience],['Colors',(p.color_primary||'')+(p.color_secondary?' / '+p.color_secondary:'')],
     ['Pain point',p.pain_point],['USP',p.usp]
   ].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-val">${v||'—'}</div></div>`).join('');
+  // Load team members for assignment
+  const{data:members}=await sb.from('profiles').select('id,name,email,role').order('name');
+  const assignSelect=document.getElementById('modal-assign-select');
+  const editors=(members||[]).filter(m=>m.role==='editor');
+  assignSelect.innerHTML='<option value="">Unassigned</option>'+editors.map(m=>`<option value="${m.id}" ${p.assigned_to===m.id?'selected':''}>${m.name||m.email}</option>`).join('');
   document.getElementById('project-modal').classList.add('open');
 }
 
@@ -998,6 +1042,95 @@ async function deleteProject(){
 
 function copyBlueprint(){navigator.clipboard.writeText(document.getElementById('blueprint-text').textContent);showNotif('Copied! ✓','success');}
 function copyModalBlueprint(){navigator.clipboard.writeText(document.getElementById('modal-blueprint').textContent);showNotif('Copied! ✓','success');}
+
+// ASSIGN PROJECT
+async function assignProject(){
+  if(!currentProjectId)return;
+  const assignedTo=document.getElementById('modal-assign-select').value;
+  await sb.from('projects').update({assigned_to:assignedTo||null,updated_at:new Date().toISOString()}).eq('id',currentProjectId);
+  allProjects=allProjects.map(p=>p.id===currentProjectId?{...p,assigned_to:assignedTo}:p);
+  showNotif(assignedTo?'Assigned! ✓':'Unassigned.','success');
+}
+
+// EXPORT PDF
+function exportPDF(){
+  const p=allProjects.find(x=>x.id===currentProjectId);
+  if(!p)return;
+  const blueprint=document.getElementById('modal-blueprint').textContent;
+  const win=window.open('','_blank');
+  win.document.write(`
+    <!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <title>${p.client_name} — Blueprint</title>
+    <style>
+      body{font-family:Arial,sans-serif;font-size:13px;line-height:1.8;padding:40px;max-width:800px;margin:0 auto;color:#111}
+      h1{font-size:20px;margin-bottom:4px}
+      .meta{font-size:11px;color:#666;margin-bottom:24px}
+      pre{white-space:pre-wrap;font-family:inherit;font-size:12px;line-height:1.9;background:#f5f5f5;padding:20px;border-radius:6px}
+      @media print{body{padding:20px}}
+    </style>
+    </head><body>
+    <h1>${p.client_name}</h1>
+    <div class="meta">${p.business_type||''} · ${p.video_size||''} · ${p.language||''} · ${fmtDate(p.created_at)}</div>
+    <pre>${blueprint}</pre>
+    <script>window.onload=()=>window.print();</script>
+    </body></html>
+  `);
+  win.document.close();
+}
+
+// ANALYTICS
+async function loadAnalytics(){
+  const{data}=await sb.from('projects').select('*').order('created_at',{ascending:false});
+  const projects=data||[];
+  
+  // Stats
+  const total=projects.length;
+  const done=projects.filter(p=>p.status==='Approved / Done').length;
+  const inProd=projects.filter(p=>p.status==='In Production').length;
+  const ready=projects.filter(p=>p.status==='Ready for Editor').length;
+  const rate=total>0?Math.round((done/total)*100):0;
+  
+  document.getElementById('analytics-stats').innerHTML=`
+    <div class="stat-card c-yellow"><div class="stat-icon" style="background:var(--yellow-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="stat-label">Total projects</div><div class="stat-val">${total}</div></div>
+    <div class="stat-card c-green"><div class="stat-icon" style="background:var(--green-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div class="stat-label">Completed</div><div class="stat-val" style="color:var(--green)">${done}</div></div>
+    <div class="stat-card c-amber"><div class="stat-icon" style="background:var(--amber-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="stat-label">In production</div><div class="stat-val" style="color:var(--amber)">${inProd}</div></div>
+    <div class="stat-card c-purple"><div class="stat-icon" style="background:var(--purple-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="stat-label">Completion rate</div><div class="stat-val" style="color:var(--purple)">${rate}%</div></div>
+  `;
+
+  // Status breakdown
+  const statuses=['New Input','Generating AI','Ready for Editor','In Production','Approved / Done'];
+  const colors={'New Input':'var(--text2)','Generating AI':'var(--purple)','Ready for Editor':'var(--green)','In Production':'var(--amber)','Approved / Done':'#4caf50'};
+  document.getElementById('analytics-status').innerHTML=statuses.map(s=>{
+    const count=projects.filter(p=>p.status===s).length;
+    const pct=total>0?Math.round((count/total)*100):0;
+    return`<div style="padding:10px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px">
+      <div style="flex:1;font-size:12px;color:var(--text2)">${s}</div>
+      <div style="font-size:13px;font-weight:600;color:${colors[s]};min-width:24px;text-align:right">${count}</div>
+      <div style="width:80px;height:4px;background:var(--border2);border-radius:4px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${colors[s]};border-radius:4px"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);min-width:28px">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  // Recent activity
+  const recent=projects.slice(0,8);
+  document.getElementById('analytics-activity').innerHTML=recent.map(p=>`
+    <div style="padding:10px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px">
+      <div style="flex:1"><div style="font-size:12px;color:var(--text);font-weight:500">${p.client_name}</div><div style="font-size:10px;color:var(--text3)">${fmtDate(p.created_at)}</div></div>
+      ${statusBadge(p.status)}
+    </div>`).join('');
+
+  // All projects table
+  document.getElementById('analytics-projects').innerHTML=projects.map(p=>`
+    <div class="table-row" style="grid-template-columns:2fr 1fr 1fr 1fr" onclick="openModal('${p.id}')">
+      <div><div class="row-name">${p.client_name}</div><div class="row-sub">${p.video_size||''}</div></div>
+      <div>${statusBadge(p.status)}</div>
+      <div class="row-meta">${p.language||'—'}</div>
+      <div class="row-date">${fmtDate(p.created_at)}</div>
+    </div>`).join('')||'<div class="table-empty">No projects yet.</div>';
+}
 
 function showNotif(msg,type){
   const n=document.getElementById('notif');
