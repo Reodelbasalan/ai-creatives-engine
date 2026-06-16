@@ -165,7 +165,8 @@ async function loadDashboard(){
   pipes.forEach(([id,status,cid])=>{
     const items=allProjects.filter(p=>p.status===status);
     document.getElementById(cid).textContent=items.length;
-    document.getElementById(id).innerHTML=items.length?items.map(p=>`<div class="pipe-card" onclick="openModal('${p.id}')"><div class="pipe-card-name">${p.client_name}</div><div class="pipe-card-type">${p.business_type||''}</div></div>`).join(''):'<div class="pipe-empty">—</div>';
+    document.getElementById(id).innerHTML=items.length?items.map(p=>`<div class="pipe-card" onclick="openModal('${p.id}')"><div class="pipe-card-name">${p.client_name}</div><div class="pipe-card-type">${p.business_type||''}</div>${status==='In Production'?`<button onclick="quickApprove('${p.id}',event)" style="margin-top:6px;width:100%;background:var(--green-dim);border:0.5px solid rgba(34,197,94,0.2);color:var(--green);border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer;font-weight:600">✓ Approve</button>`:''}${status==='Ready for Editor'?`<button onclick="quickApprove('${p.id}',event)" style="margin-top:6px;width:100%;background:var(--amber-dim);border:0.5px solid rgba(245,158,11,0.2);color:var(--amber);border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer;font-weight:600">→ Mark Done</button>`:''}
+</div>`).join(''):'<div class="pipe-empty">—</div>';
   });
   document.getElementById('recent-projects-body').innerHTML=allProjects.slice(0,10).map(p=>`
     <div class="table-row projects-cols" onclick="openModal('${p.id}')">
@@ -185,7 +186,17 @@ async function loadAllProjects(){
 function filterProjects(){
   const q=document.getElementById('search-projects').value.toLowerCase();
   const s=document.getElementById('filter-status').value;
-  renderProjectsTable(allProjects.filter(p=>(!q||p.client_name?.toLowerCase().includes(q))&&(!s||p.status===s)));
+  renderProjectsTable(allProjects.filter(p=>{
+    const matchQ=!q||
+      p.client_name?.toLowerCase().includes(q)||
+      p.business_type?.toLowerCase().includes(q)||
+      p.goal?.toLowerCase().includes(q)||
+      p.language?.toLowerCase().includes(q)||
+      p.status?.toLowerCase().includes(q)||
+      p.product?.toLowerCase().includes(q);
+    const matchS=!s||p.status===s;
+    return matchQ&&matchS;
+  }));
 }
 
 function renderProjectsTable(projects){
@@ -418,6 +429,7 @@ async function openModal(id){
   const editors=(members||[]).filter(m=>m.role==='editor');
   assignSelect.innerHTML='<option value="">Unassigned</option>'+editors.map(m=>`<option value="${m.id}" ${p.assigned_to===m.id?'selected':''}>${m.name||m.email}</option>`).join('');
   document.getElementById('project-modal').classList.add('open');
+  loadComments(id);
 }
 
 function closeModal(){document.getElementById('project-modal').classList.remove('open');currentProjectId=null;}
@@ -438,6 +450,61 @@ async function deleteProject(){
 
 function copyBlueprint(){navigator.clipboard.writeText(document.getElementById('blueprint-text').textContent);showNotif('Copied! ✓','success');}
 function copyModalBlueprint(){navigator.clipboard.writeText(document.getElementById('modal-blueprint').textContent);showNotif('Copied! ✓','success');}
+
+// COMMENTS
+let currentComments=[];
+
+async function loadComments(projectId){
+  const{data}=await sb.from('project_comments').select('*,profiles(name,email)').eq('project_id',projectId).order('created_at',{ascending:true}).limit(20);
+  currentComments=data||[];
+  renderComments();
+}
+
+function renderComments(){
+  const box=document.getElementById('modal-comments');
+  if(!box)return;
+  box.innerHTML=currentComments.length?currentComments.map(c=>`
+    <div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-start">
+      <div style="width:22px;height:22px;border-radius:50%;background:var(--yellow-dim);border:0.5px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--yellow);flex-shrink:0">${((c.profiles?.name||c.profiles?.email||'?')[0]).toUpperCase()}</div>
+      <div style="flex:1;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:7px 10px">
+        <div style="font-size:9px;color:var(--text3);margin-bottom:3px">${c.profiles?.name||c.profiles?.email||'Unknown'} · ${fmtDate(c.created_at)}</div>
+        <div style="font-size:12px;color:var(--text2)">${c.comment}</div>
+      </div>
+    </div>`).join(''):'<div style="font-size:11px;color:var(--text3);padding:8px 0">No comments yet.</div>';
+}
+
+async function addComment(){
+  if(!currentProjectId)return;
+  const input=document.getElementById('modal-comment-input');
+  const text=input.value.trim();if(!text)return;
+  await sb.from('project_comments').insert({project_id:currentProjectId,user_id:currentUser.id,comment:text});
+  input.value='';
+  loadComments(currentProjectId);
+}
+
+// DUPLICATE PROJECT
+async function duplicateProject(id){
+  const p=allProjects.find(x=>x.id===id);if(!p)return;
+  const newName=p.client_name+' (Copy)';
+  const{error}=await sb.from('projects').insert({
+    client_name:newName,business_type:p.business_type,product:p.product,
+    color_primary:p.color_primary,color_secondary:p.color_secondary,
+    audience:p.audience,pain_point:p.pain_point,usp:p.usp,goal:p.goal,
+    video_size:p.video_size,language:p.language,voice_actor:p.voice_actor,
+    avatar_desc:p.avatar_desc,emphasize:p.emphasize,tone:p.tone,
+    status:'New Input',blueprint:p.blueprint,assigned_to:null,
+    created_by:currentUser?.id
+  });
+  if(!error){showNotif('Project duplicated! ✓','success');closeModal();loadDashboard();}
+  else showNotif('Error: '+error.message,'error');
+}
+
+// QUICK APPROVE
+async function quickApprove(id,e){
+  e.stopPropagation();
+  await sb.from('projects').update({status:'Approved / Done',updated_at:new Date().toISOString()}).eq('id',id);
+  showNotif('Approved! ✓','success');loadDashboard();
+}
 
 // ASSIGN PROJECT
 async function assignProject(){
