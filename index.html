@@ -580,28 +580,39 @@ async function doLogin(){
   const err=document.getElementById('auth-err');
   const btn=document.getElementById('login-btn');
   err.style.display='none';btn.textContent='Signing in...';btn.disabled=true;
+  
+  // Step 1: Try to sign in
+  let signInError=null;
   try{
-    const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
-    btn.textContent='Sign in →';btn.disabled=false;
-    if(error){
-      // Ignore schema errors — login is still successful
-      if(error.message&&error.message.toLowerCase().includes('schema')){
-        if(data&&data.user){currentUser=data.user;loadUserRole(currentUser);showApp();return;}
-      }
-      err.textContent=error.message;err.style.display='block';return;
+    const result=await sb.auth.signInWithPassword({email,password:pass});
+    if(result.data&&result.data.user){
+      btn.textContent='Sign in →';btn.disabled=false;
+      currentUser=result.data.user;loadUserRole(currentUser);showApp();return;
     }
-    if(!data||!data.user){err.textContent='Login failed. Try again.';err.style.display='block';return;}
-    currentUser=data.user;loadUserRole(currentUser);showApp();
-  }catch(e){
-    btn.textContent='Sign in →';btn.disabled=false;
-    // Even on error, check if session exists
-    const{data:session}=await sb.auth.getSession();
-    if(session&&session.session){
-      currentUser=session.session.user;loadUserRole(currentUser);showApp();
-    } else {
-      err.textContent='Login error. Try again.';err.style.display='block';
+    signInError=result.error;
+  }catch(e){signInError=e;}
+  
+  // Step 2: Check if session exists anyway (schema errors)
+  try{
+    await new Promise(r=>setTimeout(r,500));
+    const{data:sd}=await sb.auth.getSession();
+    if(sd&&sd.session&&sd.session.user){
+      btn.textContent='Sign in →';btn.disabled=false;
+      currentUser=sd.session.user;loadUserRole(currentUser);showApp();return;
     }
+  }catch(e){}
+  
+  // Step 3: Show error only if truly failed
+  btn.textContent='Sign in →';btn.disabled=false;
+  const msg=signInError?.message||'Login failed';
+  if(msg.toLowerCase().includes('invalid')||msg.toLowerCase().includes('credentials')){
+    err.textContent='Invalid email or password.';
+  } else if(msg.toLowerCase().includes('schema')||msg.toLowerCase().includes('database')){
+    err.textContent='Connection issue. Please try again.';
+  } else {
+    err.textContent=msg;
   }
+  err.style.display='block';
 }
 
 function loadUserRole(user){
