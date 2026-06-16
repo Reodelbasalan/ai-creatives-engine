@@ -591,6 +591,12 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <option value="">Unassigned</option>
       </select>
     </div>
+    <div class="section-label">Comments</div>
+    <div id="modal-comments" style="margin-bottom:10px;max-height:160px;overflow-y:auto"></div>
+    <div style="display:flex;gap:8px;margin-bottom:1.25rem">
+      <input class="form-input" id="modal-comment-input" placeholder="Add a comment..." style="font-size:12px" onkeydown="if(event.key==='Enter')addComment()"/>
+      <button class="ghost-btn" onclick="addComment()" style="white-space:nowrap">+ Add</button>
+    </div>
     <div class="section-label">Blueprint</div>
     <div class="blueprint-box" id="modal-blueprint" style="max-height:320px"></div>
     <div class="blueprint-actions" style="margin-top:10px">
