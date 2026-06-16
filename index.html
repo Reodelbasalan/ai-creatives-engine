@@ -580,10 +580,28 @@ async function doLogin(){
   const err=document.getElementById('auth-err');
   const btn=document.getElementById('login-btn');
   err.style.display='none';btn.textContent='Signing in...';btn.disabled=true;
-  const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
-  btn.textContent='Sign in →';btn.disabled=false;
-  if(error){err.textContent=error.message;err.style.display='block';return;}
-  currentUser=data.user;loadUserRole(currentUser);showApp();
+  try{
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    btn.textContent='Sign in →';btn.disabled=false;
+    if(error){
+      // Ignore schema errors — login is still successful
+      if(error.message&&error.message.toLowerCase().includes('schema')){
+        if(data&&data.user){currentUser=data.user;loadUserRole(currentUser);showApp();return;}
+      }
+      err.textContent=error.message;err.style.display='block';return;
+    }
+    if(!data||!data.user){err.textContent='Login failed. Try again.';err.style.display='block';return;}
+    currentUser=data.user;loadUserRole(currentUser);showApp();
+  }catch(e){
+    btn.textContent='Sign in →';btn.disabled=false;
+    // Even on error, check if session exists
+    const{data:session}=await sb.auth.getSession();
+    if(session&&session.session){
+      currentUser=session.session.user;loadUserRole(currentUser);showApp();
+    } else {
+      err.textContent='Login error. Try again.';err.style.display='block';
+    }
+  }
 }
 
 function loadUserRole(user){
