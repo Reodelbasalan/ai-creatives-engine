@@ -79,7 +79,7 @@ async function doLogout(){
 function showApp(){
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app').style.display='block';
-  if(currentUserRole==='admin')loadDashboard();else loadEditorPortal();
+  if(currentUserRole==='admin'){loadDashboard();loadNotifications();}else loadEditorPortal();
 }
 
 function showPage(page){
@@ -87,7 +87,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   if(page==='all-projects')loadAllProjects();
   if(page==='editor-portal')loadEditorPortal();
@@ -170,7 +170,7 @@ async function loadDashboard(){
   });
   document.getElementById('recent-projects-body').innerHTML=allProjects.slice(0,10).map(p=>`
     <div class="table-row projects-cols" onclick="openModal('${p.id}')">
-      <div><div class="row-name">${p.client_name}</div><div class="row-sub">${p.video_size||''} · ${p.language||''} · ${p.goal||''}</div></div>
+      <div><div class="row-name">${p.client_name}</div><div class="row-sub">${p.video_size||''} · ${p.language||''} · ${p.goal||''} ${getDeadlineStatus(p.deadline)}</div></div>
       <div class="row-meta">${p.business_type||'—'}</div>
       <div>${statusBadge(p.status)}</div>
       <div class="row-date">${fmtDate(p.created_at)}</div>
@@ -428,6 +428,13 @@ async function openModal(id){
   const assignSelect=document.getElementById('modal-assign-select');
   const editors=(members||[]).filter(m=>m.role==='editor');
   assignSelect.innerHTML='<option value="">Unassigned</option>'+editors.map(m=>`<option value="${m.id}" ${p.assigned_to===m.id?'selected':''}>${m.name||m.email}</option>`).join('');
+  // Show deadline in modal
+  const deadlineRow=document.getElementById('modal-deadline-row');
+  if(deadlineRow){
+    deadlineRow.innerHTML=`<span style="font-size:11px;color:var(--text2);font-weight:500">Deadline:</span>
+    <input type="date" class="status-select" id="modal-deadline-input" value="${p.deadline||''}" onchange="setDeadline('${p.id}',this.value)" style="cursor:pointer"/>
+    ${getDeadlineStatus(p.deadline)}`;
+  }
   document.getElementById('project-modal').classList.add('open');
   loadComments(id);
 }
@@ -450,6 +457,35 @@ async function deleteProject(){
 
 function copyBlueprint(){navigator.clipboard.writeText(document.getElementById('blueprint-text').textContent);showNotif('Copied! ✓','success');}
 function copyModalBlueprint(){navigator.clipboard.writeText(document.getElementById('modal-blueprint').textContent);showNotif('Copied! ✓','success');}
+
+// NOTIFICATIONS
+let notifCount=0;
+
+async function loadNotifications(){
+  const{data}=await sb.from('projects')
+    .select('*')
+    .eq('status','Ready for Editor')
+    .order('created_at',{ascending:false});
+  const items=data||[];
+  notifCount=items.length;
+  const bell=document.getElementById('notif-bell-count');
+  if(bell){bell.textContent=notifCount;bell.style.display=notifCount>0?'flex':'none';}
+}
+
+async function toggleNotifPanel(){
+  const panel=document.getElementById('notif-panel');
+  if(!panel)return;
+  const isOpen=panel.style.display==='block';
+  panel.style.display=isOpen?'none':'block';
+  if(!isOpen){
+    const{data}=await sb.from('projects').select('*').in('status',['Ready for Editor','In Production']).order('updated_at',{ascending:false}).limit(10);
+    panel.innerHTML=(data||[]).length?(data).map(p=>`
+      <div onclick="openModal('${p.id}');toggleNotifPanel()" style="padding:10px 14px;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background 0.1s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+        <div style="font-size:12px;color:var(--text);font-weight:600;margin-bottom:2px">${p.client_name}</div>
+        <div style="display:flex;align-items:center;gap:6px"><span style="font-size:9px;color:var(--text3)">${fmtDate(p.updated_at||p.created_at)}</span>${statusBadge(p.status)}</div>
+      </div>`).join(''):'<div style="padding:1.5rem;text-align:center;font-size:12px;color:var(--text3)">No active projects</div>';
+  }
+}
 
 // COMMENTS
 let currentComments=[];
@@ -480,6 +516,22 @@ async function addComment(){
   await sb.from('project_comments').insert({project_id:currentProjectId,user_id:currentUser.id,comment:text});
   input.value='';
   loadComments(currentProjectId);
+}
+
+// DEADLINE
+async function setDeadline(id,date){
+  await sb.from('projects').update({deadline:date,updated_at:new Date().toISOString()}).eq('id',id);
+  allProjects=allProjects.map(p=>p.id===id?{...p,deadline:date}:p);
+  showNotif('Deadline set! ✓','success');
+}
+
+function getDeadlineStatus(deadline){
+  if(!deadline)return'';
+  const d=new Date(deadline);const now=new Date();
+  const diff=Math.ceil((d-now)/(1000*60*60*24));
+  if(diff<0)return'<span style="color:var(--red);font-size:10px;font-weight:600">⚠ OVERDUE</span>';
+  if(diff<=3)return`<span style="color:var(--amber);font-size:10px;font-weight:600">⚡ ${diff}d left</span>`;
+  return`<span style="color:var(--text3);font-size:10px">${diff}d left</span>`;
 }
 
 // DUPLICATE PROJECT
