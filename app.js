@@ -87,13 +87,14 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   if(page==='all-projects')loadAllProjects();
   if(page==='editor-portal')loadEditorPortal();
   if(page==='users')loadUsers();
   if(page==='dashboard')loadDashboard();
   if(page==='analytics')loadAnalytics();
+  if(page==='settings'){loadSettings();}
 }
 
 // NOTES
@@ -451,6 +452,7 @@ async function openModal(id){
   }
   document.getElementById('project-modal').classList.add('open');
   loadComments(id);
+  if(p.blueprint)renderBlueprintScenes(p.blueprint,'modal-scenes');
 }
 
 function closeModal(){document.getElementById('project-modal').classList.remove('open');currentProjectId=null;}
@@ -882,6 +884,251 @@ function applyTemplate(type){
   // Switch to manual tab
   switchTab('manual');
 }
+
+
+// ═══════════════════════════════════════
+// TOOL SETTINGS
+// ═══════════════════════════════════════
+
+function saveToolSetting(key, val){
+  localStorage.setItem('ace_'+key, val);
+}
+
+function getToolSetting(key, def){
+  return localStorage.getItem('ace_'+key)||def||'';
+}
+
+function loadSettings(){
+  // Load all saved settings
+  var fields=['higgs-mode','higgs-api-key','higgs-model','higgs-duration',
+    'grok-mode','grok-api-key','grok-model','grok-duration',
+    'veo-mode','veo-api-key','veo-model','veo-duration'];
+  fields.forEach(function(f){
+    var el=document.getElementById(f);
+    if(el){
+      var val=getToolSetting(f);
+      if(val)el.value=val;
+    }
+  });
+  // Apply mode toggles
+  toggleToolMode('grok', getToolSetting('grok-mode','api'));
+  toggleToolMode('veo', getToolSetting('veo-mode','api'));
+  toggleToolMode('higgs', getToolSetting('higgs-mode','account'));
+}
+
+function toggleToolMode(tool, mode){
+  var apiField=document.getElementById(tool+'-api-field');
+  if(apiField)apiField.style.display=mode==='api'?'flex':'none';
+}
+
+function testConnection(tool){
+  var urls={
+    higgsfield:'https://higgsfield.ai',
+    grok:'https://x.ai/grok',
+    veo:'https://aistudio.google.com'
+  };
+  var status=document.getElementById(tool.replace('higgsfield','higgs')+'-status');
+  if(urls[tool]){
+    window.open(urls[tool],'_blank');
+    if(status)status.textContent='✓ Opened '+tool+' in new tab';
+    if(status)status.style.color='var(--green)';
+  }
+}
+
+// ═══════════════════════════════════════
+// VIDEO/IMAGE GENERATION
+// ═══════════════════════════════════════
+
+function generateWithTool(tool, prompt, type){
+  var mode=getToolSetting(tool+'-mode', tool==='higgsfield'?'account':'api');
+  
+  if(mode==='account'){
+    // Copy prompt + open tool
+    navigator.clipboard.writeText(prompt).catch(function(){});
+    var urls={
+      higgsfield:'https://higgsfield.ai/create',
+      grok:'https://grok.com',
+      veo:'https://flow.google.com'
+    };
+    window.open(urls[tool]||'https://'+tool+'.ai','_blank');
+    showNotif('Prompt copied! Paste it in '+tool+' ✓','success');
+    return;
+  }
+
+  // API mode
+  var apiKey=getToolSetting(tool+'-api-key');
+  if(!apiKey){
+    showNotif('No API key set for '+tool+'. Go to Settings!','error');
+    showPage('settings');
+    return;
+  }
+
+  showNotif('Generating with '+tool+'... ⚡','success');
+
+  if(tool==='grok'){
+    generateGrok(prompt, apiKey, type);
+  } else if(tool==='veo'){
+    generateVeo(prompt, apiKey, type);
+  }
+}
+
+async function generateGrok(prompt, apiKey, type){
+  try{
+    var model=getToolSetting('grok-model','grok-imagine-video-1.5-preview');
+    var duration=parseInt(getToolSetting('grok-duration','8'));
+    var res=await fetch('/api/grok-generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt,apiKey,model,duration,type})
+    });
+    var d=await res.json();
+    if(d.url){
+      showNotif('Video ready! ✓','success');
+      window.open(d.url,'_blank');
+    } else {
+      showNotif('Error: '+(d.error||'Generation failed'),'error');
+    }
+  }catch(e){
+    showNotif('Grok error: '+e.message,'error');
+  }
+}
+
+async function generateVeo(prompt, apiKey, type){
+  try{
+    var model=getToolSetting('veo-model','veo-3');
+    var duration=parseInt(getToolSetting('veo-duration','8'));
+    var res=await fetch('/api/veo-generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt,apiKey,model,duration,type})
+    });
+    var d=await res.json();
+    if(d.url){
+      showNotif('Video ready! ✓','success');
+      window.open(d.url,'_blank');
+    } else {
+      showNotif('Error: '+(d.error||'Generation failed'),'error');
+    }
+  }catch(e){
+    showNotif('Veo error: '+e.message,'error');
+  }
+}
+
+// Parse blueprint and extract scenes with prompts
+function parseBlueprint(blueprintText){
+  var scenes=[];
+  var scenePattern=/SCENE\s+(\d+)[^]*?(?=SCENE\s+\d+|$)/gi;
+  var imagePattern=/IMAGE PROMPT[:\s]+([^\n]+)/i;
+  var videoPattern=/VIDEO PROMPT[:\s]+([^\n]+)/i;
+  var voPattern=/VOICEOVER[:\s]+([^\n]+)/i;
+  var visualPattern=/VISUAL[:\s]+([^\n]+)/i;
+
+  var matches=blueprintText.match(/SCENE\s+\d+[^]*?(?=SCENE\s+\d+|(?:PRODUCTION|═{5}|$))/gi)||[];
+  matches.forEach(function(block){
+    var numMatch=block.match(/SCENE\s+(\d+)/i);
+    var nameMatch=block.match(/SCENE\s+\d+\s*[-\u2014]\s*([^\n(]+)/i);
+    var imgMatch=block.match(imagePattern);
+    var vidMatch=block.match(videoPattern);
+    var voMatch=block.match(voPattern);
+    var visMatch=block.match(visualPattern);
+    scenes.push({
+      num:numMatch?numMatch[1]:'?',
+      name:nameMatch?nameMatch[1].trim():'Scene',
+      imagePrompt:imgMatch?imgMatch[1].trim():'',
+      videoPrompt:vidMatch?vidMatch[1].trim():'',
+      voiceover:voMatch?voMatch[1].trim():'',
+      visual:visMatch?visMatch[1].trim():''
+    });
+  });
+  return scenes;
+}
+
+function renderBlueprintScenes(blueprintText, containerId){
+  var container=document.getElementById(containerId);
+  if(!container)return;
+  
+  // Simple scene extraction
+  var sceneBlocks=blueprintText.split(/SCENE\s+\d+/i).filter(function(b){return b.trim();});
+  var sceneNums=blueprintText.match(/SCENE\s+(\d+)/gi)||[];
+  
+  if(!sceneBlocks.length){
+    container.innerHTML='<div style="font-size:12px;color:var(--text3);padding:1rem">Blueprint rendered above. Use Copy buttons to grab prompts.</div>';
+    return;
+  }
+
+  var html='';
+  sceneBlocks.forEach(function(block, idx){
+    var num=sceneNums[idx]?sceneNums[idx].replace(/SCENE\s+/i,''):(idx+1).toString();
+    
+    // Extract prompts
+    var imgMatch=block.match(/IMAGE PROMPT[:\s]+([^\n\u25B8]+)/i);
+    var vidMatch=block.match(/VIDEO PROMPT[:\s]+([^\n\u25B8]+)/i);
+    var voMatch=block.match(/VOICEOVER[:\s]+"?([^\n"]+)"?/i);
+    
+    var imgPrompt=imgMatch?imgMatch[1].trim():'';
+    var vidPrompt=vidMatch?vidMatch[1].trim():'';
+    var vo=voMatch?voMatch[1].trim():'';
+    
+    if(!imgPrompt&&!vidPrompt)return;
+    
+    html+='<div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:10px;padding:12px;margin-bottom:8px">';
+    html+='<div style="font-size:10px;font-weight:700;color:var(--yellow);margin-bottom:8px;text-transform:uppercase">Scene '+num+'</div>';
+    
+    if(vo){
+      html+='<div style="font-size:11px;color:var(--text2);margin-bottom:8px;padding:7px 10px;background:var(--bg4);border-radius:6px;font-style:italic">&ldquo;'+vo.substring(0,120)+'&rdquo;</div>';
+    }
+    
+    if(imgPrompt){
+      html+='<div style="margin-bottom:8px">';
+      html+='<div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Image Prompt</div>';
+      html+='<div style="font-size:11px;color:var(--text2);margin-bottom:5px">'+imgPrompt.substring(0,120)+'...</div>';
+      html+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
+      html+='<button class="tool-btn higgs-btn" data-prompt="'+encodeURIComponent(imgPrompt)+'" data-type="image" style="font-size:10px;padding:3px 9px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:5px;color:var(--text2);cursor:pointer">🎬 Higgsfield</button>';
+      html+='<button class="copy-btn" data-prompt="'+encodeURIComponent(imgPrompt)+'" style="font-size:10px;padding:3px 9px;background:var(--bg2);border:0.5px solid var(--border3);border-radius:5px;color:var(--text3);cursor:pointer">📋 Copy</button>';
+      html+='</div></div>';
+    }
+    
+    if(vidPrompt){
+      html+='<div>';
+      html+='<div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Video Prompt</div>';
+      html+='<div style="font-size:11px;color:var(--text2);margin-bottom:5px">'+vidPrompt.substring(0,120)+'...</div>';
+      html+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
+      html+='<button class="tool-btn higgs-btn" data-prompt="'+encodeURIComponent(vidPrompt)+'" data-type="video" style="font-size:10px;padding:3px 9px;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.2);border-radius:5px;color:var(--yellow);cursor:pointer;font-weight:600">⚡ Higgsfield</button>';
+      html+='<button class="tool-btn grok-btn" data-prompt="'+encodeURIComponent(vidPrompt)+'" data-type="video" style="font-size:10px;padding:3px 9px;background:var(--purple-dim);border:0.5px solid rgba(127,119,221,0.2);border-radius:5px;color:var(--purple);cursor:pointer;font-weight:600">⚡ Grok</button>';
+      html+='<button class="tool-btn veo-btn" data-prompt="'+encodeURIComponent(vidPrompt)+'" data-type="video" style="font-size:10px;padding:3px 9px;background:var(--amber-dim);border:0.5px solid rgba(245,158,11,0.2);border-radius:5px;color:var(--amber);cursor:pointer;font-weight:600">⚡ Veo</button>';
+      html+='<button class="copy-btn" data-prompt="'+encodeURIComponent(vidPrompt)+'" style="font-size:10px;padding:3px 9px;background:var(--bg2);border:0.5px solid var(--border3);border-radius:5px;color:var(--text3);cursor:pointer">📋 Copy</button>';
+      html+='</div></div>';
+    }
+    
+    html+='</div>';
+  });
+  
+  container.innerHTML=html||'<div style="font-size:12px;color:var(--text3);padding:1rem">No scene prompts found.</div>';
+  
+  // Attach event listeners
+  container.querySelectorAll('.higgs-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      generateWithTool('higgsfield',decodeURIComponent(this.dataset.prompt)+' 9:16 vertical',this.dataset.type);
+    });
+  });
+  container.querySelectorAll('.grok-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      generateWithTool('grok',decodeURIComponent(this.dataset.prompt)+' 9:16 vertical',this.dataset.type);
+    });
+  });
+  container.querySelectorAll('.veo-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      generateWithTool('veo',decodeURIComponent(this.dataset.prompt)+' 9:16 vertical',this.dataset.type);
+    });
+  });
+  container.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      navigator.clipboard.writeText(decodeURIComponent(this.dataset.prompt));
+      showNotif('Copied! ✓','success');
+    });
+  });
+}
+
 
 function showNotif(msg,type){
   const n=document.getElementById('notif');
