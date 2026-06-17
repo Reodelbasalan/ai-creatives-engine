@@ -165,8 +165,12 @@ async function loadDashboard(){
   pipes.forEach(([id,status,cid])=>{
     const items=allProjects.filter(p=>p.status===status);
     document.getElementById(cid).textContent=items.length;
-    document.getElementById(id).innerHTML=items.length?items.map(p=>`<div class="pipe-card" onclick="openModal('${p.id}')"><div class="pipe-card-name">${p.client_name}</div><div class="pipe-card-type">${p.business_type||''}</div>${status==='In Production'?`<button onclick="quickApprove('${p.id}',event)" style="margin-top:6px;width:100%;background:var(--green-dim);border:0.5px solid rgba(34,197,94,0.2);color:var(--green);border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer;font-weight:600">✓ Approve</button>`:''}${status==='Ready for Editor'?`<button onclick="quickApprove('${p.id}',event)" style="margin-top:6px;width:100%;background:var(--amber-dim);border:0.5px solid rgba(245,158,11,0.2);color:var(--amber);border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer;font-weight:600">→ Mark Done</button>`:''}
-</div>`).join(''):'<div class="pipe-empty">—</div>';
+    document.getElementById(id).innerHTML=items.length?items.map(p=>{
+      let btn='';
+      if(status==='In Production')btn='<button onclick="quickApprove(''+p.id+'',event)" style="margin-top:6px;width:100%;background:var(--green-dim);border:0.5px solid rgba(34,197,94,0.2);color:var(--green);border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer;font-weight:600">Approve</button>';
+      if(status==='Ready for Editor')btn='<button onclick="quickApprove(''+p.id+'',event)" style="margin-top:6px;width:100%;background:var(--amber-dim);border:0.5px solid rgba(245,158,11,0.2);color:var(--amber);border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer;font-weight:600">Mark Done</button>';
+      return '<div class="pipe-card" onclick="openModal(''+p.id+'')"><div class="pipe-card-name">'+p.client_name+'</div><div class="pipe-card-type">'+(p.business_type||'')+'</div>'+btn+'</div>';
+    }).join(''):'<div class="pipe-empty">—</div>';
   });
   document.getElementById('recent-projects-body').innerHTML=allProjects.slice(0,10).map(p=>`
     <div class="table-row projects-cols" onclick="openModal('${p.id}')">
@@ -186,6 +190,7 @@ async function loadAllProjects(){
 function filterProjects(){
   const q=document.getElementById('search-projects').value.toLowerCase();
   const s=document.getElementById('filter-status').value;
+  const pr=document.getElementById('filter-priority')?.value||'';
   renderProjectsTable(allProjects.filter(p=>{
     const matchQ=!q||
       p.client_name?.toLowerCase().includes(q)||
@@ -195,14 +200,18 @@ function filterProjects(){
       p.status?.toLowerCase().includes(q)||
       p.product?.toLowerCase().includes(q);
     const matchS=!s||p.status===s;
-    return matchQ&&matchS;
+    const matchP=!pr||p.priority===pr;
+    return matchQ&&matchS&&matchP;
   }));
 }
 
 function renderProjectsTable(projects){
   document.getElementById('all-projects-body').innerHTML=projects.length?projects.map(p=>`
-    <div class="table-row projects-cols" onclick="openModal('${p.id}')">
-      <div><div class="row-name">${p.client_name}</div><div class="row-sub">${p.video_size||''} · ${p.language||''}</div></div>
+    <div class="table-row" style="grid-template-columns:32px 2fr 1fr 1.2fr 0.8fr" onclick="openModal('${p.id}')">
+      <div onclick="toggleSelect('${p.id}',event)" style="display:flex;align-items:center;justify-content:center">
+        <input type="checkbox" id="cb-${p.id}" class="proj-checkbox" style="cursor:pointer;width:14px;height:14px;accent-color:var(--yellow)" ${selectedProjects.has(p.id)?'checked':''}/>
+      </div>
+      <div><div class="row-name">${p.client_name} ${priorityBadge(p.priority)}</div><div class="row-sub">${p.video_size||''} · ${p.language||''}</div></div>
       <div class="row-meta">${p.business_type||'—'}</div>
       <div>${statusBadge(p.status)}</div>
       <div class="row-date">${fmtDate(p.created_at)}</div>
@@ -428,6 +437,9 @@ async function openModal(id){
   const assignSelect=document.getElementById('modal-assign-select');
   const editors=(members||[]).filter(m=>m.role==='editor');
   assignSelect.innerHTML='<option value="">Unassigned</option>'+editors.map(m=>`<option value="${m.id}" ${p.assigned_to===m.id?'selected':''}>${m.name||m.email}</option>`).join('');
+  // Show priority in modal
+  const prioSelect=document.getElementById('modal-priority-select');
+  if(prioSelect)prioSelect.value=p.priority||'normal';
   // Show deadline in modal
   const deadlineRow=document.getElementById('modal-deadline-row');
   if(deadlineRow){
@@ -666,6 +678,111 @@ async function loadAnalytics(){
   }).join('')||'<div class="table-empty">No projects yet.</div>';
 }
 
+
+
+// PRIORITY SYSTEM
+async function setPriority(id, priority){
+  await sb.from('projects').update({priority, updated_at:new Date().toISOString()}).eq('id',id);
+  allProjects=allProjects.map(p=>p.id===id?{...p,priority}:p);
+  showNotif('Priority set! ✓','success');
+}
+
+function priorityBadge(p){
+  if(!p||p==='normal')return '';
+  if(p==='urgent')return '<span style="font-size:9px;padding:2px 7px;border-radius:20px;background:#2a0a0a;color:#ef4444;border:0.5px solid rgba(239,68,68,0.3);font-weight:700">URGENT</span>';
+  if(p==='low')return '<span style="font-size:9px;padding:2px 7px;border-radius:20px;background:var(--bg4);color:var(--text3);border:0.5px solid var(--border3);font-weight:600">LOW</span>';
+  return '';
+}
+
+// BULK ACTIONS
+let selectedProjects=new Set();
+
+function toggleSelect(id,e){
+  e.stopPropagation();
+  if(selectedProjects.has(id))selectedProjects.delete(id);
+  else selectedProjects.add(id);
+  updateBulkBar();
+  const cb=document.getElementById('cb-'+id);
+  if(cb)cb.checked=selectedProjects.has(id);
+}
+
+function updateBulkBar(){
+  const bar=document.getElementById('bulk-action-bar');
+  const count=document.getElementById('bulk-count');
+  if(!bar)return;
+  if(selectedProjects.size>0){
+    bar.style.display='flex';
+    if(count)count.textContent=selectedProjects.size+' selected';
+  } else {
+    bar.style.display='none';
+  }
+}
+
+async function bulkApprove(){
+  if(!selectedProjects.size)return;
+  await Promise.all([...selectedProjects].map(id=>
+    sb.from('projects').update({status:'Approved / Done',updated_at:new Date().toISOString()}).eq('id',id)
+  ));
+  showNotif(`${selectedProjects.size} projects approved! ✓`,'success');
+  selectedProjects.clear();updateBulkBar();loadDashboard();loadAllProjects();
+}
+
+async function bulkAssign(){
+  if(!selectedProjects.size)return;
+  const{data:members}=await sb.from('profiles').select('id,name,email').eq('role','editor');
+  const editors=members||[];
+  if(!editors.length){showNotif('No editors found.','error');return;}
+  const opts=editors.map(e=>`${e.name||e.email}`).join('
+');
+  const choice=prompt('Assign to which editor?
+
+'+editors.map((e,i)=>`${i+1}. ${e.name||e.email}`).join('
+')+'
+
+Enter number:');
+  const idx=parseInt(choice)-1;
+  if(isNaN(idx)||idx<0||idx>=editors.length)return;
+  const editor=editors[idx];
+  await Promise.all([...selectedProjects].map(id=>
+    sb.from('projects').update({assigned_to:editor.id,updated_at:new Date().toISOString()}).eq('id',id)
+  ));
+  showNotif(`${selectedProjects.size} projects assigned to ${editor.name||editor.email}! ✓`,'success');
+  selectedProjects.clear();updateBulkBar();loadAllProjects();
+}
+
+async function bulkDelete(){
+  if(!selectedProjects.size)return;
+  if(!confirm(`Delete ${selectedProjects.size} projects permanently?`))return;
+  await Promise.all([...selectedProjects].map(id=>
+    sb.from('projects').delete().eq('id',id)
+  ));
+  showNotif(`${selectedProjects.size} projects deleted.`,'success');
+  selectedProjects.clear();updateBulkBar();loadDashboard();loadAllProjects();
+}
+
+function clearSelection(){
+  selectedProjects.clear();
+  updateBulkBar();
+  document.querySelectorAll('.proj-checkbox').forEach(cb=>cb.checked=false);
+}
+
+// EXPORT CSV
+function exportCSV(){
+  const headers=['Client','Business Type','Goal','Status','Language','Video Size','Tone','Priority','Date Created'];
+  const rows=allProjects.map(p=>[
+    p.client_name||'',p.business_type||'',p.goal||'',p.status||'',
+    p.language||'',p.video_size||'',p.tone||'',p.priority||'',
+    p.created_at?new Date(p.created_at).toLocaleDateString('en-PH'):''
+  ].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const csv=[headers.join(','),...rows].join('
+');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='ai-creatives-projects-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(url);
+  showNotif('CSV exported! ✓','success');
+}
 
 // STATUS HISTORY LOG
 async function loadStatusHistory(projectId){
