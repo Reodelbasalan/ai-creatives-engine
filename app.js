@@ -165,12 +165,12 @@ async function loadDashboard(){
   pipes.forEach(([id,status,cid])=>{
     const items=allProjects.filter(p=>p.status===status);
     document.getElementById(cid).textContent=items.length;
-    document.getElementById(id).innerHTML=items.length?items.map(p=>{
-      let btn='';
-      if(status==='In Production')btn='<button onclick="quickApprove(''+p.id+'',event)" style="margin-top:6px;width:100%;background:var(--green-dim);border:0.5px solid rgba(34,197,94,0.2);color:var(--green);border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer;font-weight:600">Approve</button>';
-      if(status==='Ready for Editor')btn='<button onclick="quickApprove(''+p.id+'',event)" style="margin-top:6px;width:100%;background:var(--amber-dim);border:0.5px solid rgba(245,158,11,0.2);color:var(--amber);border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer;font-weight:600">Mark Done</button>';
-      return '<div class="pipe-card" onclick="openModal(''+p.id+'')"><div class="pipe-card-name">'+p.client_name+'</div><div class="pipe-card-type">'+(p.business_type||'')+'</div>'+btn+'</div>';
-    }).join(''):'<div class="pipe-empty">—</div>';
+    document.getElementById(id).innerHTML=items.length?items.map(function(p){
+      var approveBtn="";
+      if(status==="In Production")approveBtn='<button onclick="quickApprove(\''+p.id+'\',event)" style="margin-top:6px;width:100%;background:var(--green-dim);color:var(--green);border:none;border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer">Approve</button>';
+      if(status==="Ready for Editor")approveBtn='<button onclick="quickApprove(\''+p.id+'\',event)" style="margin-top:6px;width:100%;background:var(--amber-dim);color:var(--amber);border:none;border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer">Done</button>';
+      return '<div class="pipe-card" onclick="openModal(\''+p.id+'\')">'+'<div class="pipe-card-name">'+p.client_name+'</div>'+'<div class="pipe-card-type">'+(p.business_type||"")+'</div>'+approveBtn+'</div>';
+    }).join(""):"<div class=\"pipe-empty\">—</div>";
   });
   document.getElementById('recent-projects-body').innerHTML=allProjects.slice(0,10).map(p=>`
     <div class="table-row projects-cols" onclick="openModal('${p.id}')">
@@ -443,8 +443,10 @@ async function openModal(id){
   // Show deadline in modal
   const deadlineRow=document.getElementById('modal-deadline-row');
   if(deadlineRow){
+    var dval=p.deadline||"";
+    var did=p.id;
     deadlineRow.innerHTML='<span style="font-size:11px;color:var(--text2);font-weight:500">Deadline:</span>'
-      +'<input type="date" class="status-select" id="modal-deadline-input" value="'+(p.deadline||'')+'" onchange="setDeadline(''+p.id+'',this.value)" style="cursor:pointer"/>'
+      +'<input type="date" class="status-select" id="modal-deadline-input" value="'+dval+'" onchange="setDeadline(\''+did+'\',this.value)" style="cursor:pointer"/>'  
       +getDeadlineStatus(p.deadline);
   }
   document.getElementById('project-modal').classList.add('open');
@@ -732,21 +734,17 @@ async function bulkAssign(){
   const{data:members}=await sb.from('profiles').select('id,name,email').eq('role','editor');
   const editors=members||[];
   if(!editors.length){showNotif('No editors found.','error');return;}
-  const opts=editors.map(e=>`${e.name||e.email}`).join('
-');
-  const choice=prompt('Assign to which editor?
-
-'+editors.map((e,i)=>`${i+1}. ${e.name||e.email}`).join('
-')+'
-
-Enter number:');
+  const opts=editors.map(function(e){return e.name||e.email;}).join(", ");
+  var editorList="";
+  editors.forEach(function(e,i){editorList+=(i+1)+". "+(e.name||e.email)+"\n";});
+  const choice=prompt("Assign to which editor?\n\n"+editorList+"\nEnter number:");
   const idx=parseInt(choice)-1;
   if(isNaN(idx)||idx<0||idx>=editors.length)return;
   const editor=editors[idx];
   await Promise.all([...selectedProjects].map(id=>
     sb.from('projects').update({assigned_to:editor.id,updated_at:new Date().toISOString()}).eq('id',id)
   ));
-  showNotif(`${selectedProjects.size} projects assigned to ${editor.name||editor.email}! ✓`,'success');
+  showNotif(selectedProjects.size+' projects assigned to '+(editor.name||editor.email)+'! ✓','success');
   selectedProjects.clear();updateBulkBar();loadAllProjects();
 }
 
@@ -774,8 +772,7 @@ function exportCSV(){
     p.language||'',p.video_size||'',p.tone||'',p.priority||'',
     p.created_at?new Date(p.created_at).toLocaleDateString('en-PH'):''
   ].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
-  const csv=[headers.join(','),...rows].join('
-');
+  const csv=[headers.join(',')].concat(rows).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -808,22 +805,18 @@ async function generateWeeklyReport(){
   const done=projects.filter(p=>p.status==='Approved / Done').length;
   const inProd=projects.filter(p=>p.status==='In Production').length;
   const ready=projects.filter(p=>p.status==='Ready for Editor').length;
-  const report=`📊 WEEKLY REPORT — ${new Date().toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'})}
-${'═'.repeat(50)}
-
-SUMMARY
-• New projects this week: ${projects.length}
-• Completed: ${done}
-• In production: ${inProd}
-• Ready for editor: ${ready}
-• Completion rate: ${projects.length>0?Math.round((done/projects.length)*100):0}%
-
-PROJECTS THIS WEEK
-${projects.map(p=>`• ${p.client_name} — ${p.status} (${p.language||''})`).join('
-')||'No projects this week.'}
-
-${'═'.repeat(50)}
-Generated by AI Creatives Engine`;
+  var divider="==================================================";
+  var projList=projects.length?projects.map(function(p){return "• "+p.client_name+" — "+p.status+" ("+(p.language||"")+")";}).join("\n"):"No projects this week.";
+  var rate=projects.length>0?Math.round((done/projects.length)*100):0;
+  var report="📊 WEEKLY REPORT — "+new Date().toLocaleDateString("en-PH",{month:"long",day:"numeric",year:"numeric"})+"\n"
+    +divider+"\n\nSUMMARY\n"
+    +"• New projects this week: "+projects.length+"\n"
+    +"• Completed: "+done+"\n"
+    +"• In production: "+inProd+"\n"
+    +"• Ready for editor: "+ready+"\n"
+    +"• Completion rate: "+rate+"%\n\n"
+    +"PROJECTS THIS WEEK\n"+projList+"\n\n"
+    +divider+"\nGenerated by AI Creatives Engine";
   
   const win=window.open('','_blank');
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Weekly Report</title>'
