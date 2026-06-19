@@ -1095,20 +1095,43 @@ async function switchChatRoom(room){
   var badge=document.getElementById('badge-'+room);
   if(badge)badge.style.display='none';
   // Resubscribe
-  if(chatSubscription)sb.removeChannel(chatSubscription);
-  chatSubscription=sb.channel('room-'+room)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'room=eq.'+room},
-      function(){loadMessages(room);})
-    .subscribe();
+  if(chatSubscription){try{sb.removeChannel(chatSubscription);}catch(e){}}
+  chatSubscription=sb.channel('chat-room-'+room+'-'+Date.now())
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},
+      function(payload){
+        if(payload.new&&payload.new.room===room)loadMessages(room);
+      })
+    .subscribe(function(status){
+      console.log('Chat subscription:',status);
+    });
 }
 
 async function loadMessages(room){
-  var{data}=await sb.from('chat_messages')
-    .select('*,profiles(name,email)')
-    .eq('room',room)
-    .order('created_at',{ascending:true})
-    .limit(100);
-  renderMessages(data||[]);
+  try{
+    // Step 1: Get messages
+    var{data:msgs,error:msgErr}=await sb.from('chat_messages')
+      .select('id,room,user_id,message,reply_to_id,reply_to_text,is_pinned,reactions,created_at')
+      .eq('room',room)
+      .order('created_at',{ascending:true})
+      .limit(100);
+    if(msgErr){console.error('loadMessages error:',msgErr);return;}
+    var messages=msgs||[];
+    if(!messages.length){renderMessages([]);return;}
+    // Step 2: Get unique user IDs
+    var userIds=[...new Set(messages.map(function(m){return m.user_id;}).filter(Boolean))];
+    var userMap={};
+    if(userIds.length){
+      var{data:profiles}=await sb.from('profiles').select('id,name,email').in('id',userIds);
+      (profiles||[]).forEach(function(p){userMap[p.id]=p;});
+    }
+    // Step 3: Attach profile to messages
+    messages=messages.map(function(m){
+      return Object.assign({},m,{profiles:userMap[m.user_id]||null});
+    });
+    renderMessages(messages);
+  }catch(e){
+    console.error('loadMessages catch:',e);
+  }
 }
 
 function renderMessages(messages){
