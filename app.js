@@ -761,7 +761,14 @@ async function openModal(id){
   document.getElementById('project-modal').classList.add('open');
   loadComments(id);
   loadOutputs(id);
+  loadRevisions(id);
   if(p.blueprint)renderBlueprintScenes(p.blueprint,'modal-scenes');
+  // Show client approval section if there are outputs and user is client or admin
+  var approvalSection=document.getElementById('client-approval-section');
+  if(approvalSection){
+    var showApproval=(currentUserRole==='client'||currentUserRole==='admin')&&p.status==='In Production';
+    approvalSection.style.display=showApproval?'block':'none';
+  }
 }
 
 function closeModal(){document.getElementById('project-modal').classList.remove('open');currentProjectId=null;}
@@ -972,21 +979,34 @@ async function loadAnalytics(){
     </div>`;
   }).join('');
 
+  // Load performance scores
+  var perfData=await loadEditorPerformance();
+  var perfMap={};
+  perfData.forEach(function(d){perfMap[d.editor.id]=d;});
+
   // Per-editor stats
   const editorStats=eds.map(e=>{
+    var perf=perfMap[e.id]||{score:0,onTimeRate:0,avgTurnaround:0};
     const assigned=all.filter(p=>p.assigned_to===e.id);
     const edDone=assigned.filter(p=>p.status==='Approved / Done').length;
     const edProd=assigned.filter(p=>p.status==='In Production').length;
     const edReady=assigned.filter(p=>p.status==='Ready for Editor').length;
+    var sc=perf.score;var scColor=scoreColor(sc);
     return`<div style="padding:12px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:12px">
-      <div style="width:28px;height:28px;border-radius:50%;background:var(--yellow-dim);border:0.5px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--yellow);flex-shrink:0">${(e.name||e.email||'?')[0].toUpperCase()}</div>
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--yellow-dim);border:0.5px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--yellow);flex-shrink:0">${(e.name||e.email||'?')[0].toUpperCase()}</div>
       <div style="flex:1">
         <div style="font-size:12px;color:var(--text);font-weight:600">${e.name||e.email}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:2px">${assigned.length} assigned · ${edProd} in prod · ${edDone} done</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${assigned.length} assigned · ${edProd} in prod · ${edDone} done · avg ${perf.avgTurnaround||0}d</div>
       </div>
-      <div style="display:flex;gap:6px">
-        <span style="font-size:9px;padding:2px 7px;border-radius:20px;background:var(--green-dim);color:var(--green);font-weight:600">${edReady} ready</span>
-        <span style="font-size:9px;padding:2px 7px;border-radius:20px;background:var(--amber-dim);color:var(--amber);font-weight:600">${edProd} active</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div style="text-align:center;padding:4px 8px;background:var(--bg4);border-radius:var(--radius);border:0.5px solid var(--border2)">
+          <div style="font-size:14px;font-weight:700;color:${scColor}">${sc}</div>
+          <div style="font-size:8px;color:var(--text3);text-transform:uppercase">Score</div>
+        </div>
+        <div style="text-align:center;padding:4px 8px;background:var(--bg4);border-radius:var(--radius);border:0.5px solid var(--border2)">
+          <div style="font-size:14px;font-weight:700;color:var(--green)">${perf.onTimeRate||0}%</div>
+          <div style="font-size:8px;color:var(--text3);text-transform:uppercase">On time</div>
+        </div>
       </div>
     </div>`;
   }).join('')||'<div style="padding:2rem;text-align:center;font-size:12px;color:var(--text3)">No editors yet.</div>';
