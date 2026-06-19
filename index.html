@@ -321,6 +321,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         Client form
       </div>
+      <div class="nav-item" onclick="showPage('profile')" id="nav-profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My profile
+      </div>
       <div class="nav-item" onclick="showPage('chat')" id="nav-chat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         Team chat
@@ -567,7 +571,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <button class="ghost-btn" onclick="clearSelection()" style="font-size:11px;margin-left:auto">✕ Clear</button>
         </div>
         <div class="data-table">
-          <div class="table-head" style="grid-template-columns:32px 2fr 1fr 1.2fr 0.8fr"><span></span><span>Client / project</span><span>Type</span><span>Status</span><span>Date</span></div>
+          <div class="table-head" style="grid-template-columns:32px 2fr 1fr 1.2fr 0.8fr 80px"><span></span><span>Client / project</span><span>Type</span><span>Status</span><span>Date</span><span>Deadline</span></div>
           <div id="all-projects-body"></div>
         </div>
       </div>
@@ -591,21 +595,29 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div style="padding:8px;flex:1;overflow-y:auto">
               <!-- CHANNELS -->
               <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:0.12em;padding:10px 8px 4px;font-weight:600">Channels</div>
-              <div class="ch-item" data-room="announcements" data-type="channel" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
-                <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3)">📢</span><span style="font-size:12px;color:var(--text2);font-weight:500">announcements</span></div>
+              <div class="ch-item" data-room="announcements" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span>📢</span><span style="font-size:12px;color:var(--text2);font-weight:500">announcements</span></div>
                 <span class="ch-badge" id="badge-announcements" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
               </div>
-              <div class="ch-item active-ch" data-room="general" data-type="channel" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.2)">
+              <div class="ch-item" data-room="general" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.2)">
                 <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--yellow)">#</span><span style="font-size:12px;color:var(--yellow);font-weight:600">general</span></div>
                 <span class="ch-badge" id="badge-general" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
               </div>
-              <div class="ch-item" data-room="creatives" data-type="channel" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
-                <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3)">#</span><span style="font-size:12px;color:var(--text2);font-weight:500">creatives</span></div>
-                <span class="ch-badge" id="badge-creatives" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
+              <div class="ch-item" data-room="editors" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3)">#</span><span style="font-size:12px;color:var(--text2);font-weight:500">editors</span></div>
+                <span class="ch-badge" id="badge-editors" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
               </div>
-              <div class="ch-item" data-room="approvals" data-type="channel" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
-                <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3)">✅</span><span style="font-size:12px;color:var(--text2);font-weight:500">approvals</span></div>
-                <span class="ch-badge" id="badge-approvals" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
+              <div class="ch-item admin-only" data-room="admin" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span>🔐</span><span style="font-size:12px;color:var(--text2);font-weight:500">admin</span></div>
+                <span class="ch-badge" id="badge-admin" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
+              </div>
+              <div class="ch-item" data-room="revisions" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span>✏️</span><span style="font-size:12px;color:var(--text2);font-weight:500">revisions</span></div>
+                <span class="ch-badge" id="badge-revisions" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
+              </div>
+              <div class="ch-item" data-room="images" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span>🖼️</span><span style="font-size:12px;color:var(--text2);font-weight:500">images</span></div>
+                <span class="ch-badge" id="badge-images" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
               </div>
               <!-- DMs -->
               <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:0.12em;padding:14px 8px 4px;font-weight:600">Direct Messages</div>
@@ -683,7 +695,83 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
       </div>
 
+      <!-- PROFILE PAGE -->
+      <div class="page" id="page-profile">
+        <div style="max-width:600px">
+          <div class="form-card" style="margin-bottom:12px">
+            <div class="form-card-title"><span>👤</span> My profile</div>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:1.5rem;padding:1rem;background:var(--bg3);border-radius:var(--radius-lg);border:0.5px solid var(--border2)">
+              <div style="width:56px;height:56px;border-radius:50%;background:var(--yellow-dim);border:2px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--yellow);flex-shrink:0" id="profile-avatar">?</div>
+              <div>
+                <div style="font-size:15px;font-weight:700;color:var(--text)" id="profile-name-display">Loading...</div>
+                <div style="font-size:11px;color:var(--yellow);margin-top:2px" id="profile-email-display">—</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:0.08em;font-weight:600" id="profile-role-display">—</div>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-field full">
+                <label class="form-label">Display name</label>
+                <input class="form-input" id="profile-name-input" placeholder="Your name" oninput="document.getElementById('profile-name-display').textContent=this.value||'?';document.getElementById('profile-avatar').textContent=(this.value||'?')[0].toUpperCase()"/>
+              </div>
+            </div>
+            <button class="yellow-btn" onclick="saveProfile()" style="margin-top:12px">💾 Save profile</button>
+          </div>
+
+          <div class="form-card" style="margin-bottom:12px">
+            <div class="form-card-title"><span>🔒</span> Change password</div>
+            <div class="form-field">
+              <label class="form-label">New password</label>
+              <input class="form-input" type="password" id="profile-new-pass" placeholder="Min. 6 characters"/>
+            </div>
+            <button class="ghost-btn" onclick="changePassword()" style="margin-top:12px">🔑 Change password</button>
+          </div>
+
+          <div class="form-card">
+            <div class="form-card-title"><span>📊</span> My stats</div>
+            <div id="profile-stats"><div style="color:var(--text3);font-size:12px">Loading stats...</div></div>
+          </div>
+        </div>
+      </div>
+
       <!-- SETTINGS PAGE -->
+      <!-- PROFILE PAGE -->
+      <div class="page" id="page-profile">
+        <div style="max-width:600px">
+          <div class="form-card" style="margin-bottom:12px">
+            <div class="form-card-title"><span>👤</span> My profile</div>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:1.5rem;padding:1rem;background:var(--bg3);border-radius:var(--radius-lg);border:0.5px solid var(--border2)">
+              <div style="width:56px;height:56px;border-radius:50%;background:var(--yellow-dim);border:2px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--yellow);flex-shrink:0" id="profile-avatar">?</div>
+              <div>
+                <div style="font-size:15px;font-weight:700;color:var(--text)" id="profile-name-display">Loading...</div>
+                <div style="font-size:11px;color:var(--yellow);margin-top:2px" id="profile-email-display">—</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:0.08em;font-weight:600" id="profile-role-display">—</div>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-field full">
+                <label class="form-label">Display name</label>
+                <input class="form-input" id="profile-name-input" placeholder="Your name" oninput="document.getElementById('profile-name-display').textContent=this.value||'?';document.getElementById('profile-avatar').textContent=(this.value||'?')[0].toUpperCase()"/>
+              </div>
+            </div>
+            <button class="yellow-btn" onclick="saveProfile()" style="margin-top:12px">💾 Save profile</button>
+          </div>
+
+          <div class="form-card" style="margin-bottom:12px">
+            <div class="form-card-title"><span>🔒</span> Change password</div>
+            <div class="form-field">
+              <label class="form-label">New password</label>
+              <input class="form-input" type="password" id="profile-new-pass" placeholder="Min. 6 characters"/>
+            </div>
+            <button class="ghost-btn" onclick="changePassword()" style="margin-top:12px">🔑 Change password</button>
+          </div>
+
+          <div class="form-card">
+            <div class="form-card-title"><span>📊</span> My stats</div>
+            <div id="profile-stats"><div style="color:var(--text3);font-size:12px">Loading stats...</div></div>
+          </div>
+        </div>
+      </div>
+
       <!-- SETTINGS PAGE -->
       <div class="page" id="page-settings">
         <div style="max-width:760px">
@@ -853,8 +941,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
       <!-- ANALYTICS -->
       <div class="page" id="page-analytics">
-        <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
-          <button class="ghost-btn" onclick="generateWeeklyReport()" style="font-size:12px">📊 Generate weekly report</button>
+        <div style="display:flex;gap:8px;margin-bottom:1rem;align-items:center;flex-wrap:wrap">
+          <input type="month" class="form-input" id="analytics-month-filter" onchange="loadAnalytics()" style="max-width:180px"/>
+          <button class="ghost-btn" onclick="document.getElementById('analytics-month-filter').value='';loadAnalytics()" style="font-size:11px">All time</button>
+          <button class="ghost-btn" onclick="generateWeeklyReport()" style="font-size:12px;margin-left:auto">📊 Weekly report</button>
         </div>
         <div class="stats-grid" id="analytics-stats"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem">
