@@ -248,8 +248,8 @@ function initSecurityListeners(){
 }
 
 // ROLE-BASED PAGE PROTECTION
-var ADMIN_PAGES=['dashboard','new-project','all-projects','users','clients','analytics','submission','settings','chat'];
-var EDITOR_PAGES=['editor-portal','chat','profile'];
+var ADMIN_PAGES=['dashboard','new-project','all-projects','users','clients','analytics','submission','settings','chat','activity','attendance'];
+var EDITOR_PAGES=['editor-portal','chat','profile','worklog'];
 var CLIENT_PAGES=['client-dashboard','profile'];
 
 function canAccessPage(page){
@@ -309,9 +309,22 @@ function clearDraft(){
 }
 
 
-function loadUserRole(user){
+async function loadUserRole(user){
   var email=user?.email||'';
-  currentUserRole=email==='admin@aicreatives.com'?'admin':'editor';
+  // Check DB for actual role
+  var{data}=await sb.from('profiles').select('role,name').eq('id',user.id).maybeSingle();
+  if(data?.role==='client'){
+    currentUserRole='client';
+  } else if(data?.role==='admin'||email==='admin@aicreatives.com'){
+    currentUserRole='admin';
+  } else {
+    currentUserRole='editor';
+  }
+  // Update sidebar display name
+  var nameEl=document.getElementById('user-name-display');
+  var roleEl=document.getElementById('user-role-label');
+  if(nameEl)nameEl.textContent=data?.name||email;
+  if(roleEl)roleEl.textContent=currentUserRole==='admin'?'Super Admin':currentUserRole==='client'?'Client':'Editor';
   document.getElementById('user-email-label').textContent=email;
   document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
   applyRoleUI();
@@ -326,17 +339,38 @@ function loadUserRole(user){
 
 function applyRoleUI(){
   var isAdmin=currentUserRole==='admin';
+  var isEditor=currentUserRole==='editor';
   var isClient=currentUserRole==='client';
-  document.querySelectorAll('.admin-only').forEach(function(el){el.style.display=isAdmin?'':'none';});
-  if(isClient){
-    // Hide all admin + editor nav items for clients
+
+  if(isAdmin){
+    // Admin sees everything
+    document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='';});
+    document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='flex';});
+
+  } else if(isEditor){
+    // Editor — limited nav only
     document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
-    // Show only profile + client dashboard
-    var profileNav=document.getElementById('nav-profile');
-    if(profileNav)profileNav.style.display='flex';
-    showPage('client-dashboard');
-  } else if(!isAdmin){
+    // Show only editor-allowed nav items
+    var editorNavs=['nav-editor-portal','nav-chat','nav-profile','nav-worklog'];
+    editorNavs.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el)el.style.display='flex';
+    });
+    // Hide all admin-only elements
+    document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
     showPage('editor-portal');
+
+  } else if(isClient){
+    // Client — most restricted
+    document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
+    document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
+    var clientNavs=['nav-profile'];
+    clientNavs.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el)el.style.display='flex';
+    });
+    showPage('client-dashboard');
+    loadClientDashboard();
   }
 }
 
@@ -363,7 +397,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   if(page==='all-projects')loadAllProjects();
   if(page==='editor-portal')loadEditorPortal();
@@ -373,6 +407,7 @@ function showPage(page){
   if(page==='clients')loadClients();
   if(page==='activity')loadActivityLog();
   if(page==='attendance'){var today=new Date().toISOString().slice(0,10);var df=document.getElementById('attendance-date');if(df&&!df.value)df.value=today;loadAttendance();}
+  if(page==='worklog')loadWorkLog();
   if(page==='client-dashboard')loadClientDashboard();
   if(page==='settings'){loadSettings();}
   if(page==='chat'){loadChat();}
@@ -1889,3 +1924,433 @@ sb.auth.getSession().then(({data})=>{
   if(data.session){currentUser=data.session.user;loadUserRole(currentUser);showApp();}
 });
 document.getElementById('project-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+// ═══════════════════════════════════════
+// WORK LOG SYSTEM
+// ═══════════════════════════════════════
+
+var sessionTimer=null;
+
+async function loadWorkLog(){
+  if(!currentUser)return;
+  // Update session banner
+  var banner=document.getElementById('worklog-session-banner');
+  var elapsedEl=document.getElementById('session-elapsed');
+  if(banner){
+    if(currentTimeInRecord){
+      banner.style.display='flex';
+      // Update elapsed every minute
+      if(sessionTimer)clearInterval(sessionTimer);
+      sessionTimer=setInterval(function(){
+        if(elapsedEl)elapsedEl.textContent=getElapsed(currentTimeInRecord.time_in)+' elapsed';
+      },60000);
+      if(elapsedEl)elapsedEl.textContent=getElapsed(currentTimeInRecord.time_in)+' elapsed';
+    } else {
+      banner.style.display='none';
+    }
+  }
+  await loadWorkLogTasks();
+  await loadWorkLogProjectSelect();
+  await loadWorkUpdates();
+}
+
+async function loadWorkLogTasks(){
+  if(!currentUser)return;
+  var el=document.getElementById('worklog-tasks');
+  if(!el)return;
+  // Get assigned tasks
+  var{data:projects}=await sb.from('projects')
+    .select('id,client_name,status,deadline,priority')
+    .eq('assigned_to',currentUser.id)
+    .neq('status','Approved / Done')
+    .order('created_at',{ascending:false});
+  var tasks=projects||[];
+  if(!tasks.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">No tasks assigned yet.</div>';
+    return;
+  }
+  el.innerHTML=tasks.map(function(p){
+    var deadline=p.deadline?getDeadlineStatus(p.deadline):'';
+    var prioColor=p.priority==='urgent'?'var(--red)':p.priority==='normal'?'var(--amber)':'var(--text3)';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);margin-bottom:6px">'
+      +'<div style="flex:1">'
+      +'<div style="font-size:12px;font-weight:600;color:var(--text)">'+p.client_name+'</div>'
+      +'<div style="font-size:10px;color:var(--text3);margin-top:2px;display:flex;gap:8px;align-items:center">'
+      +statusBadge(p.status)+' '+deadline
+      +'</div></div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button data-pid="'+p.id+'" data-pname="'+p.client_name+'" class="update-task-btn" style="font-size:10px;padding:3px 10px;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.2);border-radius:4px;color:var(--yellow);cursor:pointer;font-weight:600">📝 Update</button>'
+      +'<button data-pid="'+p.id+'" class="done-task-btn" style="font-size:10px;padding:3px 10px;background:var(--green-dim);border:0.5px solid rgba(34,197,94,0.2);border-radius:4px;color:var(--green);cursor:pointer;font-weight:600">✅ Done</button>'
+      +'</div></div>';
+  }).join('');
+  // Attach handlers
+  el.querySelectorAll('.update-task-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      document.getElementById('worklog-project-select').value=this.dataset.pid;
+      document.getElementById('worklog-update-text').focus();
+      document.getElementById('worklog-update-text').scrollIntoView({behavior:'smooth'});
+    });
+  });
+  el.querySelectorAll('.done-task-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){markTaskDoneFromLog(this.dataset.pid);});
+  });
+}
+
+async function loadWorkLogProjectSelect(){
+  var sel=document.getElementById('worklog-project-select');
+  if(!sel)return;
+  var{data}=await sb.from('projects').select('id,client_name')
+    .eq('assigned_to',currentUser.id).neq('status','Approved / Done');
+  sel.innerHTML=(data||[]).map(function(p){
+    return '<option value="'+p.id+'">'+p.client_name+'</option>';
+  }).join('');
+}
+
+async function loadWorkUpdates(){
+  var el=document.getElementById('worklog-updates-list');
+  if(!el)return;
+  var today=new Date().toISOString().slice(0,10);
+  var{data}=await sb.from('work_updates')
+    .select('*,projects(client_name)')
+    .eq('user_id',currentUser.id)
+    .gte('created_at',today+'T00:00:00')
+    .order('created_at',{ascending:false});
+  var updates=data||[];
+  if(!updates.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">No updates yet today.</div>';
+    return;
+  }
+  var statusColors={'in-progress':'var(--amber)','done':'var(--green)','blocked':'var(--red)','review':'var(--purple)'};
+  var statusIcons={'in-progress':'🔄','done':'✅','blocked':'🚫','review':'👀'};
+  el.innerHTML=updates.map(function(u){
+    var time=new Date(u.created_at).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+    var color=statusColors[u.status]||'var(--text2)';
+    var icon=statusIcons[u.status]||'📝';
+    var eta=u.eta?'<span style="font-size:9px;color:var(--purple)">ETA: '+u.eta+'</span>':'';
+    return '<div style="padding:10px 12px;background:var(--bg3);border:0.5px solid var(--border2);border-left:2px solid '+color+';border-radius:var(--radius);margin-bottom:6px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+      +'<div style="font-size:11px;font-weight:600;color:'+color+'">'+icon+' '+(u.projects?.client_name||'Project')+'</div>'
+      +'<div style="display:flex;gap:8px;align-items:center">'+eta+'<span style="font-size:10px;color:var(--text3)">'+time+'</span></div>'
+      +'</div>'
+      +'<div style="font-size:12px;color:var(--text2)">'+u.notes+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+async function submitWorkUpdate(){
+  var projectId=document.getElementById('worklog-project-select')?.value;
+  var status=document.getElementById('worklog-status-select')?.value||'in-progress';
+  var notes=document.getElementById('worklog-update-text')?.value?.trim();
+  var eta=document.getElementById('worklog-eta')?.value||null;
+  if(!notes){showNotif('Add a note first','error');return;}
+  if(!projectId){showNotif('Select a project','error');return;}
+  var{error}=await sb.from('work_updates').insert({
+    user_id:currentUser.id,
+    project_id:projectId,
+    status:status,
+    notes:notes,
+    eta:eta
+  });
+  if(error){showNotif('Error: '+error.message,'error');return;}
+  // Update project status if done
+  if(status==='done'){
+    await sb.from('projects').update({status:'Approved / Done',updated_at:new Date().toISOString()}).eq('id',projectId);
+  } else if(status==='in-progress'){
+    await sb.from('projects').update({status:'In Production',updated_at:new Date().toISOString()}).eq('id',projectId);
+  } else if(status==='review'){
+    await sb.from('projects').update({status:'Ready for Editor',updated_at:new Date().toISOString()}).eq('id',projectId);
+  }
+  document.getElementById('worklog-update-text').value='';
+  document.getElementById('worklog-eta').value='';
+  showNotif('Update submitted! ✓','success');
+  logActivity('WORK_UPDATE',notes.substring(0,50));
+  // Notify admin
+  await sb.from('notifications').insert({
+    user_id:null,message:'Work update: '+notes.substring(0,60),
+    type:'work_update',is_read:false
+  }).catch(function(){});
+  loadWorkUpdates();
+  loadWorkLogTasks();
+}
+
+async function markTaskDoneFromLog(projectId){
+  await sb.from('projects').update({status:'Approved / Done',updated_at:new Date().toISOString()}).eq('id',projectId);
+  showNotif('Task marked done! ✓','success');
+  logActivity('TASK_DONE','Project completed');
+  loadWorkLog();
+}
+
+
+// ═══════════════════════════════════════
+// ATTENDANCE / TIME-IN SYSTEM
+// ═══════════════════════════════════════
+
+var currentTimeInRecord=null;
+
+async function initTimeInSystem(){
+  if(!currentUser)return;
+  var today=new Date().toISOString().slice(0,10);
+  var{data}=await sb.from('attendance')
+    .select('*').eq('user_id',currentUser.id)
+    .eq('date',today).is('time_out',null).maybeSingle();
+  currentTimeInRecord=data;
+  updateTimeInUI();
+  // Load active now for dashboard
+  loadActiveNow();
+}
+
+function updateTimeInUI(){
+  var btn=document.getElementById('timein-btn');
+  var status=document.getElementById('timein-status');
+  if(!btn)return;
+  if(currentTimeInRecord){
+    btn.style.background='var(--red-dim)';
+    btn.style.color='var(--red)';
+    btn.style.borderColor='rgba(239,68,68,0.3)';
+    btn.textContent='🔴 Time Out';
+    btn.onclick=openTimeOutModal;
+    var timeIn=new Date(currentTimeInRecord.time_in).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+    var elapsed=getElapsed(currentTimeInRecord.time_in);
+    if(status)status.innerHTML='Timed in: <strong style="color:var(--green)">'+timeIn+'</strong><br>'+elapsed+' elapsed';
+  } else {
+    btn.style.background='var(--green-dim)';
+    btn.style.color='var(--green)';
+    btn.style.borderColor='rgba(34,197,94,0.3)';
+    btn.textContent='🟢 Time In';
+    btn.onclick=openTimeInModal;
+    if(status)status.textContent='';
+  }
+}
+
+function getElapsed(timeIn){
+  var ms=Date.now()-new Date(timeIn).getTime();
+  var h=Math.floor(ms/(1000*60*60));
+  var m=Math.floor((ms%(1000*60*60))/(1000*60));
+  return h+'h '+m+'m';
+}
+
+async function openTimeInModal(){
+  // Load assigned tasks
+  var{data:projects}=await sb.from('projects')
+    .select('id,client_name,status,business_type')
+    .eq('assigned_to',currentUser.id)
+    .neq('status','Approved / Done')
+    .order('created_at',{ascending:false});
+  var tasks=projects||[];
+  var listEl=document.getElementById('timein-task-list');
+  if(listEl){
+    listEl.innerHTML=tasks.length?tasks.map(function(p){
+      return '<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);margin-bottom:6px;cursor:pointer">'
+        +'<input type="checkbox" value="'+p.id+'" class="task-checkbox" style="width:14px;height:14px;accent-color:var(--yellow);cursor:pointer"/>'
+        +'<div><div style="font-size:12px;color:var(--text);font-weight:500">'+p.client_name+'</div>'
+        +'<div style="font-size:10px;color:var(--text3)">'+p.status+' · '+(p.business_type||'')+'</div></div>'
+        +'</label>';
+    }).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px">No assigned tasks — admin will assign shortly.</div>';
+  }
+  var modal=document.getElementById('timein-modal');
+  if(modal)modal.style.display='flex';
+}
+
+async function confirmTimeIn(){
+  var now=new Date();
+  var today=now.toISOString().slice(0,10);
+  // Get selected tasks
+  var selectedTasks=[];
+  document.querySelectorAll('.task-checkbox:checked').forEach(function(cb){
+    selectedTasks.push(cb.value);
+  });
+  var notes=document.getElementById('timein-notes')?.value||'';
+  var{data,error}=await sb.from('attendance').insert({
+    user_id:currentUser.id,
+    date:today,
+    time_in:now.toISOString(),
+    status:'present',
+    tasks:JSON.stringify(selectedTasks),
+    notes:notes
+  }).select().maybeSingle();
+  if(error){showNotif('Error: '+error.message,'error');return;}
+  currentTimeInRecord=data;
+  // Update task statuses to in-progress
+  for(var i=0;i<selectedTasks.length;i++){
+    await sb.from('projects').update({status:'In Production',updated_at:now.toISOString()}).eq('id',selectedTasks[i]);
+  }
+  var modal=document.getElementById('timein-modal');
+  if(modal)modal.style.display='none';
+  updateTimeInUI();
+  var timeStr=now.toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+  showNotif('Timed in at '+timeStr+'! '+selectedTasks.length+' task(s) active ✓','success');
+  logActivity('TIME_IN','Time in: '+timeStr+' | Tasks: '+selectedTasks.length);
+  loadActiveNow();
+}
+
+async function openTimeOutModal(){
+  if(!currentTimeInRecord)return;
+  var timeIn=new Date(currentTimeInRecord.time_in);
+  var elapsed=getElapsed(currentTimeInRecord.time_in);
+  var timeInStr=timeIn.toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+  // Load tasks worked on
+  var tasks=[];
+  try{tasks=JSON.parse(currentTimeInRecord.tasks||'[]');}catch(e){}
+  var taskDetails='';
+  if(tasks.length){
+    var{data}=await sb.from('projects').select('client_name,status').in('id',tasks);
+    taskDetails=(data||[]).map(function(p){return '• '+p.client_name+' ('+p.status+')'}).join('<br>');
+  }
+  var summaryEl=document.getElementById('timeout-summary');
+  if(summaryEl){
+    summaryEl.innerHTML='<div style="margin-bottom:6px"><span style="color:var(--text3)">Time in:</span> <strong>'+timeInStr+'</strong></div>'
+      +'<div style="margin-bottom:6px"><span style="color:var(--text3)">Duration:</span> <strong style="color:var(--yellow)">'+elapsed+'</strong></div>'
+      +(taskDetails?'<div style="color:var(--text3);font-size:10px;margin-top:6px">Tasks:<br>'+taskDetails+'</div>':'');
+  }
+  var modal=document.getElementById('timeout-modal');
+  if(modal)modal.style.display='flex';
+}
+
+async function confirmTimeOut(){
+  if(!currentTimeInRecord)return;
+  var now=new Date();
+  var durationMs=now-new Date(currentTimeInRecord.time_in);
+  var durationMins=Math.floor(durationMs/(1000*60));
+  var notes=document.getElementById('timeout-notes')?.value||'';
+  await sb.from('attendance').update({
+    time_out:now.toISOString(),
+    duration_minutes:durationMins,
+    end_notes:notes
+  }).eq('id',currentTimeInRecord.id);
+  var modal=document.getElementById('timeout-modal');
+  if(modal)modal.style.display='none';
+  var h=Math.floor(durationMins/60);var m=durationMins%60;
+  showNotif('Timed out! Duration: '+h+'h '+m+'m ✓','success');
+  logActivity('TIME_OUT','Duration: '+h+'h '+m+'m');
+  currentTimeInRecord=null;
+  updateTimeInUI();
+  loadActiveNow();
+}
+
+// Handle old time in button
+async function handleTimeIn(){openTimeInModal();}
+async function handleTimeOut(){openTimeOutModal();}
+
+// ACTIVE NOW - show who is currently timed in
+async function loadActiveNow(){
+  var el=document.getElementById('active-now-list');
+  if(!el)return;
+  var today=new Date().toISOString().slice(0,10);
+  var{data}=await sb.from('attendance')
+    .select('*,profiles(name,email)')
+    .eq('date',today).is('time_out',null)
+    .order('time_in',{ascending:true});
+  var active=data||[];
+  if(!active.length){
+    el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:6px 0">No one timed in yet today.</div>';
+    return;
+  }
+  el.innerHTML=active.map(function(r){
+    var name=r.profiles?.name||r.profiles?.email||'?';
+    var initial=name[0].toUpperCase();
+    var timeIn=new Date(r.time_in).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+    var elapsed=getElapsed(r.time_in);
+    var tasks=[];
+    try{tasks=JSON.parse(r.tasks||'[]');}catch(e){}
+    return '<div style="background:var(--bg3);border:0.5px solid var(--green-dim);border-left:2px solid var(--green);border-radius:var(--radius-lg);padding:10px 14px;display:flex;align-items:center;gap:10px;min-width:200px">'
+      +'<div style="position:relative">'
+      +'<div style="width:32px;height:32px;border-radius:50%;background:var(--yellow-dim);border:1.5px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--yellow)">'+initial+'</div>'
+      +'<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;background:var(--green);border-radius:50%;border:1.5px solid var(--bg3)"></div>'
+      +'</div>'
+      +'<div>'
+      +'<div style="font-size:12px;font-weight:600;color:var(--text)">'+name+'</div>'
+      +'<div style="font-size:10px;color:var(--text3)">In since '+timeIn+' · '+elapsed+'</div>'
+      +(tasks.length?'<div style="font-size:9px;color:var(--green);margin-top:2px">'+tasks.length+' task(s) active</div>':'')
+      +'</div></div>';
+  }).join('');
+}
+
+async function loadAttendance(){
+  var dateFilter=document.getElementById('attendance-date')?.value||new Date().toISOString().slice(0,10);
+  var editorFilter=document.getElementById('attendance-editor-filter')?.value||'';
+  var{data:editors}=await sb.from('profiles').select('id,name,email').eq('role','editor').order('name');
+  var filterEl=document.getElementById('attendance-editor-filter');
+  if(filterEl&&filterEl.options.length<=1){
+    (editors||[]).forEach(function(e){
+      var opt=document.createElement('option');
+      opt.value=e.id;opt.textContent=e.name||e.email;
+      filterEl.appendChild(opt);
+    });
+  }
+  var query=sb.from('attendance').select('*,profiles(name,email)').eq('date',dateFilter).order('time_in',{ascending:true});
+  if(editorFilter)query=query.eq('user_id',editorFilter);
+  var{data}=await query;
+  var records=data||[];
+  var statsEl=document.getElementById('attendance-stats');
+  if(statsEl){
+    var present=records.length;
+    var timedOut=records.filter(function(r){return r.time_out;}).length;
+    var avgDur=records.filter(function(r){return r.duration_minutes;});
+    var avgMins=avgDur.length?Math.round(avgDur.reduce(function(a,r){return a+r.duration_minutes;},0)/avgDur.length):0;
+    statsEl.innerHTML=
+      '<div class="stat-card c-green"><div class="stat-label">Present</div><div class="stat-val" style="color:var(--green)">'+present+'</div></div>'
+      +'<div class="stat-card c-yellow"><div class="stat-label">Timed out</div><div class="stat-val">'+timedOut+'</div></div>'
+      +'<div class="stat-card c-purple"><div class="stat-label">Still in</div><div class="stat-val" style="color:var(--purple)">'+(present-timedOut)+'</div></div>'
+      +'<div class="stat-card c-amber"><div class="stat-label">Avg hours</div><div class="stat-val" style="color:var(--amber)">'+Math.floor(avgMins/60)+'h '+(avgMins%60)+'m</div></div>';
+  }
+  var bodyEl=document.getElementById('attendance-body');
+  if(!bodyEl)return;
+  if(!records.length){bodyEl.innerHTML='<div class="table-empty"><div class="table-empty-icon">🕐</div>No attendance records for this date.</div>';return;}
+  bodyEl.innerHTML=records.map(function(r){
+    var name=r.profiles?.name||r.profiles?.email||'Unknown';
+    var timeIn=r.time_in?new Date(r.time_in).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'}):'—';
+    var timeOut=r.time_out?new Date(r.time_out).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'}):'—';
+    var dur=r.duration_minutes?Math.floor(r.duration_minutes/60)+'h '+(r.duration_minutes%60)+'m':'🟢 Still in';
+    var tasks=[];try{tasks=JSON.parse(r.tasks||'[]');}catch(e){}
+    var isLate=r.time_in&&new Date(r.time_in).getHours()>=9;
+    var timeInDisplay=timeIn+(isLate?' <span style="font-size:9px;color:var(--amber);font-weight:600">Late</span>':'');
+    return '<div class="table-row" style="grid-template-columns:1.5fr 0.8fr 1fr 1fr 1fr 1fr;cursor:pointer" data-rid="'+r.id+'" class2="att-row">'
+      +'<div><div class="row-name">'+name+'</div>'+(tasks.length?'<div class="row-sub">'+tasks.length+' task(s)</div>':'')+'</div>'
+      +'<div class="row-date">'+r.date+'</div>'
+      +'<div style="font-size:12px">'+timeInDisplay+'</div>'
+      +'<div style="font-size:12px;color:var(--text2)">'+timeOut+'</div>'
+      +'<div style="font-size:12px;color:var(--yellow);font-weight:600">'+dur+'</div>'
+      +'<div>'+(r.time_out?'<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--bg4);color:var(--text3)">Done</span>':'<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--green-dim);color:var(--green);font-weight:600">🟢 Active</span>')+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+async function showAttendanceDetail(recordId){
+  var{data}=await sb.from('attendance').select('*,profiles(name,email)').eq('id',recordId).maybeSingle();
+  if(!data)return;
+  var name=data.profiles?.name||data.profiles?.email||'Unknown';
+  var tasks=[];try{tasks=JSON.parse(data.tasks||'[]');}catch(e){}
+  var taskDetails='No tasks selected';
+  if(tasks.length){
+    var{data:projs}=await sb.from('projects').select('client_name,status').in('id',tasks);
+    taskDetails=(projs||[]).map(function(p){return '• '+p.client_name+' ('+p.status+')';}).join('\n');
+  }
+  var timeIn=new Date(data.time_in).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+  var timeOut=data.time_out?new Date(data.time_out).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'}):'Still in';
+  var msg=name+" — "+data.date+"\n";
+  msg+="Time In: "+timeIn+"\n";
+  msg+="Time Out: "+timeOut+"\n";
+  msg+="Duration: "+dur+"\n";
+  msg+="\nTasks:\n"+taskDetails;
+  if(data.notes)msg+="\n\nPlan:\n"+data.notes;
+  if(data.end_notes)msg+="\n\nEnd of day:\n"+data.end_notes;
+  alert(msg);
+}
+
+function exportAttendanceCSV(){
+  var rows=document.querySelectorAll('#attendance-body .table-row');
+  var csvRows=['"Editor","Date","Time In","Time Out","Duration","Status"'];
+  rows.forEach(function(row){
+    var cells=row.querySelectorAll('div:not(div div)');
+    var vals=[];
+    cells.forEach(function(c,i){if(i<6)vals.push('"'+c.textContent.trim().replace(/"/g,'""')+'"');});
+    if(vals.length)csvRows.push(vals.join(','));
+  });
+  var blob=new Blob([csvRows.join('\n')],{type:'text/csv'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='attendance-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  showNotif('Exported! ✓','success');
+}
+
+
