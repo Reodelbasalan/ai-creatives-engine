@@ -1694,15 +1694,33 @@ function loadSettings(){
       if(val)el.value=val;
     }
   });
-  // Apply mode toggles
-  toggleToolMode('grok', getToolSetting('grok-mode','api'));
-  toggleToolMode('veo', getToolSetting('veo-mode','api'));
-  toggleToolMode('higgs', getToolSetting('higgs-mode','account'));
+  // Apply mode toggles - default grok+veo to API mode
+  var grokMode=getToolSetting('grok-mode')||'api';
+  var veoMode=getToolSetting('veo-mode')||'api';
+  var higgsMode=getToolSetting('higgs-mode')||'account';
+  toggleToolMode('grok', grokMode);
+  toggleToolMode('veo', veoMode);
+  toggleToolMode('higgs', higgsMode);
+  // Force set select values
+  var grokSel=document.getElementById('grok-mode');
+  var veoSel=document.getElementById('veo-mode');
+  var higgsSel=document.getElementById('higgs-mode');
+  if(grokSel)grokSel.value=grokMode;
+  if(veoSel)veoSel.value=veoMode;
+  if(higgsSel)higgsSel.value=higgsMode;
 }
 
 function toggleToolMode(tool, mode){
   var apiField=document.getElementById(tool+'-api-field');
-  if(apiField)apiField.style.display=mode==='api'?'flex':'none';
+  if(apiField){
+    apiField.style.display=mode==='api'?'block':'none';
+    apiField.style.flex=mode==='api'?'1':'';
+  }
+  // Update select value
+  var sel=document.getElementById(tool+'-mode');
+  if(sel&&sel.value!==mode)sel.value=mode;
+  // Save
+  saveToolSetting(tool+'-mode',mode);
 }
 
 function testConnection(tool){
