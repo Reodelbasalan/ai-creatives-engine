@@ -49,7 +49,7 @@ async function doLogin(){
 }
 
 function loadUserRole(user){
-  const email=user?.email||'';
+  var email=user?.email||'';
   currentUserRole=email==='admin@aicreatives.com'?'admin':'editor';
   document.getElementById('user-email-label').textContent=email;
   document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
@@ -64,9 +64,19 @@ function loadUserRole(user){
 }
 
 function applyRoleUI(){
-  const isAdmin=currentUserRole==='admin';
-  document.querySelectorAll('.admin-only').forEach(el=>el.style.display=isAdmin?'':'none');
-  if(!isAdmin)showPage('editor-portal');
+  var isAdmin=currentUserRole==='admin';
+  var isClient=currentUserRole==='client';
+  document.querySelectorAll('.admin-only').forEach(function(el){el.style.display=isAdmin?'':'none';});
+  if(isClient){
+    // Hide all admin + editor nav items for clients
+    document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
+    // Show only profile + client dashboard
+    var profileNav=document.getElementById('nav-profile');
+    if(profileNav)profileNav.style.display='flex';
+    showPage('client-dashboard');
+  } else if(!isAdmin){
+    showPage('editor-portal');
+  }
 }
 
 async function doLogout(){
@@ -87,13 +97,15 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   if(page==='all-projects')loadAllProjects();
   if(page==='editor-portal')loadEditorPortal();
   if(page==='users')loadUsers();
   if(page==='dashboard')loadDashboard();
   if(page==='analytics')loadAnalytics();
+  if(page==='clients')loadClients();
+  if(page==='client-dashboard')loadClientDashboard();
   if(page==='settings'){loadSettings();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
@@ -191,21 +203,34 @@ async function loadAllProjects(){
 }
 
 function filterProjects(){
-  const q=document.getElementById('search-projects').value.toLowerCase();
-  const s=document.getElementById('filter-status').value;
-  const pr=document.getElementById('filter-priority')?.value||'';
-  renderProjectsTable(allProjects.filter(p=>{
-    const matchQ=!q||
-      p.client_name?.toLowerCase().includes(q)||
-      p.business_type?.toLowerCase().includes(q)||
-      p.goal?.toLowerCase().includes(q)||
-      p.language?.toLowerCase().includes(q)||
-      p.status?.toLowerCase().includes(q)||
-      p.product?.toLowerCase().includes(q);
-    const matchS=!s||p.status===s;
-    const matchP=!pr||p.priority===pr;
-    return matchQ&&matchS&&matchP;
+  var q=(document.getElementById('search-projects')?.value||'').toLowerCase();
+  var s=document.getElementById('filter-status')?.value||'';
+  var pr=document.getElementById('filter-priority')?.value||'';
+  var df=document.getElementById('proj-date-from')?.value||'';
+  var dt=document.getElementById('proj-date-to')?.value||'';
+  renderProjectsTable(allProjects.filter(function(p){
+    var matchQ=!q||
+      (p.client_name||'').toLowerCase().includes(q)||
+      (p.business_type||'').toLowerCase().includes(q)||
+      (p.goal||'').toLowerCase().includes(q)||
+      (p.language||'').toLowerCase().includes(q)||
+      (p.status||'').toLowerCase().includes(q)||
+      (p.product||'').toLowerCase().includes(q);
+    var matchS=!s||p.status===s;
+    var matchP=!pr||p.priority===pr;
+    var matchDF=!df||new Date(p.created_at)>=new Date(df+'T00:00:00');
+    var matchDT=!dt||new Date(p.created_at)<=new Date(dt+'T23:59:59');
+    return matchQ&&matchS&&matchP&&matchDF&&matchDT;
   }));
+}
+
+function clearProjectFilters(){
+  ['search-projects','proj-date-from','proj-date-to'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('filter-status').value='';
+  document.getElementById('filter-priority').value='';
+  filterProjects();
 }
 
 function renderProjectsTable(projects){
@@ -635,11 +660,16 @@ function exportPDF(){
 // ANALYTICS
 async function loadAnalytics(){
   var monthFilter=document.getElementById('analytics-month-filter')?.value||'';
+  var aFrom=document.getElementById('analytics-date-from')?.value||'';
+  var aTo=document.getElementById('analytics-date-to')?.value||'';
   var query=sb.from('projects').select('*').order('created_at',{ascending:false});
   if(monthFilter){
     var start=new Date(monthFilter+'-01');
     var end=new Date(start.getFullYear(),start.getMonth()+1,0,23,59,59);
     query=query.gte('created_at',start.toISOString()).lte('created_at',end.toISOString());
+  } else if(aFrom||aTo){
+    if(aFrom)query=query.gte('created_at',aFrom+'T00:00:00');
+    if(aTo)query=query.lte('created_at',aTo+'T23:59:59');
   }
   const[{data:projects},{data:members}]=await Promise.all([
     query,
@@ -1156,20 +1186,36 @@ function escapeHtml(text){
 
 async function sendMessage(){
   var input=document.getElementById('chat-input');
-  var msg=input?input.value.trim():'';
-  if(!msg)return;
+  if(!input)return;
+  var msg=input.value.trim();
+  if(!msg){return;}
   if(!currentUser){showNotif('Not logged in','error');return;}
   var info=CHANNEL_INFO[currentRoom];
   if(info&&info.adminOnly&&currentUserRole!=='admin'){
-    showNotif('Only admins can post in announcements.','error');return;
+    showNotif('Only admins can post in #'+currentRoom,'error');return;
   }
+  var savedMsg=msg;
   input.value='';
-  var insertData={room:currentRoom,user_id:currentUser.id,message:msg,is_pinned:false,reactions:'{}'};
-  if(replyToMsg){insertData.reply_to_id=replyToMsg.id;insertData.reply_to_text=replyToMsg.text;}
-  var result=await sb.from('chat_messages').insert(insertData);
-  if(result.error){showNotif('Send failed: '+result.error.message,'error');input.value=msg;return;}
-  cancelReply();
-  await loadMessages(currentRoom);
+  try{
+    var insertData={room:currentRoom,user_id:currentUser.id,message:savedMsg};
+    if(replyToMsg){
+      insertData.reply_to_id=replyToMsg.id;
+      insertData.reply_to_text=replyToMsg.text;
+    }
+    var{error}=await sb.from('chat_messages').insert(insertData);
+    if(error){
+      console.error('Chat error:',error);
+      showNotif('Send failed: '+error.message,'error');
+      input.value=savedMsg;
+      return;
+    }
+    cancelReply();
+    await loadMessages(currentRoom);
+  }catch(e){
+    console.error('Send error:',e);
+    showNotif('Error: '+e.message,'error');
+    input.value=savedMsg;
+  }
 }
 
 function replyTo(id,name,text){
