@@ -1010,12 +1010,12 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div class="form-grid">
               <div class="form-field">
                 <label class="form-label">Connection mode</label>
-                <select class="form-select" id="grok-mode" onchange="toggleToolMode('grok',this.value);saveToolSetting('grok-mode',this.value)">
-                  <option value="api">API key (direct)</option>
+                <select class="form-select" id="grok-mode" onchange="toggleToolMode('grok',this.value)">
+                  <option value="api" selected>API key (direct)</option>
                   <option value="account">Own account (auto-open)</option>
                 </select>
               </div>
-              <div class="form-field" id="grok-api-field">
+              <div class="form-field" id="grok-api-field" style="display:none">
                 <label class="form-label">API Key</label>
                 <input class="form-input" id="grok-api-key" placeholder="xai-xxxxxxxxxxxxxxxxx" type="password" onchange="saveToolSetting('grok-api-key',this.value)"/>
               </div>
@@ -1051,12 +1051,12 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div class="form-grid">
               <div class="form-field">
                 <label class="form-label">Connection mode</label>
-                <select class="form-select" id="veo-mode" onchange="toggleToolMode('veo',this.value);saveToolSetting('veo-mode',this.value)">
-                  <option value="api">API key (direct)</option>
+                <select class="form-select" id="veo-mode" onchange="toggleToolMode('veo',this.value)">
+                  <option value="api" selected>API key (direct)</option>
                   <option value="account">Own account (auto-open)</option>
                 </select>
               </div>
-              <div class="form-field" id="veo-api-field">
+              <div class="form-field" id="veo-api-field" style="display:none">
                 <label class="form-label">Google AI Studio API Key</label>
                 <input class="form-input" id="veo-api-key" placeholder="AIzaSy-xxxxxxxxxxxxxxxxx" type="password" onchange="saveToolSetting('veo-api-key',this.value)"/>
               </div>
