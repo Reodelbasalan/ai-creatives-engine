@@ -580,66 +580,110 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
       <!-- TEAM CHAT PAGE -->
       <div class="page" id="page-chat">
-        <div style="display:grid;grid-template-columns:260px 1fr;gap:12px;height:calc(100vh - 120px)">
+        <div style="display:grid;grid-template-columns:240px 1fr;gap:0;height:calc(100vh - 120px);background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
           
-          <!-- CHAT ROOMS LIST -->
-          <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column">
-            <div style="padding:12px 14px;border-bottom:0.5px solid var(--border);font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em">Channels</div>
+          <!-- SIDEBAR CHANNELS -->
+          <div style="border-right:0.5px solid var(--border);display:flex;flex-direction:column;background:var(--bg3)">
+            <div style="padding:14px 16px;border-bottom:0.5px solid var(--border)">
+              <div style="font-size:13px;font-weight:700;color:var(--text)">AI Creatives</div>
+              <div style="font-size:10px;color:var(--green);display:flex;align-items:center;gap:4px;margin-top:2px"><span class="pulse-dot" style="width:5px;height:5px"></span> Team online</div>
+            </div>
             <div style="padding:8px;flex:1;overflow-y:auto">
-              <div class="chat-room-item active" onclick="switchChatRoom('general')" id="room-general" style="padding:8px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:2px;background:var(--yellow-dim);border:0.5px solid var(--yellow)">
-                <div style="font-size:12px;font-weight:600;color:var(--yellow)"># general</div>
-                <div style="font-size:10px;color:var(--text3)">Team announcements</div>
+              <!-- CHANNELS -->
+              <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:0.12em;padding:10px 8px 4px;font-weight:600">Channels</div>
+              <div class="ch-item" data-room="announcements" data-type="channel" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3)">📢</span><span style="font-size:12px;color:var(--text2);font-weight:500">announcements</span></div>
+                <span class="ch-badge" id="badge-announcements" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
               </div>
-              <div class="chat-room-item" onclick="switchChatRoom('creatives')" id="room-creatives" style="padding:8px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:2px">
-                <div style="font-size:12px;font-weight:600;color:var(--text2)"># creatives</div>
-                <div style="font-size:10px;color:var(--text3)">Creative discussion</div>
+              <div class="ch-item active-ch" data-room="general" data-type="channel" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.2)">
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--yellow)">#</span><span style="font-size:12px;color:var(--yellow);font-weight:600">general</span></div>
+                <span class="ch-badge" id="badge-general" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
               </div>
-              <div class="chat-room-item" onclick="switchChatRoom('updates')" id="room-updates" style="padding:8px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:2px">
-                <div style="font-size:12px;font-weight:600;color:var(--text2)"># updates</div>
-                <div style="font-size:10px;color:var(--text3)">Project updates</div>
+              <div class="ch-item" data-room="creatives" data-type="channel" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3)">#</span><span style="font-size:12px;color:var(--text2);font-weight:500">creatives</span></div>
+                <span class="ch-badge" id="badge-creatives" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
               </div>
-              <div style="padding:8px 10px;font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-top:8px">Direct Messages</div>
+              <div class="ch-item" data-room="approvals" data-type="channel" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3)">✅</span><span style="font-size:12px;color:var(--text2);font-weight:500">approvals</span></div>
+                <span class="ch-badge" id="badge-approvals" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
+              </div>
+              <!-- DMs -->
+              <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:0.12em;padding:14px 8px 4px;font-weight:600">Direct Messages</div>
               <div id="dm-list"></div>
             </div>
           </div>
 
-          <!-- CHAT MESSAGES -->
-          <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);display:flex;flex-direction:column;overflow:hidden">
-            <div style="padding:12px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px">
-              <div style="font-size:13px;font-weight:600;color:var(--text)" id="chat-room-title"># general</div>
-              <div style="font-size:11px;color:var(--text3)" id="chat-room-desc">Team announcements</div>
+          <!-- MAIN CHAT AREA -->
+          <div style="display:flex;flex-direction:column;overflow:hidden">
+            <!-- CHAT HEADER -->
+            <div style="padding:12px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2)">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text)" id="chat-room-title"># general</div>
+                <div style="font-size:10px;color:var(--text3)" id="chat-room-desc">Team chat — everyone</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button id="pin-toggle-btn" class="ghost-btn" onclick="togglePinnedMessages()" style="font-size:11px;padding:4px 10px">📌 Pinned</button>
+              </div>
             </div>
-            <div id="chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px"></div>
+
+            <!-- PINNED MESSAGES (hidden by default) -->
+            <div id="pinned-section" style="display:none;padding:10px 16px;background:var(--amber-dim);border-bottom:0.5px solid rgba(245,158,11,0.2)">
+              <div style="font-size:10px;color:var(--amber);font-weight:600;margin-bottom:6px">📌 PINNED MESSAGES</div>
+              <div id="pinned-messages"></div>
+            </div>
+
+            <!-- MESSAGES -->
+            <div id="chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:2px"></div>
+
+            <!-- REPLY PREVIEW -->
+            <div id="reply-preview" style="display:none;padding:8px 16px;background:var(--bg3);border-top:0.5px solid var(--border);border-left:3px solid var(--yellow)">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="font-size:11px;color:var(--text3)">Replying to <span id="reply-to-name" style="color:var(--yellow);font-weight:600"></span></div>
+                <button onclick="cancelReply()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px">✕</button>
+              </div>
+              <div id="reply-preview-text" style="font-size:11px;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+            </div>
+
+            <!-- ANNOUNCEMENTS NOTICE -->
+            <div id="announce-notice" style="display:none;padding:8px 16px;background:var(--purple-dim);border-top:0.5px solid rgba(127,119,221,0.2)">
+              <div style="font-size:11px;color:var(--purple)">📢 Only admins can post in #announcements</div>
+            </div>
+
+            <!-- INPUT -->
             <div style="padding:12px 16px;border-top:0.5px solid var(--border)">
-              <!-- EMOJI PICKER -->
-              <div id="emoji-picker" style="display:none;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px;margin-bottom:8px;flex-wrap:wrap;gap:4px">
-                <span onclick="insertEmoji('😊')" style="cursor:pointer;font-size:20px;padding:4px">😊</span>
-                <span onclick="insertEmoji('🔥')" style="cursor:pointer;font-size:20px;padding:4px">🔥</span>
-                <span onclick="insertEmoji('✅')" style="cursor:pointer;font-size:20px;padding:4px">✅</span>
-                <span onclick="insertEmoji('❌')" style="cursor:pointer;font-size:20px;padding:4px">❌</span>
-                <span onclick="insertEmoji('👍')" style="cursor:pointer;font-size:20px;padding:4px">👍</span>
-                <span onclick="insertEmoji('👀')" style="cursor:pointer;font-size:20px;padding:4px">👀</span>
-                <span onclick="insertEmoji('🎬')" style="cursor:pointer;font-size:20px;padding:4px">🎬</span>
-                <span onclick="insertEmoji('💎')" style="cursor:pointer;font-size:20px;padding:4px">💎</span>
-                <span onclick="insertEmoji('⚡')" style="cursor:pointer;font-size:20px;padding:4px">⚡</span>
-                <span onclick="insertEmoji('🚀')" style="cursor:pointer;font-size:20px;padding:4px">🚀</span>
-                <span onclick="insertEmoji('💪')" style="cursor:pointer;font-size:20px;padding:4px">💪</span>
-                <span onclick="insertEmoji('🎯')" style="cursor:pointer;font-size:20px;padding:4px">🎯</span>
-                <span onclick="insertEmoji('📋')" style="cursor:pointer;font-size:20px;padding:4px">📋</span>
-                <span onclick="insertEmoji('⏰')" style="cursor:pointer;font-size:20px;padding:4px">⏰</span>
-                <span onclick="insertEmoji('💰')" style="cursor:pointer;font-size:20px;padding:4px">💰</span>
-                <span onclick="insertEmoji('🤝')" style="cursor:pointer;font-size:20px;padding:4px">🤝</span>
+              <div id="emoji-picker" style="display:none;flex-wrap:wrap;gap:3px;margin-bottom:8px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">
+                <span onclick="insertEmoji('😊')" style="cursor:pointer;font-size:18px;padding:3px">😊</span>
+                <span onclick="insertEmoji('🔥')" style="cursor:pointer;font-size:18px;padding:3px">🔥</span>
+                <span onclick="insertEmoji('✅')" style="cursor:pointer;font-size:18px;padding:3px">✅</span>
+                <span onclick="insertEmoji('❌')" style="cursor:pointer;font-size:18px;padding:3px">❌</span>
+                <span onclick="insertEmoji('👍')" style="cursor:pointer;font-size:18px;padding:3px">👍</span>
+                <span onclick="insertEmoji('👀')" style="cursor:pointer;font-size:18px;padding:3px">👀</span>
+                <span onclick="insertEmoji('🎬')" style="cursor:pointer;font-size:18px;padding:3px">🎬</span>
+                <span onclick="insertEmoji('💎')" style="cursor:pointer;font-size:18px;padding:3px">💎</span>
+                <span onclick="insertEmoji('⚡')" style="cursor:pointer;font-size:18px;padding:3px">⚡</span>
+                <span onclick="insertEmoji('🚀')" style="cursor:pointer;font-size:18px;padding:3px">🚀</span>
+                <span onclick="insertEmoji('💪')" style="cursor:pointer;font-size:18px;padding:3px">💪</span>
+                <span onclick="insertEmoji('🎯')" style="cursor:pointer;font-size:18px;padding:3px">🎯</span>
+                <span onclick="insertEmoji('📋')" style="cursor:pointer;font-size:18px;padding:3px">📋</span>
+                <span onclick="insertEmoji('⏰')" style="cursor:pointer;font-size:18px;padding:3px">⏰</span>
+                <span onclick="insertEmoji('💰')" style="cursor:pointer;font-size:18px;padding:3px">💰</span>
+                <span onclick="insertEmoji('🤝')" style="cursor:pointer;font-size:18px;padding:3px">🤝</span>
+                <span onclick="insertEmoji('😎')" style="cursor:pointer;font-size:18px;padding:3px">😎</span>
+                <span onclick="insertEmoji('🙏')" style="cursor:pointer;font-size:18px;padding:3px">🙏</span>
+                <span onclick="insertEmoji('😂')" style="cursor:pointer;font-size:18px;padding:3px">😂</span>
+                <span onclick="insertEmoji('👏')" style="cursor:pointer;font-size:18px;padding:3px">👏</span>
               </div>
               <div style="display:flex;gap:8px;align-items:center">
-                <button onclick="toggleEmojiPicker()" style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:8px;cursor:pointer;font-size:16px;line-height:1">😊</button>
-                <input class="form-input" id="chat-input" placeholder="Message #general..." style="flex:1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"/>
-                <button class="yellow-btn" onclick="sendMessage()" style="padding:8px 14px">Send</button>
+                <button onclick="toggleEmojiPicker()" style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:7px 9px;cursor:pointer;font-size:16px;line-height:1;flex-shrink:0">😊</button>
+                <input class="form-input" id="chat-input" placeholder="Message #general..." style="flex:1;font-size:13px" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"/>
+                <button class="yellow-btn" onclick="sendMessage()" style="padding:8px 16px;flex-shrink:0">Send ↵</button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- SETTINGS PAGE -->
       <!-- SETTINGS PAGE -->
       <div class="page" id="page-settings">
         <div style="max-width:760px">
