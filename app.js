@@ -1164,7 +1164,8 @@ function renderMessages(messages){
     var reactions='';
     try{
       if(m.reactions){
-        var rxData=typeof m.reactions==='string'?JSON.parse(m.reactions):m.reactions;
+        var rxData={};
+        try{rxData=typeof m.reactions==='string'?JSON.parse(m.reactions):(m.reactions||{});}catch(ex2){rxData={};}
         var rxEntries=Object.entries(rxData||{});
         if(rxEntries.length)reactions=rxEntries.map(function(e){
           return '<span style="cursor:pointer;font-size:12px;padding:2px 6px;background:var(--bg4);border-radius:20px">'+e[0]+' '+e[1]+'</span>';
@@ -1309,7 +1310,10 @@ function reactToMsg(msgId){
 async function addReaction(msgId,emoji){
   var{data}=await sb.from('chat_messages').select('reactions').eq('id',msgId).maybeSingle();
   var reactions={};
-  try{reactions=JSON.parse(data?.reactions||'{}');}catch(e){}
+  try{
+    var raw=data?.reactions;
+    if(raw)reactions=typeof raw==='string'?JSON.parse(raw):raw;
+  }catch(e){reactions={};}
   reactions[emoji]=(reactions[emoji]||0)+1;
   await sb.from('chat_messages').update({reactions:JSON.stringify(reactions)}).eq('id',msgId);
   loadMessages(currentRoom);
