@@ -352,6 +352,7 @@ function showApp(){
   document.getElementById('app').style.display='block';
   initSecurityListeners();
   logActivity('LOGIN','User logged in');
+  initTimeInSystem();
   if(currentUserRole==='admin'){loadDashboard();loadNotifications();}
   else if(currentUserRole==='client'){showPage('client-dashboard');loadClientDashboard();}
   else loadEditorPortal();
@@ -362,7 +363,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   if(page==='all-projects')loadAllProjects();
   if(page==='editor-portal')loadEditorPortal();
@@ -371,6 +372,7 @@ function showPage(page){
   if(page==='analytics')loadAnalytics();
   if(page==='clients')loadClients();
   if(page==='activity')loadActivityLog();
+  if(page==='attendance'){var today=new Date().toISOString().slice(0,10);var df=document.getElementById('attendance-date');if(df&&!df.value)df.value=today;loadAttendance();}
   if(page==='client-dashboard')loadClientDashboard();
   if(page==='settings'){loadSettings();}
   if(page==='chat'){loadChat();}
