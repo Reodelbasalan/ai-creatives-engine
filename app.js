@@ -907,35 +907,91 @@ function applyTemplate(type){
 // TEAM CHAT SYSTEM
 // ═══════════════════════════════════════
 
-var currentRoom = 'general';
-var chatSubscription = null;
-var chatRooms = {
-  general: {title:'# general', desc:'Team announcements'},
-  creatives: {title:'# creatives', desc:'Creative discussion'},
-  updates: {title:'# updates', desc:'Project updates'}
+var currentRoom='general';
+var chatSubscription=null;
+var replyToMsg=null;
+var lastReadTimes={};
+
+var CHANNEL_INFO={
+  announcements:{title:'📢 announcements',desc:'Admin announcements — read only for editors',adminOnly:true},
+  general:{title:'# general',desc:'Team chat — everyone',adminOnly:false},
+  creatives:{title:'# creatives',desc:'Creative direction & feedback',adminOnly:false},
+  approvals:{title:'✅ approvals',desc:'Project approvals & revisions',adminOnly:false}
 };
 
 async function loadChat(){
-  await loadTeamMembers();
-  await loadMessages(currentRoom);
-  subscribeToChatUpdates();
+  await loadDMList();
+  await switchChatRoom('general');
+  loadUnreadBadges();
 }
 
-async function loadTeamMembers(){
+async function loadDMList(){
   var{data}=await sb.from('profiles').select('id,name,email,role').order('name');
-  var members=data||[];
+  var members=(data||[]).filter(function(m){return m.id!==currentUser?.id;});
   var dmList=document.getElementById('dm-list');
   if(!dmList)return;
-  dmList.innerHTML=members.filter(function(m){return m.id!==currentUser?.id;}).map(function(m){
-    var roomId="dm_"+m.id;
-    var initial=(m.name||m.email||"?")[0].toUpperCase();
-    var role=m.role==="admin"?"Admin":"Editor";
-    return '<div class="chat-room-item" data-room="'+roomId+'" style="padding:8px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:2px;display:flex;align-items:center;gap:8px">'
-      +'<div style="width:24px;height:24px;border-radius:50%;background:var(--bg4);border:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text2);flex-shrink:0">'+initial+'</div>'
-      +'<div><div style="font-size:12px;font-weight:500;color:var(--text2)">'+( m.name||m.email)+'</div>'
-      +'<div style="font-size:9px;color:var(--text3)">'+role+'</div></div></div>';
+  dmList.innerHTML=members.map(function(m){
+    var initial=(m.name||m.email||'?')[0].toUpperCase();
+    var roomId='dm_'+m.id;
+    return '<div class="ch-item" data-room="'+roomId+'" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;gap:8px">'
+      +'<div style="width:22px;height:22px;border-radius:50%;background:var(--bg4);border:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--text2);flex-shrink:0">'+initial+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(m.name||m.email)+'</div></div>'
+      +'<span class="ch-badge" id="badge-'+roomId+'" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>'
+      +'</div>';
   }).join('');
-  dmList.querySelectorAll(".chat-room-item[data-room]").forEach(function(el){el.addEventListener("click",function(){switchChatRoom(this.dataset.room);});});
+  dmList.querySelectorAll('.ch-item').forEach(function(el){
+    el.addEventListener('click',function(){switchChatRoom(this.dataset.room);});
+  });
+}
+
+async function switchChatRoom(room){
+  currentRoom=room;
+  // Update active channel UI
+  document.querySelectorAll('.ch-item').forEach(function(el){
+    el.style.background='';el.style.border='';
+    var spans=el.querySelectorAll('span,div');
+    spans.forEach(function(s){if(s.style.color==='var(--yellow)')s.style.color='';});
+  });
+  var activeEl=document.querySelector('[data-room="'+room+'"]');
+  if(activeEl){
+    activeEl.style.background='var(--yellow-dim)';
+    activeEl.style.border='0.5px solid rgba(250,204,21,0.2)';
+  }
+  // Update header
+  var info=CHANNEL_INFO[room];
+  var isDM=room.startsWith('dm_');
+  var titleEl=document.getElementById('chat-room-title');
+  var descEl=document.getElementById('chat-room-desc');
+  var inputEl=document.getElementById('chat-input');
+  var announceNotice=document.getElementById('announce-notice');
+  if(titleEl)titleEl.textContent=info?info.title:(isDM?'💬 Direct Message':'# '+room);
+  if(descEl)descEl.textContent=info?info.desc:(isDM?'Private conversation':'');
+  // Announcements — editor read-only
+  var isAdminOnlyRoom=info&&info.adminOnly&&currentUserRole!=='admin';
+  if(inputEl){
+    inputEl.disabled=isAdminOnlyRoom;
+    inputEl.placeholder=isAdminOnlyRoom?'Read only — admin posts here...':'Message '+(info?info.title:'...');
+  }
+  if(announceNotice)announceNotice.style.display=isAdminOnlyRoom?'block':'none';
+  var sendBtn=document.querySelector('[onclick="sendMessage()"]');
+  if(sendBtn)sendBtn.disabled=isAdminOnlyRoom;
+  // Clear reply
+  cancelReply();
+  // Hide pinned
+  var pinnedSection=document.getElementById('pinned-section');
+  if(pinnedSection)pinnedSection.style.display='none';
+  // Load messages
+  await loadMessages(room);
+  // Mark as read
+  lastReadTimes[room]=new Date().toISOString();
+  var badge=document.getElementById('badge-'+room);
+  if(badge)badge.style.display='none';
+  // Resubscribe
+  if(chatSubscription)sb.removeChannel(chatSubscription);
+  chatSubscription=sb.channel('room-'+room)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'room=eq.'+room},
+      function(){loadMessages(room);})
+    .subscribe();
 }
 
 async function loadMessages(room){
@@ -943,44 +999,163 @@ async function loadMessages(room){
     .select('*,profiles(name,email)')
     .eq('room',room)
     .order('created_at',{ascending:true})
-    .limit(50);
+    .limit(100);
   renderMessages(data||[]);
 }
 
 function renderMessages(messages){
   var box=document.getElementById('chat-messages');
   if(!box)return;
-  box.innerHTML=messages.length?messages.map(function(m){
+  if(!messages.length){
+    box.innerHTML='<div style="text-align:center;padding:3rem;color:var(--text3);font-size:12px">No messages yet — be the first! 👋</div>';
+    return;
+  }
+  var html='';
+  var lastDate='';
+  messages.forEach(function(m){
     var isMe=m.user_id===currentUser?.id;
     var name=m.profiles?.name||m.profiles?.email||'Unknown';
     var initial=(name[0]||'?').toUpperCase();
-    var time=new Date(m.created_at).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
-    return '<div style="display:flex;gap:8px;align-items:flex-start'+(isMe?';flex-direction:row-reverse':'')+'">'
+    var msgDate=new Date(m.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+    var msgTime=new Date(m.created_at).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+    // Date divider
+    if(msgDate!==lastDate){
+      html+='<div style="text-align:center;margin:12px 0"><span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:3px 10px;border-radius:20px">'+msgDate+'</span></div>';
+      lastDate=msgDate;
+    }
+    // Reply preview
+    var replyHtml='';
+    if(m.reply_to_text){
+      replyHtml='<div style="background:rgba(250,204,21,0.05);border-left:2px solid var(--yellow);padding:4px 8px;border-radius:4px;margin-bottom:4px;font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+        +'↩ '+escapeHtml(m.reply_to_text.substring(0,60))+'</div>';
+    }
+    // Reactions
+    var reactions=m.reactions?Object.entries(JSON.parse(m.reactions||'{}')).map(function(e){
+      return '<span onclick="addReaction(\"'+m.id+'\",\"'+e[0]+'\")" style="cursor:pointer;font-size:12px;padding:2px 6px;background:var(--bg4);border-radius:20px;border:0.5px solid var(--border2)">'+e[0]+' '+e[1]+'</span>';
+    }).join(''):'';
+    html+='<div class="msg-row" data-id="'+m.id+'" style="display:flex;gap:8px;align-items:flex-start;padding:3px 0;'+(isMe?'flex-direction:row-reverse':'')+'" onmouseenter="showMsgActions(this)" onmouseleave="hideMsgActions(this)">'
       +'<div style="width:28px;height:28px;border-radius:50%;background:'+(isMe?'var(--yellow-dim)':'var(--bg4)')+';border:0.5px solid '+(isMe?'var(--yellow)':'var(--border2)')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:'+(isMe?'var(--yellow)':'var(--text2)')+';flex-shrink:0">'+initial+'</div>'
-      +'<div style="max-width:70%">'
-      +'<div style="font-size:9px;color:var(--text3);margin-bottom:3px'+(isMe?';text-align:right':'')+'">'+name+' · '+time+'</div>'
-      +'<div style="background:'+(isMe?'var(--yellow-dim)':'var(--bg3)')+';border:0.5px solid '+(isMe?'rgba(250,204,21,0.2)':'var(--border2)')+';border-radius:'+(isMe?'12px 12px 4px 12px':'12px 12px 12px 4px')+';padding:8px 12px;font-size:12px;color:'+(isMe?'var(--yellow)':'var(--text)')+';line-height:1.5">'+escapeHtml(m.message)+'</div>'
+      +'<div style="max-width:65%;'+(isMe?'align-items:flex-end;':'')+'display:flex;flex-direction:column">'
+      +'<div style="font-size:9px;color:var(--text3);margin-bottom:2px;'+(isMe?'text-align:right':'')+'">'+name+' · '+msgTime+(m.is_pinned?' 📌':'')+'</div>'
+      +replyHtml
+      +'<div style="background:'+(isMe?'var(--yellow-dim)':'var(--bg3)')+';border:0.5px solid '+(isMe?'rgba(250,204,21,0.2)':'var(--border2)')+';border-radius:'+(isMe?'12px 4px 12px 12px':'4px 12px 12px 12px')+';padding:8px 12px;font-size:13px;color:'+(isMe?'var(--yellow)':'var(--text)')+';line-height:1.5;word-break:break-word">'+escapeHtml(m.message)+'</div>'
+      +(reactions?'<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">'+reactions+'</div>':'')
+      +'<div class="msg-actions" style="display:none;gap:4px;margin-top:4px;flex-wrap:wrap">'
+      +'<button data-action="reply" data-id="'+m.id+'" data-name="'+name+'" data-text="'+escapeHtml(m.message).substring(0,50)+'" style="font-size:10px;padding:2px 8px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:4px;cursor:pointer;color:var(--text2)">↩ Reply</button>'
+      +'<button data-action="react" data-id="'+m.id+'" style="font-size:10px;padding:2px 8px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:4px;cursor:pointer;color:var(--text2)">😊</button>'
+      +(currentUserRole==="admin"?'<button data-action="pin" data-id="'+m.id+'" data-pinned="'+m.is_pinned+'" style="font-size:10px;padding:2px 8px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:4px;cursor:pointer;color:var(--text2)">'+(!m.is_pinned?"📌 Pin":"Unpin")+'</button>':"")
+      +'</div>'
       +'</div></div>';
-  }).join(''):'<div style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">No messages yet — say hi! 👋</div>';
+  });
+  box.innerHTML=html;
   box.scrollTop=box.scrollHeight;
+  // Event delegation for message actions
+  box.querySelectorAll('[data-action]').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var action=this.dataset.action;
+      var id=this.dataset.id;
+      if(action==='reply')replyTo(id,this.dataset.name,this.dataset.text);
+      else if(action==='react')reactToMsg(id);
+      else if(action==='pin')pinMessage(id,this.dataset.pinned!=='true');
+    });
+  });
+}
+
+function showMsgActions(el){
+  var actions=el.querySelector('.msg-actions');
+  if(actions)actions.style.display='flex';
+}
+function hideMsgActions(el){
+  var actions=el.querySelector('.msg-actions');
+  if(actions)actions.style.display='none';
 }
 
 function escapeHtml(text){
-  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  if(!text)return'';
+  return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 async function sendMessage(){
   var input=document.getElementById('chat-input');
   var msg=input?.value?.trim();
   if(!msg||!currentUser)return;
+  // Check admin-only rooms
+  var info=CHANNEL_INFO[currentRoom];
+  if(info&&info.adminOnly&&currentUserRole!=='admin'){showNotif('Only admins can post here.','error');return;}
   input.value='';
-  var{error}=await sb.from('chat_messages').insert({
-    room:currentRoom,
-    user_id:currentUser.id,
-    message:msg,
-    created_at:new Date().toISOString()
-  });
+  var insertData={room:currentRoom,user_id:currentUser.id,message:msg};
+  if(replyToMsg){insertData.reply_to_id=replyToMsg.id;insertData.reply_to_text=replyToMsg.text;}
+  var{error}=await sb.from('chat_messages').insert(insertData);
   if(error)showNotif('Send failed: '+error.message,'error');
+  cancelReply();
+}
+
+function replyTo(id,name,text){
+  replyToMsg={id:id,text:text};
+  var preview=document.getElementById('reply-preview');
+  var nameEl=document.getElementById('reply-to-name');
+  var textEl=document.getElementById('reply-preview-text');
+  if(preview)preview.style.display='block';
+  if(nameEl)nameEl.textContent=name;
+  if(textEl)textEl.textContent=text;
+  document.getElementById('chat-input')?.focus();
+}
+
+function cancelReply(){
+  replyToMsg=null;
+  var preview=document.getElementById('reply-preview');
+  if(preview)preview.style.display='none';
+}
+
+async function pinMessage(id,pin){
+  await sb.from('chat_messages').update({is_pinned:pin}).eq('id',id);
+  loadMessages(currentRoom);
+  showNotif(pin?'Message pinned! 📌':'Message unpinned','success');
+}
+
+async function togglePinnedMessages(){
+  var section=document.getElementById('pinned-section');
+  if(!section)return;
+  var isShowing=section.style.display!=='none';
+  if(isShowing){section.style.display='none';return;}
+  var{data}=await sb.from('chat_messages').select('*,profiles(name,email)').eq('room',currentRoom).eq('is_pinned',true).order('created_at',{ascending:false});
+  var pinned=data||[];
+  var box=document.getElementById('pinned-messages');
+  if(box)box.innerHTML=pinned.length?pinned.map(function(m){
+    return '<div style="font-size:11px;color:var(--text2);padding:4px 0;border-bottom:0.5px solid rgba(245,158,11,0.1)">'
+      +'<span style="color:var(--amber);font-weight:600">'+(m.profiles?.name||'?')+': </span>'+escapeHtml(m.message)+'</div>';
+  }).join(''):'<div style="font-size:11px;color:var(--text3)">No pinned messages.</div>';
+  section.style.display='block';
+}
+
+var quickReactions=['👍','🔥','✅','❌','😂','👀'];
+function reactToMsg(msgId){
+  var row=document.querySelector('[data-id="'+msgId+'"]');
+  if(!row)return;
+  var existing=row.querySelector('.quick-reactions');
+  if(existing){existing.remove();return;}
+  var div=document.createElement('div');
+  div.className='quick-reactions';
+  div.style.cssText='display:flex;gap:4px;margin-top:4px;flex-wrap:wrap';
+  quickReactions.forEach(function(e){
+    var btn=document.createElement('button');
+    btn.textContent=e;
+    btn.style.cssText='font-size:16px;padding:2px 6px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:20px;cursor:pointer';
+    btn.onclick=function(){addReaction(msgId,e);div.remove();};
+    div.appendChild(btn);
+  });
+  var actions=row.querySelector('.msg-actions');
+  if(actions)row.querySelector('[style*="flex-direction:column"]').insertBefore(div,actions);
+}
+
+async function addReaction(msgId,emoji){
+  var{data}=await sb.from('chat_messages').select('reactions').eq('id',msgId).maybeSingle();
+  var reactions={};
+  try{reactions=JSON.parse(data?.reactions||'{}');}catch(e){}
+  reactions[emoji]=(reactions[emoji]||0)+1;
+  await sb.from('chat_messages').update({reactions:JSON.stringify(reactions)}).eq('id',msgId);
+  loadMessages(currentRoom);
 }
 
 function toggleEmojiPicker(){
@@ -992,53 +1167,21 @@ function toggleEmojiPicker(){
 function insertEmoji(emoji){
   var input=document.getElementById('chat-input');
   if(!input)return;
-  input.value+=emoji;
-  input.focus();
-  document.getElementById('emoji-picker').style.display='none';
+  input.value+=emoji;input.focus();
+  var picker=document.getElementById('emoji-picker');
+  if(picker)picker.style.display='none';
 }
 
-function switchChatRoom(room){
-  currentRoom=room;
-  // Update active state
-  document.querySelectorAll('.chat-room-item').forEach(function(el){
-    el.style.background='';
-    el.style.border='';
-    var title=el.querySelector('div');
-    if(title)title.style.color='var(--text2)';
-  });
-  var activeEl=document.getElementById('room-'+room);
-  if(activeEl){
-    activeEl.style.background='var(--yellow-dim)';
-    activeEl.style.border='0.5px solid var(--yellow)';
-    var t=activeEl.querySelector('div');
-    if(t)t.style.color='var(--yellow)';
+async function loadUnreadBadges(){
+  var rooms=['announcements','general','creatives','approvals'];
+  for(var i=0;i<rooms.length;i++){
+    var room=rooms[i];
+    if(room===currentRoom)continue;
+    var lastRead=lastReadTimes[room]||new Date(0).toISOString();
+    var{count}=await sb.from('chat_messages').select('id',{count:'exact',head:true}).eq('room',room).gt('created_at',lastRead);
+    var badge=document.getElementById('badge-'+room);
+    if(badge&&count>0){badge.textContent=count;badge.style.display='inline-block';}
   }
-  // Update title
-  var titleEl=document.getElementById('chat-room-title');
-  var descEl=document.getElementById('chat-room-desc');
-  var inputEl=document.getElementById('chat-input');
-  if(chatRooms[room]){
-    if(titleEl)titleEl.textContent=chatRooms[room].title;
-    if(descEl)descEl.textContent=chatRooms[room].desc;
-    if(inputEl)inputEl.placeholder='Message '+chatRooms[room].title+'...';
-  } else if(room.startsWith('dm_')){
-    if(titleEl)titleEl.textContent='Direct Message';
-    if(descEl)descEl.textContent='Private conversation';
-    if(inputEl)inputEl.placeholder='Send a message...';
-  }
-  loadMessages(room);
-  // Unsubscribe and resubscribe
-  if(chatSubscription)chatSubscription.unsubscribe();
-  subscribeToChatUpdates();
-}
-
-function subscribeToChatUpdates(){
-  chatSubscription=sb.channel('chat-'+currentRoom)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'room=eq.'+currentRoom},
-      function(payload){
-        loadMessages(currentRoom);
-      }
-    ).subscribe();
 }
 
 
