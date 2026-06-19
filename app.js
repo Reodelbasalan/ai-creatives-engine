@@ -49,6 +49,181 @@ async function doLogin(){
 }
 
 
+
+// ═══════════════════════════════════════
+// OUTPUT TRACKER
+// ═══════════════════════════════════════
+
+async function loadOutputs(projectId){
+  var{data}=await sb.from('project_outputs').select('*').eq('project_id',projectId).order('created_at',{ascending:false});
+  var outputs=data||[];
+  var el=document.getElementById('modal-outputs');
+  if(!el)return;
+  if(!outputs.length){
+    el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:6px 0;margin-bottom:4px">No outputs yet — add a link below.</div>';
+    return;
+  }
+  var typeIcons={video:'🎬',image:'🖼️',blueprint:'📄',other:'📎'};
+  el.innerHTML=outputs.map(function(o){
+    var icon=typeIcons[o.type]||'📎';
+    var date=new Date(o.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);margin-bottom:6px">'
+      +'<span style="font-size:16px">'+icon+'</span>'
+      +'<div style="flex:1;min-width:0">'
+      +'<a href="'+o.url+'" target="_blank" style="font-size:12px;color:var(--yellow);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">'+o.label+'</a>'
+      +'<div style="font-size:10px;color:var(--text3)">'+o.type+' · '+date+'</div>'
+      +'</div>'
+      +'<button data-oid="'+o.id+'" class="del-output-btn" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:2px 6px">✕</button>'
+      +'</div>';
+  }).join('');
+}
+
+async function addOutput(){
+  if(!currentProjectId)return;
+  var url=document.getElementById('output-url-input')?.value?.trim();
+  var type=document.getElementById('output-type-select')?.value||'video';
+  if(!url){showNotif('Paste a URL first','error');return;}
+  var typeLabels={video:'Video output',image:'Image output',blueprint:'Blueprint PDF',other:'File'};
+  var label=typeLabels[type]||'Output';
+  var{error}=await sb.from('project_outputs').insert({
+    project_id:currentProjectId,
+    user_id:currentUser.id,
+    url:url,type:type,label:label
+  });
+  if(error){showNotif('Error: '+error.message,'error');return;}
+  document.getElementById('output-url-input').value='';
+  showNotif('Output added! ✓','success');
+  loadOutputs(currentProjectId);
+  logActivity('OUTPUT_ADDED',label);
+  // Attach delete handlers
+  setTimeout(function(){
+    document.querySelectorAll('.del-output-btn').forEach(function(btn){
+      btn.addEventListener('click',function(){deleteOutput(this.dataset.oid);});
+    });
+  },200);
+  // Auto notify client if project has client_id
+  var project=allProjects.find(function(p){return p.id===currentProjectId;});
+  if(project?.client_id){
+    await sb.from('notifications').insert({
+      user_id:project.client_id,
+      message:'Your project "'+project.client_name+'" has a new '+type+' output ready!',
+      type:'output',
+      project_id:currentProjectId,
+      is_read:false
+    }).catch(function(){});
+  }
+}
+
+async function deleteOutput(id){
+  if(!confirm('Delete this output?'))return;
+  await sb.from('project_outputs').delete().eq('id',id);
+  showNotif('Output removed','success');
+  loadOutputs(currentProjectId);
+}
+
+// ═══════════════════════════════════════
+// NOTIFICATION SYSTEM
+// ═══════════════════════════════════════
+
+var notifInterval=null;
+
+async function loadNotifications(){
+  var{data}=await sb.from('projects')
+    .select('*')
+    .eq('status','Ready for Editor')
+    .order('updated_at',{ascending:false});
+  var items=data||[];
+  notifCount=items.length;
+  var bell=document.getElementById('notif-bell-count');
+  if(bell){bell.textContent=notifCount;bell.style.display=notifCount>0?'flex':'none';}
+  // Load user-specific notifications
+  if(currentUser){
+    var{data:userNotifs}=await sb.from('notifications')
+      .select('*').eq('user_id',currentUser.id)
+      .eq('is_read',false).order('created_at',{ascending:false}).limit(10);
+    var unread=(userNotifs||[]).length;
+    if(unread>0&&bell){
+      bell.textContent=unread;bell.style.display='flex';
+    }
+  }
+  // Poll every 30 seconds
+  if(!notifInterval)notifInterval=setInterval(loadNotifications,30000);
+}
+
+async function toggleNotifPanel(){
+  var panel=document.getElementById('notif-panel');
+  if(!panel)return;
+  var isOpen=panel.style.display==='block';
+  panel.style.display=isOpen?'none':'block';
+  if(!isOpen)await refreshNotifPanel();
+}
+
+async function refreshNotifPanel(){
+  var list=document.getElementById('notif-list');
+  if(!list)return;
+  list.innerHTML='<div style="padding:1rem;text-align:center;font-size:11px;color:var(--text3)">Loading...</div>';
+  // Get assigned projects (for editors) or all active (for admin)
+  var items=[];
+  if(currentUserRole==='admin'){
+    var{data}=await sb.from('projects').select('*').in('status',['Ready for Editor','In Production']).order('updated_at',{ascending:false}).limit(8);
+    items=data||[];
+  } else {
+    var{data}=await sb.from('projects').select('*').eq('assigned_to',currentUser.id).neq('status','Approved / Done').order('updated_at',{ascending:false}).limit(8);
+    items=data||[];
+  }
+  // Get user notifications
+  var userNotifHtml='';
+  if(currentUser){
+    var{data:uNotifs}=await sb.from('notifications').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(5);
+    if(uNotifs?.length){
+      userNotifHtml=uNotifs.map(function(n){
+        var bg=n.is_read?"":"var(--yellow-dim)";
+        var time=new Date(n.created_at).toLocaleString("en-PH",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
+        return '<div class="notif-item" data-nid="'+n.id+'" style="padding:10px 14px;border-bottom:0.5px solid var(--border);background:'+bg+';cursor:pointer">'
+          +'<div style="font-size:11px;color:var(--text)">'+( n.is_read?"":"🔔 ")+n.message+'</div>'
+          +'<div style="font-size:9px;color:var(--text3);margin-top:2px">'+time+'</div></div>';
+      }).join("");
+    }
+  }
+  var projHtml=items.length?items.map(function(p){
+    return '<div class="proj-notif-item" data-pid="'+p.id+'" style="padding:10px 14px;border-bottom:0.5px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:8px">'
+      +'<div style="flex:1"><div style="font-size:12px;color:var(--text);font-weight:500">'+p.client_name+'</div>'
+      +'<div style="font-size:10px;color:var(--text3);margin-top:1px">'+p.status+' · '+new Date(p.updated_at||p.created_at).toLocaleDateString("en-PH",{month:"short",day:"numeric"})+'</div></div>'
+      +statusBadge(p.status)
+      +'</div>';
+  }).join(""):'<div style="padding:1.5rem;text-align:center;font-size:12px;color:var(--text3)">All clear! ✓</div>';
+  list.innerHTML=(userNotifHtml||"")+projHtml;
+  // Attach event listeners
+  setTimeout(function(){
+    list.querySelectorAll(".notif-item").forEach(function(el){el.addEventListener("click",function(){markRead(this.dataset.nid);});});
+    list.querySelectorAll(".proj-notif-item").forEach(function(el){el.addEventListener("click",function(){openModal(this.dataset.pid);toggleNotifPanel();});});
+  },100);
+}
+
+async function markRead(notifId){
+  await sb.from('notifications').update({is_read:true}).eq('id',notifId);
+  refreshNotifPanel();loadNotifications();
+}
+
+async function markAllRead(){
+  if(!currentUser)return;
+  await sb.from('notifications').update({is_read:true}).eq('user_id',currentUser.id);
+  refreshNotifPanel();loadNotifications();
+  showNotif('All marked as read ✓','success');
+}
+
+// Send notification to editor when assigned
+async function notifyEditorAssigned(editorId,projectName){
+  if(!editorId)return;
+  await sb.from('notifications').insert({
+    user_id:editorId,
+    message:'New project assigned to you: "'+projectName+'"',
+    type:'assignment',
+    is_read:false
+  }).catch(function(){});
+}
+
+
 // ═══════════════════════════════════════
 // SECURITY + AUTO-SAVE SYSTEM
 // ═══════════════════════════════════════
@@ -585,6 +760,7 @@ async function openModal(id){
   }
   document.getElementById('project-modal').classList.add('open');
   loadComments(id);
+  loadOutputs(id);
   if(p.blueprint)renderBlueprintScenes(p.blueprint,'modal-scenes');
 }
 
