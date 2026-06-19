@@ -1223,6 +1223,18 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     <!-- OUTPUT TRACKER -->
     <div class="section-label">📦 Output files</div>
     <div id="modal-outputs" style="margin-bottom:10px"></div>
+    <!-- REVISION TRACKER -->
+    <div id="modal-revisions-section" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em">Revisions</div>
+        <span id="revision-count-badge" style="font-size:9px;padding:1px 7px;border-radius:20px;background:var(--amber-dim);color:var(--amber);font-weight:700">0</span>
+      </div>
+      <div id="modal-revisions"></div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <input class="form-input" id="revision-input" placeholder="Describe the revision needed..." style="flex:1;font-size:12px"/>
+        <button class="ghost-btn" onclick="addRevision()" style="white-space:nowrap;font-size:12px;color:var(--amber);border-color:rgba(245,158,11,0.3)">+ Request</button>
+      </div>
+    </div>
     <div style="display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap">
       <input class="form-input" id="output-url-input" placeholder="Paste video/image URL or Google Drive link..." style="flex:1;font-size:12px"/>
       <select class="form-select" id="output-type-select" style="max-width:120px;font-size:12px">
