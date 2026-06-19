@@ -409,7 +409,7 @@ function showPage(page){
   if(page==='attendance'){var today=new Date().toISOString().slice(0,10);var df=document.getElementById('attendance-date');if(df&&!df.value)df.value=today;loadAttendance();}
   if(page==='worklog')loadWorkLog();
   if(page==='client-dashboard')loadClientDashboard();
-  if(page==='settings'){loadSettings();}
+  if(page==='settings'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadSettings();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
@@ -1674,12 +1674,74 @@ async function loadUnreadBadges(){
 // TOOL SETTINGS
 // ═══════════════════════════════════════
 
+// ═══════════════════════════════════════
+// SECURE API KEY MANAGEMENT
+// ═══════════════════════════════════════
+
+// Simple obfuscation (not true encryption but prevents casual viewing)
+function obfuscate(str){
+  return btoa(str.split('').map(function(c,i){
+    return String.fromCharCode(c.charCodeAt(0)^(i%7+3));
+  }).join(''));
+}
+
+function deobfuscate(str){
+  try{
+    return atob(str).split('').map(function(c,i){
+      return String.fromCharCode(c.charCodeAt(0)^(i%7+3));
+    }).join('');
+  }catch(e){return str;}
+}
+
+function saveApiKey(tool){
+  // Admin only
+  if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}
+  var input=document.getElementById(tool+'-api-key');
+  if(!input)return;
+  var key=input.value.trim();
+  if(!key){showNotif('Paste your API key first','error');return;}
+  // Validate format
+  var valid=false;
+  if(tool==='grok'&&key.startsWith('xai-'))valid=true;
+  if(tool==='veo'&&key.startsWith('AIza'))valid=true;
+  if(tool==='higgs')valid=true;
+  if(!valid){
+    showNotif('Invalid key format for '+tool,'error');
+    return;
+  }
+  // Save obfuscated
+  localStorage.setItem('ace_secure_'+tool, obfuscate(key));
+  localStorage.setItem('ace_'+tool+'-api-key', obfuscate(key));
+  // Show status
+  var statusEl=document.getElementById(tool+'-key-status');
+  if(statusEl){
+    statusEl.textContent='✅ Saved! Key ends in ...'+key.slice(-6);
+    statusEl.style.color='var(--green)';
+  }
+  // Mask input
+  input.value=key;
+  showNotif(tool+' API key saved! ✓','success');
+  // Log (without key value)
+  logActivity('API_KEY_UPDATED',tool+' API key updated');
+}
+
+function getSecureApiKey(tool){
+  var val=localStorage.getItem('ace_secure_'+tool)||localStorage.getItem('ace_'+tool+'-api-key')||'';
+  if(!val)return'';
+  try{return deobfuscate(val);}catch(e){return val;}
+}
+
 function saveToolSetting(key, val){
   localStorage.setItem('ace_'+key, val);
 }
 
 function getToolSetting(key, def){
-  return localStorage.getItem('ace_'+key)||def||'';
+  var val=localStorage.getItem('ace_'+key)||def||'';
+  // Deobfuscate if it looks encoded
+  if(key.endsWith('-api-key')&&val&&!val.startsWith('xai-')&&!val.startsWith('AIza')&&!val.startsWith('higgs')){
+    try{val=deobfuscate(val);}catch(e){}
+  }
+  return val;
 }
 
 function loadSettings(){
@@ -1699,13 +1761,21 @@ function loadSettings(){
   var veoMode=getToolSetting('veo-mode')||'api';
   switchToolMode('grok', grokMode);
   switchToolMode('veo', veoMode);
-  // Restore API key values
-  var grokKey=getToolSetting('grok-api-key');
-  var veoKey=getToolSetting('veo-api-key');
-  var grokInput=document.getElementById('grok-api-key');
-  var veoInput=document.getElementById('veo-api-key');
-  if(grokInput&&grokKey)grokInput.value=grokKey;
-  if(veoInput&&veoKey)veoInput.value=veoKey;
+  // Restore API key values + show status
+  var tools=['grok','veo','higgs'];
+  tools.forEach(function(t){
+    var key=getToolSetting(t+'-api-key');
+    var input=document.getElementById(t+'-api-key');
+    var statusEl=document.getElementById(t+'-key-status');
+    if(input&&key)input.value=key;
+    if(statusEl&&key){
+      statusEl.textContent='✅ Key saved — ends in ...'+key.slice(-6);
+      statusEl.style.color='var(--green)';
+    } else if(statusEl){
+      statusEl.textContent='⚠️ No API key saved yet';
+      statusEl.style.color='var(--amber)';
+    }
+  });
 }
 
 function switchToolMode(tool, mode){
@@ -1787,7 +1857,7 @@ function generateWithTool(tool, prompt, type){
   }
 
   // API mode — check for key
-  var apiKey=getToolSetting(tool+'-api-key');
+  var apiKey=getToolSetting(tool+'-api-key')||getSecureApiKey(tool);
   if(!apiKey){
     showNotif('No API key for '+tool+' — set it in Settings!','error');
     setTimeout(function(){showPage('settings');},1500);
