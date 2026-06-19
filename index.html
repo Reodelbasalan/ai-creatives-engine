@@ -354,6 +354,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         Clients
         <span class="nav-badge" id="clients-badge" style="display:none">0</span>
       </div>
+      <div class="nav-item admin-only" onclick="showPage('attendance')" id="nav-attendance">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Attendance
+      </div>
       <div class="nav-item admin-only" onclick="showPage('activity')" id="nav-activity">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Activity log
@@ -1000,6 +1004,31 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- ATTENDANCE PAGE -->
+      <div class="page" id="page-attendance">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+          <div class="section-label" style="margin:0">🕐 Attendance tracker</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <input type="date" class="form-input" id="attendance-date" style="max-width:160px;font-size:11px" onchange="loadAttendance()"/>
+            <select class="form-select" id="attendance-editor-filter" style="max-width:180px;font-size:11px" onchange="loadAttendance()">
+              <option value="">All editors</option>
+            </select>
+            <button class="ghost-btn" onclick="exportAttendanceCSV()" style="font-size:11px">📥 Export</button>
+          </div>
+        </div>
+
+        <!-- SUMMARY CARDS -->
+        <div id="attendance-stats" class="stats-grid" style="margin-bottom:1rem"></div>
+
+        <!-- ATTENDANCE TABLE -->
+        <div class="data-table">
+          <div class="table-head" style="grid-template-columns:1.5fr 1fr 1fr 1fr 1fr 1fr">
+            <span>Editor</span><span>Date</span><span>Time In</span><span>Time Out</span><span>Duration</span><span>Status</span>
+          </div>
+          <div id="attendance-body"></div>
         </div>
       </div>
 
