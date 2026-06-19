@@ -87,7 +87,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   if(page==='all-projects')loadAllProjects();
   if(page==='editor-portal')loadEditorPortal();
@@ -96,6 +96,7 @@ function showPage(page){
   if(page==='analytics')loadAnalytics();
   if(page==='settings'){loadSettings();}
   if(page==='chat'){loadChat();}
+  if(page==='profile'){loadProfile();}
 }
 
 // NOTES
@@ -562,11 +563,13 @@ async function setDeadline(id,date){
 
 function getDeadlineStatus(deadline){
   if(!deadline)return'';
-  const d=new Date(deadline);const now=new Date();
-  const diff=Math.ceil((d-now)/(1000*60*60*24));
-  if(diff<0)return'<span style="color:var(--red);font-size:10px;font-weight:600">⚠ OVERDUE</span>';
-  if(diff<=3)return`<span style="color:var(--amber);font-size:10px;font-weight:600">⚡ ${diff}d left</span>`;
-  return`<span style="color:var(--text3);font-size:10px">${diff}d left</span>`;
+  var d=new Date(deadline);var now=new Date();now.setHours(0,0,0,0);d.setHours(0,0,0,0);
+  var diff=Math.ceil((d-now)/(1000*60*60*24));
+  if(diff<0)return'<span style="color:var(--red);font-size:10px;font-weight:700;background:var(--red-dim);padding:1px 6px;border-radius:4px">⚠ OVERDUE '+Math.abs(diff)+'d</span>';
+  if(diff===0)return'<span style="color:var(--red);font-size:10px;font-weight:700;background:var(--red-dim);padding:1px 6px;border-radius:4px">🔴 DUE TODAY</span>';
+  if(diff<=3)return'<span style="color:var(--red);font-size:10px;font-weight:600;background:var(--red-dim);padding:1px 6px;border-radius:4px">🔴 '+diff+'d left</span>';
+  if(diff<=6)return'<span style="color:var(--amber);font-size:10px;font-weight:600;background:var(--amber-dim);padding:1px 6px;border-radius:4px">🟡 '+diff+'d left</span>';
+  return'<span style="color:var(--text3);font-size:10px">'+diff+'d left</span>';
 }
 
 // DUPLICATE PROJECT
@@ -631,8 +634,15 @@ function exportPDF(){
 
 // ANALYTICS
 async function loadAnalytics(){
+  var monthFilter=document.getElementById('analytics-month-filter')?.value||'';
+  var query=sb.from('projects').select('*').order('created_at',{ascending:false});
+  if(monthFilter){
+    var start=new Date(monthFilter+'-01');
+    var end=new Date(start.getFullYear(),start.getMonth()+1,0,23,59,59);
+    query=query.gte('created_at',start.toISOString()).lte('created_at',end.toISOString());
+  }
   const[{data:projects},{data:members}]=await Promise.all([
-    sb.from('projects').select('*').order('created_at',{ascending:false}),
+    query,
     sb.from('profiles').select('*').eq('role','editor')
   ]);
   const all=projects||[];const eds=members||[];
@@ -903,6 +913,56 @@ function applyTemplate(type){
 
 
 
+
+// ═══════════════════════════════════════
+// EDITOR PROFILE
+// ═══════════════════════════════════════
+
+async function loadProfile(){
+  if(!currentUser)return;
+  var{data}=await sb.from('profiles').select('*').eq('id',currentUser.id).maybeSingle();
+  var profile=data||{};
+  var nameEl=document.getElementById('profile-name-input');
+  var emailEl=document.getElementById('profile-email-display');
+  var roleEl=document.getElementById('profile-role-display');
+  var statsEl=document.getElementById('profile-stats');
+  if(nameEl)nameEl.value=profile.name||'';
+  if(emailEl)emailEl.textContent=currentUser.email||'';
+  if(roleEl)roleEl.textContent=currentUserRole==='admin'?'Super Admin':'Editor';
+  // Load stats
+  if(statsEl){
+    var{data:projects}=await sb.from('projects').select('status,assigned_to').eq('assigned_to',currentUser.id);
+    var all=projects||[];
+    var done=all.filter(function(p){return p.status==='Approved / Done';}).length;
+    var inProd=all.filter(function(p){return p.status==='In Production';}).length;
+    statsEl.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
+      +'<div class="stat-card c-yellow" style="text-align:center"><div class="stat-label">Assigned</div><div class="stat-val">'+all.length+'</div></div>'
+      +'<div class="stat-card c-amber" style="text-align:center"><div class="stat-label">In prod</div><div class="stat-val" style="color:var(--amber)">'+inProd+'</div></div>'
+      +'<div class="stat-card c-green" style="text-align:center"><div class="stat-label">Completed</div><div class="stat-val" style="color:var(--green)">'+done+'</div></div>'
+      +'</div>';
+  }
+}
+
+async function saveProfile(){
+  var name=document.getElementById('profile-name-input')?.value?.trim();
+  if(!name){showNotif('Name required','error');return;}
+  var{error}=await sb.from('profiles').update({name:name}).eq('id',currentUser.id);
+  if(error){showNotif('Error: '+error.message,'error');return;}
+  document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
+  showNotif('Profile updated! ✓','success');
+  loadUserRole(currentUser);
+}
+
+async function changePassword(){
+  var newPass=document.getElementById('profile-new-pass')?.value?.trim();
+  if(!newPass||newPass.length<6){showNotif('Password must be at least 6 characters','error');return;}
+  var{error}=await sb.auth.updateUser({password:newPass});
+  if(error){showNotif('Error: '+error.message,'error');return;}
+  document.getElementById('profile-new-pass').value='';
+  showNotif('Password changed! ✓','success');
+}
+
+
 // ═══════════════════════════════════════
 // TEAM CHAT SYSTEM
 // ═══════════════════════════════════════
@@ -913,13 +973,20 @@ var replyToMsg=null;
 var lastReadTimes={};
 
 var CHANNEL_INFO={
-  announcements:{title:'📢 announcements',desc:'Admin announcements — read only for editors',adminOnly:true},
-  general:{title:'# general',desc:'Team chat — everyone',adminOnly:false},
-  creatives:{title:'# creatives',desc:'Creative direction & feedback',adminOnly:false},
-  approvals:{title:'✅ approvals',desc:'Project approvals & revisions',adminOnly:false}
+  announcements:{title:'📢 announcements',desc:'Admin only — important updates & announcements',adminOnly:true},
+  general:{title:'# general',desc:'General chat — everyone',adminOnly:false},
+  editors:{title:'# editors',desc:'Editors chat — production updates',adminOnly:false},
+  admin:{title:'🔐 admin',desc:'Admin only — private channel',adminOnly:true},
+  revisions:{title:'✏️ revisions',desc:'Revision requests & feedback',adminOnly:false},
+  images:{title:'🖼️ images',desc:'Image references & creative assets',adminOnly:false}
 };
 
 async function loadChat(){
+  // Attach click to static channel items
+  document.querySelectorAll('.ch-item[data-room]').forEach(function(el){
+    el.onclick=null;
+    el.addEventListener('click',function(){switchChatRoom(this.dataset.room);});
+  });
   await loadDMList();
   await switchChatRoom('general');
   loadUnreadBadges();
@@ -930,12 +997,21 @@ async function loadDMList(){
   var members=(data||[]).filter(function(m){return m.id!==currentUser?.id;});
   var dmList=document.getElementById('dm-list');
   if(!dmList)return;
+  if(!members.length){
+    dmList.innerHTML='<div style="font-size:11px;color:var(--text3);padding:6px 10px">No teammates yet</div>';
+    return;
+  }
   dmList.innerHTML=members.map(function(m){
     var initial=(m.name||m.email||'?')[0].toUpperCase();
     var roomId='dm_'+m.id;
+    var roleColor=m.role==='admin'?'var(--yellow)':'var(--purple)';
+    var roleBg=m.role==='admin'?'var(--yellow-dim)':'var(--purple-dim)';
     return '<div class="ch-item" data-room="'+roomId+'" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;gap:8px">'
-      +'<div style="width:22px;height:22px;border-radius:50%;background:var(--bg4);border:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--text2);flex-shrink:0">'+initial+'</div>'
-      +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(m.name||m.email)+'</div></div>'
+      +'<div style="width:26px;height:26px;border-radius:50%;background:'+roleBg+';border:0.5px solid '+roleColor+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:'+roleColor+';flex-shrink:0">'+initial+'</div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:12px;font-weight:500;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(m.name||m.email)+'</div>'
+      +'<div style="font-size:9px;color:var(--text3)">'+(m.role==='admin'?'Admin':'Editor')+'</div>'
+      +'</div>'
       +'<span class="ch-badge" id="badge-'+roomId+'" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>'
       +'</div>';
   }).join('');
@@ -946,11 +1022,13 @@ async function loadDMList(){
 
 async function switchChatRoom(room){
   currentRoom=room;
+  // Hide admin channel for non-admins
+  document.querySelectorAll('.ch-item[data-room="admin"]').forEach(function(el){
+    el.style.display=currentUserRole==='admin'?'flex':'none';
+  });
   // Update active channel UI
   document.querySelectorAll('.ch-item').forEach(function(el){
     el.style.background='';el.style.border='';
-    var spans=el.querySelectorAll('span,div');
-    spans.forEach(function(s){if(s.style.color==='var(--yellow)')s.style.color='';});
   });
   var activeEl=document.querySelector('[data-room="'+room+'"]');
   if(activeEl){
@@ -1078,17 +1156,20 @@ function escapeHtml(text){
 
 async function sendMessage(){
   var input=document.getElementById('chat-input');
-  var msg=input?.value?.trim();
-  if(!msg||!currentUser)return;
-  // Check admin-only rooms
+  var msg=input?input.value.trim():'';
+  if(!msg)return;
+  if(!currentUser){showNotif('Not logged in','error');return;}
   var info=CHANNEL_INFO[currentRoom];
-  if(info&&info.adminOnly&&currentUserRole!=='admin'){showNotif('Only admins can post here.','error');return;}
+  if(info&&info.adminOnly&&currentUserRole!=='admin'){
+    showNotif('Only admins can post in announcements.','error');return;
+  }
   input.value='';
-  var insertData={room:currentRoom,user_id:currentUser.id,message:msg};
+  var insertData={room:currentRoom,user_id:currentUser.id,message:msg,is_pinned:false,reactions:'{}'};
   if(replyToMsg){insertData.reply_to_id=replyToMsg.id;insertData.reply_to_text=replyToMsg.text;}
-  var{error}=await sb.from('chat_messages').insert(insertData);
-  if(error)showNotif('Send failed: '+error.message,'error');
+  var result=await sb.from('chat_messages').insert(insertData);
+  if(result.error){showNotif('Send failed: '+result.error.message,'error');input.value=msg;return;}
   cancelReply();
+  await loadMessages(currentRoom);
 }
 
 function replyTo(id,name,text){
@@ -1173,7 +1254,7 @@ function insertEmoji(emoji){
 }
 
 async function loadUnreadBadges(){
-  var rooms=['announcements','general','creatives','approvals'];
+  var rooms=['announcements','general','editors','admin','revisions','images'];
   for(var i=0;i<rooms.length;i++){
     var room=rooms[i];
     if(room===currentRoom)continue;
