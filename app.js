@@ -87,7 +87,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   if(page==='all-projects')loadAllProjects();
   if(page==='editor-portal')loadEditorPortal();
@@ -95,6 +95,7 @@ function showPage(page){
   if(page==='dashboard')loadDashboard();
   if(page==='analytics')loadAnalytics();
   if(page==='settings'){loadSettings();}
+  if(page==='chat'){loadChat();}
 }
 
 // NOTES
@@ -898,6 +899,146 @@ function applyTemplate(type){
   showNotif('Template applied! ✓','success');
   // Switch to manual tab
   switchTab('manual');
+}
+
+
+
+// ═══════════════════════════════════════
+// TEAM CHAT SYSTEM
+// ═══════════════════════════════════════
+
+var currentRoom = 'general';
+var chatSubscription = null;
+var chatRooms = {
+  general: {title:'# general', desc:'Team announcements'},
+  creatives: {title:'# creatives', desc:'Creative discussion'},
+  updates: {title:'# updates', desc:'Project updates'}
+};
+
+async function loadChat(){
+  await loadTeamMembers();
+  await loadMessages(currentRoom);
+  subscribeToChatUpdates();
+}
+
+async function loadTeamMembers(){
+  var{data}=await sb.from('profiles').select('id,name,email,role').order('name');
+  var members=data||[];
+  var dmList=document.getElementById('dm-list');
+  if(!dmList)return;
+  dmList.innerHTML=members.filter(function(m){return m.id!==currentUser?.id;}).map(function(m){
+    var roomId="dm_"+m.id;
+    var initial=(m.name||m.email||"?")[0].toUpperCase();
+    var role=m.role==="admin"?"Admin":"Editor";
+    return '<div class="chat-room-item" data-room="'+roomId+'" style="padding:8px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:2px;display:flex;align-items:center;gap:8px">'
+      +'<div style="width:24px;height:24px;border-radius:50%;background:var(--bg4);border:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text2);flex-shrink:0">'+initial+'</div>'
+      +'<div><div style="font-size:12px;font-weight:500;color:var(--text2)">'+( m.name||m.email)+'</div>'
+      +'<div style="font-size:9px;color:var(--text3)">'+role+'</div></div></div>';
+  }).join('');
+  dmList.querySelectorAll(".chat-room-item[data-room]").forEach(function(el){el.addEventListener("click",function(){switchChatRoom(this.dataset.room);});});
+}
+
+async function loadMessages(room){
+  var{data}=await sb.from('chat_messages')
+    .select('*,profiles(name,email)')
+    .eq('room',room)
+    .order('created_at',{ascending:true})
+    .limit(50);
+  renderMessages(data||[]);
+}
+
+function renderMessages(messages){
+  var box=document.getElementById('chat-messages');
+  if(!box)return;
+  box.innerHTML=messages.length?messages.map(function(m){
+    var isMe=m.user_id===currentUser?.id;
+    var name=m.profiles?.name||m.profiles?.email||'Unknown';
+    var initial=(name[0]||'?').toUpperCase();
+    var time=new Date(m.created_at).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+    return '<div style="display:flex;gap:8px;align-items:flex-start'+(isMe?';flex-direction:row-reverse':'')+'">'
+      +'<div style="width:28px;height:28px;border-radius:50%;background:'+(isMe?'var(--yellow-dim)':'var(--bg4)')+';border:0.5px solid '+(isMe?'var(--yellow)':'var(--border2)')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:'+(isMe?'var(--yellow)':'var(--text2)')+';flex-shrink:0">'+initial+'</div>'
+      +'<div style="max-width:70%">'
+      +'<div style="font-size:9px;color:var(--text3);margin-bottom:3px'+(isMe?';text-align:right':'')+'">'+name+' · '+time+'</div>'
+      +'<div style="background:'+(isMe?'var(--yellow-dim)':'var(--bg3)')+';border:0.5px solid '+(isMe?'rgba(250,204,21,0.2)':'var(--border2)')+';border-radius:'+(isMe?'12px 12px 4px 12px':'12px 12px 12px 4px')+';padding:8px 12px;font-size:12px;color:'+(isMe?'var(--yellow)':'var(--text)')+';line-height:1.5">'+escapeHtml(m.message)+'</div>'
+      +'</div></div>';
+  }).join(''):'<div style="text-align:center;padding:2rem;color:var(--text3);font-size:12px">No messages yet — say hi! 👋</div>';
+  box.scrollTop=box.scrollHeight;
+}
+
+function escapeHtml(text){
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function sendMessage(){
+  var input=document.getElementById('chat-input');
+  var msg=input?.value?.trim();
+  if(!msg||!currentUser)return;
+  input.value='';
+  var{error}=await sb.from('chat_messages').insert({
+    room:currentRoom,
+    user_id:currentUser.id,
+    message:msg,
+    created_at:new Date().toISOString()
+  });
+  if(error)showNotif('Send failed: '+error.message,'error');
+}
+
+function toggleEmojiPicker(){
+  var picker=document.getElementById('emoji-picker');
+  if(!picker)return;
+  picker.style.display=picker.style.display==='flex'?'none':'flex';
+}
+
+function insertEmoji(emoji){
+  var input=document.getElementById('chat-input');
+  if(!input)return;
+  input.value+=emoji;
+  input.focus();
+  document.getElementById('emoji-picker').style.display='none';
+}
+
+function switchChatRoom(room){
+  currentRoom=room;
+  // Update active state
+  document.querySelectorAll('.chat-room-item').forEach(function(el){
+    el.style.background='';
+    el.style.border='';
+    var title=el.querySelector('div');
+    if(title)title.style.color='var(--text2)';
+  });
+  var activeEl=document.getElementById('room-'+room);
+  if(activeEl){
+    activeEl.style.background='var(--yellow-dim)';
+    activeEl.style.border='0.5px solid var(--yellow)';
+    var t=activeEl.querySelector('div');
+    if(t)t.style.color='var(--yellow)';
+  }
+  // Update title
+  var titleEl=document.getElementById('chat-room-title');
+  var descEl=document.getElementById('chat-room-desc');
+  var inputEl=document.getElementById('chat-input');
+  if(chatRooms[room]){
+    if(titleEl)titleEl.textContent=chatRooms[room].title;
+    if(descEl)descEl.textContent=chatRooms[room].desc;
+    if(inputEl)inputEl.placeholder='Message '+chatRooms[room].title+'...';
+  } else if(room.startsWith('dm_')){
+    if(titleEl)titleEl.textContent='Direct Message';
+    if(descEl)descEl.textContent='Private conversation';
+    if(inputEl)inputEl.placeholder='Send a message...';
+  }
+  loadMessages(room);
+  // Unsubscribe and resubscribe
+  if(chatSubscription)chatSubscription.unsubscribe();
+  subscribeToChatUpdates();
+}
+
+function subscribeToChatUpdates(){
+  chatSubscription=sb.channel('chat-'+currentRoom)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'room=eq.'+currentRoom},
+      function(payload){
+        loadMessages(currentRoom);
+      }
+    ).subscribe();
 }
 
 
