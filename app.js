@@ -179,7 +179,7 @@ async function loadDashboard(){
       <div class="row-meta">${p.business_type||'—'}</div>
       <div>${statusBadge(p.status)}</div>
       <div class="row-date">${fmtDate(p.created_at)}</div>
-    </div>`).join('')||'<div class="table-empty"><div class="table-empty-icon">📋</div>No projects yet — create your first one!</div>';
+    </div>`).join('')||'<div class="table-empty"><div class="table-empty-icon">📋</div><div>No projects yet</div><div style="font-size:11px;margin-top:6px;color:var(--text3)">Click + New project to get started</div></div>';
 }
 
 // ALL PROJECTS
@@ -244,7 +244,9 @@ async function loadEditorPortal(){
 
 async function markInProduction(id){
   await sb.from('projects').update({status:'In Production',updated_at:new Date().toISOString()}).eq('id',id);
-  showNotif('Marked as In Production! 🎬','success');loadEditorPortal();
+  showNotif('Marked as In Production! 🎬','success');
+  loadEditorPortal();
+  if(currentUserRole==='admin')loadDashboard();
 }
 
 // USERS
@@ -343,7 +345,7 @@ ${allNotes?'- Internal Notes: '+allNotes:''}`;
   }
 
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Generating...';
-  status.textContent='AI is building your blueprint...';
+  status.textContent='⚡ AI is building your blueprint (10-20 seconds)...';
   document.getElementById('blueprint-output').style.display='none';
 
   const systemPrompt=`ROLE: Elite AI Creative Director for high-performance Filipino Video Ads Agency. Generate hyper-optimized, high-converting scene-by-scene advertising blueprint. Output requires ZERO manual rewrites.
@@ -359,7 +361,7 @@ OUTPUT FORMAT: ### 📊 AUTOMATED PROJECT OVERVIEW\n### 🎙️ ELEVENLABS AUDIO
     const text=d.content?.map(i=>i.text||'').join('')||'Error generating blueprint.';
     document.getElementById('blueprint-text').textContent=text;
     document.getElementById('blueprint-output').style.display='block';
-    status.textContent='✓ Blueprint ready — review and save!';
+    status.textContent='✓ Blueprint ready ('+text.split('\n').length+' lines) — review and save!';
   }catch(e){showNotif('Error: '+e.message,'error');status.textContent='';}
   finally{btn.disabled=false;btn.innerHTML='⚡ Generate blueprint';}
 }
@@ -375,9 +377,16 @@ async function saveProject(){
   if(isPaste){
     const brief=document.getElementById('f-brief').value.trim();
     // Try multiple patterns to extract client name
-    const nm=brief.match(/(?:client\s*name|business\s*name|brand\s*name|company|client)[\s]*[:\-][\s]*([^\n]+)/i);
-    if(nm)clientName=nm[1].trim().replace(/[*_]/g,'').trim();
-    else clientName='Client '+new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+    const patterns=[
+      /(?:client\s*name|business\s*name|brand\s*name)[\s]*[:\-][\s]*([^\n]+)/i,
+      /(?:company|brand|client|business)[\s]*[:\-][\s]*([^\n]+)/i,
+      /^([^\n]{3,50})(?:\n|$)/m
+    ];
+    for(const pat of patterns){
+      const m=brief.match(pat);
+      if(m&&m[1]){clientName=m[1].trim().replace(/[*_\[\]]/g,'').trim();break;}
+    }
+    if(!clientName||clientName.length<2)clientName='Client '+new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric'});
     product=brief.substring(0,500);
     emphasize=document.getElementById('f-script').value||'';
   } else {
@@ -426,11 +435,17 @@ async function openModal(id){
   document.getElementById('modal-date').textContent=fmtDate(p.created_at)+' · '+p.business_type;
   document.getElementById('modal-status-select').value=p.status;
   document.getElementById('modal-blueprint').textContent=p.blueprint||'No blueprint yet.';
+  // Get assigned editor name
+  var assignedName='Unassigned';
+  if(p.assigned_to){
+    const{data:edData}=await sb.from('profiles').select('name,email').eq('id',p.assigned_to).maybeSingle();
+    if(edData)assignedName=edData.name||edData.email;
+  }
   document.getElementById('modal-detail-grid').innerHTML=[
-    ['FB Page',p.fb_page],['Website',p.website],
+    ['Client',p.client_name],['Business type',p.business_type],
     ['Goal',p.goal],['Language',p.language],
     ['Video size',p.video_size],['Tone',p.tone],
-    ['Audience',p.audience],['Colors',(p.color_primary||'')+(p.color_secondary?' / '+p.color_secondary:'')],
+    ['Audience',p.audience],['Assigned to',assignedName],
     ['Pain point',p.pain_point],['USP',p.usp]
   ].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-val">${v||'—'}</div></div>`).join('');
   // Load team members for assignment
