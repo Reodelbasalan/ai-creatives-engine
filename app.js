@@ -1727,50 +1727,103 @@ function generateWithTool(tool, prompt, type){
   var mode=getToolSetting(tool+'-mode', tool==='higgsfield'?'account':'api');
   
   if(mode==='account'){
-    // Copy prompt + open tool
-    navigator.clipboard.writeText(prompt).catch(function(){});
+    // Copy prompt to clipboard
+    navigator.clipboard.writeText(prompt).then(function(){
+      showNotif('✓ Prompt copied! Opening '+tool+'...','success');
+    }).catch(function(){
+      showNotif('Opening '+tool+' — paste your prompt there','success');
+    });
+    // Open the right tool URL
     var urls={
       higgsfield:'https://higgsfield.ai/create',
       grok:'https://grok.com',
-      veo:'https://flow.google.com'
+      veo:'https://flow.google.com/video'
     };
-    window.open(urls[tool]||'https://'+tool+'.ai','_blank');
-    showNotif('Prompt copied! Paste it in '+tool+' ✓','success');
+    setTimeout(function(){
+      window.open(urls[tool]||'https://'+tool+'.ai','_blank');
+    },300);
     return;
   }
 
-  // API mode
+  // API mode — check for key
   var apiKey=getToolSetting(tool+'-api-key');
   if(!apiKey){
-    showNotif('No API key set for '+tool+'. Go to Settings!','error');
-    showPage('settings');
+    showNotif('No API key for '+tool+' — set it in Settings!','error');
+    setTimeout(function(){showPage('settings');},1500);
     return;
   }
 
-  showNotif('Generating with '+tool+'... ⚡','success');
+  // Show loading
+  showNotif('⚡ Generating with '+tool+'...','success');
 
   if(tool==='grok'){
     generateGrok(prompt, apiKey, type);
   } else if(tool==='veo'){
     generateVeo(prompt, apiKey, type);
+  } else if(tool==='higgsfield'){
+    generateHiggsfield(prompt, apiKey, type);
+  }
+}
+
+// Higgsfield API mode
+async function generateHiggsfield(prompt, apiKey, type){
+  try{
+    showNotif('⚡ Sending to Higgsfield API...','success');
+    var res=await fetch('/api/higgs-generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt:prompt,apiKey:apiKey,type:type,
+        model:getToolSetting('higgs-model','soul-2'),
+        duration:parseInt(getToolSetting('higgs-duration','4'))})
+    });
+    var d=await res.json();
+    if(d.url){
+      showNotif('✅ Generated! Opening output...','success');
+      window.open(d.url,'_blank');
+      // Auto-save to project
+      if(currentProjectId){
+        await sb.from('project_outputs').insert({
+          project_id:currentProjectId,user_id:currentUser.id,
+          url:d.url,type:type,label:'Higgsfield '+type
+        });
+        loadOutputs(currentProjectId);
+      }
+    } else if(d.status==='processing'){
+      showNotif('⏳ Generating... Check Higgsfield in ~30 seconds','success');
+    } else {
+      showNotif('Error: '+(d.error||'Generation failed'),'error');
+    }
+  }catch(e){
+    showNotif('Higgsfield error: '+e.message,'error');
   }
 }
 
 async function generateGrok(prompt, apiKey, type){
   try{
+    showNotif('⚡ Grok generating (may take 30-60 sec)...','success');
     var model=getToolSetting('grok-model','grok-imagine-video-1.5-preview');
     var duration=parseInt(getToolSetting('grok-duration','8'));
     var res=await fetch('/api/grok-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt,apiKey,model,duration,type})
+      body:JSON.stringify({prompt:prompt,apiKey:apiKey,model:model,duration:duration,type:type})
     });
     var d=await res.json();
     if(d.url){
-      showNotif('Video ready! ✓','success');
+      showNotif('✅ Grok video ready! Opening...','success');
       window.open(d.url,'_blank');
+      // Auto-save output
+      if(currentProjectId){
+        await sb.from('project_outputs').insert({
+          project_id:currentProjectId,user_id:currentUser.id,
+          url:d.url,type:'video',label:'Grok video'
+        });
+        loadOutputs(currentProjectId);
+      }
+    } else if(d.status==='processing'){
+      showNotif('⏳ Still generating — check back in 1 minute','success');
     } else {
-      showNotif('Error: '+(d.error||'Generation failed'),'error');
+      showNotif('Grok error: '+(d.error||'Failed'),'error');
     }
   }catch(e){
     showNotif('Grok error: '+e.message,'error');
@@ -1779,19 +1832,30 @@ async function generateGrok(prompt, apiKey, type){
 
 async function generateVeo(prompt, apiKey, type){
   try{
+    showNotif('⚡ Veo generating (1-3 minutes)...','success');
     var model=getToolSetting('veo-model','veo-3');
     var duration=parseInt(getToolSetting('veo-duration','8'));
     var res=await fetch('/api/veo-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt,apiKey,model,duration,type})
+      body:JSON.stringify({prompt:prompt,apiKey:apiKey,model:model,duration:duration,type:type})
     });
     var d=await res.json();
     if(d.url){
-      showNotif('Video ready! ✓','success');
+      showNotif('✅ Veo video ready! Opening...','success');
       window.open(d.url,'_blank');
+      // Auto-save output
+      if(currentProjectId){
+        await sb.from('project_outputs').insert({
+          project_id:currentProjectId,user_id:currentUser.id,
+          url:d.url,type:'video',label:'Veo video'
+        });
+        loadOutputs(currentProjectId);
+      }
+    } else if(d.status==='processing'){
+      showNotif('⏳ Veo is still processing — check Google AI Studio','success');
     } else {
-      showNotif('Error: '+(d.error||'Generation failed'),'error');
+      showNotif('Veo error: '+(d.error||'Failed'),'error');
     }
   }catch(e){
     showNotif('Veo error: '+e.message,'error');
