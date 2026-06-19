@@ -48,6 +48,92 @@ async function doLogin(){
   err.style.display='block';
 }
 
+
+// ═══════════════════════════════════════
+// SECURITY + AUTO-SAVE SYSTEM
+// ═══════════════════════════════════════
+
+// SESSION TIMEOUT - 30 mins inactivity
+var inactivityTimer=null;
+var SESSION_TIMEOUT=30*60*1000;
+
+function resetInactivityTimer(){
+  clearTimeout(inactivityTimer);
+  inactivityTimer=setTimeout(function(){
+    showNotif('Session expired. Please login again.','error');
+    setTimeout(function(){sb.auth.signOut().then(function(){location.reload();});},2000);
+  },SESSION_TIMEOUT);
+}
+
+function initSecurityListeners(){
+  ['mousemove','keydown','click','scroll','touchstart'].forEach(function(evt){
+    document.addEventListener(evt,resetInactivityTimer,{passive:true});
+  });
+  resetInactivityTimer();
+}
+
+// ROLE-BASED PAGE PROTECTION
+var ADMIN_PAGES=['dashboard','new-project','all-projects','users','clients','analytics','submission','settings','chat'];
+var EDITOR_PAGES=['editor-portal','chat','profile'];
+var CLIENT_PAGES=['client-dashboard','profile'];
+
+function canAccessPage(page){
+  if(currentUserRole==='admin')return true;
+  if(currentUserRole==='client')return CLIENT_PAGES.indexOf(page)>=0;
+  return EDITOR_PAGES.indexOf(page)>=0;
+}
+
+// ACTIVITY LOG
+async function logActivity(action,details){
+  try{
+    await sb.from('activity_logs').insert({
+      user_id:currentUser?.id,
+      action:action,
+      details:details||null,
+      created_at:new Date().toISOString()
+    });
+  }catch(e){}
+}
+
+// AUTO-SAVE new project form
+var autoSaveTimer=null;
+
+function initAutoSave(){
+  var fields=['f-client','f-biztype','f-product','f-pain','f-usp','f-audience','f-goal','f-emphasize','f-brief','f-script'];
+  fields.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){
+      // Restore saved value
+      var saved=localStorage.getItem('ace_draft_'+id);
+      if(saved&&!el.value)el.value=saved;
+      // Auto-save on input
+      el.addEventListener('input',function(){
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer=setTimeout(function(){
+          fields.forEach(function(fid){
+            var fel=document.getElementById(fid);
+            if(fel&&fel.value)localStorage.setItem('ace_draft_'+fid,fel.value);
+          });
+          showDraftSaved();
+        },1500);
+      });
+    }
+  });
+}
+
+function showDraftSaved(){
+  var el=document.getElementById('draft-saved-indicator');
+  if(!el)return;
+  el.style.opacity='1';
+  setTimeout(function(){el.style.opacity='0';},2000);
+}
+
+function clearDraft(){
+  var fields=['f-client','f-biztype','f-product','f-pain','f-usp','f-audience','f-goal','f-emphasize','f-brief','f-script'];
+  fields.forEach(function(id){localStorage.removeItem('ace_draft_'+id);});
+}
+
+
 function loadUserRole(user){
   var email=user?.email||'';
   currentUserRole=email==='admin@aicreatives.com'?'admin':'editor';
@@ -89,7 +175,11 @@ async function doLogout(){
 function showApp(){
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app').style.display='block';
-  if(currentUserRole==='admin'){loadDashboard();loadNotifications();}else loadEditorPortal();
+  initSecurityListeners();
+  logActivity('LOGIN','User logged in');
+  if(currentUserRole==='admin'){loadDashboard();loadNotifications();}
+  else if(currentUserRole==='client'){showPage('client-dashboard');loadClientDashboard();}
+  else loadEditorPortal();
 }
 
 function showPage(page){
@@ -97,7 +187,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   if(page==='all-projects')loadAllProjects();
   if(page==='editor-portal')loadEditorPortal();
@@ -105,6 +195,7 @@ function showPage(page){
   if(page==='dashboard')loadDashboard();
   if(page==='analytics')loadAnalytics();
   if(page==='clients')loadClients();
+  if(page==='activity')loadActivityLog();
   if(page==='client-dashboard')loadClientDashboard();
   if(page==='settings'){loadSettings();}
   if(page==='chat'){loadChat();}
