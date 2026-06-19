@@ -283,6 +283,17 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .notif.show{display:flex;align-items:center;gap:8px}
 .notif.success{border-color:rgba(34,197,94,0.3);color:var(--green)}
 .notif.error{border-color:rgba(239,68,68,0.3);color:var(--red)}
+/* SECURITY STYLES */
+.session-warning{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:var(--amber-dim);border:0.5px solid var(--amber);
+  border-radius:var(--radius-lg);padding:10px 20px;font-size:12px;
+  color:var(--amber);font-weight:600;z-index:9999;display:none;
+  box-shadow:var(--shadow-lg);
+}
+/* AUTO-SAVE PULSE */
+@keyframes savePulse{0%{opacity:1}50%{opacity:0.5}100%{opacity:1}}
+#draft-saved-indicator.saving{animation:savePulse 1s infinite;}
 </style>
 </head>
 <body>
@@ -343,6 +354,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         Clients
         <span class="nav-badge" id="clients-badge" style="display:none">0</span>
       </div>
+      <div class="nav-item admin-only" onclick="showPage('activity')" id="nav-activity">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Activity log
+      </div>
       <div class="nav-item admin-only" onclick="showPage('analytics')" id="nav-analytics">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Analytics
@@ -390,8 +405,12 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
           <div id="notif-bell-count" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:8px;font-weight:700;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center">0</div>
         </div>
-        <div id="notif-panel" style="display:none;position:absolute;top:54px;right:80px;width:300px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:100;overflow:hidden">
-          <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);font-size:11px;font-weight:600;color:var(--text2)">Active projects</div>
+        <div id="notif-panel" style="display:none;position:absolute;top:54px;right:80px;width:320px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:1000;overflow:hidden">
+          <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:11px;font-weight:600;color:var(--text2)">Notifications</div>
+            <button onclick="markAllRead()" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer">Mark all read</button>
+          </div>
+          <div id="notif-list" style="max-height:300px;overflow-y:auto"></div>
         </div>
         <button class="yellow-btn admin-only" onclick="showPage('new-project')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -571,7 +590,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <!-- GENERATE -->
         <div class="generate-area">
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <button class="yellow-btn" id="generate-btn" onclick="generateBlueprint()">⚡ Generate blueprint</button>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span id="draft-saved-indicator" style="font-size:10px;color:var(--green);opacity:0;transition:opacity 0.3s">✓ Draft saved</span>
+          </div>
+          <button class="yellow-btn" id="generate-btn" onclick="generateBlueprint()">⚡ Generate blueprint</button>
             <span id="gen-status" style="font-size:12px;color:var(--text3)"></span>
           </div>
           <div id="blueprint-output" style="display:none;margin-top:1rem">
@@ -981,6 +1003,25 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
       </div>
 
+      <!-- ACTIVITY LOG PAGE -->
+      <div class="page" id="page-activity">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div class="section-label" style="margin:0">Activity log</div>
+          <div style="display:flex;gap:8px">
+            <input type="date" class="form-input" id="activity-date-from" style="max-width:140px;font-size:11px" onchange="loadActivityLog()"/>
+            <span style="font-size:11px;color:var(--text3);line-height:32px">→</span>
+            <input type="date" class="form-input" id="activity-date-to" style="max-width:140px;font-size:11px" onchange="loadActivityLog()"/>
+            <button class="ghost-btn" onclick="document.getElementById('activity-date-from').value='';document.getElementById('activity-date-to').value='';loadActivityLog()" style="font-size:11px">All time</button>
+          </div>
+        </div>
+        <div class="data-table">
+          <div class="table-head" style="grid-template-columns:1.5fr 1fr 2fr 1fr">
+            <span>User</span><span>Action</span><span>Details</span><span>Time</span>
+          </div>
+          <div id="activity-log-body"></div>
+        </div>
+      </div>
+
       <!-- CLIENTS PAGE -->
       <div class="page" id="page-clients">
 
@@ -1177,6 +1218,20 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     <div class="blueprint-actions" style="margin-top:10px">
       <button class="ghost-btn" onclick="copyModalBlueprint()">📋 Copy blueprint</button>
       <button class="ghost-btn" onclick="exportPDF()">📄 Export PDF</button>
+    </div>
+    <div class="section-divider"></div>
+    <!-- OUTPUT TRACKER -->
+    <div class="section-label">📦 Output files</div>
+    <div id="modal-outputs" style="margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap">
+      <input class="form-input" id="output-url-input" placeholder="Paste video/image URL or Google Drive link..." style="flex:1;font-size:12px"/>
+      <select class="form-select" id="output-type-select" style="max-width:120px;font-size:12px">
+        <option value="video">🎬 Video</option>
+        <option value="image">🖼️ Image</option>
+        <option value="blueprint">📄 Blueprint</option>
+        <option value="other">📎 Other</option>
+      </select>
+      <button class="ghost-btn" onclick="addOutput()" style="white-space:nowrap;font-size:12px">+ Add</button>
     </div>
     <div class="section-divider"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
