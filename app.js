@@ -1161,9 +1161,16 @@ function renderMessages(messages){
         +'↩ '+escapeHtml(m.reply_to_text.substring(0,60))+'</div>';
     }
     // Reactions
-    var reactions=m.reactions?Object.entries(JSON.parse(m.reactions||'{}')).map(function(e){
-      return '<span onclick="addReaction(\"'+m.id+'\",\"'+e[0]+'\")" style="cursor:pointer;font-size:12px;padding:2px 6px;background:var(--bg4);border-radius:20px;border:0.5px solid var(--border2)">'+e[0]+' '+e[1]+'</span>';
-    }).join(''):'';
+    var reactions='';
+    try{
+      if(m.reactions){
+        var rxData=typeof m.reactions==='string'?JSON.parse(m.reactions):m.reactions;
+        var rxEntries=Object.entries(rxData||{});
+        if(rxEntries.length)reactions=rxEntries.map(function(e){
+          return '<span style="cursor:pointer;font-size:12px;padding:2px 6px;background:var(--bg4);border-radius:20px">'+e[0]+' '+e[1]+'</span>';
+        }).join('');
+      }
+    }catch(ex){reactions='';}
     html+='<div class="msg-row" data-id="'+m.id+'" style="display:flex;gap:8px;align-items:flex-start;padding:3px 0;'+(isMe?'flex-direction:row-reverse':'')+'" onmouseenter="showMsgActions(this)" onmouseleave="hideMsgActions(this)">'
       +'<div style="width:28px;height:28px;border-radius:50%;background:'+(isMe?'var(--yellow-dim)':'var(--bg4)')+';border:0.5px solid '+(isMe?'var(--yellow)':'var(--border2)')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:'+(isMe?'var(--yellow)':'var(--text2)')+';flex-shrink:0">'+initial+'</div>'
       +'<div style="max-width:65%;'+(isMe?'align-items:flex-end;':'')+'display:flex;flex-direction:column">'
