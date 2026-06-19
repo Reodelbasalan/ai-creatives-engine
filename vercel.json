@@ -1,13 +1,8 @@
 {
   "functions": {
-    "api/generate.js": {
-      "maxDuration": 30
-    },
-    "api/grok-generate.js": {
-      "maxDuration": 60
-    },
-    "api/veo-generate.js": {
-      "maxDuration": 60
-    }
+    "api/generate.js": { "maxDuration": 30 },
+    "api/grok-generate.js": { "maxDuration": 60 },
+    "api/veo-generate.js": { "maxDuration": 60 },
+    "api/higgs-generate.js": { "maxDuration": 60 }
   }
 }
