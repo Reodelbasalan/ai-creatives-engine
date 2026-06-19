@@ -6,6 +6,29 @@
 <title>AI Creatives Engine</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+/* MOBILE RESPONSIVE */
+@media(max-width:768px){
+  .layout{flex-direction:column}
+  .sidebar{width:100%;height:auto;position:relative;flex-direction:row;flex-wrap:wrap}
+  .sidebar-nav{display:flex;flex-direction:row;overflow-x:auto;padding:4px}
+  .nav-section{display:none}
+  .sidebar-footer{display:none}
+  .sidebar-logo{padding:10px 14px;border-bottom:none;border-right:0.5px solid var(--border)}
+  .stats-grid{grid-template-columns:1fr 1fr!important}
+  .pipeline{grid-template-columns:1fr!important}
+  .form-grid{grid-template-columns:1fr!important}
+  .form-grid-3{grid-template-columns:1fr!important}
+  .tone-grid{grid-template-columns:1fr 1fr!important}
+  .modal{margin:0;border-radius:0;max-height:100vh}
+  .detail-grid{grid-template-columns:1fr!important}
+  .topbar{padding:0 1rem}
+  .content{padding:1rem}
+  .projects-cols{grid-template-columns:2fr 1fr!important}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr!important}
+  .auth-box{width:calc(100vw - 2rem);padding:1.5rem}
+}
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 :root{
   --bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--bg4:#1e1e1e;--bg5:#242424;
@@ -192,7 +215,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 
 /* GENERATE AREA */
 .generate-area{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-top:12px}
-.blueprint-box{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:1.25rem;font-size:12px;line-height:1.9;color:var(--text2);white-space:pre-wrap;max-height:500px;overflow-y:auto;font-family:'Courier New',monospace}
+.blueprint-box{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:1.25rem;font-size:11.5px;line-height:1.9;color:var(--text2);white-space:pre-wrap;max-height:500px;overflow-y:auto;font-family:'Courier New',monospace;word-break:break-word}
 .blueprint-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .ghost-btn{background:transparent;border:0.5px solid var(--border2);border-radius:var(--radius);padding:8px 14px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s;font-family:'Inter',sans-serif;font-weight:500}
 .ghost-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--border3)}
