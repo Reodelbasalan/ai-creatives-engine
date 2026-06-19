@@ -1694,20 +1694,43 @@ function loadSettings(){
       if(val)el.value=val;
     }
   });
-  // Apply mode toggles - default grok+veo to API mode
+  // Apply mode toggles
   var grokMode=getToolSetting('grok-mode')||'api';
   var veoMode=getToolSetting('veo-mode')||'api';
-  var higgsMode=getToolSetting('higgs-mode')||'account';
-  toggleToolMode('grok', grokMode);
-  toggleToolMode('veo', veoMode);
-  toggleToolMode('higgs', higgsMode);
-  // Force set select values
-  var grokSel=document.getElementById('grok-mode');
-  var veoSel=document.getElementById('veo-mode');
-  var higgsSel=document.getElementById('higgs-mode');
-  if(grokSel)grokSel.value=grokMode;
-  if(veoSel)veoSel.value=veoMode;
-  if(higgsSel)higgsSel.value=higgsMode;
+  switchToolMode('grok', grokMode);
+  switchToolMode('veo', veoMode);
+  // Restore API key values
+  var grokKey=getToolSetting('grok-api-key');
+  var veoKey=getToolSetting('veo-api-key');
+  var grokInput=document.getElementById('grok-api-key');
+  var veoInput=document.getElementById('veo-api-key');
+  if(grokInput&&grokKey)grokInput.value=grokKey;
+  if(veoInput&&veoKey)veoInput.value=veoKey;
+}
+
+function switchToolMode(tool, mode){
+  saveToolSetting(tool+'-mode', mode);
+  // Update button states
+  var apiBtn=document.getElementById(tool+'-btn-api');
+  var accBtn=document.getElementById(tool+'-btn-account');
+  if(apiBtn){
+    apiBtn.style.background=mode==='api'?'var(--yellow-dim)':'var(--bg3)';
+    apiBtn.style.color=mode==='api'?'var(--yellow)':'var(--text3)';
+    apiBtn.style.borderColor=mode==='api'?'var(--yellow)':'var(--border2)';
+  }
+  if(accBtn){
+    accBtn.style.background=mode==='account'?'var(--yellow-dim)':'var(--bg3)';
+    accBtn.style.color=mode==='account'?'var(--yellow)':'var(--text3)';
+    accBtn.style.borderColor=mode==='account'?'var(--yellow)':'var(--border2)';
+  }
+  // Show/hide sections
+  var apiSection=document.getElementById(tool+'-api-section');
+  var accSection=document.getElementById(tool+'-account-section');
+  if(apiSection)apiSection.style.display=mode==='api'?'block':'none';
+  if(accSection)accSection.style.display=mode==='account'?'block':'none';
+  // Also update generateWithTool to use new mode
+  var modeEl=document.getElementById(tool+'-mode');
+  if(modeEl)modeEl.value=mode;
 }
 
 function toggleToolMode(tool, mode){
@@ -1742,7 +1765,7 @@ function testConnection(tool){
 // ═══════════════════════════════════════
 
 function generateWithTool(tool, prompt, type){
-  var mode=getToolSetting(tool+'-mode', tool==='higgsfield'?'account':'api');
+  var mode=getToolSetting(tool+'-mode')||(tool==='higgsfield'?'account':'api');
   
   if(mode==='account'){
     // Copy prompt to clipboard
