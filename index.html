@@ -6,6 +6,31 @@
 <title>AI Creatives Engine</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+/* CUSTOM DATE PICKER */
+input[type="date"], input[type="month"]{
+  color-scheme: dark;
+  cursor:pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator{
+  filter: invert(0.8) sepia(1) saturate(5) hue-rotate(0deg);
+  cursor:pointer;
+  opacity:0.7;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="month"]::-webkit-calendar-picker-indicator:hover{
+  opacity:1;
+}
+/* DATE FILTER BAR */
+.date-filter-bar{
+  display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;
+  padding:10px 14px;background:var(--bg3);border:0.5px solid var(--border2);
+  border-radius:var(--radius-lg);
+}
+.date-filter-bar label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-right:2px}
+.date-filter-bar input{max-width:150px;font-size:12px;padding:5px 10px}
+.date-filter-bar .ghost-btn{font-size:11px;padding:5px 12px}
+
 /* MOBILE RESPONSIVE */
 @media(max-width:768px){
   .layout{flex-direction:column}
@@ -313,6 +338,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         Team members
       </div>
+      <div class="nav-item admin-only" onclick="showPage('clients')" id="nav-clients">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        Clients
+        <span class="nav-badge" id="clients-badge" style="display:none">0</span>
+      </div>
       <div class="nav-item admin-only" onclick="showPage('analytics')" id="nav-analytics">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Analytics
@@ -404,7 +434,15 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
           <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#f59e0b"></div><span class="pipe-col-label">In production</span><span class="pipe-count" id="count-prod">0</span></div><div id="pipe-prod"><div class="pipe-empty">—</div></div></div>
           <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#4caf50"></div><span class="pipe-col-label">Done</span><span class="pipe-count" id="count-done">0</span></div><div id="pipe-done"><div class="pipe-empty">—</div></div></div>
         </div>
-        <div class="section-label">Recent projects</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+          <div class="section-label" style="margin:0">Recent projects</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="date" class="form-input" id="dash-date-from" placeholder="From" style="max-width:140px;font-size:11px" onchange="loadDashboard()"/>
+            <span style="font-size:11px;color:var(--text3)">to</span>
+            <input type="date" class="form-input" id="dash-date-to" placeholder="To" style="max-width:140px;font-size:11px" onchange="loadDashboard()"/>
+            <button class="ghost-btn" onclick="document.getElementById('dash-date-from').value='';document.getElementById('dash-date-to').value='';loadDashboard()" style="font-size:10px;padding:4px 8px">Clear</button>
+          </div>
+        </div>
         <div class="data-table">
           <div class="table-head projects-cols"><span>Client / project</span><span>Type</span><span>Status</span><span>Date</span></div>
           <div id="recent-projects-body"></div>
@@ -560,6 +598,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <option value="normal">🟡 Normal</option>
             <option value="low">⚪ Low</option>
           </select>
+          <input type="date" class="form-input" id="proj-date-from" style="max-width:140px;font-size:11px" onchange="filterProjects()"/>
+          <span style="font-size:11px;color:var(--text3)">→</span>
+          <input type="date" class="form-input" id="proj-date-to" style="max-width:140px;font-size:11px" onchange="filterProjects()"/>
+          <button class="ghost-btn" onclick="clearProjectFilters()" style="font-size:11px">Clear</button>
           <button class="ghost-btn" onclick="exportCSV()" style="font-size:11px;margin-left:auto">📥 Export CSV</button>
         </div>
         <!-- BULK ACTION BAR -->
@@ -939,11 +981,102 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
       </div>
 
+      <!-- CLIENTS PAGE -->
+      <div class="page" id="page-clients">
+
+        <!-- ADD CLIENT FORM -->
+        <div class="add-user-form" style="margin-bottom:1.25rem">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:1rem">➕ Add new client</div>
+          <div class="form-grid">
+            <div class="form-field"><label class="form-label">Full name</label><input class="form-input" id="new-client-name" placeholder="Juan dela Cruz"/></div>
+            <div class="form-field"><label class="form-label">Company / Brand</label><input class="form-input" id="new-client-company" placeholder="Cosmetic Cocoon PH"/></div>
+            <div class="form-field"><label class="form-label">Email</label><input class="form-input" id="new-client-email" placeholder="client@email.com"/></div>
+            <div class="form-field"><label class="form-label">Phone</label><input class="form-input" id="new-client-phone" placeholder="+63 9XX XXX XXXX"/></div>
+            <div class="form-field"><label class="form-label">Password</label><input class="form-input" type="password" id="new-client-pass" placeholder="Min. 6 characters"/></div>
+            <div class="form-field"><label class="form-label">Plan</label>
+              <select class="form-select" id="new-client-plan">
+                <option value="basic">Basic</option>
+                <option value="standard">Standard</option>
+                <option value="premium">Premium</option>
+              </select>
+            </div>
+            <div class="form-field"><label class="form-label">Payment due date</label><input class="form-input" type="date" id="new-client-due"/></div>
+            <div class="form-field"><label class="form-label">Payment status</label>
+              <select class="form-select" id="new-client-payment">
+                <option value="paid">✅ Paid</option>
+                <option value="unpaid">❌ Unpaid</option>
+                <option value="overdue">⚠️ Overdue</option>
+              </select>
+            </div>
+          </div>
+          <button class="yellow-btn" style="margin-top:1rem" onclick="addClient()" id="add-client-btn">Add client</button>
+        </div>
+
+        <!-- CLIENTS STATS -->
+        <div class="stats-grid" style="margin-bottom:1rem" id="clients-stats"></div>
+
+        <!-- CLIENTS TABLE -->
+        <div class="section-label">All clients</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <input class="form-input" id="search-clients" placeholder="Search clients..." oninput="filterClients()" style="max-width:220px"/>
+          <select class="form-select" id="filter-payment" onchange="filterClients()" style="max-width:160px">
+            <option value="">All payments</option>
+            <option value="paid">✅ Paid</option>
+            <option value="unpaid">❌ Unpaid</option>
+            <option value="overdue">⚠️ Overdue</option>
+          </select>
+        </div>
+        <div class="data-table">
+          <div class="table-head" style="grid-template-columns:2fr 1.5fr 1fr 1fr 1fr 100px">
+            <span>Client / Company</span><span>Contact</span><span>Plan</span><span>Payment</span><span>Due date</span><span>Actions</span>
+          </div>
+          <div id="clients-body"></div>
+        </div>
+      </div>
+
+      <!-- CLIENT DASHBOARD (for client role) -->
+      <div class="page" id="page-client-dashboard">
+        <div style="margin-bottom:1.5rem">
+          <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px">Welcome back! 👋</div>
+          <div style="font-size:12px;color:var(--text3)">Here are your projects and their current status.</div>
+        </div>
+        <div class="stats-grid" id="client-stats"></div>
+        <div class="section-label" style="margin-top:1rem">My projects</div>
+        <div id="client-projects-body"></div>
+
+        <!-- SUBMIT NEW BRIEF -->
+        <div class="generate-area" style="margin-top:1.5rem">
+          <div class="form-card-title" style="margin-bottom:1rem"><span>📋</span> Submit new brief</div>
+          <textarea class="form-textarea" id="client-brief-input" placeholder="Describe your project...&#10;&#10;Include:&#10;- Brand name&#10;- Product/service&#10;- Target audience&#10;- Goals&#10;- Any special requests" style="min-height:160px"></textarea>
+          <div class="form-grid-3" style="margin-top:10px">
+            <div class="form-field">
+              <label class="form-label">Video size</label>
+              <select class="form-select" id="client-size"><option>9:16 Vertical — TikTok / Reels / Shorts</option><option>1:1 Square — Feed</option><option>16:9 Landscape — YouTube</option></select>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Language</label>
+              <select class="form-select" id="client-lang"><option>Taglish</option><option>Pure Tagalog</option><option>English</option></select>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Duration</label>
+              <select class="form-select" id="client-duration"><option>30 seconds</option><option>45 seconds</option><option>60 seconds</option></select>
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+            <button class="yellow-btn" id="client-submit-btn" onclick="submitClientBrief()">⚡ Submit & Auto-generate blueprint</button>
+            <span id="client-submit-status" style="font-size:12px;color:var(--text3)"></span>
+          </div>
+        </div>
+      </div>
+
       <!-- ANALYTICS -->
       <div class="page" id="page-analytics">
         <div style="display:flex;gap:8px;margin-bottom:1rem;align-items:center;flex-wrap:wrap">
           <input type="month" class="form-input" id="analytics-month-filter" onchange="loadAnalytics()" style="max-width:180px"/>
           <button class="ghost-btn" onclick="document.getElementById('analytics-month-filter').value='';loadAnalytics()" style="font-size:11px">All time</button>
+          <input type="date" class="form-input" id="analytics-date-from" style="max-width:140px;font-size:11px" onchange="loadAnalytics()"/>
+          <span style="font-size:11px;color:var(--text3)">→</span>
+          <input type="date" class="form-input" id="analytics-date-to" style="max-width:140px;font-size:11px" onchange="loadAnalytics()"/>
           <button class="ghost-btn" onclick="generateWeeklyReport()" style="font-size:12px;margin-left:auto">📊 Weekly report</button>
         </div>
         <div class="stats-grid" id="analytics-stats"></div>
