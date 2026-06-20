@@ -329,7 +329,7 @@ async function loadUserRole(user){
   document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
   applyRoleUI();
   sb.from('profiles').select('role').eq('id',user.id).maybeSingle().then(({data})=>{
-    if(data?.role&&email!=='admin@aicreatives.com'){
+    if(data?.role&&currentUserRole!=='admin'){
       currentUserRole=data.role;
       document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
       applyRoleUI();
@@ -1748,7 +1748,7 @@ async function generateAvatar(){
   var promptEl=document.getElementById('auto-avatar-prompt');
   var prompt=promptEl?.value?.trim();
   if(!prompt){showNotif('Add avatar description first','error');return;}
-  var apiKey=getToolSetting('dalle-api-key')||getSecureApiKey('dalle');
+  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
   if(!apiKey){showNotif('Set DALL-E API key in Settings first!','error');showPage('settings');return;}
   var btn=document.getElementById('gen-avatar-btn');
   var status=document.getElementById('avatar-gen-status');
@@ -1808,7 +1808,7 @@ function approveAvatar(){
 async function generateSceneImage(idx){
   var scene=autoScenes[idx];
   if(!scene)return;
-  var apiKey=getToolSetting('dalle-api-key')||getSecureApiKey('dalle');
+  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
   if(!apiKey){showNotif('Set DALL-E API key in Settings!','error');return;}
   var statusEl=document.getElementById('scene-status-'+idx);
   var container=document.getElementById('scene-img-container-'+idx);
@@ -2041,7 +2041,7 @@ function loadSettings(){
   // Restore API key values + show status
   var tools=['grok','veo','higgs','dalle'];
   tools.forEach(function(t){
-    var key=getToolSetting(t+'-api-key');
+    var key=getSecureApiKey(t)||getToolSetting(t+'-api-key');
     var input=document.getElementById(t+'-api-key');
     var statusEl=document.getElementById(t+'-key-status');
     if(input&&key)input.value=key;
