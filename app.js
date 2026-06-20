@@ -2810,7 +2810,6 @@ function exportAttendanceCSV(){
 // ═══════════════════════════════════════
 // CLIENTS
 // ═══════════════════════════════════════
-
 async function loadClients(){
   var{data}=await sb.from('profiles').select('*').eq('role','client').order('created_at',{ascending:false});
   var clients=data||[];
@@ -2835,9 +2834,8 @@ async function loadClients(){
       +'<div class="row-meta">'+(c.plan||'basic')+'</div>'
       +'<div><span style="font-size:10px;color:'+payColor+';font-weight:600">'+payIcon+' '+(c.payment_status||'unpaid')+'</span></div>'
       +'<div class="row-date">'+(c.payment_due||'—')+'</div>'
-      +'<div style="display:flex;gap:4px">'
-      +'<button onclick="deleteClient(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Remove</button>'
-      +'</div></div>';
+      +'<div><button onclick="deleteClient(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Remove</button></div>'
+      +'</div>';
   }).join(''):'<div class="table-empty"><div class="table-empty-icon">👥</div>No clients yet.</div>';
 }
 
@@ -2856,9 +2854,7 @@ async function addClient(){
   btn.disabled=true;btn.textContent='Adding...';
   var{data,error}=await sb.rpc('create_user_with_profile',{user_email:email,user_password:pass,user_name:name,user_role:'client'});
   if(error||!data?.success){showNotif('Error: '+(error?.message||'Failed'),'error');btn.disabled=false;btn.textContent='Add client';return;}
-  if(data.user_id){
-    await sb.from('profiles').update({company:company,phone:phone,plan:plan,payment_due:due,payment_status:payment}).eq('id',data.user_id);
-  }
+  if(data.user_id){await sb.from('profiles').update({company:company,phone:phone,plan:plan,payment_due:due,payment_status:payment}).eq('id',data.user_id);}
   showNotif('Client added! ✓','success');
   ['new-client-name','new-client-company','new-client-email','new-client-phone','new-client-pass'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   btn.disabled=false;btn.textContent='Add client';
@@ -2868,8 +2864,7 @@ async function addClient(){
 async function deleteClient(id){
   if(!confirm('Remove this client?'))return;
   await sb.from('profiles').delete().eq('id',id);
-  showNotif('Client removed','success');
-  loadClients();
+  showNotif('Client removed','success');loadClients();
 }
 
 function filterClients(){
@@ -2877,16 +2872,13 @@ function filterClients(){
   var pay=document.getElementById('filter-payment')?.value||'';
   document.querySelectorAll('#clients-body .table-row').forEach(function(row){
     var text=row.textContent.toLowerCase();
-    var matchQ=!q||text.includes(q);
-    var matchP=!pay||text.includes(pay);
-    row.style.display=(matchQ&&matchP)?'':'none';
+    row.style.display=(!q||text.includes(q))&&(!pay||text.includes(pay))?'':'none';
   });
 }
 
 // ═══════════════════════════════════════
 // ACTIVITY LOG
 // ═══════════════════════════════════════
-
 async function loadActivityLog(){
   var from=document.getElementById('activity-date-from')?.value||'';
   var to=document.getElementById('activity-date-to')?.value||'';
@@ -2898,13 +2890,13 @@ async function loadActivityLog(){
   var bodyEl=document.getElementById('activity-log-body');
   if(!bodyEl)return;
   if(!records.length){bodyEl.innerHTML='<div class="table-empty"><div class="table-empty-icon">📋</div>No activity yet.</div>';return;}
+  var actionColor={LOGIN:'var(--green)',TIME_IN:'var(--green)',TIME_OUT:'var(--red)',OUTPUT_ADDED:'var(--amber)',API_KEY_UPDATED:'var(--purple)',AVATAR_GENERATED:'var(--purple)',WORK_UPDATE:'var(--amber)',PROJECT_COMPLETED:'#4caf50'};
   bodyEl.innerHTML=records.map(function(r){
     var name=r.profiles?.name||r.profiles?.email||'System';
     var time=new Date(r.created_at).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-    var actionColor={'LOGIN':'var(--green)','LOGOUT':'var(--text3)','PROJECT_SAVED':'var(--yellow)','STATUS_CHANGED':'var(--purple)','OUTPUT_ADDED':'var(--amber)','TIME_IN':'var(--green)','TIME_OUT':'var(--red)','API_KEY_UPDATED':'var(--purple)','AVATAR_GENERATED':'var(--purple)','WORK_UPDATE':'var(--amber)'};
     var color=actionColor[r.action]||'var(--text2)';
     return '<div class="table-row" style="grid-template-columns:1.5fr 1fr 2fr 1fr">'
-      +'<div><div class="row-name">'+(name)+'</div></div>'
+      +'<div class="row-meta">'+name+'</div>'
       +'<div><span style="font-size:10px;color:'+color+';font-weight:600;background:var(--bg3);padding:2px 8px;border-radius:20px">'+r.action+'</span></div>'
       +'<div style="font-size:11px;color:var(--text3)">'+(r.details||'—')+'</div>'
       +'<div class="row-date">'+time+'</div>'
@@ -2915,7 +2907,6 @@ async function loadActivityLog(){
 // ═══════════════════════════════════════
 // REVISIONS
 // ═══════════════════════════════════════
-
 async function loadRevisions(projectId){
   var{data}=await sb.from('project_revisions').select('*,profiles(name,email)').eq('project_id',projectId).order('created_at',{ascending:false});
   var revisions=data||[];
@@ -2926,7 +2917,7 @@ async function loadRevisions(projectId){
   if(!revisions.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:4px 0">No revisions yet.</div>';return;}
   el.innerHTML=revisions.map(function(r){
     var time=new Date(r.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric'});
-    var doneBtn=r.is_done?'<span style="font-size:9px;color:var(--green);padding:1px 6px;border-radius:3px;background:var(--green-dim)">✓ Done</span>':'<button onclick="markRevisionDone(\''+r.id+'\')" style="font-size:9px;padding:1px 6px;background:var(--green-dim);color:var(--green);border:none;border-radius:3px;cursor:pointer;margin-left:6px">✓ Done</button>';
+    var doneBtn=r.is_done?'<span style="font-size:9px;color:var(--green);padding:1px 6px;border-radius:3px;background:var(--green-dim)">✓ Done</span>':'<button onclick="markRevisionDone(\''+r.id+'\')" style="font-size:9px;padding:1px 8px;background:var(--green-dim);color:var(--green);border:none;border-radius:3px;cursor:pointer">✓ Done</button>';
     return '<div style="padding:7px 10px;background:var(--bg3);border:0.5px solid '+(r.is_done?'var(--border2)':'rgba(245,158,11,0.2)')+';border-radius:var(--radius);margin-bottom:4px;display:flex;align-items:flex-start;gap:8px">'
       +'<div style="flex:1"><div style="font-size:11px;color:'+(r.is_done?'var(--text3)':'var(--text2)')+';'+(r.is_done?'text-decoration:line-through':'')+'">'+r.description+'</div>'
       +'<div style="font-size:9px;color:var(--text3);margin-top:2px">'+(r.profiles?.name||r.profiles?.email||'?')+' · '+time+'</div></div>'
@@ -2939,24 +2930,21 @@ async function addRevision(){
   var input=document.getElementById('revision-input');
   var desc=input?.value?.trim();
   if(!desc){showNotif('Describe the revision','error');return;}
-  var{error}=await sb.from('project_revisions').insert({project_id:currentProjectId,user_id:currentUser.id,description:desc,is_done:false});
-  if(error){showNotif('Error: '+error.message,'error');return;}
+  await sb.from('project_revisions').insert({project_id:currentProjectId,user_id:currentUser.id,description:desc,is_done:false});
   input.value='';
   showNotif('Revision requested ✓','success');
-  logActivity('REVISION_REQUESTED',desc.substring(0,50));
   loadRevisions(currentProjectId);
 }
 
 async function markRevisionDone(id){
   await sb.from('project_revisions').update({is_done:true}).eq('id',id);
-  showNotif('Revision done ✓','success');
   loadRevisions(currentProjectId);
+  showNotif('Revision done ✓','success');
 }
 
 // ═══════════════════════════════════════
 // EDITOR PERFORMANCE
 // ═══════════════════════════════════════
-
 async function loadEditorPerformance(){
   var{data:editors}=await sb.from('profiles').select('id,name,email').eq('role','editor');
   var results=[];
@@ -2968,14 +2956,8 @@ async function loadEditorPerformance(){
     var onTime=done.filter(function(p){return !p.deadline||new Date(p.updated_at)<=new Date(p.deadline);}).length;
     var onTimeRate=done.length?Math.round((onTime/done.length)*100):0;
     var score=Math.min(100,Math.round((done.length*20)+(onTimeRate*0.5)));
-    var avgTurnaround=0;
-    if(done.length){
-      var totalDays=done.reduce(function(acc,p){
-        var diff=(new Date(p.updated_at)-new Date(p.created_at))/(1000*60*60*24);
-        return acc+Math.round(diff);
-      },0);
-      avgTurnaround=Math.round(totalDays/done.length);
-    }
+    var totalDays=done.reduce(function(acc,p){return acc+Math.round((new Date(p.updated_at)-new Date(p.created_at))/(1000*60*60*24));},0);
+    var avgTurnaround=done.length?Math.round(totalDays/done.length):0;
     results.push({editor:e,score:score,onTimeRate:onTimeRate,avgTurnaround:avgTurnaround});
   }
   return results;
@@ -2990,7 +2972,6 @@ function scoreColor(score){
 // ═══════════════════════════════════════
 // CLIENT DASHBOARD
 // ═══════════════════════════════════════
-
 async function loadClientDashboard(){
   if(!currentUser)return;
   var{data:projects}=await sb.from('projects').select('*').eq('created_by',currentUser.id).order('created_at',{ascending:false});
@@ -3003,29 +2984,7 @@ async function loadClientDashboard(){
       +'<div class="stat-card c-purple"><div class="stat-label">Ready</div><div class="stat-val" style="color:var(--purple)">'+all.filter(function(p){return p.status==='Ready for Editor';}).length+'</div></div>';
   }
   var bodyEl=document.getElementById('client-projects-body');
-  if(bodyEl){
-    bodyEl.innerHTML=all.length?all.map(function(p){
-      return '<div class="editor-card">'
-        +'<div class="editor-card-top">'
-        +'<div><div class="editor-card-name">'+p.client_name+'</div>'
-        +'<div class="editor-card-meta">'+fmtDate(p.created_at)+' · '+(p.video_size||'')+'</div></div>'
-        +statusBadge(p.status)
-        +'</div>'
-        +(p.blueprint?'<div style="margin-top:8px"><button class="ghost-btn" onclick="viewClientBlueprint(\''+p.id+'\')" style="font-size:11px">📄 View blueprint</button></div>':'')
-        +'</div>';
-    }).join(''):'<div class="table-empty"><div class="table-empty-icon">📋</div>No projects yet.</div>';
-  }
-}
-
-async function viewClientBlueprint(id){
-  var p=allProjects.find(function(x){return x.id===id;});
-  if(!p){
-    var{data}=await sb.from('projects').select('*').eq('id',id).maybeSingle();
-    p=data;
-  }
-  if(!p)return;
-  allProjects=[p,...allProjects.filter(function(x){return x.id!==id;})];
-  openModal(id);
+  if(bodyEl){bodyEl.innerHTML=all.length?all.map(function(p){return '<div class="editor-card"><div class="editor-card-top"><div><div class="editor-card-name">'+p.client_name+'</div><div class="editor-card-meta">'+fmtDate(p.created_at)+' · '+(p.video_size||'')+'</div></div>'+statusBadge(p.status)+'</div></div>';}).join(''):'<div class="table-empty"><div class="table-empty-icon">📋</div>No projects yet.</div>';}
 }
 
 async function submitClientBrief(){
@@ -3033,39 +2992,344 @@ async function submitClientBrief(){
   if(!brief){showNotif('Please describe your project first','error');return;}
   var btn=document.getElementById('client-submit-btn');
   var status=document.getElementById('client-submit-status');
-  btn.disabled=true;
-  if(status)status.textContent='⚡ Generating blueprint...';
+  btn.disabled=true;if(status)status.textContent='⚡ Generating blueprint...';
   try{
-    var res=await fetch('/api/generate',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-6',max_tokens:3000,
-        system:'You are an expert video ad blueprint generator for Filipino businesses. Generate a detailed scene-by-scene blueprint.',
-        messages:[{role:'user',content:brief}]
-      })
-    });
+    var res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:3000,
+        system:'You are an expert video ad blueprint generator for Filipino businesses.',
+        messages:[{role:'user',content:brief}]})});
     var d=await res.json();
     var blueprint=d.content?.map(function(i){return i.text||'';}).join('')||'';
     if(blueprint){
-      await sb.from('projects').insert({
-        client_name:currentUser.email,
-        blueprint:blueprint,
-        status:'New Input',
-        created_by:currentUser.id,
-        video_size:document.getElementById('client-size')?.value||'9:16 Vertical — TikTok / Reels / Shorts',
-        language:document.getElementById('client-lang')?.value||'Taglish',
-        duration:document.getElementById('client-duration')?.value||'30 seconds'
-      });
-      showNotif('Brief submitted! Our team will review it ✓','success');
+      await sb.from('projects').insert({client_name:currentUser.email,blueprint:blueprint,status:'New Input',created_by:currentUser.id,
+        video_size:document.getElementById('client-size')?.value||'9:16 Vertical',
+        language:document.getElementById('client-lang')?.value||'Taglish'});
+      showNotif('Brief submitted! ✓','success');
       document.getElementById('client-brief-input').value='';
       loadClientDashboard();
+    }
+  }catch(e){showNotif('Error: '+e.message,'error');}
+  btn.disabled=false;if(status)status.textContent='';
+}
+
+// ═══════════════════════════════════════
+// AUTOMATION — PHASE 3 VIDEO (per scene, editor picks model)
+// ═══════════════════════════════════════
+
+// Override renderAutomationScenes to include video generation per scene
+function renderAutomationScenes(){
+  var grid=document.getElementById('auto-scenes-grid');
+  if(!grid)return;
+  var videoSize=autoProject?.video_size||'9:16';
+  var isSquare=videoSize.includes('1:1');
+  var sizeLabel=isSquare?'1:1':'9:16';
+  var dalleSize=isSquare?'1024x1024':'1024x1792';
+
+  grid.innerHTML=autoScenes.map(function(s,i){
+    var aspectStyle=isSquare?'aspect-ratio:1/1':'aspect-ratio:9/16';
+    return '<div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);overflow:hidden" id="scene-card-'+i+'">'
+      +'<div style="'+aspectStyle+';background:var(--bg4);display:flex;align-items:center;justify-content:center;position:relative;max-height:200px" id="scene-img-container-'+i+'">'
+      +'<div style="font-size:10px;color:var(--text3);text-align:center;padding:8px">Scene '+s.num+'<br><span style="font-size:9px;color:var(--yellow)">'+sizeLabel+'</span></div>'
+      +'</div>'
+      +'<div style="padding:8px">'
+      +'<div style="font-size:9px;color:var(--text3);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(s.voiceover||s.imagePrompt||'').substring(0,50)+'...</div>'
+      // Image generation
+      +'<div style="display:flex;gap:4px;margin-bottom:6px">'
+      +'<button class="gen-scene-btn" data-idx="'+i+'" data-size="'+dalleSize+'" style="flex:1;font-size:10px;padding:4px;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.2);border-radius:4px;color:var(--yellow);cursor:pointer;font-weight:600">🎨 Gen Image</button>'
+      +'<span id="scene-status-'+i+'" style="font-size:9px;color:var(--text3);display:flex;align-items:center;padding:0 4px"></span>'
+      +'</div>'
+      // Video generation — editor picks model
+      +'<div style="font-size:9px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase">🎬 Generate Video:</div>'
+      +'<div style="display:flex;gap:3px;flex-wrap:wrap">'
+      +'<button class="gen-video-btn" data-idx="'+i+'" data-tool="higgsfield" style="font-size:9px;padding:3px 6px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer">Higgsfield</button>'
+      +'<button class="gen-video-btn" data-idx="'+i+'" data-tool="grok" style="font-size:9px;padding:3px 6px;background:var(--purple-dim);border:0.5px solid rgba(127,119,221,0.2);border-radius:4px;color:var(--purple);cursor:pointer">Grok</button>'
+      +'<button class="gen-video-btn" data-idx="'+i+'" data-tool="veo" style="font-size:9px;padding:3px 6px;background:var(--amber-dim);border:0.5px solid rgba(245,158,11,0.2);border-radius:4px;color:var(--amber);cursor:pointer">Veo</button>'
+      +'</div>'
+      +'<div id="scene-video-status-'+i+'" style="font-size:9px;color:var(--text3);margin-top:4px"></div>'
+      +'</div></div>';
+  }).join('');
+
+  // Attach image gen handlers
+  grid.querySelectorAll('.gen-scene-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      generateSceneImage(parseInt(this.dataset.idx),this.dataset.size);
+    });
+  });
+
+  // Attach video gen handlers — per scene, editor picks tool
+  grid.querySelectorAll('.gen-video-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      generateSceneVideo(parseInt(this.dataset.idx),this.dataset.tool);
+    });
+  });
+}
+
+// Generate video per scene with chosen tool
+async function generateSceneVideo(idx,tool){
+  var scene=autoScenes[idx];
+  if(!scene){showNotif('No scene found','error');return;}
+  var statusEl=document.getElementById('scene-video-status-'+idx);
+  if(statusEl)statusEl.textContent='⏳ Generating with '+tool+'...';
+
+  var videoSize=autoProject?.video_size||'9:16';
+  var sizeTag=videoSize.includes('1:1')?'1:1 square format, equal width and height':'9:16 vertical portrait, mobile-optimized';
+  var prompt=(scene.videoPrompt||scene.imagePrompt||scene.visual||'Cinematic video clip')
+    +' Duration: 8-10 seconds, smooth cinematic motion, '+sizeTag+', photorealistic, no text overlays';
+
+  // Add avatar context
+  if(autoProject?.avatar_desc)prompt='Featuring: '+autoProject.avatar_desc+'. '+prompt;
+
+  if(tool==='higgsfield'){
+    // Own account — copy prompt + open tab
+    navigator.clipboard.writeText(prompt).catch(function(){});
+    window.open('https://higgsfield.ai/create','_blank');
+    if(statusEl)statusEl.innerHTML='✅ Prompt copied! <span style="color:var(--yellow)">Paste in Higgsfield →</span>';
+    // Save placeholder output
+    if(autoProject?.id){
+      autoOutputs[idx]=autoOutputs[idx]||{};
+      autoOutputs[idx].videoTool='higgsfield';
+      autoOutputs[idx].videoPrompt=prompt;
+    }
+  } else {
+    // API mode — Grok or Veo
+    var apiKey=getSecureApiKey(tool)||getToolSetting(tool+'-api-key');
+    if(!apiKey){showNotif('No API key for '+tool+' — set in Settings!','error');showPage('settings');return;}
+    try{
+      var endpoint=tool==='grok'?'/api/grok-generate':'/api/veo-generate';
+      var model=tool==='grok'?getToolSetting('grok-model','grok-imagine-video-1.5-preview'):getToolSetting('veo-model','veo-3');
+      var res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({prompt:prompt,apiKey:apiKey,model:model,duration:8,type:'video'})});
+      var d=await res.json();
+      if(d.url){
+        if(statusEl)statusEl.innerHTML='✅ Video ready! <a href="'+d.url+'" target="_blank" style="color:var(--yellow)">Open →</a>';
+        // Save to outputs
+        if(autoProject?.id){
+          await sb.from('project_outputs').insert({project_id:autoProject.id,user_id:currentUser.id,url:d.url,type:'video',label:'Scene '+scene.num+' video ('+tool+')'}).catch(function(){});
+        }
+        autoOutputs[idx]=autoOutputs[idx]||{};
+        autoOutputs[idx].videoUrl=d.url;
+        autoOutputs[idx].videoTool=tool;
+        showNotif('Scene '+scene.num+' video done! ✓','success');
+        // Unlock phase 4 if any video done
+        var phase4=document.getElementById('auto-phase4');
+        if(phase4){phase4.style.opacity='1';phase4.style.pointerEvents='auto';}
+      } else if(d.status==='processing'){
+        if(statusEl)statusEl.textContent='⏳ Processing... check back in 1 min';
+      } else {
+        if(statusEl)statusEl.textContent='❌ Error: '+(d.error||'Failed');
+        showNotif(tool+' error: '+(d.error||'Failed'),'error');
+      }
+    }catch(e){
+      if(statusEl)statusEl.textContent='❌ '+e.message;
+      showNotif('Error: '+e.message,'error');
+    }
+  }
+}
+
+// Override generateSceneImage to support 1:1 size
+async function generateSceneImage(idx, dalleSize){
+  var scene=autoScenes[idx];
+  if(!scene)return;
+  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
+  if(!apiKey){showNotif('Set DALL-E API key in Settings!','error');showPage('settings');return;}
+  var statusEl=document.getElementById('scene-status-'+idx);
+  var container=document.getElementById('scene-img-container-'+idx);
+  if(statusEl)statusEl.textContent='⏳';
+  var videoSize=autoProject?.video_size||'9:16';
+  var isSquare=videoSize.includes('1:1');
+  var imgSize=dalleSize||(isSquare?'1024x1024':'1024x1792');
+  var sizeTag=isSquare?'1:1 square format, equal dimensions':'9:16 vertical portrait, mobile-optimized';
+  var prompt=scene.imagePrompt||scene.videoPrompt||scene.visual||'';
+  if(autoAvatarUrl&&autoProject?.avatar_desc)prompt='Featuring the same character: '+autoProject.avatar_desc+'. Scene: '+prompt;
+  if(autoProject?.color_primary)prompt+='. Brand color: '+autoProject.color_primary;
+  prompt+=' '+sizeTag+', photorealistic, cinematic lighting, no text, no logos';
+  try{
+    var res=await fetch('/api/dalle-generate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:imgSize,quality:getToolSetting('dalle-quality','hd'),style:getToolSetting('dalle-style','vivid')})});
+    var d=await res.json();
+    if(d.url){
+      if(container){
+        var aspectStyle=isSquare?'aspect-ratio:1/1':'aspect-ratio:9/16';
+        container.innerHTML='<img src="'+d.url+'" style="width:100%;height:100%;object-fit:cover;max-height:200px"/>'
+          +'<div style="position:absolute;bottom:4px;right:4px;display:flex;gap:3px">'
+          +'<button class="regen-scene" data-idx="'+idx+'" style="font-size:9px;padding:2px 6px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:3px;cursor:pointer">🔄</button>'
+          +'<button class="approve-scene" data-idx="'+idx+'" data-url="'+d.url+'" style="font-size:9px;padding:2px 6px;background:rgba(34,197,94,0.8);color:#fff;border:none;border-radius:3px;cursor:pointer">✅</button>'
+          +'</div>';
+        container.style.position='relative';
+        container.querySelectorAll('.regen-scene').forEach(function(b){b.addEventListener('click',function(){generateSceneImage(parseInt(this.dataset.idx));});});
+        container.querySelectorAll('.approve-scene').forEach(function(b){b.addEventListener('click',function(){approveSceneImage(parseInt(this.dataset.idx),this.dataset.url);});});
+      }
+      if(statusEl)statusEl.textContent='✅';
+      autoOutputs[idx]=autoOutputs[idx]||{};
+      autoOutputs[idx].url=d.url;autoOutputs[idx].type='image';autoOutputs[idx].scene=scene;
+      // Save to DB
+      if(autoProject?.id){
+        await sb.from('project_outputs').insert({project_id:autoProject.id,user_id:currentUser.id,url:d.url,type:'image',label:'Scene '+scene.num+' image'}).catch(function(){});
+      }
     } else {
-      showNotif('Error generating blueprint','error');
+      if(statusEl)statusEl.textContent='❌';
+      showNotif('Scene '+scene.num+' error: '+(d.error||'Failed'),'error');
+    }
+  }catch(e){if(statusEl)statusEl.textContent='❌';}
+}
+
+
+// ═══════════════════════════════════════
+// SUPABASE STORAGE — AUTO-UPLOAD IMAGES
+// Bucket: "Ai creatives system storage"
+// Prevents DALL-E URL expiry (1 hour limit)
+// ═══════════════════════════════════════
+
+var STORAGE_BUCKET='Ai creatives system storage';
+
+// Upload image from URL to Supabase Storage
+// Returns permanent Supabase URL or original URL if fails
+async function uploadImageToStorage(imageUrl, fileName){
+  try{
+    // Fetch the image
+    var response=await fetch(imageUrl);
+    if(!response.ok)throw new Error('Failed to fetch image');
+    var blob=await response.blob();
+    // Upload to Supabase Storage
+    var filePath='images/'+fileName;
+    var{data,error}=await sb.storage.from(STORAGE_BUCKET).upload(filePath,blob,{
+      contentType:'image/png',
+      upsert:true
+    });
+    if(error){console.error('Storage upload error:',error);return imageUrl;}
+    // Get public URL
+    var{data:urlData}=sb.storage.from(STORAGE_BUCKET).getPublicUrl(filePath);
+    return urlData?.publicUrl||imageUrl;
+  }catch(e){
+    console.error('Storage upload failed:',e);
+    return imageUrl; // Fallback to original URL
+  }
+}
+
+// Generate unique filename
+function genFileName(prefix,idx){
+  var ts=Date.now();
+  var proj=autoProject?.id?.slice(0,8)||'proj';
+  return prefix+'-'+proj+'-'+(idx!==undefined?idx+'-':'')+ts+'.png';
+}
+
+// Override generateAvatar to auto-save to storage
+var _origGenerateAvatar=generateAvatar;
+generateAvatar=async function(){
+  var promptEl=document.getElementById('auto-avatar-prompt');
+  var prompt=promptEl?.value?.trim();
+  if(!prompt){showNotif('Add avatar description first','error');return;}
+  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
+  if(!apiKey){showNotif('Set DALL-E API key in Settings first!','error');showPage('settings');return;}
+  var btn=document.getElementById('gen-avatar-btn');
+  var status=document.getElementById('avatar-gen-status');
+  if(btn)btn.disabled=true;
+  if(status)status.textContent='⚡ Generating avatar...';
+  try{
+    var res=await fetch('/api/dalle-generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',
+        apiKey:apiKey,size:'1024x1792',
+        quality:getToolSetting('dalle-quality','hd'),
+        style:getToolSetting('dalle-style','vivid')
+      })
+    });
+    var d=await res.json();
+    if(d.url){
+      if(status)status.textContent='⚡ Saving to storage...';
+      // Upload to Supabase Storage
+      var fileName=genFileName('avatar');
+      var permanentUrl=await uploadImageToStorage(d.url,fileName);
+      autoAvatarUrl=permanentUrl;
+      var preview=document.getElementById('avatar-preview');
+      var result=document.getElementById('avatar-result');
+      if(preview)preview.src=permanentUrl;
+      if(result)result.style.display='block';
+      if(status)status.textContent='✅ Avatar saved to storage!';
+      // Save permanent URL to project outputs
+      if(autoProject?.id){
+        await sb.from('project_outputs').insert({
+          project_id:autoProject.id,user_id:currentUser.id,
+          url:permanentUrl,type:'image',label:'Avatar'
+        });
+      }
+      logActivity('AVATAR_GENERATED',autoProject?.client_name||'');
+    } else {
+      if(status)status.textContent='Error: '+(d.error||'Failed');
+      showNotif('DALL-E error: '+(d.error||'Failed'),'error');
     }
   }catch(e){
+    if(status)status.textContent='Error: '+e.message;
     showNotif('Error: '+e.message,'error');
+  }finally{
+    if(btn)btn.disabled=false;
   }
-  btn.disabled=false;
-  if(status)status.textContent='';
-}
+};
+
+// Override generateSceneImage to auto-save to storage
+var _origGenerateSceneImage=generateSceneImage;
+generateSceneImage=async function(idx,dalleSize){
+  var scene=autoScenes[idx];
+  if(!scene)return;
+  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
+  if(!apiKey){showNotif('Set DALL-E API key in Settings!','error');showPage('settings');return;}
+  var statusEl=document.getElementById('scene-status-'+idx);
+  var container=document.getElementById('scene-img-container-'+idx);
+  if(statusEl)statusEl.textContent='⏳';
+  var videoSize=autoProject?.video_size||'9:16';
+  var isSquare=videoSize.includes('1:1');
+  var imgSize=dalleSize||(isSquare?'1024x1024':'1024x1792');
+  var sizeTag=isSquare?'1:1 square format':'9:16 vertical portrait, mobile-optimized';
+  var prompt=scene.imagePrompt||scene.videoPrompt||scene.visual||'';
+  if(autoAvatarUrl&&autoProject?.avatar_desc)prompt='Featuring the same character: '+autoProject.avatar_desc+'. Scene: '+prompt;
+  if(autoProject?.color_primary)prompt+='. Brand color: '+autoProject.color_primary;
+  prompt+=' '+sizeTag+', photorealistic, cinematic lighting, no text, no logos';
+  try{
+    var res=await fetch('/api/dalle-generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:imgSize,
+        quality:getToolSetting('dalle-quality','hd'),
+        style:getToolSetting('dalle-style','vivid')})
+    });
+    var d=await res.json();
+    if(d.url){
+      if(statusEl)statusEl.textContent='💾';
+      // Upload to Supabase Storage
+      var fileName=genFileName('scene',idx);
+      var permanentUrl=await uploadImageToStorage(d.url,fileName);
+      if(container){
+        var aspectStyle=isSquare?'aspect-ratio:1/1':'aspect-ratio:9/16';
+        container.innerHTML='<img src="'+permanentUrl+'" style="width:100%;height:100%;object-fit:cover;max-height:200px"/>'
+          +'<div style="position:absolute;bottom:4px;right:4px;display:flex;gap:3px">'
+          +'<button class="regen-scene" data-idx="'+idx+'" style="font-size:9px;padding:2px 6px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:3px;cursor:pointer">🔄</button>'
+          +'<button class="approve-scene" data-idx="'+idx+'" data-url="'+permanentUrl+'" style="font-size:9px;padding:2px 6px;background:rgba(34,197,94,0.8);color:#fff;border:none;border-radius:3px;cursor:pointer">✅</button>'
+          +'</div>';
+        container.style.position='relative';
+        container.querySelectorAll('.regen-scene').forEach(function(b){b.addEventListener('click',function(){generateSceneImage(parseInt(this.dataset.idx));});});
+        container.querySelectorAll('.approve-scene').forEach(function(b){b.addEventListener('click',function(){approveSceneImage(parseInt(this.dataset.idx),this.dataset.url);});});
+      }
+      if(statusEl)statusEl.textContent='✅';
+      autoOutputs[idx]=autoOutputs[idx]||{};
+      autoOutputs[idx].url=permanentUrl;
+      autoOutputs[idx].type='image';
+      autoOutputs[idx].scene=scene;
+      // Save permanent URL to DB
+      if(autoProject?.id){
+        await sb.from('project_outputs').insert({
+          project_id:autoProject.id,user_id:currentUser.id,
+          url:permanentUrl,type:'image',label:'Scene '+scene.num+' image'
+        }).catch(function(){});
+      }
+    } else {
+      if(statusEl)statusEl.textContent='❌';
+      showNotif('Scene '+scene.num+' error: '+(d.error||'Failed'),'error');
+    }
+  }catch(e){
+    if(statusEl)statusEl.textContent='❌';
+    console.error('Scene gen error:',e);
+  }
+};
+
