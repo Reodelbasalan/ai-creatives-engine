@@ -2806,3 +2806,266 @@ function exportAttendanceCSV(){
 }
 
 
+
+// ═══════════════════════════════════════
+// CLIENTS
+// ═══════════════════════════════════════
+
+async function loadClients(){
+  var{data}=await sb.from('profiles').select('*').eq('role','client').order('created_at',{ascending:false});
+  var clients=data||[];
+  var statsEl=document.getElementById('clients-stats');
+  if(statsEl){
+    var paid=clients.filter(function(c){return c.payment_status==='paid';}).length;
+    var unpaid=clients.filter(function(c){return c.payment_status==='unpaid';}).length;
+    var overdue=clients.filter(function(c){return c.payment_status==='overdue';}).length;
+    statsEl.innerHTML='<div class="stat-card c-yellow"><div class="stat-label">Total clients</div><div class="stat-val">'+clients.length+'</div></div>'
+      +'<div class="stat-card c-green"><div class="stat-label">Paid</div><div class="stat-val" style="color:var(--green)">'+paid+'</div></div>'
+      +'<div class="stat-card c-red"><div class="stat-label">Unpaid</div><div class="stat-val" style="color:var(--red)">'+unpaid+'</div></div>'
+      +'<div class="stat-card c-amber"><div class="stat-label">Overdue</div><div class="stat-val" style="color:var(--amber)">'+overdue+'</div></div>';
+  }
+  var badge=document.getElementById('clients-badge');
+  if(badge){badge.textContent=clients.length;badge.style.display=clients.length>0?'':'none';}
+  document.getElementById('clients-body').innerHTML=clients.length?clients.map(function(c){
+    var payColor=c.payment_status==='paid'?'var(--green)':c.payment_status==='overdue'?'var(--red)':'var(--amber)';
+    var payIcon=c.payment_status==='paid'?'✅':c.payment_status==='overdue'?'⚠️':'❌';
+    return '<div class="table-row" style="grid-template-columns:2fr 1.5fr 1fr 1fr 1fr 100px">'
+      +'<div><div class="row-name">'+(c.name||'—')+'</div><div class="row-sub">'+(c.company||'')+'</div></div>'
+      +'<div><div class="row-meta" style="font-size:11px">'+(c.email||'')+'</div><div class="row-sub">'+(c.phone||'')+'</div></div>'
+      +'<div class="row-meta">'+(c.plan||'basic')+'</div>'
+      +'<div><span style="font-size:10px;color:'+payColor+';font-weight:600">'+payIcon+' '+(c.payment_status||'unpaid')+'</span></div>'
+      +'<div class="row-date">'+(c.payment_due||'—')+'</div>'
+      +'<div style="display:flex;gap:4px">'
+      +'<button onclick="deleteClient(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Remove</button>'
+      +'</div></div>';
+  }).join(''):'<div class="table-empty"><div class="table-empty-icon">👥</div>No clients yet.</div>';
+}
+
+async function addClient(){
+  var name=document.getElementById('new-client-name')?.value?.trim();
+  var company=document.getElementById('new-client-company')?.value?.trim();
+  var email=document.getElementById('new-client-email')?.value?.trim();
+  var phone=document.getElementById('new-client-phone')?.value?.trim();
+  var pass=document.getElementById('new-client-pass')?.value;
+  var plan=document.getElementById('new-client-plan')?.value||'basic';
+  var due=document.getElementById('new-client-due')?.value||null;
+  var payment=document.getElementById('new-client-payment')?.value||'unpaid';
+  if(!name||!email||!pass){showNotif('Fill in name, email, password','error');return;}
+  if(pass.length<6){showNotif('Password min 6 characters','error');return;}
+  var btn=document.getElementById('add-client-btn');
+  btn.disabled=true;btn.textContent='Adding...';
+  var{data,error}=await sb.rpc('create_user_with_profile',{user_email:email,user_password:pass,user_name:name,user_role:'client'});
+  if(error||!data?.success){showNotif('Error: '+(error?.message||'Failed'),'error');btn.disabled=false;btn.textContent='Add client';return;}
+  if(data.user_id){
+    await sb.from('profiles').update({company:company,phone:phone,plan:plan,payment_due:due,payment_status:payment}).eq('id',data.user_id);
+  }
+  showNotif('Client added! ✓','success');
+  ['new-client-name','new-client-company','new-client-email','new-client-phone','new-client-pass'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  btn.disabled=false;btn.textContent='Add client';
+  loadClients();
+}
+
+async function deleteClient(id){
+  if(!confirm('Remove this client?'))return;
+  await sb.from('profiles').delete().eq('id',id);
+  showNotif('Client removed','success');
+  loadClients();
+}
+
+function filterClients(){
+  var q=(document.getElementById('search-clients')?.value||'').toLowerCase();
+  var pay=document.getElementById('filter-payment')?.value||'';
+  document.querySelectorAll('#clients-body .table-row').forEach(function(row){
+    var text=row.textContent.toLowerCase();
+    var matchQ=!q||text.includes(q);
+    var matchP=!pay||text.includes(pay);
+    row.style.display=(matchQ&&matchP)?'':'none';
+  });
+}
+
+// ═══════════════════════════════════════
+// ACTIVITY LOG
+// ═══════════════════════════════════════
+
+async function loadActivityLog(){
+  var from=document.getElementById('activity-date-from')?.value||'';
+  var to=document.getElementById('activity-date-to')?.value||'';
+  var query=sb.from('activity_logs').select('*,profiles(name,email)').order('created_at',{ascending:false}).limit(100);
+  if(from)query=query.gte('created_at',from+'T00:00:00');
+  if(to)query=query.lte('created_at',to+'T23:59:59');
+  var{data}=await query;
+  var records=data||[];
+  var bodyEl=document.getElementById('activity-log-body');
+  if(!bodyEl)return;
+  if(!records.length){bodyEl.innerHTML='<div class="table-empty"><div class="table-empty-icon">📋</div>No activity yet.</div>';return;}
+  bodyEl.innerHTML=records.map(function(r){
+    var name=r.profiles?.name||r.profiles?.email||'System';
+    var time=new Date(r.created_at).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    var actionColor={'LOGIN':'var(--green)','LOGOUT':'var(--text3)','PROJECT_SAVED':'var(--yellow)','STATUS_CHANGED':'var(--purple)','OUTPUT_ADDED':'var(--amber)','TIME_IN':'var(--green)','TIME_OUT':'var(--red)','API_KEY_UPDATED':'var(--purple)','AVATAR_GENERATED':'var(--purple)','WORK_UPDATE':'var(--amber)'};
+    var color=actionColor[r.action]||'var(--text2)';
+    return '<div class="table-row" style="grid-template-columns:1.5fr 1fr 2fr 1fr">'
+      +'<div><div class="row-name">'+(name)+'</div></div>'
+      +'<div><span style="font-size:10px;color:'+color+';font-weight:600;background:var(--bg3);padding:2px 8px;border-radius:20px">'+r.action+'</span></div>'
+      +'<div style="font-size:11px;color:var(--text3)">'+(r.details||'—')+'</div>'
+      +'<div class="row-date">'+time+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// REVISIONS
+// ═══════════════════════════════════════
+
+async function loadRevisions(projectId){
+  var{data}=await sb.from('project_revisions').select('*,profiles(name,email)').eq('project_id',projectId).order('created_at',{ascending:false});
+  var revisions=data||[];
+  var badge=document.getElementById('revision-count-badge');
+  if(badge)badge.textContent=revisions.length;
+  var el=document.getElementById('modal-revisions');
+  if(!el)return;
+  if(!revisions.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:4px 0">No revisions yet.</div>';return;}
+  el.innerHTML=revisions.map(function(r){
+    var time=new Date(r.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+    var doneBtn=r.is_done?'<span style="font-size:9px;color:var(--green);padding:1px 6px;border-radius:3px;background:var(--green-dim)">✓ Done</span>':'<button onclick="markRevisionDone(\''+r.id+'\')" style="font-size:9px;padding:1px 6px;background:var(--green-dim);color:var(--green);border:none;border-radius:3px;cursor:pointer;margin-left:6px">✓ Done</button>';
+    return '<div style="padding:7px 10px;background:var(--bg3);border:0.5px solid '+(r.is_done?'var(--border2)':'rgba(245,158,11,0.2)')+';border-radius:var(--radius);margin-bottom:4px;display:flex;align-items:flex-start;gap:8px">'
+      +'<div style="flex:1"><div style="font-size:11px;color:'+(r.is_done?'var(--text3)':'var(--text2)')+';'+(r.is_done?'text-decoration:line-through':'')+'">'+r.description+'</div>'
+      +'<div style="font-size:9px;color:var(--text3);margin-top:2px">'+(r.profiles?.name||r.profiles?.email||'?')+' · '+time+'</div></div>'
+      +doneBtn+'</div>';
+  }).join('');
+}
+
+async function addRevision(){
+  if(!currentProjectId)return;
+  var input=document.getElementById('revision-input');
+  var desc=input?.value?.trim();
+  if(!desc){showNotif('Describe the revision','error');return;}
+  var{error}=await sb.from('project_revisions').insert({project_id:currentProjectId,user_id:currentUser.id,description:desc,is_done:false});
+  if(error){showNotif('Error: '+error.message,'error');return;}
+  input.value='';
+  showNotif('Revision requested ✓','success');
+  logActivity('REVISION_REQUESTED',desc.substring(0,50));
+  loadRevisions(currentProjectId);
+}
+
+async function markRevisionDone(id){
+  await sb.from('project_revisions').update({is_done:true}).eq('id',id);
+  showNotif('Revision done ✓','success');
+  loadRevisions(currentProjectId);
+}
+
+// ═══════════════════════════════════════
+// EDITOR PERFORMANCE
+// ═══════════════════════════════════════
+
+async function loadEditorPerformance(){
+  var{data:editors}=await sb.from('profiles').select('id,name,email').eq('role','editor');
+  var results=[];
+  for(var i=0;i<(editors||[]).length;i++){
+    var e=editors[i];
+    var{data:projects}=await sb.from('projects').select('*').eq('assigned_to',e.id);
+    var all=projects||[];
+    var done=all.filter(function(p){return p.status==='Approved / Done';});
+    var onTime=done.filter(function(p){return !p.deadline||new Date(p.updated_at)<=new Date(p.deadline);}).length;
+    var onTimeRate=done.length?Math.round((onTime/done.length)*100):0;
+    var score=Math.min(100,Math.round((done.length*20)+(onTimeRate*0.5)));
+    var avgTurnaround=0;
+    if(done.length){
+      var totalDays=done.reduce(function(acc,p){
+        var diff=(new Date(p.updated_at)-new Date(p.created_at))/(1000*60*60*24);
+        return acc+Math.round(diff);
+      },0);
+      avgTurnaround=Math.round(totalDays/done.length);
+    }
+    results.push({editor:e,score:score,onTimeRate:onTimeRate,avgTurnaround:avgTurnaround});
+  }
+  return results;
+}
+
+function scoreColor(score){
+  if(score>=80)return'var(--green)';
+  if(score>=50)return'var(--amber)';
+  return'var(--red)';
+}
+
+// ═══════════════════════════════════════
+// CLIENT DASHBOARD
+// ═══════════════════════════════════════
+
+async function loadClientDashboard(){
+  if(!currentUser)return;
+  var{data:projects}=await sb.from('projects').select('*').eq('created_by',currentUser.id).order('created_at',{ascending:false});
+  var all=projects||[];
+  var statsEl=document.getElementById('client-stats');
+  if(statsEl){
+    statsEl.innerHTML='<div class="stat-card c-yellow"><div class="stat-label">My projects</div><div class="stat-val">'+all.length+'</div></div>'
+      +'<div class="stat-card c-green"><div class="stat-label">Completed</div><div class="stat-val" style="color:var(--green)">'+all.filter(function(p){return p.status==='Approved / Done';}).length+'</div></div>'
+      +'<div class="stat-card c-amber"><div class="stat-label">In progress</div><div class="stat-val" style="color:var(--amber)">'+all.filter(function(p){return p.status==='In Production';}).length+'</div></div>'
+      +'<div class="stat-card c-purple"><div class="stat-label">Ready</div><div class="stat-val" style="color:var(--purple)">'+all.filter(function(p){return p.status==='Ready for Editor';}).length+'</div></div>';
+  }
+  var bodyEl=document.getElementById('client-projects-body');
+  if(bodyEl){
+    bodyEl.innerHTML=all.length?all.map(function(p){
+      return '<div class="editor-card">'
+        +'<div class="editor-card-top">'
+        +'<div><div class="editor-card-name">'+p.client_name+'</div>'
+        +'<div class="editor-card-meta">'+fmtDate(p.created_at)+' · '+(p.video_size||'')+'</div></div>'
+        +statusBadge(p.status)
+        +'</div>'
+        +(p.blueprint?'<div style="margin-top:8px"><button class="ghost-btn" onclick="viewClientBlueprint(\''+p.id+'\')" style="font-size:11px">📄 View blueprint</button></div>':'')
+        +'</div>';
+    }).join(''):'<div class="table-empty"><div class="table-empty-icon">📋</div>No projects yet.</div>';
+  }
+}
+
+async function viewClientBlueprint(id){
+  var p=allProjects.find(function(x){return x.id===id;});
+  if(!p){
+    var{data}=await sb.from('projects').select('*').eq('id',id).maybeSingle();
+    p=data;
+  }
+  if(!p)return;
+  allProjects=[p,...allProjects.filter(function(x){return x.id!==id;})];
+  openModal(id);
+}
+
+async function submitClientBrief(){
+  var brief=document.getElementById('client-brief-input')?.value?.trim();
+  if(!brief){showNotif('Please describe your project first','error');return;}
+  var btn=document.getElementById('client-submit-btn');
+  var status=document.getElementById('client-submit-status');
+  btn.disabled=true;
+  if(status)status.textContent='⚡ Generating blueprint...';
+  try{
+    var res=await fetch('/api/generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',max_tokens:3000,
+        system:'You are an expert video ad blueprint generator for Filipino businesses. Generate a detailed scene-by-scene blueprint.',
+        messages:[{role:'user',content:brief}]
+      })
+    });
+    var d=await res.json();
+    var blueprint=d.content?.map(function(i){return i.text||'';}).join('')||'';
+    if(blueprint){
+      await sb.from('projects').insert({
+        client_name:currentUser.email,
+        blueprint:blueprint,
+        status:'New Input',
+        created_by:currentUser.id,
+        video_size:document.getElementById('client-size')?.value||'9:16 Vertical — TikTok / Reels / Shorts',
+        language:document.getElementById('client-lang')?.value||'Taglish',
+        duration:document.getElementById('client-duration')?.value||'30 seconds'
+      });
+      showNotif('Brief submitted! Our team will review it ✓','success');
+      document.getElementById('client-brief-input').value='';
+      loadClientDashboard();
+    } else {
+      showNotif('Error generating blueprint','error');
+    }
+  }catch(e){
+    showNotif('Error: '+e.message,'error');
+  }
+  btn.disabled=false;
+  if(status)status.textContent='';
+}
