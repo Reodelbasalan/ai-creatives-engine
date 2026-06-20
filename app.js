@@ -249,7 +249,7 @@ function initSecurityListeners(){
 
 // ROLE-BASED PAGE PROTECTION
 var ADMIN_PAGES=['dashboard','new-project','all-projects','users','clients','analytics','submission','settings','chat','activity','attendance'];
-var EDITOR_PAGES=['editor-portal','chat','profile','worklog'];
+var EDITOR_PAGES=['editor-portal','chat','profile','worklog','automation','clients','activity'];
 var CLIENT_PAGES=['client-dashboard','profile'];
 
 function canAccessPage(page){
@@ -351,7 +351,7 @@ function applyRoleUI(){
     // Editor — limited nav only
     document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
     // Show only editor-allowed nav items
-    var editorNavs=['nav-editor-portal','nav-chat','nav-profile','nav-worklog'];
+    var editorNavs=['nav-editor-portal','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity'];
     editorNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el)el.style.display='flex';
@@ -410,7 +410,7 @@ function showPage(page){
   if(page==='worklog')loadWorkLog();
   if(page==='client-dashboard')loadClientDashboard();
   if(page==='settings'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadSettings();}
-  if(page==='automation'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadAutomationProjects();}
+  if(page==='automation'){loadAutomationProjects();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
