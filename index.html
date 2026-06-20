@@ -349,6 +349,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         Team members
       </div>
+      <div class="nav-item admin-only" onclick="showPage('automation')" id="nav-automation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Automation
+      </div>
       <div class="nav-item admin-only" onclick="showPage('clients')" id="nav-clients">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
         Clients
@@ -1001,6 +1005,38 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
           </div>
 
+          <!-- DALL-E -->
+          <div class="form-card" style="margin-bottom:16px">
+            <div class="form-card-title" style="margin-bottom:1rem">
+              <span>🎨</span> DALL-E (OpenAI)
+              <span style="font-size:10px;color:var(--green);background:var(--green-dim);padding:2px 8px;border-radius:20px;font-weight:600">Images</span>
+              <span style="font-size:9px;padding:2px 8px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);font-weight:600;margin-left:auto">🔐 Admin only</span>
+            </div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">DALL-E 3 — Avatar + Scene image generation. ~$0.04-0.08 per image.</div>
+            <label class="form-label">API Key (sk-proj-...)</label>
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+              <input class="form-input" id="dalle-api-key" placeholder="sk-proj-xxxxxxxxxxxxxxxxx" type="password" style="flex:1"/>
+              <button class="yellow-btn" onclick="saveApiKey('dalle')" style="font-size:12px;white-space:nowrap">💾 Save</button>
+            </div>
+            <div id="dalle-key-status" style="font-size:11px;color:var(--text3);margin-bottom:10px"></div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label class="form-label">Quality</label>
+                <select class="form-select" id="dalle-quality" onchange="saveToolSetting('dalle-quality',this.value)">
+                  <option value="hd">HD (Recommended)</option>
+                  <option value="standard">Standard (Faster)</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Style</label>
+                <select class="form-select" id="dalle-style" onchange="saveToolSetting('dalle-style',this.value)">
+                  <option value="vivid">Vivid (Dramatic)</option>
+                  <option value="natural">Natural (Realistic)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <!-- GROK -->
           <div class="form-card" style="margin-bottom:16px">
             <div class="form-card-title" style="margin-bottom:1rem">
@@ -1175,6 +1211,105 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <span>User</span><span>Action</span><span>Details</span><span>Time</span>
           </div>
           <div id="activity-log-body"></div>
+        </div>
+      </div>
+
+      <!-- AUTOMATION PIPELINE PAGE -->
+      <div class="page" id="page-automation">
+        <div style="max-width:900px">
+
+          <!-- PROJECT SELECTOR -->
+          <div class="form-card" style="margin-bottom:16px">
+            <div class="form-card-title" style="margin-bottom:1rem"><span>⚡</span> Automation Pipeline</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">Select a project with a blueprint to start automated generation.</div>
+            <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
+              <select class="form-select" id="auto-project-select" style="flex:1" onchange="loadAutomationProject()">
+                <option value="">Select project...</option>
+              </select>
+              <button class="ghost-btn" onclick="loadAutomationProjects()" style="font-size:12px">🔄 Refresh</button>
+            </div>
+            <div id="auto-project-info" style="display:none;padding:10px 14px;background:var(--bg3);border-radius:var(--radius);border:0.5px solid var(--border2);font-size:12px;color:var(--text2)"></div>
+          </div>
+
+          <!-- PHASE 1 — AVATAR -->
+          <div class="form-card" style="margin-bottom:16px" id="auto-phase1">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--yellow-dim);border:1.5px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--yellow)">1</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">Avatar Generation</div>
+                <div style="font-size:11px;color:var(--text3)">Generate the client avatar/character first</div>
+              </div>
+              <span id="phase1-status" style="margin-left:auto;font-size:11px;color:var(--text3)">Pending</span>
+            </div>
+            <div class="form-field" style="margin-bottom:10px">
+              <label class="form-label">Avatar description (from client brief)</label>
+              <textarea class="form-textarea" id="auto-avatar-prompt" placeholder="e.g. Filipino woman, 25-35 years old, professional appearance, wearing white lab coat, confident smile, studio lighting, white background, 9:16 portrait aspect ratio, photorealistic" style="min-height:80px"></textarea>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <button class="yellow-btn" id="gen-avatar-btn" onclick="generateAvatar()">🎨 Generate Avatar (DALL-E)</button>
+              <button class="ghost-btn" onclick="generateAvatar()" style="font-size:12px">🔄 Regenerate</button>
+              <span id="avatar-gen-status" style="font-size:11px;color:var(--text3)"></span>
+            </div>
+            <div id="avatar-result" style="margin-top:12px;display:none">
+              <img id="avatar-preview" style="width:120px;height:213px;object-fit:cover;border-radius:var(--radius);border:0.5px solid var(--border2)" src=""/>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button onclick="approveAvatar()" class="yellow-btn" style="font-size:12px">✅ Approve — proceed to scenes</button>
+                <button onclick="generateAvatar()" class="ghost-btn" style="font-size:12px">🔄 Regenerate</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PHASE 2 — SCENE IMAGES -->
+          <div class="form-card" style="margin-bottom:16px;opacity:0.5;pointer-events:none" id="auto-phase2">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--bg4);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text3)">2</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">Scene Images</div>
+                <div style="font-size:11px;color:var(--text3)">Generate all scene images using DALL-E</div>
+              </div>
+              <span id="phase2-status" style="margin-left:auto;font-size:11px;color:var(--text3)">Waiting for avatar...</span>
+            </div>
+            <div id="auto-scenes-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:1rem"></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="yellow-btn" id="gen-all-scenes-btn" onclick="generateAllScenes()">🎨 Generate All Scenes</button>
+              <span id="scenes-progress" style="font-size:12px;color:var(--text3)"></span>
+            </div>
+          </div>
+
+          <!-- PHASE 3 — ANIMATE -->
+          <div class="form-card" style="margin-bottom:16px;opacity:0.5;pointer-events:none" id="auto-phase3">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--bg4);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text3)">3</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">Animate Scenes</div>
+                <div style="font-size:11px;color:var(--text3)">Animate each image via Higgsfield (8-10 sec per clip)</div>
+              </div>
+              <span id="phase3-status" style="margin-left:auto;font-size:11px;color:var(--text3)">Waiting for images...</span>
+            </div>
+            <div id="auto-animate-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:1rem"></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="yellow-btn" id="animate-all-btn" onclick="animateAllScenes()">🎬 Animate All via Higgsfield</button>
+              <span id="animate-progress" style="font-size:12px;color:var(--text3)"></span>
+            </div>
+          </div>
+
+          <!-- PHASE 4 — COMPILE & DOWNLOAD -->
+          <div class="form-card" style="opacity:0.5;pointer-events:none" id="auto-phase4">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--bg4);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text3)">4</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">Compile & Deliver</div>
+                <div style="font-size:11px;color:var(--text3)">Download all assets for CapCut editing</div>
+              </div>
+              <span id="phase4-status" style="margin-left:auto;font-size:11px;color:var(--text3)">Waiting...</span>
+            </div>
+            <div id="auto-outputs-list" style="margin-bottom:1rem"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="yellow-btn" id="download-all-btn" onclick="downloadAllOutputs()">📥 Download All Assets</button>
+              <button class="ghost-btn" onclick="copyAllLinks()" style="font-size:12px">📋 Copy all links</button>
+              <button class="ghost-btn" onclick="notifyClientDone()" style="font-size:12px;color:var(--green);border-color:rgba(34,197,94,0.3)">✅ Notify client — done!</button>
+            </div>
+          </div>
         </div>
       </div>
 
