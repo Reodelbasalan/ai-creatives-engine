@@ -397,7 +397,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   if(page==='all-projects')loadAllProjects();
   if(page==='editor-portal')loadEditorPortal();
@@ -410,6 +410,7 @@ function showPage(page){
   if(page==='worklog')loadWorkLog();
   if(page==='client-dashboard')loadClientDashboard();
   if(page==='settings'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadSettings();}
+  if(page==='automation'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadAutomationProjects();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
@@ -1674,6 +1675,281 @@ async function loadUnreadBadges(){
 // TOOL SETTINGS
 // ═══════════════════════════════════════
 
+
+// ═══════════════════════════════════════
+// AUTOMATION PIPELINE
+// ═══════════════════════════════════════
+
+var autoProject=null;
+var autoScenes=[];
+var autoAvatarUrl=null;
+var autoOutputs=[];
+
+async function loadAutomationProjects(){
+  var sel=document.getElementById('auto-project-select');
+  if(!sel)return;
+  var{data}=await sb.from('projects').select('id,client_name,status,blueprint')
+    .not('blueprint','is',null).order('created_at',{ascending:false});
+  sel.innerHTML='<option value="">Select project...</option>';
+  (data||[]).forEach(function(p){
+    var opt=document.createElement('option');
+    opt.value=p.id;
+    opt.textContent=p.client_name+' ('+p.status+')';
+    sel.appendChild(opt);
+  });
+}
+
+async function loadAutomationProject(){
+  var sel=document.getElementById('auto-project-select');
+  if(!sel||!sel.value)return;
+  var{data}=await sb.from('projects').select('*').eq('id',sel.value).maybeSingle();
+  autoProject=data;
+  if(!data)return;
+  // Show project info
+  var info=document.getElementById('auto-project-info');
+  if(info){
+    info.style.display='block';
+    info.innerHTML='<strong>'+data.client_name+'</strong> · '+data.business_type+' · '+data.video_size
+      +'<br><span style="color:var(--text3);font-size:11px">Blueprint: '+( data.blueprint?data.blueprint.length+' chars':'Not generated')+'</span>';
+  }
+  // Parse scenes from blueprint
+  if(data.blueprint){
+    autoScenes=parseBlueprint(data.blueprint);
+    renderAutomationScenes();
+  }
+  var avatarEl=document.getElementById('auto-avatar-prompt');
+  if(avatarEl&&data.avatar_desc){avatarEl.value=data.avatar_desc+', 9:16 portrait, photorealistic, studio lighting';}
+  var avatarEl=document.getElementById('auto-avatar-prompt');
+  if(avatarEl&&data.avatar_desc){avatarEl.value=data.avatar_desc+', 9:16 portrait, photorealistic, studio lighting';}
+}
+
+function renderAutomationScenes(){
+  var grid=document.getElementById('auto-scenes-grid');
+  if(!grid)return;
+  grid.innerHTML=autoScenes.map(function(s,i){
+    return '<div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);overflow:hidden" id="scene-card-'+i+'">'
+      +'<div style="aspect-ratio:9/16;background:var(--bg4);display:flex;align-items:center;justify-content:center;position:relative" id="scene-img-container-'+i+'">'
+      +'<div style="font-size:10px;color:var(--text3);text-align:center;padding:8px">Scene '+s.num+'<br>'+s.name+'</div>'
+      +'</div>'
+      +'<div style="padding:8px">'
+      +'<div style="font-size:9px;color:var(--text3);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(s.imagePrompt||s.videoPrompt||'').substring(0,50)+'...</div>'
+      +'<div style="display:flex;gap:4px">'
+      +'<button class="gen-scene-btn" data-idx="'+i+'" style="flex:1;font-size:10px;padding:3px;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.2);border-radius:4px;color:var(--yellow);cursor:pointer">🎨 Gen</button>'
+      +'<span id="scene-status-'+i+'" style="font-size:9px;color:var(--text3);display:flex;align-items:center"></span>'
+      +'</div></div></div>';
+  }).join('');
+  // Attach handlers
+  grid.querySelectorAll('.gen-scene-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){generateSceneImage(parseInt(this.dataset.idx));});
+  });
+}
+
+async function generateAvatar(){
+  var promptEl=document.getElementById('auto-avatar-prompt');
+  var prompt=promptEl?.value?.trim();
+  if(!prompt){showNotif('Add avatar description first','error');return;}
+  var apiKey=getToolSetting('dalle-api-key')||getSecureApiKey('dalle');
+  if(!apiKey){showNotif('Set DALL-E API key in Settings first!','error');showPage('settings');return;}
+  var btn=document.getElementById('gen-avatar-btn');
+  var status=document.getElementById('avatar-gen-status');
+  if(btn)btn.disabled=true;
+  if(status)status.textContent='⚡ Generating avatar...';
+  try{
+    var res=await fetch('/api/dalle-generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',
+        apiKey:apiKey,
+        size:'1024x1792',
+        quality:getToolSetting('dalle-quality','hd'),
+        style:getToolSetting('dalle-style','vivid')
+      })
+    });
+    var d=await res.json();
+    if(d.url){
+      autoAvatarUrl=d.url;
+      var preview=document.getElementById('avatar-preview');
+      var result=document.getElementById('avatar-result');
+      if(preview)preview.src=d.url;
+      if(result)result.style.display='block';
+      if(status)status.textContent='✅ Avatar generated!';
+      // Save to project outputs
+      if(autoProject?.id){
+        await sb.from('project_outputs').insert({
+          project_id:autoProject.id,user_id:currentUser.id,
+          url:d.url,type:'image',label:'Avatar'
+        });
+      }
+      logActivity('AVATAR_GENERATED',autoProject?.client_name||'');
+    } else {
+      if(status)status.textContent='Error: '+(d.error||'Failed');
+      showNotif('DALL-E error: '+(d.error||'Failed'),'error');
+    }
+  }catch(e){
+    if(status)status.textContent='Error: '+e.message;
+    showNotif('Error: '+e.message,'error');
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+}
+
+function approveAvatar(){
+  // Unlock Phase 2
+  var phase2=document.getElementById('auto-phase2');
+  if(phase2){phase2.style.opacity='1';phase2.style.pointerEvents='auto';}
+  var p1status=document.getElementById('phase1-status');
+  if(p1status){p1status.textContent='✅ Done';p1status.style.color='var(--green)';}
+  var p2status=document.getElementById('phase2-status');
+  if(p2status)p2status.textContent='Ready — click Generate All';
+  showNotif('Avatar approved! Proceed to scene images ✓','success');
+}
+
+async function generateSceneImage(idx){
+  var scene=autoScenes[idx];
+  if(!scene)return;
+  var apiKey=getToolSetting('dalle-api-key')||getSecureApiKey('dalle');
+  if(!apiKey){showNotif('Set DALL-E API key in Settings!','error');return;}
+  var statusEl=document.getElementById('scene-status-'+idx);
+  var container=document.getElementById('scene-img-container-'+idx);
+  if(statusEl)statusEl.textContent='⏳';
+  // Build prompt — include avatar context
+  var prompt=scene.imagePrompt||scene.videoPrompt||scene.visual||'';
+  if(autoAvatarUrl&&autoProject?.avatar_desc){
+    prompt='Featuring the same character: '+autoProject.avatar_desc+'. Scene: '+prompt;
+  }
+  prompt+=' 9:16 vertical portrait, mobile-optimized, photorealistic';
+  try{
+    var res=await fetch('/api/dalle-generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:'1024x1792',
+        quality:getToolSetting('dalle-quality','hd'),
+        style:getToolSetting('dalle-style','vivid')})
+    });
+    var d=await res.json();
+    if(d.url){
+      // Show image in card
+      if(container){
+        container.innerHTML='<img src="'+d.url+'" style="width:100%;height:100%;object-fit:cover"/>'
+          +'<div style="position:absolute;bottom:4px;right:4px;display:flex;gap:3px">'
+          +'<button class="regen-scene" data-idx="'+idx+'" style="font-size:9px;padding:2px 6px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:3px;cursor:pointer">🔄</button>'
+          +'<button class="approve-scene" data-idx="'+idx+'" data-url="'+d.url+'" style="font-size:9px;padding:2px 6px;background:rgba(34,197,94,0.8);color:#fff;border:none;border-radius:3px;cursor:pointer">✅</button>'
+          +'</div>';
+        container.style.position='relative';
+        container.querySelectorAll('.regen-scene').forEach(function(b){b.addEventListener('click',function(){generateSceneImage(parseInt(this.dataset.idx));});});
+        container.querySelectorAll('.approve-scene').forEach(function(b){
+          b.addEventListener('click',function(){approveSceneImage(parseInt(this.dataset.idx),this.dataset.url);});
+        });
+      }
+      if(statusEl)statusEl.textContent='✅';
+      // Save to autoOutputs
+      autoOutputs[idx]={url:d.url,type:'image',scene:scene,approved:false};
+    } else {
+      if(statusEl)statusEl.textContent='❌';
+      showNotif('Scene '+scene.num+' error: '+(d.error||'Failed'),'error');
+    }
+  }catch(e){
+    if(statusEl)statusEl.textContent='❌';
+  }
+}
+
+function approveSceneImage(idx,url){
+  if(autoOutputs[idx])autoOutputs[idx].approved=true;
+  var btn=document.querySelector('#scene-img-container-'+idx+' .approve-scene');
+  if(btn){btn.textContent='✓';btn.style.background='rgba(250,204,21,0.8)';}
+  // Check if all approved
+  var allApproved=autoScenes.every(function(_,i){return autoOutputs[i]?.approved;});
+  if(allApproved){
+    var phase3=document.getElementById('auto-phase3');
+    if(phase3){phase3.style.opacity='1';phase3.style.pointerEvents='auto';}
+    var p2s=document.getElementById('phase2-status');
+    if(p2s){p2s.textContent='✅ All approved!';p2s.style.color='var(--green)';}
+    var p3s=document.getElementById('phase3-status');
+    if(p3s)p3s.textContent='Ready — click Animate All';
+    showNotif('All scenes approved! Proceed to animation ✓','success');
+  }
+}
+
+async function generateAllScenes(){
+  if(!autoScenes.length){showNotif('Load a project with blueprint first','error');return;}
+  var progress=document.getElementById('scenes-progress');
+  var btn=document.getElementById('gen-all-scenes-btn');
+  if(btn)btn.disabled=true;
+  for(var i=0;i<autoScenes.length;i++){
+    if(progress)progress.textContent='Generating scene '+(i+1)+' of '+autoScenes.length+'...';
+    await generateSceneImage(i);
+    await new Promise(function(r){setTimeout(r,2000);}); // 2s delay between calls
+  }
+  if(progress)progress.textContent='All scenes generated! Review and approve each.';
+  if(btn)btn.disabled=false;
+}
+
+function animateAllScenes(){
+  var approvedScenes=autoOutputs.filter(function(o){return o&&o.approved;});
+  if(!approvedScenes.length){showNotif('Approve scene images first!','error');return;}
+  showNotif('Opening Higgsfield for animation — prompts copied!','success');
+  approvedScenes.forEach(function(o,i){
+    var animPrompt='Animate this image: '+o.scene.videoPrompt+' Duration: 8-10 seconds, smooth cinematic motion, 9:16 vertical';
+    setTimeout(function(){
+      navigator.clipboard.writeText(animPrompt);
+      window.open('https://higgsfield.ai/create','_blank');
+    },i*1500);
+  });
+  // Unlock phase 4
+  setTimeout(function(){
+    var phase4=document.getElementById('auto-phase4');
+    if(phase4){phase4.style.opacity='1';phase4.style.pointerEvents='auto';}
+    var p4s=document.getElementById('phase4-status');
+    if(p4s)p4s.textContent='Compile outputs when done animating';
+  },2000);
+}
+
+async function downloadAllOutputs(){
+  var approved=autoOutputs.filter(function(o){return o&&o.url;});
+  if(!approved.length){showNotif('No outputs to download','error');return;}
+  // Save all to project outputs in DB
+  if(autoProject?.id){
+    for(var i=0;i<approved.length;i++){
+      await sb.from('project_outputs').insert({
+        project_id:autoProject.id,user_id:currentUser.id,
+        url:approved[i].url,type:'image',
+        label:'Scene '+(i+1)+' image'
+      }).catch(function(){});
+    }
+    loadOutputs(autoProject.id);
+  }
+  // Open each image in new tab for manual download
+  approved.forEach(function(o,i){
+    setTimeout(function(){window.open(o.url,'_blank');},i*500);
+  });
+  showNotif('Opening all outputs — save each one ✓','success');
+  // Unlock compile
+  var p4s=document.getElementById('phase4-status');
+  if(p4s){p4s.textContent='✅ Done!';p4s.style.color='var(--green)';}
+}
+
+function copyAllLinks(){
+  var links=autoOutputs.filter(function(o){return o&&o.url;}).map(function(o,i){return 'Scene '+(i+1)+': '+o.url;}).join('\n');
+  navigator.clipboard.writeText(links);
+  showNotif('All links copied! ✓','success');
+}
+
+async function notifyClientDone(){
+  if(!autoProject)return;
+  if(autoProject.client_id){
+    await sb.from('notifications').insert({
+      user_id:autoProject.client_id,
+      message:'Your project "'+autoProject.client_name+'" is complete and ready for review!',
+      type:'output',is_read:false
+    }).catch(function(){});
+  }
+  await sb.from('projects').update({status:'Approved / Done',updated_at:new Date().toISOString()}).eq('id',autoProject.id);
+  showNotif('Client notified! Project marked complete ✅','success');
+  logActivity('PROJECT_COMPLETED',autoProject.client_name);
+}
+
+
 // ═══════════════════════════════════════
 // SECURE API KEY MANAGEMENT
 // ═══════════════════════════════════════
@@ -1705,6 +1981,7 @@ function saveApiKey(tool){
   if(tool==='grok'&&key.startsWith('xai-'))valid=true;
   if(tool==='veo'&&key.startsWith('AIza'))valid=true;
   if(tool==='higgs')valid=true;
+  if(tool==='dalle'&&key.startsWith('sk-'))valid=true;
   if(!valid){
     showNotif('Invalid key format for '+tool,'error');
     return;
@@ -1762,7 +2039,7 @@ function loadSettings(){
   switchToolMode('grok', grokMode);
   switchToolMode('veo', veoMode);
   // Restore API key values + show status
-  var tools=['grok','veo','higgs'];
+  var tools=['grok','veo','higgs','dalle'];
   tools.forEach(function(t){
     var key=getToolSetting(t+'-api-key');
     var input=document.getElementById(t+'-api-key');
