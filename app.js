@@ -404,6 +404,7 @@ function showPage(page){
   if(page==='users')loadUsers();
   if(page==='dashboard')loadDashboard();
   if(page==='analytics')loadAnalytics();
+  if(page==='outputs'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadOutputsTable();}
   if(page==='clients')loadClients();
   if(page==='activity')loadActivityLog();
   if(page==='attendance'){var today=new Date().toISOString().slice(0,10);var df=document.getElementById('attendance-date');if(df&&!df.value)df.value=today;loadAttendance();}
@@ -552,6 +553,9 @@ function renderProjectsTable(projects){
 
 // EDITOR PORTAL
 async function loadEditorPortal(){
+  // Load submit output form
+  loadEditorOutputProjectSelect();
+  loadEditorRecentOutputs();
   // Show assigned projects for editors, all Ready for Editor for admin
   var query;
   if(currentUserRole==='editor'){
@@ -3360,3 +3364,210 @@ generateSceneImage=async function(idx,dalleSize){
   }
 };
 
+
+
+// ═══════════════════════════════════════
+// EDITOR OUTPUT SUBMISSION
+// ═══════════════════════════════════════
+
+async function loadEditorOutputProjectSelect(){
+  var sel=document.getElementById('submit-project-select');
+  if(!sel)return;
+  var{data}=await sb.from('projects').select('id,client_name,status')
+    .eq('assigned_to',currentUser.id)
+    .neq('status','Approved / Done')
+    .order('client_name');
+  sel.innerHTML='<option value="">Select project...</option>'+(data||[]).map(function(p){
+    return '<option value="'+p.id+'">'+p.client_name+' ('+p.status+')</option>';
+  }).join('');
+}
+
+async function loadEditorRecentOutputs(){
+  var el=document.getElementById('editor-recent-outputs');
+  if(!el)return;
+  var{data}=await sb.from('project_outputs')
+    .select('*,projects(client_name)')
+    .eq('user_id',currentUser.id)
+    .order('created_at',{ascending:false})
+    .limit(5);
+  var outputs=data||[];
+  if(!outputs.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">No outputs submitted yet.</div>';
+    return;
+  }
+  var typeIcons={video:'🎬',image:'🖼️',blueprint:'📄',other:'📎'};
+  el.innerHTML=outputs.map(function(o){
+    var date=new Date(o.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);margin-bottom:6px">'
+      +'<span style="font-size:16px">'+(typeIcons[o.type]||'📎')+'</span>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:11px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(o.projects?.client_name||'Project')+'</div>'
+      +'<a href="'+o.url+'" target="_blank" style="font-size:10px;color:var(--yellow);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">'+o.url.substring(0,40)+'...</a>'
+      +'</div>'
+      +'<div style="font-size:9px;color:var(--text3);white-space:nowrap">'+date+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+async function submitEditorOutput(markDone){
+  var projectId=document.getElementById('submit-project-select')?.value;
+  var url=document.getElementById('submit-output-url')?.value?.trim();
+  var type=document.getElementById('submit-output-type')?.value||'video';
+  var notes=document.getElementById('submit-output-notes')?.value?.trim()||'';
+  if(!projectId){showNotif('Select a project first','error');return;}
+  if(!url){showNotif('Paste the output URL','error');return;}
+  var project=null;
+  var{data:proj}=await sb.from('projects').select('*').eq('id',projectId).maybeSingle();
+  project=proj;
+  var typeLabels={video:'Video output',image:'Image output',blueprint:'Blueprint PDF',other:'File'};
+  var label=typeLabels[type]||'Output';
+  if(notes)label=label+' — '+notes.substring(0,30);
+  // Save to project_outputs
+  var{error}=await sb.from('project_outputs').insert({
+    project_id:projectId,
+    user_id:currentUser.id,
+    url:url,
+    type:type,
+    label:label
+  });
+  if(error){showNotif('Error: '+error.message,'error');return;}
+  // Log activity
+  logActivity('OUTPUT_SUBMITTED',(project?.client_name||'Project')+' — '+type);
+  // Mark done if requested
+  if(markDone){
+    await sb.from('projects').update({status:'Approved / Done',updated_at:new Date().toISOString()}).eq('id',projectId);
+    showNotif('Output submitted + marked Done! ✅','success');
+  } else {
+    showNotif('Output submitted! ✓','success');
+  }
+  // Notify admin
+  await sb.from('notifications').insert({
+    user_id:null,
+    message:'New output submitted by editor for "'+( project?.client_name||'Project')+'" — '+type,
+    type:'output',
+    project_id:projectId,
+    is_read:false
+  }).catch(function(){});
+  // Clear form
+  document.getElementById('submit-output-url').value='';
+  document.getElementById('submit-output-notes').value='';
+  // Reload
+  loadEditorRecentOutputs();
+  loadEditorPortal();
+}
+
+async function submitAndMarkDone(){
+  await submitEditorOutput(true);
+}
+
+// ═══════════════════════════════════════
+// ADMIN OUTPUTS TABLE
+// ═══════════════════════════════════════
+
+async function loadOutputsTable(){
+  var editorFilter=document.getElementById('outputs-editor-filter')?.value||'';
+  var typeFilter=document.getElementById('outputs-type-filter')?.value||'';
+  var dateFrom=document.getElementById('outputs-date-from')?.value||'';
+  var dateTo=document.getElementById('outputs-date-to')?.value||'';
+
+  // Load editors for filter dropdown
+  var filterEl=document.getElementById('outputs-editor-filter');
+  if(filterEl&&filterEl.options.length<=1){
+    var{data:eds}=await sb.from('profiles').select('id,name,email').eq('role','editor').order('name');
+    (eds||[]).forEach(function(e){
+      var opt=document.createElement('option');
+      opt.value=e.id;opt.textContent=e.name||e.email;
+      filterEl.appendChild(opt);
+    });
+  }
+
+  // Build query
+  var query=sb.from('project_outputs')
+    .select('*,profiles(name,email),projects(client_name,status)')
+    .order('created_at',{ascending:false})
+    .limit(200);
+  if(editorFilter)query=query.eq('user_id',editorFilter);
+  if(typeFilter)query=query.eq('type',typeFilter);
+  if(dateFrom)query=query.gte('created_at',dateFrom+'T00:00:00');
+  if(dateTo)query=query.lte('created_at',dateTo+'T23:59:59');
+
+  var{data}=await query;
+  var outputs=data||[];
+
+  // Stats
+  var statsEl=document.getElementById('outputs-stats');
+  if(statsEl){
+    var videos=outputs.filter(function(o){return o.type==='video';}).length;
+    var images=outputs.filter(function(o){return o.type==='image';}).length;
+    var total=outputs.length;
+    // Count unique projects
+    var uniqueProjects=new Set(outputs.map(function(o){return o.project_id;})).size;
+    statsEl.innerHTML=
+      '<div class="stat-card c-yellow"><div class="stat-label">Total outputs</div><div class="stat-val">'+total+'</div></div>'
+      +'<div class="stat-card c-purple"><div class="stat-label">Videos</div><div class="stat-val" style="color:var(--purple)">'+videos+'</div></div>'
+      +'<div class="stat-card c-green"><div class="stat-label">Images</div><div class="stat-val" style="color:var(--green)">'+images+'</div></div>'
+      +'<div class="stat-card c-amber"><div class="stat-label">Projects</div><div class="stat-val" style="color:var(--amber)">'+uniqueProjects+'</div></div>';
+  }
+
+  // Update badge
+  var badge=document.getElementById('outputs-badge');
+  if(badge){badge.textContent=outputs.length;badge.style.display=outputs.length>0?'':'none';}
+
+  // Table body
+  var bodyEl=document.getElementById('outputs-table-body');
+  if(!bodyEl)return;
+  if(!outputs.length){
+    bodyEl.innerHTML='<div class="table-empty"><div class="table-empty-icon">📦</div>No outputs yet.</div>';
+    return;
+  }
+  var typeIcons={video:'🎬',image:'🖼️',blueprint:'📄',other:'📎'};
+  bodyEl.innerHTML=outputs.map(function(o){
+    var date=new Date(o.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
+    var editor=o.profiles?.name||o.profiles?.email||'Unknown';
+    var client=o.projects?.client_name||'—';
+    var projStatus=o.projects?.status||'';
+    var icon=typeIcons[o.type]||'📎';
+    var shortUrl=o.url.length>40?o.url.substring(0,40)+'...':o.url;
+    return '<div class="table-row" style="grid-template-columns:1.5fr 1.5fr 1fr 1fr 2fr 1fr">'
+      +'<div><div class="row-name">'+editor+'</div></div>'
+      +'<div><div class="row-name">'+client+'</div><div class="row-sub">'+projStatus+'</div></div>'
+      +'<div><span style="font-size:12px">'+icon+' '+o.type+'</span></div>'
+      +'<div>'+statusBadge(projStatus)+'</div>'
+      +'<div><a href="'+o.url+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+shortUrl+'</a>'
+      +(o.label?'<div style="font-size:10px;color:var(--text3)">'+o.label+'</div>':'')+'</div>'
+      +'<div class="row-date">'+date+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function exportOutputsCSV(){
+  var rows=document.querySelectorAll('#outputs-table-body .table-row');
+  var csvRows=['"Editor","Client","Type","Status","URL","Label","Date"'];
+  rows.forEach(function(row){
+    var cells=row.querySelectorAll('div.row-name,div.row-sub,span,a,div.row-date');
+    // Better approach - re-fetch from table data
+  });
+  // Export from current data
+  sb.from('project_outputs').select('*,profiles(name,email),projects(client_name,status)').order('created_at',{ascending:false}).limit(500)
+    .then(function({data}){
+      var outputs=data||[];
+      var csv=['"Editor","Client","Type","Output URL","Label","Date"'].concat(
+        outputs.map(function(o){
+          return [
+            o.profiles?.name||o.profiles?.email||'',
+            o.projects?.client_name||'',
+            o.type||'',
+            o.url||'',
+            o.label||'',
+            o.created_at?new Date(o.created_at).toLocaleDateString('en-PH'):''
+          ].map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');
+        })
+      ).join('\n');
+      var blob=new Blob([csv],{type:'text/csv'});
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='outputs-'+new Date().toISOString().slice(0,10)+'.csv';
+      a.click();
+      showNotif('Exported! ✓','success');
+    });
+}
