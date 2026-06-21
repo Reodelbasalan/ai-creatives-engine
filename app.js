@@ -471,6 +471,68 @@ function statusBadge(s){
 }
 function fmtDate(d){return new Date(d).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}
 
+
+// ═══════════════════════════════════════
+// SAVE CLIENT DETAILS (no blueprint yet)
+// ═══════════════════════════════════════
+async function saveClientDetails(){
+  var btn=document.getElementById('save-details-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Saving...';}
+  var isPaste=document.getElementById('tab-paste').classList.contains('active');
+  var clientName='';
+  var product='',emphasize='',script='';
+  if(isPaste){
+    var brief=document.getElementById('f-brief').value.trim();
+    if(!brief){showNotif('Paste client brief first','error');if(btn){btn.disabled=false;btn.innerHTML='💾 Save details only';}return;}
+    var briefLines=brief.split('\n');clientName='';for(var bl=0;bl<briefLines.length;bl++){var bLine=briefLines[bl];if(bLine.toLowerCase().includes('client name')||bLine.toLowerCase().includes('business name')||bLine.toLowerCase().includes('brand name')){var colonIdx=bLine.indexOf(':');if(colonIdx>0){clientName=bLine.substring(colonIdx+1).trim().replace(/[*_]/g,'');break;}}}
+    for(var pat of patterns){var m=brief.match(pat);if(m&&m[1]){clientName=m[1].trim().replace(/[*_\[\]]/g,'').trim();break;}}
+    if(!clientName)clientName='Client '+new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+    product=brief.substring(0,500);
+    emphasize=document.getElementById('f-script')?.value||'';
+  } else {
+    clientName=document.getElementById('f-client')?.value?.trim();
+    if(!clientName){showNotif('Client name required','error');if(btn){btn.disabled=false;btn.innerHTML='💾 Save details only';}return;}
+    product=document.getElementById('f-product')?.value?.trim()||'';
+    emphasize=document.getElementById('f-emphasize')?.value||'';
+    script=document.getElementById('f-script')?.value||'';
+  }
+  var{error}=await sb.from('projects').insert({
+    client_name:clientName,
+    business_type:isPaste?'':document.getElementById('f-biztype')?.value||'',
+    product,
+    fb_page:isPaste?'':document.getElementById('f-fb')?.value?.trim()||null,
+    website:isPaste?'':document.getElementById('f-website')?.value?.trim()||null,
+    color_primary:isPaste?'':document.getElementById('f-color1')?.value||null,
+    color_secondary:isPaste?'':document.getElementById('f-color2')?.value||null,
+    audience:isPaste?'':document.getElementById('f-audience')?.value||'',
+    pain_point:isPaste?'':document.getElementById('f-pain')?.value?.trim()||'',
+    usp:isPaste?'':document.getElementById('f-usp')?.value?.trim()||'',
+    goal:isPaste?'':document.getElementById('f-goal')?.value||'',
+    video_size:document.getElementById('f-size')?.value||'9:16 Vertical',
+    language:document.getElementById('f-lang')?.value||'Taglish',
+    voice_actor:isPaste?'':document.getElementById('f-voice')?.value||null,
+    avatar_desc:isPaste?'':document.getElementById('f-avatar')?.value||null,
+    emphasize,
+    tone:selectedToneVal||'',
+    blueprint:null,
+    status:'New Input',
+    assigned_to:document.getElementById('f-assign-to')?.value||null,
+    created_by:currentUser?.id,
+    gdrive_link:document.getElementById('f-gdrive')?.value?.trim()||null,
+    moodboard_link:document.getElementById('f-moodboard')?.value?.trim()||null,
+    sample_video_link:document.getElementById('f-sample-video')?.value?.trim()||null,
+    client_extra:document.getElementById('f-client-extra')?.value?.trim()||null
+  });
+  if(btn){btn.disabled=false;btn.innerHTML='💾 Save details only';}
+  if(error){showNotif('Error: '+error.message,'error');return;}
+  showNotif('Client details saved! ✓ Generate blueprint when ready.','success');
+  logActivity('CLIENT_SAVED',clientName);
+  // Clear form
+  ['f-client','f-biztype','f-product','f-pain','f-usp','f-audience','f-goal','f-emphasize','f-brief','f-script','f-fb','f-website','f-color1','f-color2','f-gdrive','f-moodboard','f-sample-video','f-client-extra'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  selectedToneVal='';
+  document.querySelectorAll('.tone-opt').forEach(function(t){t.classList.remove('selected');});
+  showPage('dashboard');
+}
 // DASHBOARD
 async function loadDashboard(){
   const{data}=await sb.from('projects').select('*').order('created_at',{ascending:false});
@@ -769,7 +831,7 @@ async function saveProject(){
     voice_actor:isPaste?'':document.getElementById('f-voice').value,
     avatar_desc:isPaste?'':document.getElementById('f-avatar').value,
     emphasize,tone:selectedToneVal,
-    status:'Ready for Editor',blueprint,
+    status:'New Input',blueprint:blueprint||null,
     assigned_to:document.getElementById('f-assign-to')?.value||null,
     created_by:currentUser?.id,
     gdrive_link:document.getElementById('f-gdrive')?.value?.trim()||null,
@@ -811,6 +873,8 @@ async function openModal(id){
   var sampleHtml=p.sample_video_link?'<a href="'+p.sample_video_link+'" target="_blank" style="color:var(--yellow);font-size:11px">🎬 Open Sample</a>':'—';
   document.getElementById('modal-detail-grid').innerHTML=[
     ['Client',p.client_name],['Business type',p.business_type],
+    ['FB Page',p.fb_page?`<a href="${p.fb_page}" target="_blank" style="color:var(--yellow);font-size:11px">🔗 Open FB Page</a>`:'—'],
+    ['Website',p.website?`<a href="${p.website}" target="_blank" style="color:var(--yellow);font-size:11px">🔗 Open Website</a>`:'—'],
     ['Goal',p.goal],['Language',p.language],
     ['Video size',p.video_size],['Tone',p.tone],
     ['Audience',p.audience],['Assigned to',assignedName],
