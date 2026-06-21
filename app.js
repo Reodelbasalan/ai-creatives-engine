@@ -400,6 +400,7 @@ function showPage(page){
   const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   if(page==='all-projects')loadAllProjects();
+  if(page==='new-project')loadAssignDropdown();
   if(page==='editor-portal')loadEditorPortal();
   if(page==='users')loadUsers();
   if(page==='dashboard')loadDashboard();
@@ -489,7 +490,7 @@ async function loadDashboard(){
       var approveBtn="";
       if(status==="In Production")approveBtn='<button onclick="quickApprove(\''+p.id+'\',event)" style="margin-top:6px;width:100%;background:var(--green-dim);color:var(--green);border:none;border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer">Approve</button>';
       if(status==="Ready for Editor")approveBtn='<button onclick="quickApprove(\''+p.id+'\',event)" style="margin-top:6px;width:100%;background:var(--amber-dim);color:var(--amber);border:none;border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer">Done</button>';
-      return '<div class="pipe-card" onclick="openModal(\''+p.id+'\')">'+'<div class="pipe-card-name">'+p.client_name+'</div>'+'<div class="pipe-card-type">'+(p.business_type||"")+'</div>'+approveBtn+'</div>';
+      return '<div class="pipe-card" onclick="openModal(\''+p.id+'\')">'+'<div class="pipe-card-name">'+p.client_name+'</div>'+'<div class="pipe-card-type">'+(p.business_type||"")+"</div>"+approveBtn+'<button onclick="quickAssignModal(\''+p.id+'\',event)" style="margin-top:4px;width:100%;background:var(--bg2);border:0.5px solid var(--border2);color:var(--text3);border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer">👤 Assign</button>'+'</div>';
     }).join(""):"<div class=\"pipe-empty\">—</div>";
   });
   document.getElementById('recent-projects-body').innerHTML=allProjects.slice(0,10).map(p=>`
@@ -501,6 +502,15 @@ async function loadDashboard(){
     </div>`).join('')||'<div class="table-empty"><div class="table-empty-icon">📋</div><div>No projects yet</div><div style="font-size:11px;margin-top:6px;color:var(--text3)">Click + New project to get started</div></div>';
 }
 
+
+async function loadAssignDropdown(){
+  var sel=document.getElementById('f-assign-to');
+  if(!sel)return;
+  var{data}=await sb.from('profiles').select('id,name,email').eq('role','editor').order('name');
+  sel.innerHTML='<option value="">Unassigned (assign later)</option>'+(data||[]).map(function(e){
+    return '<option value="'+e.id+'">'+(e.name||e.email)+'</option>';
+  }).join('');
+}
 // ALL PROJECTS
 async function loadAllProjects(){
   const{data}=await sb.from('projects').select('*').order('created_at',{ascending:false});
@@ -755,7 +765,7 @@ async function saveProject(){
     avatar_desc:isPaste?'':document.getElementById('f-avatar').value,
     emphasize,tone:selectedToneVal,
     status:'Ready for Editor',blueprint,
-    assigned_to:null,
+    assigned_to:document.getElementById('f-assign-to')?.value||null,
     created_by:currentUser?.id,
     gdrive_link:document.getElementById('f-gdrive')?.value?.trim()||null,
     moodboard_link:document.getElementById('f-moodboard')?.value?.trim()||null,
@@ -3628,4 +3638,63 @@ function exportOutputsCSV(){
       a.click();
       showNotif('Exported! ✓','success');
     });
+}
+
+// ═══════════════════════════════════════
+// QUICK ASSIGN FROM DASHBOARD
+// ═══════════════════════════════════════
+
+async function quickAssignModal(projectId, e){
+  e.stopPropagation();
+  var{data:editors}=await sb.from('profiles').select('id,name,email').eq('role','editor').order('name');
+  if(!editors||!editors.length){showNotif('No editors found','error');return;}
+  var proj=allProjects.find(function(p){return p.id===projectId;});
+  var projName=proj?.client_name||'Project';
+  // Build picker UI
+  var picker=document.getElementById('quick-assign-picker');
+  if(!picker){
+    picker=document.createElement('div');
+    picker.id='quick-assign-picker';
+    picker.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:1.25rem;z-index:9999;min-width:280px;box-shadow:0 16px 48px rgba(0,0,0,0.6)';
+    document.body.appendChild(picker);
+  }
+  picker.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">Assign project</div>'
+    +'<div style="font-size:11px;color:var(--text3);margin-bottom:1rem">'+projName+'</div>'
+    +editors.map(function(e){
+      return '<div onclick="doQuickAssign(''+projectId+'',''+e.id+'',''+( e.name||e.email)+'')" style="padding:10px 12px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.15s" onmouseover="this.style.borderColor='var(--yellow)'" onmouseout="this.style.borderColor='var(--border2)'">'
+        +'<div style="width:28px;height:28px;border-radius:50%;background:var(--yellow-dim);border:1.5px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--yellow)">'+(e.name||e.email)[0].toUpperCase()+'</div>'
+        +'<div><div style="font-size:12px;font-weight:600;color:var(--text)">'+(e.name||e.email)+'</div>'
+        +'<div style="font-size:10px;color:var(--text3)">Editor</div></div>'
+        +'</div>';
+    }).join('')
+    +'<button onclick="closeQuickAssign()" style="width:100%;margin-top:8px;padding:8px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text3);cursor:pointer;font-size:12px">Cancel</button>';
+  picker.style.display='block';
+  // Click outside to close
+  setTimeout(function(){
+    document.addEventListener('click',function handler(ev){
+      if(!picker.contains(ev.target)){closeQuickAssign();document.removeEventListener('click',handler);}
+    });
+  },100);
+}
+
+function closeQuickAssign(){
+  var picker=document.getElementById('quick-assign-picker');
+  if(picker)picker.style.display='none';
+}
+
+async function doQuickAssign(projectId, editorId, editorName){
+  await sb.from('projects').update({assigned_to:editorId,updated_at:new Date().toISOString()}).eq('id',projectId);
+  allProjects=allProjects.map(function(p){return p.id===projectId?Object.assign({},p,{assigned_to:editorId}):p;});
+  // Notify editor
+  var proj=allProjects.find(function(p){return p.id===projectId;});
+  await sb.from('notifications').insert({
+    user_id:editorId,
+    message:'New project assigned to you: "'+(proj?.client_name||'Project')+'" — check My Tasks!',
+    type:'assignment',
+    project_id:projectId,
+    is_read:false
+  }).catch(function(){});
+  closeQuickAssign();
+  showNotif('Assigned to '+editorName+'! ✓','success');
+  loadDashboard();
 }
