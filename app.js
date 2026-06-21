@@ -3661,9 +3661,10 @@ async function quickAssignModal(projectId, e){
   picker.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">Assign project</div>'
     +'<div style="font-size:11px;color:var(--text3);margin-bottom:1rem">'+projName+'</div>'
     +editors.map(function(e){
-      return '<div onclick="doQuickAssign(''+projectId+'',''+e.id+'',''+( e.name||e.email)+'')" style="padding:10px 12px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.15s" onmouseover="this.style.borderColor='var(--yellow)'" onmouseout="this.style.borderColor='var(--border2)'">'
-        +'<div style="width:28px;height:28px;border-radius:50%;background:var(--yellow-dim);border:1.5px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--yellow)">'+(e.name||e.email)[0].toUpperCase()+'</div>'
-        +'<div><div style="font-size:12px;font-weight:600;color:var(--text)">'+(e.name||e.email)+'</div>'
+      var eName=e.name||e.email;
+      return '<div onclick="doQuickAssign(\"'+projectId+'\",\"'+e.id+'\",\"'+eName+'\")" style="padding:10px 12px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px" onmouseover="this.style.borderColor=\'var(--yellow)\'" onmouseout="this.style.borderColor=\'var(--border2)\'">'
+        +'<div style="width:28px;height:28px;border-radius:50%;background:var(--yellow-dim);border:1.5px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--yellow)">'+eName[0].toUpperCase()+'</div>'
+        +'<div><div style="font-size:12px;font-weight:600;color:var(--text)">'+eName+'</div>'
         +'<div style="font-size:10px;color:var(--text3)">Editor</div></div>'
         +'</div>';
     }).join('')
