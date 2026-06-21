@@ -756,7 +756,11 @@ async function saveProject(){
     emphasize,tone:selectedToneVal,
     status:'Ready for Editor',blueprint,
     assigned_to:null,
-    created_by:currentUser?.id
+    created_by:currentUser?.id,
+    gdrive_link:document.getElementById('f-gdrive')?.value?.trim()||null,
+    moodboard_link:document.getElementById('f-moodboard')?.value?.trim()||null,
+    sample_video_link:document.getElementById('f-sample-video')?.value?.trim()||null,
+    client_extra:document.getElementById('f-client-extra')?.value?.trim()||null
   });
   btn.disabled=false;btn.innerHTML='💾 Save &amp; send to editor';
   if(error){showNotif('Save error: '+error.message,'error');return;}
@@ -786,13 +790,21 @@ async function openModal(id){
     const{data:edData}=await sb.from('profiles').select('name,email').eq('id',p.assigned_to).maybeSingle();
     if(edData)assignedName=edData.name||edData.email;
   }
+  // Build material links
+  var gdriveHtml=p.gdrive_link?'<a href="'+p.gdrive_link+'" target="_blank" style="color:var(--yellow);font-size:11px">📁 Open GDrive</a>':'—';
+  var moodHtml=p.moodboard_link?'<a href="'+p.moodboard_link+'" target="_blank" style="color:var(--yellow);font-size:11px">🖼️ Open Moodboard</a>':'—';
+  var sampleHtml=p.sample_video_link?'<a href="'+p.sample_video_link+'" target="_blank" style="color:var(--yellow);font-size:11px">🎬 Open Sample</a>':'—';
   document.getElementById('modal-detail-grid').innerHTML=[
     ['Client',p.client_name],['Business type',p.business_type],
     ['Goal',p.goal],['Language',p.language],
     ['Video size',p.video_size],['Tone',p.tone],
     ['Audience',p.audience],['Assigned to',assignedName],
     ['Pain point',p.pain_point],['USP',p.usp]
-  ].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-val">${v||'—'}</div></div>`).join('');
+  ].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-val">${v||'—'}</div></div>`).join('')
+  +`<div class="detail-item"><div class="detail-label">GDrive Materials</div><div class="detail-val">${gdriveHtml}</div></div>`
+  +`<div class="detail-item"><div class="detail-label">Moodboard</div><div class="detail-val">${moodHtml}</div></div>`
+  +`<div class="detail-item"><div class="detail-label">Sample Video</div><div class="detail-val">${sampleHtml}</div></div>`
+  +(p.client_extra?`<div class="detail-item" style="grid-column:1/-1"><div class="detail-label">Extra Notes</div><div class="detail-val">${p.client_extra}</div></div>`:'');
   // Load team members for assignment
   const{data:members}=await sb.from('profiles').select('id,name,email,role').order('name');
   const assignSelect=document.getElementById('modal-assign-select');
