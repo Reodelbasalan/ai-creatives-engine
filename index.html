@@ -366,6 +366,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Activity log
       </div>
+      <div class="nav-item admin-only" onclick="showPage('outputs')" id="nav-outputs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Output tracker
+        <span class="nav-badge" id="outputs-badge" style="display:none">0</span>
+      </div>
       <div class="nav-item admin-only" onclick="showPage('analytics')" id="nav-analytics">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Analytics
@@ -654,8 +659,47 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
       <!-- EDITOR PORTAL -->
       <div class="page" id="page-editor-portal">
-        <div class="section-label" style="margin-bottom:1rem">Projects ready for production</div>
-        <div id="editor-projects-body"></div>
+        <div style="display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start">
+          <!-- LEFT: Assigned Projects -->
+          <div>
+            <div class="section-label" style="margin-bottom:1rem">My assigned projects</div>
+            <div id="editor-projects-body"></div>
+          </div>
+          <!-- RIGHT: Submit Output -->
+          <div>
+            <div class="section-label" style="margin-bottom:1rem">📤 Submit completed output</div>
+            <div class="form-card">
+              <div class="form-field" style="margin-bottom:10px">
+                <label class="form-label">Project / Client</label>
+                <select class="form-select" id="submit-project-select"></select>
+              </div>
+              <div class="form-field" style="margin-bottom:10px">
+                <label class="form-label">Output URL <span class="opt">(Google Drive, Dropbox, etc.)</span></label>
+                <input class="form-input" id="submit-output-url" placeholder="https://drive.google.com/..."/>
+              </div>
+              <div class="form-field" style="margin-bottom:10px">
+                <label class="form-label">Output type</label>
+                <select class="form-select" id="submit-output-type">
+                  <option value="video">🎬 Video</option>
+                  <option value="image">🖼️ Images</option>
+                  <option value="blueprint">📄 Blueprint</option>
+                  <option value="other">📎 Other</option>
+                </select>
+              </div>
+              <div class="form-field" style="margin-bottom:12px">
+                <label class="form-label">Notes <span class="opt">(optional)</span></label>
+                <textarea class="form-textarea" id="submit-output-notes" placeholder="Add notes about this output..." style="min-height:60px"></textarea>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="yellow-btn" onclick="submitEditorOutput()" style="flex:1">📤 Submit output</button>
+                <button class="ghost-btn" onclick="submitAndMarkDone()" style="font-size:12px;color:var(--green);border-color:rgba(34,197,94,0.3)">✅ Submit &amp; Mark Done</button>
+              </div>
+            </div>
+            <!-- My Recent Outputs -->
+            <div class="section-label" style="margin:1rem 0 0.5rem">My recent outputs</div>
+            <div id="editor-recent-outputs"></div>
+          </div>
+        </div>
       </div>
 
       <!-- TEAM CHAT PAGE -->
@@ -1338,6 +1382,38 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <span>Client</span><span>Status</span><span>Editor</span><span>Date</span>
           </div>
           <div id="analytics-projects"></div>
+        </div>
+      </div>
+
+      <!-- OUTPUTS TABLE (Admin) -->
+      <div class="page" id="page-outputs">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+          <div class="section-label" style="margin:0">📦 All Editor Outputs</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select class="form-select" id="outputs-editor-filter" onchange="loadOutputsTable()" style="max-width:180px;font-size:11px">
+              <option value="">All editors</option>
+            </select>
+            <select class="form-select" id="outputs-type-filter" onchange="loadOutputsTable()" style="max-width:140px;font-size:11px">
+              <option value="">All types</option>
+              <option value="video">🎬 Video</option>
+              <option value="image">🖼️ Image</option>
+              <option value="blueprint">📄 Blueprint</option>
+              <option value="other">📎 Other</option>
+            </select>
+            <input type="date" class="form-input" id="outputs-date-from" style="max-width:140px;font-size:11px" onchange="loadOutputsTable()"/>
+            <span style="font-size:11px;color:var(--text3);line-height:32px">→</span>
+            <input type="date" class="form-input" id="outputs-date-to" style="max-width:140px;font-size:11px" onchange="loadOutputsTable()"/>
+            <button class="ghost-btn" onclick="exportOutputsCSV()" style="font-size:11px">📥 Export CSV</button>
+          </div>
+        </div>
+        <!-- Summary Stats -->
+        <div class="stats-grid" style="margin-bottom:1rem" id="outputs-stats"></div>
+        <!-- Outputs Table -->
+        <div class="data-table">
+          <div class="table-head" style="grid-template-columns:1.5fr 1.5fr 1fr 1fr 2fr 1fr">
+            <span>Editor</span><span>Client / Project</span><span>Type</span><span>Status</span><span>Output Link</span><span>Date</span>
+          </div>
+          <div id="outputs-table-body"></div>
         </div>
       </div>
 
