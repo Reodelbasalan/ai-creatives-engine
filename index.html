@@ -673,11 +673,30 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <label class="form-label">Project / Client</label>
                 <select class="form-select" id="submit-project-select"></select>
               </div>
-              <div class="form-field" style="margin-bottom:10px">
-                <label class="form-label">Output URL <span class="opt">(Google Drive, Dropbox, etc.)</span></label>
+              <!-- Project/Client select with expand -->
+              <div class="form-field" style="margin-bottom:8px">
+                <label class="form-label">Project / Client</label>
+                <div style="display:flex;gap:6px">
+                  <select class="form-select" id="submit-project-select" style="flex:1" onchange="loadSubmitClientDetails()">
+                    <option value="">Select project...</option>
+                  </select>
+                  <button onclick="toggleClientDetails()" class="ghost-btn" style="font-size:11px;padding:4px 10px;white-space:nowrap" id="view-client-btn" title="View client details">👁</button>
+                </div>
+              </div>
+              <!-- Client details (hidden by default, expandable) -->
+              <div id="submit-client-details" style="display:none;background:var(--bg4);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;font-size:11px;color:var(--text2);line-height:1.8"></div>
+              <!-- GDrive link -->
+              <div class="form-field" style="margin-bottom:8px">
+                <label class="form-label">📁 Google Drive / Video Link</label>
                 <input class="form-input" id="submit-output-url" placeholder="https://drive.google.com/..."/>
               </div>
-              <div class="form-field" style="margin-bottom:10px">
+              <!-- Excel/Sheet link -->
+              <div class="form-field" style="margin-bottom:8px">
+                <label class="form-label">📊 Excel / Google Sheet Link <span class="opt">(optional)</span></label>
+                <input class="form-input" id="submit-output-sheet" placeholder="https://docs.google.com/spreadsheets/..."/>
+              </div>
+              <!-- Output type -->
+              <div class="form-field" style="margin-bottom:8px">
                 <label class="form-label">Output type</label>
                 <select class="form-select" id="submit-output-type">
                   <option value="video">🎬 Video</option>
@@ -686,9 +705,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                   <option value="other">📎 Other</option>
                 </select>
               </div>
+              <!-- Notes -->
               <div class="form-field" style="margin-bottom:12px">
                 <label class="form-label">Notes <span class="opt">(optional)</span></label>
-                <textarea class="form-textarea" id="submit-output-notes" placeholder="Add notes about this output..." style="min-height:60px"></textarea>
+                <textarea class="form-textarea" id="submit-output-notes" placeholder="Add notes about this output..." style="min-height:50px"></textarea>
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <button class="yellow-btn" onclick="submitEditorOutput()" style="flex:1">📤 Submit output</button>
