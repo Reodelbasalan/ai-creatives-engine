@@ -3386,10 +3386,10 @@ async function loadEditorRecentOutputs(){
   var el=document.getElementById('editor-recent-outputs');
   if(!el)return;
   var{data}=await sb.from('project_outputs')
-    .select('*,projects(client_name)')
+    .select('*,projects(client_name,business_type,audience,goal,video_size,color_primary,product)')
     .eq('user_id',currentUser.id)
     .order('created_at',{ascending:false})
-    .limit(5);
+    .limit(8);
   var outputs=data||[];
   if(!outputs.length){
     el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">No outputs submitted yet.</div>';
@@ -3409,20 +3409,52 @@ async function loadEditorRecentOutputs(){
   }).join('');
 }
 
+// Load client details when project selected
+async function loadSubmitClientDetails(){
+  var sel=document.getElementById('submit-project-select');
+  if(!sel||!sel.value)return;
+  var{data}=await sb.from('projects').select('*').eq('id',sel.value).maybeSingle();
+  if(!data)return;
+  // Store for later use
+  window._currentSubmitProject=data;
+  var el=document.getElementById('submit-client-details');
+  if(el){
+    el.innerHTML='<strong style="color:var(--yellow)">'+(data.client_name||'—')+'</strong>'
+      +(data.business_type?'<br>Type: '+data.business_type:'')
+      +(data.product?'<br>Product: '+data.product.substring(0,80)+'...':'')
+      +(data.audience?'<br>Audience: '+data.audience:'')
+      +(data.goal?'<br>Goal: '+data.goal:'')
+      +(data.video_size?'<br>Size: '+data.video_size:'')
+      +(data.color_primary?'<br>Brand color: '+data.color_primary:'');
+  }
+}
+
+function toggleClientDetails(){
+  var el=document.getElementById('submit-client-details');
+  if(!el)return;
+  if(el.style.display==='none'||!el.style.display){
+    if(!window._currentSubmitProject){showNotif('Select a project first','error');return;}
+    el.style.display='block';
+    document.getElementById('view-client-btn').textContent='🙈';
+  } else {
+    el.style.display='none';
+    document.getElementById('view-client-btn').textContent='👁';
+  }
+}
+
 async function submitEditorOutput(markDone){
   var projectId=document.getElementById('submit-project-select')?.value;
   var url=document.getElementById('submit-output-url')?.value?.trim();
+  var sheetUrl=document.getElementById('submit-output-sheet')?.value?.trim()||'';
   var type=document.getElementById('submit-output-type')?.value||'video';
   var notes=document.getElementById('submit-output-notes')?.value?.trim()||'';
   if(!projectId){showNotif('Select a project first','error');return;}
-  if(!url){showNotif('Paste the output URL','error');return;}
-  var project=null;
-  var{data:proj}=await sb.from('projects').select('*').eq('id',projectId).maybeSingle();
-  project=proj;
+  if(!url){showNotif('Paste the Google Drive / Video link','error');return;}
+  var{data:project}=await sb.from('projects').select('*').eq('id',projectId).maybeSingle();
   var typeLabels={video:'Video output',image:'Image output',blueprint:'Blueprint PDF',other:'File'};
   var label=typeLabels[type]||'Output';
   if(notes)label=label+' — '+notes.substring(0,30);
-  // Save to project_outputs
+  // Save main output (GDrive/video link)
   var{error}=await sb.from('project_outputs').insert({
     project_id:projectId,
     user_id:currentUser.id,
@@ -3431,8 +3463,18 @@ async function submitEditorOutput(markDone){
     label:label
   });
   if(error){showNotif('Error: '+error.message,'error');return;}
+  // Save sheet link if provided
+  if(sheetUrl){
+    await sb.from('project_outputs').insert({
+      project_id:projectId,
+      user_id:currentUser.id,
+      url:sheetUrl,
+      type:'other',
+      label:'📊 Excel / Sheet'+(notes?' — '+notes.substring(0,20):'')
+    }).catch(function(){});
+  }
   // Log activity
-  logActivity('OUTPUT_SUBMITTED',(project?.client_name||'Project')+' — '+type);
+  logActivity('OUTPUT_SUBMITTED',(project?.client_name||'Project')+' — '+type+(sheetUrl?' + Sheet':''));
   // Mark done if requested
   if(markDone){
     await sb.from('projects').update({status:'Approved / Done',updated_at:new Date().toISOString()}).eq('id',projectId);
@@ -3443,14 +3485,18 @@ async function submitEditorOutput(markDone){
   // Notify admin
   await sb.from('notifications').insert({
     user_id:null,
-    message:'New output submitted by editor for "'+( project?.client_name||'Project')+'" — '+type,
+    message:'New output from editor: "'+(project?.client_name||'Project')+'" — '+type+(sheetUrl?' + Sheet link':''),
     type:'output',
     project_id:projectId,
     is_read:false
   }).catch(function(){});
   // Clear form
   document.getElementById('submit-output-url').value='';
+  document.getElementById('submit-output-sheet').value='';
   document.getElementById('submit-output-notes').value='';
+  document.getElementById('submit-client-details').style.display='none';
+  document.getElementById('view-client-btn').textContent='👁';
+  window._currentSubmitProject=null;
   // Reload
   loadEditorRecentOutputs();
   loadEditorPortal();
