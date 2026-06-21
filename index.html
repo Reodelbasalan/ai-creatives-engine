@@ -633,6 +633,12 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
             <span id="draft-saved-indicator" style="font-size:10px;color:var(--green);opacity:0;transition:opacity 0.3s">✓ Draft saved</span>
           </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+              <label style="font-size:11px;color:var(--text2);font-weight:500;white-space:nowrap">👤 Auto-assign to:</label>
+              <select class="form-select" id="f-assign-to" style="max-width:220px;font-size:12px">
+                <option value="">Unassigned (assign later)</option>
+              </select>
+            </div>
           <button class="yellow-btn" id="generate-btn" onclick="generateBlueprint()">⚡ Generate blueprint</button>
             <span id="gen-status" style="font-size:12px;color:var(--text3)"></span>
           </div>
