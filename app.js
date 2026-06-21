@@ -475,6 +475,10 @@ function fmtDate(d){return new Date(d).toLocaleDateString('en-PH',{month:'short'
 async function loadDashboard(){
   const{data}=await sb.from('projects').select('*').order('created_at',{ascending:false});
   allProjects=data||[];
+  // Load editors for name lookup in pipeline cards
+  var{data:editorsList}=await sb.from('profiles').select('id,name,email').eq('role','editor');
+  var editorsMap={};
+  (editorsList||[]).forEach(function(e){editorsMap[e.id]=e.name||e.email;});
   const ready=allProjects.filter(p=>p.status==='Ready for Editor').length;
   document.getElementById('stat-total').textContent=allProjects.length;
   document.getElementById('stat-ai').textContent=allProjects.filter(p=>p.status==='Generating AI').length;
@@ -490,7 +494,8 @@ async function loadDashboard(){
       var approveBtn="";
       if(status==="In Production")approveBtn='<button onclick="quickApprove(\''+p.id+'\',event)" style="margin-top:6px;width:100%;background:var(--green-dim);color:var(--green);border:none;border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer">Approve</button>';
       if(status==="Ready for Editor")approveBtn='<button onclick="quickApprove(\''+p.id+'\',event)" style="margin-top:6px;width:100%;background:var(--amber-dim);color:var(--amber);border:none;border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer">Done</button>';
-      return '<div class="pipe-card" onclick="openModal(\''+p.id+'\')">'+'<div class="pipe-card-name">'+p.client_name+'</div>'+'<div class="pipe-card-type">'+(p.business_type||"")+"</div>"+approveBtn+'<button onclick="quickAssignModal(\''+p.id+'\',event)" style="margin-top:4px;width:100%;background:var(--bg2);border:0.5px solid var(--border2);color:var(--text3);border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer">👤 Assign</button>'+'</div>';
+      var assignedTag=p.assigned_to&&editorsMap[p.assigned_to]?'<div style="font-size:9px;color:var(--green);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">👤 '+editorsMap[p.assigned_to]+'</div>':'';
+      return '<div class="pipe-card" onclick="openModal(\''+p.id+'\')"><div class="pipe-card-name">'+p.client_name+'</div><div class="pipe-card-type">'+(p.business_type||'')+"</div>"+assignedTag+approveBtn+'<button onclick="quickAssignModal(\''+p.id+'\',event)" style="margin-top:4px;width:100%;background:var(--bg2);border:0.5px solid var(--border2);color:var(--text3);border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer">👤 '+(p.assigned_to&&editorsMap[p.assigned_to]?'Re-assign':'Assign')+'</button></div>';
     }).join(""):"<div class=\"pipe-empty\">—</div>";
   });
   document.getElementById('recent-projects-body').innerHTML=allProjects.slice(0,10).map(p=>`
@@ -987,6 +992,7 @@ async function assignProject(){
     }).catch(function(){});
   }
   showNotif(assignedTo?'Assigned! Editor notified ✓':'Unassigned.','success');
+  loadDashboard();
 }
 
 // EXPORT PDF
@@ -3697,5 +3703,7 @@ async function doQuickAssign(projectId, editorId, editorName){
   }).catch(function(){});
   closeQuickAssign();
   showNotif('Assigned to '+editorName+'! ✓','success');
+  // Update local allProjects so tag shows immediately
+  allProjects=allProjects.map(function(p){return p.id===projectId?Object.assign({},p,{assigned_to:editorId}):p;});
   loadDashboard();
 }
