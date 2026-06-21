@@ -484,11 +484,30 @@ async function saveClientDetails(){
   if(isPaste){
     var brief=document.getElementById('f-brief').value.trim();
     if(!brief){showNotif('Paste client brief first','error');if(btn){btn.disabled=false;btn.innerHTML='💾 Save details only';}return;}
-    var briefLines=brief.split('\n');clientName='';for(var bl=0;bl<briefLines.length;bl++){var bLine=briefLines[bl];if(bLine.toLowerCase().includes('client name')||bLine.toLowerCase().includes('business name')||bLine.toLowerCase().includes('brand name')){var colonIdx=bLine.indexOf(':');if(colonIdx>0){clientName=bLine.substring(colonIdx+1).trim().replace(/[*_]/g,'');break;}}}
-    for(var pat of patterns){var m=brief.match(pat);if(m&&m[1]){clientName=m[1].trim().replace(/[*_\[\]]/g,'').trim();break;}}
-    if(!clientName)clientName='Client '+new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric'});
-    product=brief.substring(0,500);
-    emphasize=document.getElementById('f-script')?.value||'';
+    function extractField(text,keys){
+      var ls=text.split('\n');
+      for(var i=0;i<ls.length;i++){
+        var l=ls[i];
+        for(var k=0;k<keys.length;k++){
+          if(l.toLowerCase().indexOf(keys[k].toLowerCase())>=0){
+            var ci=l.indexOf(':');if(ci>0){var v=l.substring(ci+1).trim().replace(/[*_\[\]]/g,'').trim();if(v)return v;}
+          }
+        }
+      }
+      return '';
+    }
+    clientName=extractField(brief,['client name','business name','brand name','company name'])||'Client '+new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+    var extractedBizType=extractField(brief,['business type','type of business','industry','niche']);
+    var extractedFB=extractField(brief,['fb page','facebook page','fb link','facebook link']);
+    var extractedWebsite=extractField(brief,['website','web link','site url']);
+    var extractedAudience=extractField(brief,['target audience','audience','target market']);
+    var extractedPain=extractField(brief,['pain point','problem','challenge']);
+    var extractedUSP=extractField(brief,['usp','unique selling','advantage']);
+    var extractedGoal=extractField(brief,['goal','objective','purpose']);
+    var extractedColor1=extractField(brief,['brand color','primary color','color']);
+    var extractedModel=extractField(brief,['model','avatar','voice','character']);
+    product=extractField(brief,['product','service','offering'])||brief.substring(0,300);
+    emphasize=document.getElementById('f-script')?.value||extractField(brief,['emphasize','script','highlight','focus']);
   } else {
     clientName=document.getElementById('f-client')?.value?.trim();
     if(!clientName){showNotif('Client name required','error');if(btn){btn.disabled=false;btn.innerHTML='💾 Save details only';}return;}
@@ -500,18 +519,19 @@ async function saveClientDetails(){
     client_name:clientName,
     business_type:isPaste?'':document.getElementById('f-biztype')?.value||'',
     product,
-    fb_page:isPaste?'':document.getElementById('f-fb')?.value?.trim()||null,
-    website:isPaste?'':document.getElementById('f-website')?.value?.trim()||null,
-    color_primary:isPaste?'':document.getElementById('f-color1')?.value||null,
-    color_secondary:isPaste?'':document.getElementById('f-color2')?.value||null,
-    audience:isPaste?'':document.getElementById('f-audience')?.value||'',
-    pain_point:isPaste?'':document.getElementById('f-pain')?.value?.trim()||'',
-    usp:isPaste?'':document.getElementById('f-usp')?.value?.trim()||'',
-    goal:isPaste?'':document.getElementById('f-goal')?.value||'',
+    fb_page:isPaste?(extractedFB||null):document.getElementById('f-fb')?.value?.trim()||null,
+    website:isPaste?(extractedWebsite||null):document.getElementById('f-website')?.value?.trim()||null,
+    color_primary:isPaste?(extractedColor1||null):document.getElementById('f-color1')?.value||null,
+    color_secondary:isPaste?null:document.getElementById('f-color2')?.value||null,
+    audience:isPaste?(extractedAudience||''):document.getElementById('f-audience')?.value||'',
+    pain_point:isPaste?(extractedPain||''):document.getElementById('f-pain')?.value?.trim()||'',
+    usp:isPaste?(extractedUSP||''):document.getElementById('f-usp')?.value?.trim()||'',
+    goal:isPaste?(extractedGoal||''):document.getElementById('f-goal')?.value||'',
+    business_type:isPaste?(extractedBizType||''):document.getElementById('f-biztype')?.value||'',
     video_size:document.getElementById('f-size')?.value||'9:16 Vertical',
     language:document.getElementById('f-lang')?.value||'Taglish',
-    voice_actor:isPaste?'':document.getElementById('f-voice')?.value||null,
-    avatar_desc:isPaste?'':document.getElementById('f-avatar')?.value||null,
+    voice_actor:isPaste?(extractedModel||null):document.getElementById('f-voice')?.value||null,
+    avatar_desc:isPaste?(extractedModel||null):document.getElementById('f-avatar')?.value||null,
     emphasize,
     tone:selectedToneVal||'',
     blueprint:null,
