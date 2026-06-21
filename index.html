@@ -639,6 +639,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <option value="">Unassigned (assign later)</option>
               </select>
             </div>
+          <button class="ghost-btn" id="save-details-btn" onclick="saveClientDetails()" style="color:var(--green);border-color:rgba(34,197,94,0.3)">💾 Save details only</button>
           <button class="yellow-btn" id="generate-btn" onclick="generateBlueprint()">⚡ Generate blueprint</button>
             <span id="gen-status" style="font-size:12px;color:var(--text3)"></span>
           </div>
@@ -646,7 +647,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div class="blueprint-box" id="blueprint-text"></div>
             <div class="blueprint-actions">
               <button class="ghost-btn" onclick="copyBlueprint()">📋 Copy blueprint</button>
-              <button class="yellow-btn" onclick="saveProject()" id="save-btn">💾 Save &amp; send to editor</button>
+              <button class="yellow-btn" onclick="saveProject()" id="save-btn">💾 Save client details</button>
             </div>
           </div>
         </div>
