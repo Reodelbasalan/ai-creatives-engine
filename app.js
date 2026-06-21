@@ -350,14 +350,14 @@ function applyRoleUI(){
   } else if(isEditor){
     // Editor — limited nav only
     document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
-    // Show only editor-allowed nav items
+    // Hide admin-only elements first
+    document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
+    // Show editor-allowed nav items — force show even if admin-only class
     var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance'];
     editorNavs.forEach(function(id){
       var el=document.getElementById(id);
-      if(el)el.style.display='flex';
+      if(el){el.style.display='flex';el.style.setProperty('display','flex','important');}
     });
-    // Hide all admin-only elements
-    document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
     showPage('editor-portal');
 
   } else if(isClient){
