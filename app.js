@@ -249,7 +249,7 @@ function initSecurityListeners(){
 
 // ROLE-BASED PAGE PROTECTION
 var ADMIN_PAGES=['dashboard','new-project','all-projects','users','clients','analytics','submission','settings','chat','activity','attendance'];
-var EDITOR_PAGES=['editor-portal','chat','profile','worklog','automation','clients','activity'];
+var EDITOR_PAGES=['editor-portal','all-projects','chat','profile','worklog','automation','clients','activity','attendance'];
 var CLIENT_PAGES=['client-dashboard','profile'];
 
 function canAccessPage(page){
@@ -351,7 +351,7 @@ function applyRoleUI(){
     // Editor — limited nav only
     document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
     // Show only editor-allowed nav items
-    var editorNavs=['nav-editor-portal','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity'];
+    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance'];
     editorNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el)el.style.display='flex';
@@ -552,7 +552,14 @@ function renderProjectsTable(projects){
 
 // EDITOR PORTAL
 async function loadEditorPortal(){
-  const{data}=await sb.from('projects').select('*').eq('status','Ready for Editor').order('created_at',{ascending:false});
+  // Show assigned projects for editors, all Ready for Editor for admin
+  var query;
+  if(currentUserRole==='editor'){
+    query=sb.from('projects').select('*').eq('assigned_to',currentUser.id).neq('status','Approved / Done').order('created_at',{ascending:false});
+  } else {
+    query=sb.from('projects').select('*').eq('status','Ready for Editor').order('created_at',{ascending:false});
+  }
+  const{data}=await query;
   const projects=data||[];
   const tb=document.getElementById('tasks-badge');
   tb.textContent=projects.length;tb.style.display=projects.length>0?'':'none';
@@ -561,16 +568,19 @@ async function loadEditorPortal(){
       <div class="editor-card-top">
         <div>
           <div class="editor-card-name">${p.client_name}</div>
-          <div class="editor-card-meta">${p.business_type||''} · ${p.goal||''} · ${p.video_size||''} · ${p.language||''}</div>
+          <div class="editor-card-meta">${p.business_type||''} · ${p.goal||''} · ${p.video_size||''} · ${p.language||''} · ${statusBadge(p.status)}</div>
         </div>
-        ${statusBadge(p.status)}
+        <div style="display:flex;gap:6px;align-items:center">
+          ${getDeadlineStatus(p.deadline)}
+        </div>
       </div>
       ${p.emphasize?`<div style="font-size:12px;color:var(--text2);margin-bottom:12px">${p.emphasize}</div>`:''}
       <div class="editor-card-actions">
         <button class="ghost-btn" onclick="openModal('${p.id}')">📄 View blueprint</button>
-        <button class="yellow-btn" onclick="markInProduction('${p.id}')">🎬 Mark in production</button>
+        ${p.status==='Ready for Editor'?`<button class="yellow-btn" onclick="markInProduction('${p.id}')">🎬 Start production</button>`:''}
+        ${p.status==='In Production'?`<button class="yellow-btn" style="background:var(--green-dim);color:var(--green);border:0.5px solid rgba(34,197,94,0.3)" onclick="quickApprove('${p.id}',event)">✅ Mark done</button>`:''}
       </div>
-    </div>`).join(''):'<div class="table-empty"><div class="table-empty-icon">✅</div>No projects ready yet.</div>';
+    </div>`).join(''):'<div class="table-empty"><div class="table-empty-icon">✅</div><div>No assigned projects yet</div><div style="font-size:11px;margin-top:4px;color:var(--text3)">Admin will assign projects to you</div></div>';
 }
 
 async function markInProduction(id){
@@ -939,7 +949,18 @@ async function assignProject(){
   const assignedTo=document.getElementById('modal-assign-select').value;
   await sb.from('projects').update({assigned_to:assignedTo||null,updated_at:new Date().toISOString()}).eq('id',currentProjectId);
   allProjects=allProjects.map(p=>p.id===currentProjectId?{...p,assigned_to:assignedTo}:p);
-  showNotif(assignedTo?'Assigned! ✓':'Unassigned.','success');
+  // Notify editor when assigned
+  if(assignedTo){
+    var proj=allProjects.find(function(p){return p.id===currentProjectId;});
+    await sb.from('notifications').insert({
+      user_id:assignedTo,
+      message:'New project assigned to you: "'+(proj?.client_name||'Project')+'" — check My Tasks!',
+      type:'assignment',
+      project_id:currentProjectId,
+      is_read:false
+    }).catch(function(){});
+  }
+  showNotif(assignedTo?'Assigned! Editor notified ✓':'Unassigned.','success');
 }
 
 // EXPORT PDF
@@ -1281,9 +1302,15 @@ async function loadProfile(){
   var emailEl=document.getElementById('profile-email-display');
   var roleEl=document.getElementById('profile-role-display');
   var statsEl=document.getElementById('profile-stats');
-  if(nameEl)nameEl.value=profile.name||'';
+  var displayName=profile.name||currentUser.email||'';
+  if(nameEl)nameEl.value=displayName;
   if(emailEl)emailEl.textContent=currentUser.email||'';
   if(roleEl)roleEl.textContent=currentUserRole==='admin'?'Super Admin':'Editor';
+  // Fix profile display
+  var nameDisplay=document.getElementById('profile-name-display');
+  var avatarEl=document.getElementById('profile-avatar');
+  if(nameDisplay)nameDisplay.textContent=displayName||'—';
+  if(avatarEl)avatarEl.textContent=(displayName[0]||'?').toUpperCase();
   // Load stats
   if(statsEl){
     var{data:projects}=await sb.from('projects').select('status,assigned_to').eq('assigned_to',currentUser.id);
