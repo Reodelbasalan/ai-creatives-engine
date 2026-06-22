@@ -3,56 +3,42 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
   try {
-    const { prompt, size = '1024x1024', quality = 'standard', apiKey: bodyApiKey } = req.body;
+    const { prompt, size = '1024x1024', quality = 'hd' } = req.body;
     if (!prompt) {
       return res.status(400).json({ error: 'Prompt is required' });
     }
-    const apiKey = bodyApiKey || process.env.DALLE_API_KEY || process.env.OPENAI_API_KEY;
+
+    const apiKey = process.env.OPENAI_API_KEY || process.env.DALLE_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: 'DALL-E API key not configured' });
+      return res.status(500).json({ error: 'OPENAI_API_KEY not set in Vercel env vars' });
     }
 
-    function mapSize(s) {
-      if (s === '1024x1792' || s === '1024x1536') return '1024x1536';
-      if (s === '1792x1024' || s === '1536x1024') return '1536x1024';
-      return '1024x1024';
-    }
+    // Only use dall-e-3 — most reliable
+    const validSizes = ['1024x1024', '1792x1024', '1024x1792'];
+    const safeSize = validSizes.includes(size) ? size : '1024x1024';
 
-    let response = await fetch('https://api.openai.com/v1/images/generations', {
+    const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-image-1',
+        model: 'dall-e-3',
         prompt,
-        size: mapSize(size),
-        quality: quality === 'hd' ? 'high' : 'medium',
+        size: safeSize,
+        quality: 'hd',
         n: 1
       })
     });
 
-    let data = await response.json();
-
-    if (!response.ok) {
-      const dalleSize = ['1024x1024', '1792x1024', '1024x1792'].includes(size)
-        ? size : '1024x1024';
-      response = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'dall-e-3',
-          prompt,
-          size: dalleSize,
-          quality: 'hd',
-          n: 1
-        })
-      });
-      data = await response.json();
+    const responseText = await response.text();
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      return res.status(500).json({ error: 'OpenAI returned invalid response: ' + responseText.substring(0, 100) });
     }
 
     if (!response.ok) {
@@ -61,18 +47,10 @@ export default async function handler(req, res) {
       });
     }
 
-    const imageData = data.data[0];
-    const result = {
+    return res.status(200).json({
       success: true,
-      url: imageData?.url || null,
-      b64_json: imageData?.b64_json || null
-    };
-
-    if (!result.url && result.b64_json) {
-      result.url = `data:image/png;base64,${result.b64_json}`;
-    }
-
-    return res.status(200).json(result);
+      url: data.data[0]?.url || null
+    });
 
   } catch (error) {
     return res.status(500).json({ error: error.message });
