@@ -387,9 +387,11 @@ function showApp(){
   initSecurityListeners();
   logActivity('LOGIN','User logged in');
   initTimeInSystem();
+  // Load team API keys for everyone (editors can generate without seeing keys)
+  loadTeamApiKeys();
   if(currentUserRole==='admin'){loadDashboard();loadNotifications();}
   else if(currentUserRole==='client'){showPage('client-dashboard');loadClientDashboard();}
-  else loadEditorPortal();
+  else{loadEditorPortal();loadNotifications();}
 }
 
 function showPage(page){
@@ -817,19 +819,36 @@ async function saveProject(){
   let clientName='New Project',product='',emphasize='';
   if(isPaste){
     const brief=document.getElementById('f-brief').value.trim();
-    // Try multiple patterns to extract client name
-    const patterns=[
-      /(?:client\s*name|business\s*name|brand\s*name)[\s]*[:\-][\s]*([^\n]+)/i,
-      /(?:company|brand|client|business)[\s]*[:\-][\s]*([^\n]+)/i,
-      /^([^\n]{3,50})(?:\n|$)/m
-    ];
-    for(const pat of patterns){
-      const m=brief.match(pat);
-      if(m&&m[1]){clientName=m[1].trim().replace(/[*_\[\]]/g,'').trim();break;}
+    // Extract helper
+    function extractF(text,keys){
+      var ls=text.split('\n');
+      for(var i=0;i<ls.length;i++){
+        var l=ls[i];
+        for(var k=0;k<keys.length;k++){
+          if(l.toLowerCase().indexOf(keys[k].toLowerCase())>=0){
+            var ci=l.indexOf(':');
+            if(ci>0){var v=l.substring(ci+1).trim().replace(/[*_\[\]]/g,'').trim();if(v)return v;}
+          }
+        }
+      }
+      return '';
     }
-    if(!clientName||clientName.length<2)clientName='Client '+new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric'});
-    product=brief.substring(0,500);
-    emphasize=document.getElementById('f-script').value||'';
+    clientName=extractF(brief,['client name','business name','brand name','company name','client:'])||'Client '+new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+    var pFB=extractF(brief,['fb page','facebook page','fb link','facebook link','facebook.com','fb.com']);
+    // Also check for raw URLs in brief
+    var urlMatch=brief.match(/https?:\/\/(?:www\.)?facebook\.com\/[^\s]+/i);
+    if(!pFB&&urlMatch)pFB=urlMatch[0];
+    var pWebsite=extractF(brief,['website','web link','site url','www.']);
+    var pBizType=extractF(brief,['business type','type of business','industry','niche']);
+    var pAudience=extractF(brief,['target audience','audience','target market']);
+    var pPain=extractF(brief,['pain point','problem','challenge']);
+    var pUSP=extractF(brief,['usp','unique selling','advantage']);
+    var pGoal=extractF(brief,['goal','objective','main goal','purpose']);
+    var pColor=extractF(brief,['brand color','primary color','color']);
+    var pModel=extractF(brief,['model','avatar','voice actor','character','brand avatar']);
+    var pTone=extractF(brief,['tone of voice','tone:','voice tone']);
+    product=extractF(brief,['product','service','offering','what we sell'])||brief.substring(0,300);
+    emphasize=document.getElementById('f-script')?.value||extractF(brief,['emphasize','script','highlight','focus','what things']);
   } else {
     clientName=document.getElementById('f-client').value.trim()||'Client '+new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric'});
     product=document.getElementById('f-product').value.trim();
@@ -839,19 +858,20 @@ async function saveProject(){
     client_name:clientName,
     business_type:isPaste?'':document.getElementById('f-biztype').value,
     product,
-    fb_page:isPaste?'':document.getElementById('f-fb')?.value?.trim()||null,
-    website:isPaste?'':document.getElementById('f-website')?.value?.trim()||null,
-    color_primary:isPaste?'':document.getElementById('f-color1').value,
-    color_secondary:isPaste?'':document.getElementById('f-color2').value,
-    audience:isPaste?'':document.getElementById('f-audience').value,
-    pain_point:isPaste?'':document.getElementById('f-pain').value.trim(),
-    usp:isPaste?'':document.getElementById('f-usp').value.trim(),
-    goal:isPaste?'':document.getElementById('f-goal').value,
+    fb_page:isPaste?(pFB||null):document.getElementById('f-fb')?.value?.trim()||null,
+    website:isPaste?(pWebsite||null):document.getElementById('f-website')?.value?.trim()||null,
+    color_primary:isPaste?(pColor||null):document.getElementById('f-color1').value||null,
+    color_secondary:isPaste?null:document.getElementById('f-color2').value||null,
+    audience:isPaste?(pAudience||''):document.getElementById('f-audience').value||'',
+    pain_point:isPaste?(pPain||''):document.getElementById('f-pain').value.trim()||'',
+    usp:isPaste?(pUSP||''):document.getElementById('f-usp').value.trim()||'',
+    goal:isPaste?(pGoal||''):document.getElementById('f-goal').value||'',
+    business_type:isPaste?(pBizType||''):document.getElementById('f-biztype').value||'',
+    voice_actor:isPaste?(pModel||null):document.getElementById('f-voice').value||null,
+    avatar_desc:isPaste?(pModel||null):document.getElementById('f-avatar').value||null,
     video_size:document.getElementById('f-size').value,
     language:document.getElementById('f-lang').value,
-    voice_actor:isPaste?'':document.getElementById('f-voice').value,
-    avatar_desc:isPaste?'':document.getElementById('f-avatar').value,
-    emphasize,tone:selectedToneVal,
+    emphasize,tone:isPaste?(pTone||selectedToneVal):selectedToneVal,
     status:'New Input',blueprint:blueprint||null,
     assigned_to:document.getElementById('f-assign-to')?.value||null,
     created_by:currentUser?.id,
@@ -1944,8 +1964,10 @@ function approveAvatar(){
   var p1status=document.getElementById('phase1-status');
   if(p1status){p1status.textContent='✅ Done';p1status.style.color='var(--green)';}
   var p2status=document.getElementById('phase2-status');
-  if(p2status)p2status.textContent='Ready — click Generate All';
-  showNotif('Avatar approved! Proceed to scene images ✓','success');
+  if(p2status)p2status.textContent='⚡ Auto-generating all scenes...';
+  showNotif('Avatar approved! Auto-generating scene images... ✓','success');
+  // AUTO-START scene generation
+  setTimeout(function(){generateAllScenes();},500);
 }
 
 async function generateSceneImage(idx){
@@ -2006,11 +2028,13 @@ function approveSceneImage(idx,url){
   if(allApproved){
     var phase3=document.getElementById('auto-phase3');
     if(phase3){phase3.style.opacity='1';phase3.style.pointerEvents='auto';}
+    var phase4=document.getElementById('auto-phase4');
+    if(phase4){phase4.style.opacity='1';phase4.style.pointerEvents='auto';}
     var p2s=document.getElementById('phase2-status');
     if(p2s){p2s.textContent='✅ All approved!';p2s.style.color='var(--green)';}
     var p3s=document.getElementById('phase3-status');
-    if(p3s)p3s.textContent='Ready — click Animate All';
-    showNotif('All scenes approved! Proceed to animation ✓','success');
+    if(p3s)p3s.textContent='✅ Ready — pick video tool per scene or animate all';
+    showNotif('All scenes approved! Choose video tool to generate 🎬','success');
   }
 }
 
@@ -2112,7 +2136,7 @@ function deobfuscate(str){
   }catch(e){return str;}
 }
 
-function saveApiKey(tool){
+async function saveApiKey(tool){
   // Admin only
   if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}
   var input=document.getElementById(tool+'-api-key');
@@ -2125,30 +2149,49 @@ function saveApiKey(tool){
   if(tool==='veo'&&key.startsWith('AIza'))valid=true;
   if(tool==='higgs')valid=true;
   if(tool==='dalle'&&key.startsWith('sk-'))valid=true;
-  if(!valid){
-    showNotif('Invalid key format for '+tool,'error');
-    return;
-  }
-  // Save obfuscated
+  if(!valid){showNotif('Invalid key format for '+tool,'error');return;}
+  // Save obfuscated to localStorage (admin browser)
   localStorage.setItem('ace_secure_'+tool, obfuscate(key));
   localStorage.setItem('ace_'+tool+'-api-key', obfuscate(key));
+  // Also save to Supabase for team access (obfuscated)
+  await sb.from('app_settings').upsert({
+    key:'api_'+tool,
+    value:obfuscate(key),
+    updated_by:currentUser?.id,
+    updated_at:new Date().toISOString()
+  },{onConflict:'key'}).catch(function(){});
   // Show status
   var statusEl=document.getElementById(tool+'-key-status');
   if(statusEl){
     statusEl.textContent='✅ Saved! Key ends in ...'+key.slice(-6);
     statusEl.style.color='var(--green)';
   }
-  // Mask input
   input.value=key;
   showNotif(tool+' API key saved! ✓','success');
-  // Log (without key value)
   logActivity('API_KEY_UPDATED',tool+' API key updated');
 }
 
 function getSecureApiKey(tool){
+  // Check localStorage first (fast, admin browser)
   var val=localStorage.getItem('ace_secure_'+tool)||localStorage.getItem('ace_'+tool+'-api-key')||'';
-  if(!val)return'';
-  try{return deobfuscate(val);}catch(e){return val;}
+  if(val){try{return deobfuscate(val);}catch(e){return val;}}
+  // Check in-memory cache (loaded from Supabase)
+  if(window._apiKeyCache&&window._apiKeyCache[tool])return window._apiKeyCache[tool];
+  return'';
+}
+
+// Load API keys from Supabase for editors
+async function loadTeamApiKeys(){
+  try{
+    var{data}=await sb.from('app_settings').select('key,value').like('key','api_%');
+    if(!data||!data.length)return;
+    window._apiKeyCache=window._apiKeyCache||{};
+    data.forEach(function(row){
+      var tool=row.key.replace('api_','');
+      try{window._apiKeyCache[tool]=deobfuscate(row.value);}catch(e){window._apiKeyCache[tool]=row.value;}
+    });
+    console.log('Team API keys loaded for tools:', Object.keys(window._apiKeyCache).join(', '));
+  }catch(e){console.log('No team API keys found');}
 }
 
 function saveToolSetting(key, val){
