@@ -2146,7 +2146,7 @@ async function saveApiKey(tool){
   // Validate format
   var valid=false;
   if(tool==='grok'&&key.startsWith('xai-'))valid=true;
-  if(tool==='veo'&&key.startsWith('AIza'))valid=true;
+  if(tool==='veo')valid=true; // Google keys vary in format
   if(tool==='higgs')valid=true;
   if(tool==='dalle'&&key.startsWith('sk-'))valid=true;
   if(!valid){showNotif('Invalid key format for '+tool,'error');return;}
