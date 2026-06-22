@@ -12,14 +12,12 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'DALL-E API key not configured' });
     }
 
-    // Map size for gpt-image-1 (only supports 1024x1024, 1536x1024, 1024x1536, auto)
     function mapSize(s) {
       if (s === '1024x1792' || s === '1024x1536') return '1024x1536';
       if (s === '1792x1024' || s === '1536x1024') return '1536x1024';
       return '1024x1024';
     }
 
-    // Try gpt-image-1 first (no style param)
     let response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -37,12 +35,9 @@ export default async function handler(req, res) {
 
     let data = await response.json();
 
-    // Fallback to dall-e-3 if gpt-image-1 fails
     if (!response.ok) {
       const dalleSize = ['1024x1024', '1792x1024', '1024x1792'].includes(size)
-        ? size
-        : '1024x1024';
-
+        ? size : '1024x1024';
       response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
         headers: {
@@ -73,7 +68,6 @@ export default async function handler(req, res) {
       b64_json: imageData?.b64_json || null
     };
 
-    // gpt-image-1 returns base64 — convert to data URL
     if (!result.url && result.b64_json) {
       result.url = `data:image/png;base64,${result.b64_json}`;
     }
