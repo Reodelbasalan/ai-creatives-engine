@@ -2154,12 +2154,14 @@ async function saveApiKey(tool){
   localStorage.setItem('ace_secure_'+tool, obfuscate(key));
   localStorage.setItem('ace_'+tool+'-api-key', obfuscate(key));
   // Also save to Supabase for team access (obfuscated)
-  await sb.from('app_settings').upsert({
-    key:'api_'+tool,
-    value:obfuscate(key),
-    updated_by:currentUser?.id,
-    updated_at:new Date().toISOString()
-  },{onConflict:'key'}).catch(function(){});
+  try{
+    await sb.from('app_settings').upsert({
+      key:'api_'+tool,
+      value:obfuscate(key),
+      updated_by:currentUser?.id,
+      updated_at:new Date().toISOString()
+    },{onConflict:'key'});
+  }catch(e){console.log('Settings save:',e);}
   // Show status
   var statusEl=document.getElementById(tool+'-key-status');
   if(statusEl){
