@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
   try {
-    const { prompt, size = '1024x1024', quality = 'hd', apiKey: bodyApiKey } = req.body;
+    const { prompt, size = '1024x1024', quality = 'standard', apiKey: bodyApiKey } = req.body;
     if (!prompt) {
       return res.status(400).json({ error: 'Prompt is required' });
     }
@@ -12,14 +12,15 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'DALL-E API key not configured' });
     }
 
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
+    // Try gpt-image-1 first, fallback to dall-e-3
+    let response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'dall-e-3',
+        model: 'gpt-image-1',
         prompt,
         size,
         quality,
@@ -27,16 +28,48 @@ export default async function handler(req, res) {
       })
     });
 
-    const data = await response.json();
+    let data = await response.json();
+
+    // Fallback to dall-e-3 if gpt-image-1 fails
     if (!response.ok) {
-      return res.status(response.status).json({ 
-        error: data.error?.message || 'DALL-E API error' 
+      response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'dall-e-3',
+          prompt,
+          size: '1024x1024', // dall-e-3 safe size
+          quality: 'hd',
+          n: 1
+        })
+      });
+      data = await response.json();
+    }
+
+    if (!response.ok) {
+      return res.status(response.status).json({
+        error: data.error?.message || 'DALL-E API error'
       });
     }
-    return res.status(200).json({
+
+    // gpt-image-1 returns base64, dall-e-3 returns URL
+    const imageData = data.data[0];
+    const result = {
       success: true,
-      url: data.data[0]?.url
-    });
+      url: imageData?.url || null,
+      b64_json: imageData?.b64_json || null
+    };
+
+    // If base64, convert to data URL so frontend can display it
+    if (!result.url && result.b64_json) {
+      result.url = `data:image/png;base64,${result.b64_json}`;
+    }
+
+    return res.status(200).json(result);
+
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
