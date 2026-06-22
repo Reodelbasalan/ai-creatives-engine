@@ -517,8 +517,8 @@ async function saveClientDetails(){
   }
   var{error}=await sb.from('projects').insert({
     client_name:clientName,
-    business_type:isPaste?'':document.getElementById('f-biztype')?.value||'',
-    product,
+    business_type:isPaste?(extractedBizType||''):document.getElementById('f-biztype')?.value||'',
+    product:product||'',
     fb_page:isPaste?(extractedFB||null):document.getElementById('f-fb')?.value?.trim()||null,
     website:isPaste?(extractedWebsite||null):document.getElementById('f-website')?.value?.trim()||null,
     color_primary:isPaste?(extractedColor1||null):document.getElementById('f-color1')?.value||null,
@@ -527,15 +527,14 @@ async function saveClientDetails(){
     pain_point:isPaste?(extractedPain||''):document.getElementById('f-pain')?.value?.trim()||'',
     usp:isPaste?(extractedUSP||''):document.getElementById('f-usp')?.value?.trim()||'',
     goal:isPaste?(extractedGoal||''):document.getElementById('f-goal')?.value||'',
-    business_type:isPaste?(extractedBizType||''):document.getElementById('f-biztype')?.value||'',
     video_size:document.getElementById('f-size')?.value||'9:16 Vertical',
     language:document.getElementById('f-lang')?.value||'Taglish',
     voice_actor:isPaste?(extractedModel||null):document.getElementById('f-voice')?.value||null,
     avatar_desc:isPaste?(extractedModel||null):document.getElementById('f-avatar')?.value||null,
-    emphasize,
+    emphasize:emphasize||'',
     tone:selectedToneVal||'',
-    blueprint:null,
     status:'New Input',
+    blueprint:null,
     assigned_to:document.getElementById('f-assign-to')?.value||null,
     created_by:currentUser?.id,
     gdrive_link:document.getElementById('f-gdrive')?.value?.trim()||null,
@@ -840,6 +839,8 @@ async function saveProject(){
     client_name:clientName,
     business_type:isPaste?'':document.getElementById('f-biztype').value,
     product,
+    fb_page:isPaste?'':document.getElementById('f-fb')?.value?.trim()||null,
+    website:isPaste?'':document.getElementById('f-website')?.value?.trim()||null,
     color_primary:isPaste?'':document.getElementById('f-color1').value,
     color_secondary:isPaste?'':document.getElementById('f-color2').value,
     audience:isPaste?'':document.getElementById('f-audience').value,
@@ -1064,18 +1065,17 @@ async function assignProject(){
   const assignedTo=document.getElementById('modal-assign-select').value;
   await sb.from('projects').update({assigned_to:assignedTo||null,updated_at:new Date().toISOString()}).eq('id',currentProjectId);
   allProjects=allProjects.map(p=>p.id===currentProjectId?{...p,assigned_to:assignedTo}:p);
-  // Notify editor when assigned
   if(assignedTo){
     var proj=allProjects.find(function(p){return p.id===currentProjectId;});
     await sb.from('notifications').insert({
       user_id:assignedTo,
-      message:'New project assigned to you: "'+(proj?.client_name||'Project')+'" — check My Tasks!',
-      type:'assignment',
-      project_id:currentProjectId,
-      is_read:false
+      message:'🎯 New project assigned to you: "'+(proj?.client_name||'Project')+'" — check My Tasks!',
+      type:'assignment',project_id:currentProjectId,is_read:false
     }).catch(function(){});
+    showNotif('Assigned! Editor notified ✓','success');
+  } else {
+    showNotif('Unassigned.','success');
   }
-  showNotif(assignedTo?'Assigned! Editor notified ✓':'Unassigned.','success');
   loadDashboard();
 }
 
