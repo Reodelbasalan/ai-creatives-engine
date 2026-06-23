@@ -1911,8 +1911,6 @@ async function generateAvatar(){
   var promptEl=document.getElementById('auto-avatar-prompt');
   var prompt=promptEl?.value?.trim();
   if(!prompt){showNotif('Add avatar description first','error');return;}
-  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
-  if(!apiKey){showNotif('Set DALL-E API key in Settings first!','error');showPage('settings');return;}
   var btn=document.getElementById('gen-avatar-btn');
   var status=document.getElementById('avatar-gen-status');
   if(btn)btn.disabled=true;
@@ -1923,10 +1921,6 @@ async function generateAvatar(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',
-        apiKey:apiKey,
-        size:'1024x1792',
-        quality:getToolSetting('dalle-quality','hd'),
-        style:getToolSetting('dalle-style','vivid')
       })
     });
     var d=await res.json();
@@ -1973,8 +1967,6 @@ function approveAvatar(){
 async function generateSceneImage(idx){
   var scene=autoScenes[idx];
   if(!scene)return;
-  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
-  if(!apiKey){showNotif('Set DALL-E API key in Settings!','error');return;}
   var statusEl=document.getElementById('scene-status-'+idx);
   var container=document.getElementById('scene-img-container-'+idx);
   if(statusEl)statusEl.textContent='⏳';
@@ -1988,8 +1980,7 @@ async function generateSceneImage(idx){
     var res=await fetch('/api/dalle-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:'1024x1792',
-        quality:getToolSetting('dalle-quality','hd'),
+      body:JSON.stringify({prompt:prompt,
         style:getToolSetting('dalle-style','vivid')})
     });
     var d=await res.json();
@@ -2348,7 +2339,7 @@ async function generateHiggsfield(prompt, apiKey, type){
     var res=await fetch('/api/higgs-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,apiKey:apiKey,type:type,
+      body:JSON.stringify({prompt:prompt,type:type,
         model:getToolSetting('higgs-model','soul-2'),
         duration:parseInt(getToolSetting('higgs-duration','4'))})
     });
@@ -2382,7 +2373,7 @@ async function generateGrok(prompt, apiKey, type){
     var res=await fetch('/api/grok-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,apiKey:apiKey,model:model,duration:duration,type:type})
+      body:JSON.stringify({prompt:prompt,model:model,duration:duration,type:type})
     });
     var d=await res.json();
     if(d.url){
@@ -2414,7 +2405,7 @@ async function generateVeo(prompt, apiKey, type){
     var res=await fetch('/api/veo-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,apiKey:apiKey,model:model,duration:duration,type:type})
+      body:JSON.stringify({prompt:prompt,model:model,duration:duration,type:type})
     });
     var d=await res.json();
     if(d.url){
@@ -3286,7 +3277,7 @@ async function generateSceneVideo(idx,tool){
       var endpoint=tool==='grok'?'/api/grok-generate':'/api/veo-generate';
       var model=tool==='grok'?getToolSetting('grok-model','grok-imagine-video-1.5-preview'):getToolSetting('veo-model','veo-3');
       var res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({prompt:prompt,apiKey:apiKey,model:model,duration:8,type:'video'})});
+        body:JSON.stringify({prompt:prompt,model:model,duration:8,type:'video'})});
       var d=await res.json();
       if(d.url){
         if(statusEl)statusEl.innerHTML='✅ Video ready! <a href="'+d.url+'" target="_blank" style="color:var(--yellow)">Open →</a>';
@@ -3318,8 +3309,6 @@ async function generateSceneVideo(idx,tool){
 async function generateSceneImage(idx, dalleSize){
   var scene=autoScenes[idx];
   if(!scene)return;
-  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
-  if(!apiKey){showNotif('Set DALL-E API key in Settings!','error');showPage('settings');return;}
   var statusEl=document.getElementById('scene-status-'+idx);
   var container=document.getElementById('scene-img-container-'+idx);
   if(statusEl)statusEl.textContent='⏳';
@@ -3333,7 +3322,7 @@ async function generateSceneImage(idx, dalleSize){
   prompt+=' '+sizeTag+', photorealistic, cinematic lighting, no text, no logos';
   try{
     var res=await fetch('/api/dalle-generate',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:imgSize,quality:getToolSetting('dalle-quality','hd'),style:getToolSetting('dalle-style','vivid')})});
+      body:JSON.stringify({prompt:prompt,size:'1024x1024'})});
     var d=await res.json();
     if(d.url){
       if(container){
@@ -3407,8 +3396,6 @@ generateAvatar=async function(){
   var promptEl=document.getElementById('auto-avatar-prompt');
   var prompt=promptEl?.value?.trim();
   if(!prompt){showNotif('Add avatar description first','error');return;}
-  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
-  if(!apiKey){showNotif('Set DALL-E API key in Settings first!','error');showPage('settings');return;}
   var btn=document.getElementById('gen-avatar-btn');
   var status=document.getElementById('avatar-gen-status');
   if(btn)btn.disabled=true;
@@ -3419,9 +3406,7 @@ generateAvatar=async function(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',
-        apiKey:apiKey,size:'1024x1792',
-        quality:getToolSetting('dalle-quality','hd'),
-        style:getToolSetting('dalle-style','vivid')
+        size:'1024x1024'
       })
     });
     var d=await res.json();
@@ -3461,8 +3446,6 @@ var _origGenerateSceneImage=generateSceneImage;
 generateSceneImage=async function(idx,dalleSize){
   var scene=autoScenes[idx];
   if(!scene)return;
-  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
-  if(!apiKey){showNotif('Set DALL-E API key in Settings!','error');showPage('settings');return;}
   var statusEl=document.getElementById('scene-status-'+idx);
   var container=document.getElementById('scene-img-container-'+idx);
   if(statusEl)statusEl.textContent='⏳';
@@ -3478,8 +3461,7 @@ generateSceneImage=async function(idx,dalleSize){
     var res=await fetch('/api/dalle-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:imgSize,
-        quality:getToolSetting('dalle-quality','hd'),
+      body:JSON.stringify({prompt:prompt,size:imgSize,
         style:getToolSetting('dalle-style','vivid')})
     });
     var d=await res.json();
