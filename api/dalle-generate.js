@@ -1,55 +1,55 @@
-export default async function handler(req, res) {
+]export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
   try {
-    const { prompt, size = '1024x1024', quality = 'hd' } = req.body;
+    const { prompt, size = '1024x1024', quality = 'standard' } = req.body;
     if (!prompt) {
       return res.status(400).json({ error: 'Prompt is required' });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY || process.env.DALLE_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'OPENAI_API_KEY not set in Vercel env vars' });
+    const apiToken = process.env.REPLICATE_API_TOKEN;
+    if (!apiToken) {
+      return res.status(500).json({ error: 'REPLICATE_API_TOKEN not set in Vercel env vars' });
     }
 
-    // Only use dall-e-3 — most reliable
-    const validSizes = ['1024x1024', '1792x1024', '1024x1792'];
-    const safeSize = validSizes.includes(size) ? size : '1024x1024';
-
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
+    // Use Flux 1.1 Pro — best quality image model on Replicate
+    const response = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro/predictions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${apiToken}`,
+        'Prefer': 'wait'
       },
       body: JSON.stringify({
-        model: 'dall-e-3',
-        prompt,
-        size: safeSize,
-        quality: 'hd',
-        n: 1
+        input: {
+          prompt: prompt,
+          aspect_ratio: size === '1024x1024' ? '1:1' : '9:16',
+          output_format: 'jpg',
+          output_quality: 90,
+          safety_tolerance: 2
+        }
       })
     });
 
-    const responseText = await response.text();
-    
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (e) {
-      return res.status(500).json({ error: 'OpenAI returned invalid response: ' + responseText.substring(0, 100) });
-    }
+    const data = await response.json();
 
     if (!response.ok) {
       return res.status(response.status).json({
-        error: data.error?.message || 'DALL-E API error'
+        error: data.detail || data.error || 'Replicate API error'
       });
+    }
+
+    // Get the output URL
+    const imageUrl = Array.isArray(data.output) ? data.output[0] : data.output;
+
+    if (!imageUrl) {
+      return res.status(500).json({ error: 'No image generated' });
     }
 
     return res.status(200).json({
       success: true,
-      url: data.data[0]?.url || null
+      url: imageUrl
     });
 
   } catch (error) {
