@@ -1911,7 +1911,7 @@ async function generateAvatar(){
   var promptEl=document.getElementById('auto-avatar-prompt');
   var prompt=promptEl?.value?.trim();
   if(!prompt){showNotif('Add avatar description first','error');return;}
-  var btn=document.getElementById('gen-avatar-btn');
+    var btn=document.getElementById('gen-avatar-btn');
   var status=document.getElementById('avatar-gen-status');
   if(btn)btn.disabled=true;
   if(status)status.textContent='⚡ Generating avatar...';
@@ -1921,6 +1921,7 @@ async function generateAvatar(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',
+        size:'1024x1024'
       })
     });
     var d=await res.json();
@@ -1967,7 +1968,7 @@ function approveAvatar(){
 async function generateSceneImage(idx){
   var scene=autoScenes[idx];
   if(!scene)return;
-  var statusEl=document.getElementById('scene-status-'+idx);
+    var statusEl=document.getElementById('scene-status-'+idx);
   var container=document.getElementById('scene-img-container-'+idx);
   if(statusEl)statusEl.textContent='⏳';
   // Build prompt — include avatar context
@@ -1980,8 +1981,7 @@ async function generateSceneImage(idx){
     var res=await fetch('/api/dalle-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,
-        style:getToolSetting('dalle-style','vivid')})
+      body:JSON.stringify({prompt:prompt,size:'1024x1024'})
     });
     var d=await res.json();
     if(d.url){
@@ -3309,7 +3309,7 @@ async function generateSceneVideo(idx,tool){
 async function generateSceneImage(idx, dalleSize){
   var scene=autoScenes[idx];
   if(!scene)return;
-  var statusEl=document.getElementById('scene-status-'+idx);
+    var statusEl=document.getElementById('scene-status-'+idx);
   var container=document.getElementById('scene-img-container-'+idx);
   if(statusEl)statusEl.textContent='⏳';
   var videoSize=autoProject?.video_size||'9:16';
@@ -3322,7 +3322,7 @@ async function generateSceneImage(idx, dalleSize){
   prompt+=' '+sizeTag+', photorealistic, cinematic lighting, no text, no logos';
   try{
     var res=await fetch('/api/dalle-generate',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,size:'1024x1024'})});
+      body:JSON.stringify({prompt:prompt,size:imgSize})});
     var d=await res.json();
     if(d.url){
       if(container){
@@ -3396,7 +3396,7 @@ generateAvatar=async function(){
   var promptEl=document.getElementById('auto-avatar-prompt');
   var prompt=promptEl?.value?.trim();
   if(!prompt){showNotif('Add avatar description first','error');return;}
-  var btn=document.getElementById('gen-avatar-btn');
+    var btn=document.getElementById('gen-avatar-btn');
   var status=document.getElementById('avatar-gen-status');
   if(btn)btn.disabled=true;
   if(status)status.textContent='⚡ Generating avatar...';
@@ -3405,8 +3405,7 @@ generateAvatar=async function(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',
-        size:'1024x1024'
+        prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',size:'1024x1024'
       })
     });
     var d=await res.json();
@@ -3446,7 +3445,7 @@ var _origGenerateSceneImage=generateSceneImage;
 generateSceneImage=async function(idx,dalleSize){
   var scene=autoScenes[idx];
   if(!scene)return;
-  var statusEl=document.getElementById('scene-status-'+idx);
+    var statusEl=document.getElementById('scene-status-'+idx);
   var container=document.getElementById('scene-img-container-'+idx);
   if(statusEl)statusEl.textContent='⏳';
   var videoSize=autoProject?.video_size||'9:16';
@@ -3461,8 +3460,7 @@ generateSceneImage=async function(idx,dalleSize){
     var res=await fetch('/api/dalle-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,size:imgSize,
-        style:getToolSetting('dalle-style','vivid')})
+      body:JSON.stringify({prompt:prompt,size:imgSize})
     });
     var d=await res.json();
     if(d.url){
