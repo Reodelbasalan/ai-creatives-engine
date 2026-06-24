@@ -414,7 +414,7 @@ function showPage(page){
   if(page==='worklog')loadWorkLog();
   if(page==='client-dashboard')loadClientDashboard();
   if(page==='settings'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadSettings();}
-  if(page==='automation'){loadAutomationProjects();}
+  if(page==='automation'){loadAutomationProjects();setTimeout(function(){initSideDashboard();},300);}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
@@ -1981,7 +1981,7 @@ async function generateSceneImage(idx){
     var res=await fetch('/api/dalle-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,size:'1024x1024'})
+      body:JSON.stringify({prompt:prompt,size:'1024x1024',type:'scene'})
     });
     var d=await res.json();
     if(d.url){
@@ -2041,6 +2041,142 @@ async function generateAllScenes(){
   }
   if(progress)progress.textContent='All scenes generated! Review and approve each.';
   if(btn)btn.disabled=false;
+}
+
+// ═══════════════════════════════════════
+// SIDE DASHBOARD — Live generation tracker
+// Shows avatar, scene images, video prompts in real-time
+// ═══════════════════════════════════════
+
+var sideDashboardData={avatar:null,scenes:{},videos:{}};
+
+function initSideDashboard(){
+  // Create side dashboard panel next to automation pipeline
+  var autoPage=document.getElementById('page-automation');
+  if(!autoPage)return;
+  var existing=document.getElementById('auto-side-dashboard');
+  if(existing)return;
+
+  // Wrap automation content in a grid
+  var innerContent=autoPage.querySelector('.page-inner')||autoPage;
+  var wrapper=document.createElement('div');
+  wrapper.style.cssText='display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;height:100%';
+
+  // Move existing content to left
+  var leftCol=document.createElement('div');
+  leftCol.id='auto-left-col';
+  while(innerContent.firstChild){leftCol.appendChild(innerContent.firstChild);}
+  wrapper.appendChild(leftCol);
+
+  // Create right side dashboard
+  var rightCol=document.createElement('div');
+  rightCol.id='auto-side-dashboard';
+  rightCol.style.cssText='position:sticky;top:0;overflow-y:auto;max-height:100vh;padding:16px 0;display:flex;flex-direction:column;gap:12px';
+  rightCol.innerHTML='<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">⚡ Generation tracker</div>'
+    +'<div style="font-size:11px;color:var(--text3)">Assets will appear here as they generate.</div>';
+  wrapper.appendChild(rightCol);
+  innerContent.appendChild(wrapper);
+}
+
+function updateSideDashboard(idx,type,data){
+  var dash=document.getElementById('auto-side-dashboard');
+  if(!dash)return;
+
+  if(type==='avatar'&&data.url){
+    sideDashboardData.avatar=data.url;
+    renderSideDashboard();
+  } else if(type==='scene_done'&&data.url){
+    sideDashboardData.scenes[idx]={url:data.url,num:data.num};
+    renderSideDashboard();
+  } else if(type==='video'&&data.prompt){
+    sideDashboardData.videos[idx]=sideDashboardData.videos[idx]||{};
+    sideDashboardData.videos[idx].tool=data.tool;
+    sideDashboardData.videos[idx].prompt=data.prompt;
+    renderSideDashboard();
+  } else if(type==='video_done'&&data.url){
+    sideDashboardData.videos[idx]=sideDashboardData.videos[idx]||{};
+    sideDashboardData.videos[idx].url=data.url;
+    sideDashboardData.videos[idx].tool=data.tool;
+    renderSideDashboard();
+  }
+}
+
+function renderSideDashboard(){
+  var dash=document.getElementById('auto-side-dashboard');
+  if(!dash)return;
+
+  var totalScenes=autoScenes.length||0;
+  var doneScenes=Object.keys(sideDashboardData.scenes).length;
+  var doneVideos=Object.values(sideDashboardData.videos).filter(function(v){return v.url;}).length;
+  var pct=totalScenes>0?Math.round(((doneScenes+doneVideos)/(totalScenes*2))*100):0;
+
+  var html='<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">⚡ Generation tracker</div>';
+
+  // Progress bar
+  html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:12px">'
+    +'<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
+    +'<span style="font-size:11px;color:var(--text2);font-weight:600">Overall progress</span>'
+    +'<span style="font-size:11px;color:var(--yellow);font-weight:700">'+pct+'%</span>'
+    +'</div>'
+    +'<div style="height:5px;background:var(--bg4);border-radius:99px;overflow:hidden">'
+    +'<div style="width:'+pct+'%;height:100%;background:var(--yellow);border-radius:99px;transition:width 0.4s ease"></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px">'
+    +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:'+(sideDashboardData.avatar?'var(--green)':'var(--text3)')+'">'+( sideDashboardData.avatar?'✅':'⏳')+'</div><div style="font-size:9px;color:var(--text3)">Avatar</div></div>'
+    +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--amber)">'+doneScenes+'/'+totalScenes+'</div><div style="font-size:9px;color:var(--text3)">Scenes</div></div>'
+    +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--purple)">'+doneVideos+'/'+totalScenes+'</div><div style="font-size:9px;color:var(--text3)">Videos</div></div>'
+    +'</div>'
+    +'</div>';
+
+  // Avatar card
+  if(sideDashboardData.avatar){
+    html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
+      +'<div style="font-size:11px;font-weight:600;color:var(--yellow);margin-bottom:8px">👤 Avatar</div>'
+      +'<img src="'+sideDashboardData.avatar+'" style="width:100%;border-radius:var(--radius);object-fit:cover;max-height:200px"/>'
+      +'</div>';
+  }
+
+  // Scene images grid
+  if(doneScenes>0){
+    html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
+      +'<div style="font-size:11px;font-weight:600;color:var(--amber);margin-bottom:8px">🎨 Scene images ('+doneScenes+'/'+totalScenes+')</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">';
+    for(var i=0;i<totalScenes;i++){
+      var s=sideDashboardData.scenes[i];
+      if(s){
+        html+='<div style="position:relative;border-radius:var(--radius);overflow:hidden">'
+          +'<img src="'+s.url+'" style="width:100%;aspect-ratio:9/16;object-fit:cover"/>'
+          +'<div style="position:absolute;bottom:2px;left:2px;font-size:8px;background:rgba(0,0,0,0.7);color:#fff;padding:1px 4px;border-radius:2px">S'+( s.num||i+1)+'</div>'
+          +'</div>';
+      } else {
+        html+='<div style="aspect-ratio:9/16;background:var(--bg4);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3)">'+( i+1)+'</div>';
+      }
+    }
+    html+='</div></div>';
+  }
+
+  // Video prompts/outputs
+  if(Object.keys(sideDashboardData.videos).length>0){
+    html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
+      +'<div style="font-size:11px;font-weight:600;color:var(--purple);margin-bottom:8px">🎬 Video prompts</div>';
+    Object.keys(sideDashboardData.videos).forEach(function(idx){
+      var v=sideDashboardData.videos[idx];
+      html+='<div style="padding:6px;background:var(--bg3);border-radius:var(--radius);margin-bottom:6px">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+        +'<span style="font-size:10px;font-weight:600;color:var(--text2)">Scene '+(parseInt(idx)+1)+'</span>'
+        +'<span style="font-size:9px;color:var(--purple)">'+( v.tool||'')+'</span>'
+        +'</div>';
+      if(v.url){
+        html+='<a href="'+v.url+'" target="_blank" style="font-size:10px;color:var(--yellow)">▶ Open video</a>';
+      } else if(v.prompt){
+        html+='<div style="font-size:9px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">'+v.prompt.substring(0,80)+'...</div>';
+      }
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+
+  dash.innerHTML=html;
 }
 
 function animateAllScenes(){
@@ -3420,6 +3556,7 @@ generateAvatar=async function(){
       if(preview)preview.src=permanentUrl;
       if(result)result.style.display='block';
       if(status)status.textContent='✅ Avatar saved to storage!';
+      updateSideDashboard(-1,'avatar',{url:permanentUrl});
       // Save permanent URL to project outputs
       if(autoProject?.id){
         await sb.from('project_outputs').insert({
@@ -3484,6 +3621,7 @@ generateSceneImage=async function(idx,dalleSize){
       autoOutputs[idx].url=permanentUrl;
       autoOutputs[idx].type='image';
       autoOutputs[idx].scene=scene;
+      updateSideDashboard(idx,'scene_done',{url:permanentUrl,num:scene.num});
       // Save permanent URL to DB
       if(autoProject?.id){
         await sb.from('project_outputs').insert({
