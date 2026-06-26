@@ -2140,6 +2140,36 @@ async function handleReferenceUpload(e){
     // AUTO-PROCEED — skip avatar generation, unlock scenes directly
     setTimeout(function(){
       autoAvatarUrl=autoReferenceImageUrl; // Use reference as avatar
+
+      // ─── HIDE avatar generate section — not needed anymore ───
+      var avatarPromptBox=document.querySelector('#auto-phase1 textarea, [id="auto-avatar-prompt"]');
+      var avatarPromptLabel=document.querySelector('[for="auto-avatar-prompt"], .avatar-prompt-label');
+      var genAvatarBtn=document.getElementById('gen-avatar-btn');
+      var regenBtn=document.querySelector('[onclick="generateAvatar()"]');
+      var avatarDescSection=document.getElementById('avatar-desc-section');
+      // Hide description box + label + generate button
+      if(avatarPromptBox){avatarPromptBox.closest('div')&&avatarPromptBox.closest('div').previousElementSibling?avatarPromptBox.closest('div').previousElementSibling.style.display='none':'';avatarPromptBox.style.display='none';}
+      if(genAvatarBtn){genAvatarBtn.style.display='none';}
+      // Also hide the label "Avatar description (from client brief)"
+      document.querySelectorAll('#auto-phase1 label, #auto-phase1 .field-label').forEach(function(el){
+        if(el.textContent.toLowerCase().includes('avatar'))el.style.display='none';
+      });
+      // Hide the textarea wrapper
+      var avatarTextarea=document.getElementById('auto-avatar-prompt');
+      if(avatarTextarea){
+        // Hide label above it
+        var wrapper=avatarTextarea.parentElement;
+        if(wrapper){
+          var prevSibling=wrapper.previousElementSibling;
+          if(prevSibling)prevSibling.style.display='none';
+          wrapper.style.display='none';
+        }
+        avatarTextarea.style.display='none';
+      }
+      // Hide generate + regenerate buttons
+      document.querySelectorAll('#gen-avatar-btn, [onclick*="generateAvatar"]').forEach(function(el){el.style.display='none';});
+
+      // Unlock Phase 2
       var phase2=document.getElementById('auto-phase2');
       if(phase2){phase2.style.opacity='1';phase2.style.pointerEvents='auto';}
       var p1status=document.getElementById('phase1-status');
@@ -2161,10 +2191,24 @@ function clearReferenceImage(){
   if(statusEl)statusEl.textContent='No reference — AI generates from description';
   if(previewDiv)previewDiv.style.display='none';
   if(fileInput)fileInput.value='';
+
+  // ─── RESTORE avatar section ───
+  var avatarTextarea=document.getElementById('auto-avatar-prompt');
+  if(avatarTextarea){
+    var wrapper=avatarTextarea.parentElement;
+    if(wrapper){
+      var prevSibling=wrapper.previousElementSibling;
+      if(prevSibling)prevSibling.style.display='';
+      wrapper.style.display='';
+    }
+    avatarTextarea.style.display='';
+  }
+  document.querySelectorAll('#gen-avatar-btn, [onclick*="generateAvatar"]').forEach(function(el){el.style.display='';});
+
   // Lock phase 2 back
   var phase2=document.getElementById('auto-phase2');
   if(phase2){phase2.style.opacity='0.4';phase2.style.pointerEvents='none';}
-  showNotif('Reference removed','success');
+  showNotif('Reference removed — generate avatar to proceed','success');
 }
 
 // ═══════════════════════════════════════
