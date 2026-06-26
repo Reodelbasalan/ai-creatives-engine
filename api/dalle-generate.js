@@ -12,33 +12,28 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'OPENAI_API_KEY not set in Vercel env vars' });
     }
 
-    // ═══════════════════════════════════════
-    // UGC MODEL FORGE AI — DALL-E 3 ENGINE
-    // ═══════════════════════════════════════
-
     const MASTER_TRIGGER = "Captured as a real iPhone photo, natural window lighting, casual framing, slight imperfections, visible pores, natural skin texture, candid moment, unpolished RAW look, no filters, no retouching, shallow depth of field, subtle grain, real-life lighting behavior.";
 
     const AVATAR_BRAIN = [
-      "Ultra-realistic 4K–8K Filipino UGC model photo, indistinguishable from a real smartphone photo.",
-      "Shot on iPhone-quality camera, 35mm or 50mm lens equivalent, natural shallow depth of field, slightly imperfect focus.",
-      "Natural lighting ONLY: window light or soft daylight, realistic shadow behavior under chin, nose, neck. NO studio lighting, NO artificial glow.",
-      "Slight grain RAW unprocessed feel, natural dynamic range, no HDR.",
-      "Skin: visible pores, natural skin texture NO smoothing, small blemishes, faint under-eye circles, natural lips, slight facial asymmetry, baby hairs and flyaway strands.",
-      "Natural relaxed expression, micro-expressions, slight imperfection in gaze.",
-      "Candid feel — slightly imperfect framing, casual handheld camera angle.",
+      "Ultra-realistic 4K Filipino UGC model photo, indistinguishable from a real smartphone photo.",
+      "Shot on iPhone-quality camera, 35mm lens equivalent, natural shallow depth of field.",
+      "Natural lighting ONLY: window light or soft daylight, realistic shadow behavior. NO studio lighting.",
+      "Skin: visible pores, natural texture NO smoothing, small blemishes, faint under-eye circles, natural lips, slight facial asymmetry, baby hairs.",
+      "Natural relaxed expression, not posed, slight imperfection in gaze.",
+      "Candid feel, slightly imperfect framing, casual handheld camera angle.",
       "Background feels lived-in, real Filipino home or café setting.",
       "Relatable Filipino look — morena or light morena skin tone, natural Filipino facial features.",
-      "Ad-ready UGC creator look — scroll-stopping but natural, NOT a fashion shoot.",
+      "Scroll-stopping but natural, NOT a fashion shoot, NOT stock photo.",
     ].join(" ");
 
     const SCENE_BRAIN = [
       "Ultra-realistic Filipino UGC ad scene, looks exactly like a real iPhone candid photo.",
       "Real Filipino everyday environment: lived-in home, condo, local café, vanity, or office.",
-      "Person looks like a real Filipino creator — natural skin, real proportions, casual attire.",
+      "Person looks like a real Filipino creator — natural skin, casual attire.",
       "Natural window or ambient lighting only. NO studio setup.",
-      "Brand props placed naturally: product packaging, phone, receipts, everyday items.",
+      "Brand props placed naturally: product packaging, phone, receipts.",
       "Slightly imperfect handheld framing, natural depth of field.",
-      "NOT staged, NOT commercial shoot, NOT over-lit. Real Filipino UGC energy.",
+      "NOT staged, NOT commercial shoot. Real Filipino UGC energy.",
     ].join(" ");
 
     let dallePrompt;
@@ -48,8 +43,7 @@ export default async function handler(req, res) {
       dallePrompt = SCENE_BRAIN + " " + prompt + " " + MASTER_TRIGGER;
     }
 
-    // Map size to DALL-E 3 supported sizes
-    // DALL-E 3 supports: 1024x1024, 1024x1792, 1792x1024
+    // DALL-E 3 supported sizes: 1024x1024, 1024x1792, 1792x1024
     const dalleSize = size === '1024x1024' ? '1024x1024' : '1024x1792';
 
     const response = await fetch('https://api.openai.com/v1/images/generations', {
@@ -63,8 +57,8 @@ export default async function handler(req, res) {
         prompt: dallePrompt,
         n: 1,
         size: dalleSize,
-        quality: 'hd',
-        style: 'natural'  // natural = more realistic, vivid = more dramatic
+        quality: 'hd'
+        // NOTE: style parameter removed — not supported in all accounts
       })
     });
 
