@@ -1,5 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -18,7 +16,7 @@ export default async function handler(req, res) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    // ─── Character + Brand Brain ───
+    // ─── Brain ───
     const characterDesc = avatarDesc || 'Filipino woman, 25-32 years old, morena light brown skin, long dark brown hair, natural minimal makeup, warm brown eyes, oval face';
     const CHARACTER_LOCK = `The person must look like: ${characterDesc}. Same face, skin tone, hair. Consistent appearance.`;
 
@@ -39,14 +37,14 @@ export default async function handler(req, res) {
     const getBackground = (b, n) => {
       b = (b||'').toLowerCase(); n = n||1;
       if(b.includes('beauty')||b.includes('skin')||b.includes('aesthetics')||b.includes('clinic')){
-        const bg=['Filipino bedroom vanity, warm morning window light, skincare products on dresser','bright minimalist bathroom, white tiles, clean natural light','cozy living room couch, warm afternoon light','bedroom window seat, golden hour sunlight, indoor plants','modern condo, floor-to-ceiling window, city view blurred','clean kitchen counter, morning light, bright and fresh'];
+        const bg=['Filipino bedroom vanity, warm morning window light, skincare products on dresser','bright minimalist bathroom, white tiles, clean natural light','cozy living room couch, warm afternoon light','bedroom window seat, golden hour sunlight, indoor plants','modern condo, floor-to-ceiling window, city view blurred','clean kitchen counter, morning light'];
         return bg[(n-1)%bg.length];
       }
       if(b.includes('food')||b.includes('cafe')){
         const bg=['Filipino home dining table, natural window light','cozy local cafe, warm ambient lighting','home kitchen, bright and clean','outdoor garden or small porch'];
         return bg[(n-1)%bg.length];
       }
-      const bg=['cozy Filipino living room, warm window light, plants and lived-in feel','modern Filipino condo, soft natural light, minimalist decor','local neighborhood cafe, warm amber lighting, wooden furniture','Filipino bedroom, morning light streaming in','home office corner, natural light, casual atmosphere','outdoor Filipino home, small garden, natural daylight'];
+      const bg=['cozy Filipino living room, warm window light, plants and lived-in feel','modern Filipino condo, soft natural light, minimalist decor','local neighborhood cafe, warm amber lighting, wooden furniture','Filipino bedroom, morning light streaming in','home office corner, natural light','outdoor Filipino home, small garden, natural daylight'];
       return bg[(n-1)%bg.length];
     };
 
@@ -56,7 +54,7 @@ export default async function handler(req, res) {
 
     let finalPrompt;
     if(type === 'avatar'){
-      finalPrompt = `Ultra-realistic 4K Filipino UGC model photo. ${CHARACTER_LOCK} Wearing: ${attire}. Background: ${background}. Natural lighting only, visible pores, natural skin texture, baby hairs, slight facial asymmetry, candid relaxed expression. Relatable Filipino morena look. ${prompt} ${MASTER}`;
+      finalPrompt = `Ultra-realistic 4K Filipino UGC model photo. ${CHARACTER_LOCK} Wearing: ${attire}. Background: ${background}. Natural lighting only, visible pores, natural skin, baby hairs, slight facial asymmetry, candid relaxed expression. Relatable Filipino morena look. ${prompt} ${MASTER}`;
     } else {
       finalPrompt = `Ultra-realistic Filipino UGC ad scene, real iPhone photo quality. ${CHARACTER_LOCK} Wearing: ${attire}. Background: ${background}. Natural ambient lighting only. ${product?`Product: ${product}, held naturally.`:''} Authentic Filipino UGC energy, NOT staged. ${prompt} ${MASTER}`;
     }
@@ -84,37 +82,33 @@ export default async function handler(req, res) {
     const base64Image = data.data?.[0]?.b64_json;
     if (!base64Image) return res.status(500).json({ error: 'No image generated' });
 
-    // ─── Upload to Supabase server-side → return permanent URL ───
+    // ─── Upload to Supabase server-side using fetch (no SDK import needed) ───
     if (supabaseUrl && supabaseKey) {
       try {
-        const sb = createClient(supabaseUrl, supabaseKey);
+        const buffer = Buffer.from(base64Image, 'base64');
         const fileName = `gen-${type}-${Date.now()}.png`;
         const filePath = `images/${fileName}`;
 
-        // Convert base64 to buffer
-        const buffer = Buffer.from(base64Image, 'base64');
-
-        const { data: uploadData, error: uploadError } = await sb.storage
-          .from('Ai creatives system storage')
-          .upload(filePath, buffer, {
-            contentType: 'image/png',
-            upsert: true
-          });
-
-        if (!uploadError) {
-          const { data: urlData } = sb.storage
-            .from('Ai creatives system storage')
-            .getPublicUrl(filePath);
-
-          if (urlData?.publicUrl) {
-            return res.status(200).json({
-              success: true,
-              url: urlData.publicUrl,
-              mode: 'gpt-image-1'
-            });
+        const uploadRes = await fetch(
+          `${supabaseUrl}/storage/v1/object/Ai%20creatives%20system%20storage/${filePath}`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'image/png',
+              'x-upsert': 'true'
+            },
+            body: buffer
           }
+        );
+
+        if (uploadRes.ok) {
+          const publicUrl = `${supabaseUrl}/storage/v1/object/public/Ai%20creatives%20system%20storage/${filePath}`;
+          return res.status(200).json({ success: true, url: publicUrl, mode: 'gpt-image-1' });
+        } else {
+          const uploadErr = await uploadRes.text();
+          console.log('Supabase upload failed:', uploadErr);
         }
-        console.log('Supabase upload error:', uploadError?.message);
       } catch (uploadErr) {
         console.log('Storage error:', uploadErr.message);
       }
