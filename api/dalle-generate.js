@@ -10,7 +10,6 @@ export default async function handler(req, res) {
       clientName,
       product,
       brandType,
-      audience,
       avatarDesc,
       tone,
       sceneNum,
@@ -27,11 +26,10 @@ export default async function handler(req, res) {
     }
 
     // ═══════════════════════════════════════
-    // CHARACTER LOCK — consistent across scenes
+    // CHARACTER LOCK
     // ═══════════════════════════════════════
     const characterDesc = avatarDesc || 'Filipino woman, 25-32 years old, morena light brown skin, long dark brown hair, natural minimal makeup, warm brown eyes, oval face';
-
-    const CHARACTER_LOCK = `IMPORTANT CHARACTER CONSISTENCY: The person in this image must ALWAYS look like the same individual: ${characterDesc}. Same face shape, same skin tone, same hair. Do not change her appearance.`;
+    const CHARACTER_LOCK = `IMPORTANT: The person in this image must look like: ${characterDesc}. Same face shape, same skin tone, same hair. Consistent appearance.`;
 
     // ═══════════════════════════════════════
     // BRAND-AWARE ATTIRE
@@ -40,36 +38,32 @@ export default async function handler(req, res) {
       const b = (brandType || '').toLowerCase();
       const t = (tone || '').toLowerCase();
       const n = (sceneNum || 1);
-
       if (b.includes('beauty') || b.includes('skin') || b.includes('aesthetics') || b.includes('clinic')) {
         const attires = [
           'soft white ribbed tank top, minimal gold jewelry, dewy fresh skin',
-          'light beige spaghetti strap top, hair down naturally, no heavy makeup',
+          'light beige spaghetti strap top, hair down naturally',
           'cozy cream knit top, gold hoop earrings, glowing skin',
-          'white button-down shirt slightly open, natural relaxed confident look',
+          'white button-down shirt slightly open, natural relaxed look',
           'nude bodysuit, hair loosely tied, natural dewy look',
-          'simple white crop top, small gold necklace, fresh clean appearance'
+          'simple white crop top, small gold necklace'
         ];
         return attires[(n - 1) % attires.length];
       }
-
       if (b.includes('food') || b.includes('cafe') || b.includes('restaurant')) {
         const attires = [
           'casual white t-shirt and jeans, relaxed home look',
           'colorful casual blouse, comfortable and cheerful',
-          'oversized shirt, hair in bun, cozy home kitchen look',
+          'oversized shirt hair in bun, cozy kitchen look',
           'casual sundress, bright and approachable'
         ];
         return attires[(n - 1) % attires.length];
       }
-
-      if (t.includes('luxury') || t.includes('premium') || t.includes('luxurious')) {
-        return 'clean minimalist white or nude toned outfit, subtle luxury accessories, polished natural look';
+      if (t.includes('luxury') || t.includes('premium')) {
+        return 'clean minimalist white or nude toned outfit, subtle luxury accessories';
       }
-
       const defaults = [
-        'casual white or light-colored top, everyday relaxed Filipino creator look',
-        'simple comfortable t-shirt, natural no-fuss styling',
+        'casual white top, everyday relaxed Filipino creator look',
+        'simple comfortable t-shirt, natural styling',
         'casual blouse, approachable and relatable',
         'cozy home outfit, authentic and natural'
       ];
@@ -82,7 +76,6 @@ export default async function handler(req, res) {
     const getBackground = (brandType, sceneNum) => {
       const b = (brandType || '').toLowerCase();
       const n = (sceneNum || 1);
-
       if (b.includes('beauty') || b.includes('skin') || b.includes('aesthetics') || b.includes('clinic')) {
         const bgs = [
           'Filipino bedroom vanity area, warm morning window light, skincare products on dresser',
@@ -90,11 +83,10 @@ export default async function handler(req, res) {
           'cozy living room couch, warm afternoon light, soft cushions',
           'bedroom window seat, golden hour sunlight, indoor plants visible',
           'modern condo unit, floor-to-ceiling window, city view softly blurred',
-          'clean kitchen counter, morning light, bright and fresh atmosphere'
+          'clean kitchen counter, morning light, bright and fresh'
         ];
         return bgs[(n - 1) % bgs.length];
       }
-
       if (b.includes('food') || b.includes('cafe')) {
         const bgs = [
           'Filipino home dining table, natural window light, warm and inviting',
@@ -104,7 +96,6 @@ export default async function handler(req, res) {
         ];
         return bgs[(n - 1) % bgs.length];
       }
-
       const defaults = [
         'cozy Filipino living room, warm window light, lived-in authentic feel with plants',
         'modern Filipino condo, soft natural light, minimalist clean decor',
@@ -119,27 +110,21 @@ export default async function handler(req, res) {
     const attire = getBrandAttire(brandType, tone, sceneNum);
     const background = getBackground(brandType, sceneNum);
 
-    const MASTER_TRIGGER = "Captured as a real iPhone photo, natural window lighting, casual framing, slight imperfections, visible pores, natural skin texture, candid moment, unpolished RAW look, no filters, no retouching, shallow depth of field, subtle grain, real-life lighting behavior.";
+    const MASTER_TRIGGER = "Captured as a real iPhone photo, natural window lighting, casual framing, slight imperfections, visible pores, natural skin texture, candid moment, unpolished RAW look, no filters, shallow depth of field, subtle grain.";
 
-    // ═══════════════════════════════════════
-    // AVATAR PROMPT
-    // ═══════════════════════════════════════
-    const AVATAR_BRAIN = `Ultra-realistic 4K Filipino UGC model photo, indistinguishable from a real smartphone photo. ${CHARACTER_LOCK} She is wearing ${attire}. Natural lighting ONLY: soft window light, realistic shadows under chin and nose, no studio lighting. Skin: visible pores, natural texture no smoothing, small blemishes, faint under-eye circles, slight facial asymmetry, baby hairs. Natural relaxed candid expression, slightly imperfect framing. Background: ${background}. Relatable Filipino morena look, ad-ready UGC creator energy, NOT a fashion shoot.`;
+    const AVATAR_BRAIN = `Ultra-realistic 4K Filipino UGC model photo, indistinguishable from a real smartphone photo. ${CHARACTER_LOCK} She is wearing ${attire}. Natural lighting ONLY: soft window light, realistic shadows, no studio lighting. Skin: visible pores, natural texture, small blemishes, baby hairs, slight facial asymmetry. Natural relaxed candid expression. Background: ${background}. Relatable Filipino morena look, ad-ready UGC creator energy.`;
 
-    // ═══════════════════════════════════════
-    // SCENE PROMPT
-    // ═══════════════════════════════════════
-    const SCENE_BRAIN = `Ultra-realistic Filipino UGC ad scene, real iPhone candid photo quality. ${CHARACTER_LOCK} She is wearing ${attire}. Background: ${background}. Natural window or ambient lighting only, soft realistic shadows, no studio setup. ${product ? `Product visible: ${product}, held naturally or placed organically nearby.` : ''} Slightly imperfect handheld framing, natural depth of field, authentic Filipino UGC creator energy. NOT staged, NOT professionally lit, NOT over-edited.`;
+    const SCENE_BRAIN = `Ultra-realistic Filipino UGC ad scene, real iPhone candid photo quality. ${CHARACTER_LOCK} She is wearing ${attire}. Background: ${background}. Natural window or ambient lighting only, no studio setup. ${product ? `Product: ${product}, held naturally or placed nearby.` : ''} Slightly imperfect handheld framing, natural depth of field, authentic Filipino UGC energy. NOT staged, NOT professionally lit.`;
 
-    let dallePrompt;
+    let finalPrompt;
     if (type === 'avatar') {
-      dallePrompt = AVATAR_BRAIN + ' ' + prompt + ' ' + MASTER_TRIGGER;
+      finalPrompt = AVATAR_BRAIN + ' ' + prompt + ' ' + MASTER_TRIGGER;
     } else {
-      dallePrompt = SCENE_BRAIN + ' ' + prompt + ' ' + MASTER_TRIGGER;
+      finalPrompt = SCENE_BRAIN + ' ' + prompt + ' ' + MASTER_TRIGGER;
     }
 
-    // DALL-E 3 sizes: 1024x1024, 1024x1792, 1792x1024
-    const dalleSize = size === '1024x1024' ? '1024x1024' : '1024x1792';
+    // gpt-image-1 sizes: 1024x1024, 1024x1536, 1536x1024, auto
+    const imageSize = size === '1024x1024' ? '1024x1024' : '1024x1536';
 
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -148,11 +133,11 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${openaiKey}`
       },
       body: JSON.stringify({
-        model: 'dall-e-3',
-        prompt: dallePrompt,
+        model: 'gpt-image-1',
+        prompt: finalPrompt,
         n: 1,
-        size: dalleSize,
-        quality: 'hd'
+        size: imageSize,
+        quality: 'high'
       })
     });
 
@@ -160,16 +145,20 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       return res.status(response.status).json({
-        error: data.error?.message || 'DALL-E API error'
+        error: data.error?.message || 'OpenAI API error'
       });
     }
 
-    const imageUrl = data.data?.[0]?.url;
-    if (!imageUrl) {
+    // gpt-image-1 returns base64
+    const base64Image = data.data?.[0]?.b64_json;
+    if (!base64Image) {
       return res.status(500).json({ error: 'No image generated' });
     }
 
-    return res.status(200).json({ success: true, url: imageUrl, mode: 'dalle-3' });
+    // Convert base64 to data URL
+    const imageUrl = `data:image/png;base64,${base64Image}`;
+
+    return res.status(200).json({ success: true, url: imageUrl, mode: 'gpt-image-1' });
 
   } catch (error) {
     return res.status(500).json({ error: error.message });
