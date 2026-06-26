@@ -2394,6 +2394,84 @@ async function generateSceneVideo(idx,tool){
   }
 }
 
+
+// ═══════════════════════════════════════
+// SCENE UPLOAD — Use your own image per scene
+// Skips AI generation, uploads to storage
+// ═══════════════════════════════════════
+
+async function handleSceneUpload(idx, inputEl){
+  var file=inputEl.files[0];
+  if(!file)return;
+  var scene=autoScenes[idx];
+  var statusEl=document.getElementById('scene-status-'+idx);
+  var container=document.getElementById('scene-img-container-'+idx);
+  if(statusEl)statusEl.textContent='⚡';
+
+  var reader=new FileReader();
+  reader.onload=async function(ev){
+    var base64=ev.target.result;
+
+    // Show preview immediately
+    if(container){
+      container.innerHTML='<img src="'+base64+'" style="width:100%;height:100%;object-fit:cover;max-height:200px"/>'
+        +'<div style="position:absolute;top:4px;left:4px;font-size:9px;background:rgba(34,197,94,0.9);color:#fff;padding:2px 6px;border-radius:3px;font-weight:600">📁 Uploaded</div>'
+        +'<div style="position:absolute;bottom:4px;right:4px;display:flex;gap:3px">'
+        +'<button class="regen-scene" data-idx="'+idx+'" style="font-size:9px;padding:2px 6px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:3px;cursor:pointer">🔄</button>'
+        +'<button class="approve-scene" data-idx="'+idx+'" data-url="'+base64+'" style="font-size:9px;padding:2px 6px;background:rgba(34,197,94,0.8);color:#fff;border:none;border-radius:3px;cursor:pointer">✅</button>'
+        +'</div>';
+      container.style.position='relative';
+      container.querySelectorAll('.regen-scene').forEach(function(b){
+        b.addEventListener('click',function(){
+          // Reset to empty state for re-upload or AI gen
+          container.innerHTML='<div style="font-size:10px;color:var(--text3);text-align:center;padding:8px">Scene '+(scene.num||idx+1)+'</div>';
+          inputEl.value='';
+          if(statusEl)statusEl.textContent='';
+          delete autoOutputs[idx];
+        });
+      });
+      container.querySelectorAll('.approve-scene').forEach(function(b){
+        b.addEventListener('click',function(){approveSceneImage(parseInt(this.dataset.idx),this.dataset.url);});
+      });
+    }
+
+    // Upload to Supabase storage
+    if(statusEl)statusEl.textContent='💾';
+    var permanentUrl=await uploadImageToStorage(base64, genFileName('scene-upload',idx));
+
+    // Save to autoOutputs
+    autoOutputs[idx]=autoOutputs[idx]||{};
+    autoOutputs[idx].url=permanentUrl;
+    autoOutputs[idx].type='image';
+    autoOutputs[idx].scene=scene;
+    autoOutputs[idx].isUploaded=true;
+
+    // Update container with permanent URL
+    if(container){
+      var approveBtn=container.querySelector('.approve-scene');
+      if(approveBtn)approveBtn.dataset.url=permanentUrl;
+    }
+
+    // Update side dashboard
+    updateSideDashboard(idx,'scene_done',{url:permanentUrl,num:scene.num||idx+1});
+
+    if(statusEl)statusEl.textContent='✅';
+
+    // Save to project outputs DB
+    if(autoProject?.id){
+      await sb.from('project_outputs').insert({
+        project_id:autoProject.id,
+        user_id:currentUser.id,
+        url:permanentUrl,
+        type:'image',
+        label:'Scene '+(scene.num||idx+1)+' (uploaded)'
+      }).catch(function(){});
+    }
+    showNotif('Scene '+(idx+1)+' image uploaded! ✅','success');
+  };
+  reader.readAsDataURL(file);
+}
+
 function animateAllScenes(){
   var approvedScenes=autoOutputs.filter(function(o){return o&&o.approved;});
   if(!approvedScenes.length){showNotif('Approve scene images first!','error');return;}
@@ -3558,17 +3636,23 @@ function renderAutomationScenes(){
   grid.innerHTML=autoScenes.map(function(s,i){
     var aspectStyle=isSquare?'aspect-ratio:1/1':'aspect-ratio:9/16';
     return '<div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);overflow:hidden" id="scene-card-'+i+'">'
+      // ─── Image container ───
       +'<div style="'+aspectStyle+';background:var(--bg4);display:flex;align-items:center;justify-content:center;position:relative;max-height:200px" id="scene-img-container-'+i+'">'
       +'<div style="font-size:10px;color:var(--text3);text-align:center;padding:8px">Scene '+s.num+'<br><span style="font-size:9px;color:var(--yellow)">'+sizeLabel+'</span></div>'
       +'</div>'
       +'<div style="padding:8px">'
+      // ─── Scene script snippet ───
       +'<div style="font-size:9px;color:var(--text3);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(s.voiceover||s.imagePrompt||'').substring(0,50)+'...</div>'
-      // Image generation
-      +'<div style="display:flex;gap:4px;margin-bottom:6px">'
-      +'<button class="gen-scene-btn" data-idx="'+i+'" data-size="'+dalleSize+'" style="flex:1;font-size:10px;padding:4px;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.2);border-radius:4px;color:var(--yellow);cursor:pointer;font-weight:600">🎨 Gen Image</button>'
-      +'<span id="scene-status-'+i+'" style="font-size:9px;color:var(--text3);display:flex;align-items:center;padding:0 4px"></span>'
+      // ─── TOGGLE: AI Generate OR Upload own image ───
+      +'<div style="display:flex;gap:4px;margin-bottom:6px;align-items:center">'
+      +'<button class="gen-scene-btn" data-idx="'+i+'" data-size="'+dalleSize+'" style="flex:1;font-size:10px;padding:4px;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.2);border-radius:4px;color:var(--yellow);cursor:pointer;font-weight:600">🎨 AI Generate</button>'
+      +'<label style="flex:1;cursor:pointer;font-size:10px;padding:4px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:4px;color:var(--text2);text-align:center;font-weight:600">'
+      +'📁 Upload'
+      +'<input type="file" accept="image/*" class="scene-upload-input" data-idx="'+i+'" style="display:none"/>'
+      +'</label>'
+      +'<span id="scene-status-'+i+'" style="font-size:9px;color:var(--text3);display:flex;align-items:center;padding:0 2px"></span>'
       +'</div>'
-      // Video generation — editor picks model
+      // ─── Video generation ───
       +'<div style="font-size:9px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase">🎬 Generate Video:</div>'
       +'<div style="display:flex;gap:3px;flex-wrap:wrap">'
       +'<button class="gen-video-btn" data-idx="'+i+'" data-tool="higgsfield" style="font-size:9px;padding:3px 6px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer">Higgsfield</button>'
@@ -3583,6 +3667,13 @@ function renderAutomationScenes(){
   grid.querySelectorAll('.gen-scene-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
       generateSceneImage(parseInt(this.dataset.idx),this.dataset.size);
+    });
+  });
+
+  // Attach scene upload handlers
+  grid.querySelectorAll('.scene-upload-input').forEach(function(input){
+    input.addEventListener('change',function(){
+      handleSceneUpload(parseInt(this.dataset.idx),this);
     });
   });
 
