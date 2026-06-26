@@ -1847,6 +1847,7 @@ var autoProject=null;
 var autoScenes=[];
 var autoAvatarUrl=null;
 var autoOutputs=[];
+var autoReferenceImageUrl=null; // Reference image URL for face consistency
 
 async function loadAutomationProjects(){
   var sel=document.getElementById('auto-project-select');
@@ -1880,22 +1881,17 @@ async function loadAutomationProject(){
     autoScenes=parseBlueprint(data.blueprint);
     renderAutomationScenes();
   }
-  // AUTO-FILL avatar description with ultra realistic suffix
   var avatarEl=document.getElementById('auto-avatar-prompt');
   if(avatarEl){
-    // Build smart avatar description from all available client details
     var avatarParts=[];
     if(data.avatar_desc)avatarParts.push(data.avatar_desc);
     else if(data.voice_actor)avatarParts.push(data.voice_actor);
-    // Add brand/product context
     if(data.business_type)avatarParts.push(data.business_type+' brand');
     if(data.audience){
-      // Extract age/gender hints from audience
       var aud=data.audience.toLowerCase();
       if(aud.includes('women')||aud.includes('babae'))avatarParts.push('female');
       else if(aud.includes('men')||aud.includes('lalaki'))avatarParts.push('male');
     }
-    // Always append ultra realistic suffix
     var baseDesc=avatarParts.length>0?avatarParts.join(', '):'Filipino person';
     avatarEl.value=baseDesc+', ultra realistic 4K, natural Filipino look, UGC model';
   }
@@ -1996,7 +1992,7 @@ async function generateSceneImage(idx){
     var res=await fetch('/api/dalle-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,size:'1024x1024',type:'scene'})
+      body:JSON.stringify({prompt:prompt,size:'1024x1024',type:'scene',referenceImageUrl:autoReferenceImageUrl||null})
     });
     var d=await res.json();
     if(d.url){
@@ -2060,7 +2056,94 @@ async function generateAllScenes(){
 
 
 // ═══════════════════════════════════════
-// SIDE DASHBOARD — Live generation tracker
+// REFERENCE IMAGE UPLOAD — Phase 1
+// User uploads their own model photo
+// ═══════════════════════════════════════
+
+function initReferenceUpload(){
+  var avatarSection=document.getElementById('auto-phase1');
+  if(!avatarSection||document.getElementById('ref-upload-section'))return;
+
+  var refSection=document.createElement('div');
+  refSection.id='ref-upload-section';
+  refSection.style.cssText='margin-top:12px;padding:12px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg)';
+  refSection.innerHTML=
+    '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">📸 Use your own model photo</div>'
+    +'<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Upload a reference photo — AI will match this look for all scenes</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+    +'<label style="cursor:pointer;padding:8px 14px;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.3);border-radius:var(--radius);color:var(--yellow);font-size:12px;font-weight:600">'
+    +'📁 Upload photo'
+    +'<input type="file" accept="image/*" id="ref-image-input" style="display:none" onchange="handleReferenceUpload(event)"/>'
+    +'</label>'
+    +'<span id="ref-image-status" style="font-size:11px;color:var(--text3)">No reference — AI will generate from description</span>'
+    +'</div>'
+    +'<div id="ref-image-preview" style="display:none;margin-top:10px">'
+    +'<img id="ref-preview-img" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius);border:1.5px solid var(--yellow)"/>'
+    +'<button onclick="clearReferenceImage()" style="margin-left:8px;font-size:10px;padding:3px 8px;background:var(--red-dim);border:0.5px solid rgba(239,68,68,0.3);color:var(--red);border-radius:var(--radius);cursor:pointer">✕ Remove</button>'
+    +'</div>';
+
+  // Insert after avatar prompt textarea
+  var avatarResult=document.getElementById('avatar-result');
+  if(avatarResult){
+    avatarResult.parentNode.insertBefore(refSection,avatarResult.nextSibling);
+  } else {
+    avatarSection.appendChild(refSection);
+  }
+}
+
+async function handleReferenceUpload(e){
+  var file=e.target.files[0];
+  if(!file)return;
+  var statusEl=document.getElementById('ref-image-status');
+  var previewDiv=document.getElementById('ref-image-preview');
+  var previewImg=document.getElementById('ref-preview-img');
+  if(statusEl)statusEl.textContent='⚡ Uploading to storage...';
+
+  try{
+    // Read file as base64
+    var reader=new FileReader();
+    reader.onload=async function(ev){
+      var base64=ev.target.result;
+      // Show preview
+      if(previewImg)previewImg.src=base64;
+      if(previewDiv)previewDiv.style.display='block';
+
+      // Upload to Supabase Storage
+      var blob=await(await fetch(base64)).blob();
+      var fileName='ref-'+Date.now()+'.jpg';
+      var{data,error}=await sb.storage.from('Ai creatives system storage').upload('references/'+fileName,blob,{
+        contentType:'image/jpeg',upsert:true
+      });
+      if(error){
+        if(statusEl)statusEl.textContent='❌ Upload failed — using base64';
+        // Fallback: use base64 directly
+        autoReferenceImageUrl=base64;
+      } else {
+        var{data:urlData}=sb.storage.from('Ai creatives system storage').getPublicUrl('references/'+fileName);
+        autoReferenceImageUrl=urlData?.publicUrl||base64;
+        if(statusEl)statusEl.innerHTML='✅ Reference uploaded! <span style="color:var(--green);font-weight:600">Face will be used in all scenes</span>';
+      }
+      showNotif('Reference image set! All scenes will match this look 🔥','success');
+    };
+    reader.readAsDataURL(file);
+  }catch(err){
+    if(statusEl)statusEl.textContent='Error: '+err.message;
+  }
+}
+
+function clearReferenceImage(){
+  autoReferenceImageUrl=null;
+  var statusEl=document.getElementById('ref-image-status');
+  var previewDiv=document.getElementById('ref-image-preview');
+  var input=document.getElementById('ref-image-input');
+  if(statusEl)statusEl.textContent='No reference — AI will generate from description';
+  if(previewDiv)previewDiv.style.display='none';
+  if(input)input.value='';
+  showNotif('Reference cleared','success');
+}
+
+// ═══════════════════════════════════════
+// SIDE DASHBOARD
 // ═══════════════════════════════════════
 var sideDashboardData={avatar:null,scenes:{},videos:{}};
 
@@ -2076,17 +2159,20 @@ function initSideDashboard(){
   var rightCol=document.createElement('div');
   rightCol.id='auto-side-dashboard';
   rightCol.style.cssText='position:sticky;top:0;overflow-y:auto;max-height:100vh;display:flex;flex-direction:column;gap:10px;padding:8px 0';
-  rightCol.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--text)">⚡ Generation tracker</div><div style="font-size:11px;color:var(--text3)">Assets will appear here as they generate.</div>';
+  rightCol.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--text)">⚡ Generation tracker</div>'
+    +'<div style="font-size:11px;color:var(--text3)">Assets will appear here as they generate.</div>';
   wrapper.appendChild(leftCol);
   wrapper.appendChild(rightCol);
   autoPage.appendChild(wrapper);
+  // Init reference upload after dashboard
+  setTimeout(function(){initReferenceUpload();},500);
 }
 
 function updateSideDashboard(idx,type,data){
   var dash=document.getElementById('auto-side-dashboard');
   if(!dash)return;
-  if(type==='avatar'&&data.url){sideDashboardData.avatar=data.url;}
-  else if(type==='scene_done'&&data.url){sideDashboardData.scenes[idx]={url:data.url,num:data.num};}
+  if(type==='avatar'&&data.url)sideDashboardData.avatar=data.url;
+  else if(type==='scene_done'&&data.url)sideDashboardData.scenes[idx]={url:data.url,num:data.num};
   else if(type==='video'&&data.prompt){sideDashboardData.videos[idx]=sideDashboardData.videos[idx]||{};sideDashboardData.videos[idx].tool=data.tool;sideDashboardData.videos[idx].prompt=data.prompt;}
   else if(type==='video_done'&&data.url){sideDashboardData.videos[idx]=sideDashboardData.videos[idx]||{};sideDashboardData.videos[idx].url=data.url;sideDashboardData.videos[idx].tool=data.tool;}
   renderSideDashboard();
@@ -2100,6 +2186,11 @@ function renderSideDashboard(){
   var doneVideos=Object.values(sideDashboardData.videos).filter(function(v){return v.url;}).length;
   var pct=total>0?Math.round(((doneScenes+doneVideos)/(total*2))*100):0;
   var html='<div style="font-size:12px;font-weight:600;color:var(--text)">⚡ Generation tracker</div>';
+  // Reference badge
+  if(autoReferenceImageUrl){
+    html+='<div style="background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.3);border-radius:var(--radius);padding:8px 10px;font-size:11px;color:var(--yellow);font-weight:600">📸 Reference image active — face consistency ON</div>';
+  }
+  // Progress
   html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
     +'<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;color:var(--text2);font-weight:600">Overall</span><span style="font-size:11px;color:var(--yellow);font-weight:700">'+pct+'%</span></div>'
     +'<div style="height:5px;background:var(--bg4);border-radius:99px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--yellow);border-radius:99px;transition:width 0.4s"></div></div>'
@@ -2131,9 +2222,9 @@ function renderSideDashboard(){
     Object.keys(sideDashboardData.videos).forEach(function(i){
       var v=sideDashboardData.videos[i];
       html+='<div style="padding:5px;background:var(--bg3);border-radius:var(--radius);margin-bottom:4px">'
-        +'<div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:10px;font-weight:600;color:var(--text2)">Scene '+(parseInt(i)+1)+'</span><span style="font-size:9px;color:var(--purple)">'+(v.tool||'')+'</span></div>';
-      if(v.url){html+='<a href="'+v.url+'" target="_blank" style="font-size:10px;color:var(--yellow)">▶ Open</a>';}
-      else if(v.prompt){html+='<div style="font-size:9px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+v.prompt.substring(0,70)+'...</div>';}
+        +'<div style="display:flex;justify-content:space-between"><span style="font-size:10px;font-weight:600;color:var(--text2)">Scene '+(parseInt(i)+1)+'</span><span style="font-size:9px;color:var(--purple)">'+(v.tool||'')+'</span></div>';
+      if(v.url)html+='<a href="'+v.url+'" target="_blank" style="font-size:10px;color:var(--yellow)">▶ Open</a>';
+      else if(v.prompt)html+='<div style="font-size:9px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+v.prompt.substring(0,70)+'...</div>';
       html+='</div>';
     });
     html+='</div>';
@@ -2169,7 +2260,7 @@ async function generateSceneVideo(idx,tool){
   }catch(e){console.log('VEO brain error:',e);}
   if(!optimizedPrompt){
     var sizeTag=(autoProject?.video_size||'').includes('1:1')?'1:1 square':'9:16 vertical portrait, mobile-optimized';
-    optimizedPrompt=(scene.videoPrompt||scene.imagePrompt||scene.visual||'Filipino UGC video clip')+' '+sizeTag+', natural iPhone camera feel, handheld micro-jitter, RAW UGC look, natural lighting, no filters. Captured as a real iPhone video frame, natural lighting, casual handheld framing, candid moment. Negative: AI look, CGI, plastic skin, beauty filter, studio lighting.';
+    optimizedPrompt=(scene.videoPrompt||scene.imagePrompt||scene.visual||'Filipino UGC video clip')+' '+sizeTag+', natural iPhone camera feel, handheld micro-jitter, RAW UGC look, natural lighting. Negative: AI look, CGI, plastic skin, studio lighting.';
     if(autoProject?.avatar_desc)optimizedPrompt='Featuring: '+autoProject.avatar_desc+'. '+optimizedPrompt;
   }
   updateSideDashboard(idx,'video',{tool:tool,prompt:optimizedPrompt});
@@ -3580,7 +3671,8 @@ generateAvatar=async function(){
       var result=document.getElementById('avatar-result');
       if(preview)preview.src=permanentUrl;
       if(result)result.style.display='block';
-      if(status)status.textContent='✅ Avatar saved to storage!';updateSideDashboard(-1,'avatar',{url:permanentUrl});
+      if(status)status.textContent='✅ Avatar saved to storage!';
+      updateSideDashboard(-1,'avatar',{url:permanentUrl});
       // Save permanent URL to project outputs
       if(autoProject?.id){
         await sb.from('project_outputs').insert({
