@@ -3825,7 +3825,17 @@ generateSceneImage=async function(idx,dalleSize){
     var res=await fetch('/api/dalle-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,size:imgSize})
+      body:JSON.stringify({
+        prompt:prompt,
+        size:imgSize,
+        type:'scene',
+        clientName:autoProject?.client_name||'',
+        product:autoProject?.product||'',
+        brandType:autoProject?.business_type||'',
+        avatarDesc:autoProject?.avatar_desc||document.getElementById('auto-avatar-prompt')?.value||'',
+        tone:autoProject?.tone||'',
+        sceneNum:idx+1
+      })
     });
     var d=await res.json();
     if(d.url){
