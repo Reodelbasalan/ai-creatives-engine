@@ -2043,140 +2043,157 @@ async function generateAllScenes(){
   if(btn)btn.disabled=false;
 }
 
+
 // ═══════════════════════════════════════
 // SIDE DASHBOARD — Live generation tracker
-// Shows avatar, scene images, video prompts in real-time
 // ═══════════════════════════════════════
-
 var sideDashboardData={avatar:null,scenes:{},videos:{}};
 
 function initSideDashboard(){
-  // Create side dashboard panel next to automation pipeline
   var autoPage=document.getElementById('page-automation');
-  if(!autoPage)return;
-  var existing=document.getElementById('auto-side-dashboard');
-  if(existing)return;
-
-  // Wrap automation content in a grid
-  var innerContent=autoPage.querySelector('.page-inner')||autoPage;
+  if(!autoPage||document.getElementById('auto-side-dashboard'))return;
   var wrapper=document.createElement('div');
-  wrapper.style.cssText='display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;height:100%';
-
-  // Move existing content to left
+  wrapper.id='auto-wrapper';
+  wrapper.style.cssText='display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start';
   var leftCol=document.createElement('div');
   leftCol.id='auto-left-col';
-  while(innerContent.firstChild){leftCol.appendChild(innerContent.firstChild);}
-  wrapper.appendChild(leftCol);
-
-  // Create right side dashboard
+  while(autoPage.firstChild){leftCol.appendChild(autoPage.firstChild);}
   var rightCol=document.createElement('div');
   rightCol.id='auto-side-dashboard';
-  rightCol.style.cssText='position:sticky;top:0;overflow-y:auto;max-height:100vh;padding:16px 0;display:flex;flex-direction:column;gap:12px';
-  rightCol.innerHTML='<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">⚡ Generation tracker</div>'
-    +'<div style="font-size:11px;color:var(--text3)">Assets will appear here as they generate.</div>';
+  rightCol.style.cssText='position:sticky;top:0;overflow-y:auto;max-height:100vh;display:flex;flex-direction:column;gap:10px;padding:8px 0';
+  rightCol.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--text)">⚡ Generation tracker</div><div style="font-size:11px;color:var(--text3)">Assets will appear here as they generate.</div>';
+  wrapper.appendChild(leftCol);
   wrapper.appendChild(rightCol);
-  innerContent.appendChild(wrapper);
+  autoPage.appendChild(wrapper);
 }
 
 function updateSideDashboard(idx,type,data){
   var dash=document.getElementById('auto-side-dashboard');
   if(!dash)return;
-
-  if(type==='avatar'&&data.url){
-    sideDashboardData.avatar=data.url;
-    renderSideDashboard();
-  } else if(type==='scene_done'&&data.url){
-    sideDashboardData.scenes[idx]={url:data.url,num:data.num};
-    renderSideDashboard();
-  } else if(type==='video'&&data.prompt){
-    sideDashboardData.videos[idx]=sideDashboardData.videos[idx]||{};
-    sideDashboardData.videos[idx].tool=data.tool;
-    sideDashboardData.videos[idx].prompt=data.prompt;
-    renderSideDashboard();
-  } else if(type==='video_done'&&data.url){
-    sideDashboardData.videos[idx]=sideDashboardData.videos[idx]||{};
-    sideDashboardData.videos[idx].url=data.url;
-    sideDashboardData.videos[idx].tool=data.tool;
-    renderSideDashboard();
-  }
+  if(type==='avatar'&&data.url){sideDashboardData.avatar=data.url;}
+  else if(type==='scene_done'&&data.url){sideDashboardData.scenes[idx]={url:data.url,num:data.num};}
+  else if(type==='video'&&data.prompt){sideDashboardData.videos[idx]=sideDashboardData.videos[idx]||{};sideDashboardData.videos[idx].tool=data.tool;sideDashboardData.videos[idx].prompt=data.prompt;}
+  else if(type==='video_done'&&data.url){sideDashboardData.videos[idx]=sideDashboardData.videos[idx]||{};sideDashboardData.videos[idx].url=data.url;sideDashboardData.videos[idx].tool=data.tool;}
+  renderSideDashboard();
 }
 
 function renderSideDashboard(){
   var dash=document.getElementById('auto-side-dashboard');
   if(!dash)return;
-
-  var totalScenes=autoScenes.length||0;
+  var total=autoScenes.length||0;
   var doneScenes=Object.keys(sideDashboardData.scenes).length;
   var doneVideos=Object.values(sideDashboardData.videos).filter(function(v){return v.url;}).length;
-  var pct=totalScenes>0?Math.round(((doneScenes+doneVideos)/(totalScenes*2))*100):0;
-
-  var html='<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">⚡ Generation tracker</div>';
-
-  // Progress bar
-  html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:12px">'
-    +'<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
-    +'<span style="font-size:11px;color:var(--text2);font-weight:600">Overall progress</span>'
-    +'<span style="font-size:11px;color:var(--yellow);font-weight:700">'+pct+'%</span>'
-    +'</div>'
-    +'<div style="height:5px;background:var(--bg4);border-radius:99px;overflow:hidden">'
-    +'<div style="width:'+pct+'%;height:100%;background:var(--yellow);border-radius:99px;transition:width 0.4s ease"></div>'
-    +'</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px">'
-    +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:'+(sideDashboardData.avatar?'var(--green)':'var(--text3)')+'">'+( sideDashboardData.avatar?'✅':'⏳')+'</div><div style="font-size:9px;color:var(--text3)">Avatar</div></div>'
-    +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--amber)">'+doneScenes+'/'+totalScenes+'</div><div style="font-size:9px;color:var(--text3)">Scenes</div></div>'
-    +'<div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--purple)">'+doneVideos+'/'+totalScenes+'</div><div style="font-size:9px;color:var(--text3)">Videos</div></div>'
-    +'</div>'
-    +'</div>';
-
-  // Avatar card
+  var pct=total>0?Math.round(((doneScenes+doneVideos)/(total*2))*100):0;
+  var html='<div style="font-size:12px;font-weight:600;color:var(--text)">⚡ Generation tracker</div>';
+  // Progress
+  html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
+    +'<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;color:var(--text2);font-weight:600">Overall</span><span style="font-size:11px;color:var(--yellow);font-weight:700">'+pct+'%</span></div>'
+    +'<div style="height:5px;background:var(--bg4);border-radius:99px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--yellow);border-radius:99px;transition:width 0.4s"></div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:8px">'
+    +'<div style="text-align:center"><div style="font-size:14px;font-weight:700;color:'+(sideDashboardData.avatar?'var(--green)':'var(--text3)')+'">'+( sideDashboardData.avatar?'✅':'⏳')+'</div><div style="font-size:9px;color:var(--text3)">Avatar</div></div>'
+    +'<div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--amber)">'+doneScenes+'/'+total+'</div><div style="font-size:9px;color:var(--text3)">Scenes</div></div>'
+    +'<div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--purple)">'+doneVideos+'/'+total+'</div><div style="font-size:9px;color:var(--text3)">Videos</div></div>'
+    +'</div></div>';
+  // Avatar
   if(sideDashboardData.avatar){
     html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
-      +'<div style="font-size:11px;font-weight:600;color:var(--yellow);margin-bottom:8px">👤 Avatar</div>'
-      +'<img src="'+sideDashboardData.avatar+'" style="width:100%;border-radius:var(--radius);object-fit:cover;max-height:200px"/>'
+      +'<div style="font-size:11px;font-weight:600;color:var(--yellow);margin-bottom:6px">👤 Avatar</div>'
+      +'<img src="'+sideDashboardData.avatar+'" style="width:100%;border-radius:var(--radius);object-fit:cover;max-height:180px"/>'
       +'</div>';
   }
-
-  // Scene images grid
+  // Scenes grid
   if(doneScenes>0){
     html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
-      +'<div style="font-size:11px;font-weight:600;color:var(--amber);margin-bottom:8px">🎨 Scene images ('+doneScenes+'/'+totalScenes+')</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">';
-    for(var i=0;i<totalScenes;i++){
+      +'<div style="font-size:11px;font-weight:600;color:var(--amber);margin-bottom:6px">🎨 Scenes ('+doneScenes+'/'+total+')</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">';
+    for(var i=0;i<total;i++){
       var s=sideDashboardData.scenes[i];
-      if(s){
-        html+='<div style="position:relative;border-radius:var(--radius);overflow:hidden">'
-          +'<img src="'+s.url+'" style="width:100%;aspect-ratio:9/16;object-fit:cover"/>'
-          +'<div style="position:absolute;bottom:2px;left:2px;font-size:8px;background:rgba(0,0,0,0.7);color:#fff;padding:1px 4px;border-radius:2px">S'+( s.num||i+1)+'</div>'
-          +'</div>';
-      } else {
-        html+='<div style="aspect-ratio:9/16;background:var(--bg4);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3)">'+( i+1)+'</div>';
-      }
+      if(s){html+='<div style="position:relative;border-radius:4px;overflow:hidden"><img src="'+s.url+'" style="width:100%;aspect-ratio:9/16;object-fit:cover"/><div style="position:absolute;bottom:2px;left:2px;font-size:8px;background:rgba(0,0,0,0.7);color:#fff;padding:1px 3px;border-radius:2px">S'+(s.num||i+1)+'</div></div>';}
+      else{html+='<div style="aspect-ratio:9/16;background:var(--bg4);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3)">'+(i+1)+'</div>';}
     }
     html+='</div></div>';
   }
-
-  // Video prompts/outputs
+  // Videos
   if(Object.keys(sideDashboardData.videos).length>0){
     html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
-      +'<div style="font-size:11px;font-weight:600;color:var(--purple);margin-bottom:8px">🎬 Video prompts</div>';
-    Object.keys(sideDashboardData.videos).forEach(function(idx){
-      var v=sideDashboardData.videos[idx];
-      html+='<div style="padding:6px;background:var(--bg3);border-radius:var(--radius);margin-bottom:6px">'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
-        +'<span style="font-size:10px;font-weight:600;color:var(--text2)">Scene '+(parseInt(idx)+1)+'</span>'
-        +'<span style="font-size:9px;color:var(--purple)">'+( v.tool||'')+'</span>'
-        +'</div>';
-      if(v.url){
-        html+='<a href="'+v.url+'" target="_blank" style="font-size:10px;color:var(--yellow)">▶ Open video</a>';
-      } else if(v.prompt){
-        html+='<div style="font-size:9px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">'+v.prompt.substring(0,80)+'...</div>';
-      }
+      +'<div style="font-size:11px;font-weight:600;color:var(--purple);margin-bottom:6px">🎬 Video prompts</div>';
+    Object.keys(sideDashboardData.videos).forEach(function(i){
+      var v=sideDashboardData.videos[i];
+      html+='<div style="padding:5px;background:var(--bg3);border-radius:var(--radius);margin-bottom:4px">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:10px;font-weight:600;color:var(--text2)">Scene '+(parseInt(i)+1)+'</span><span style="font-size:9px;color:var(--purple)">'+(v.tool||'')+'</span></div>';
+      if(v.url){html+='<a href="'+v.url+'" target="_blank" style="font-size:10px;color:var(--yellow)">▶ Open video</a>';}
+      else if(v.prompt){html+='<div style="font-size:9px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+v.prompt.substring(0,70)+'...</div>';}
       html+='</div>';
     });
     html+='</div>';
   }
-
   dash.innerHTML=html;
+}
+
+// Generate video per scene with VEO 3 brain
+async function generateSceneVideo(idx,tool){
+  var scene=autoScenes[idx];
+  if(!scene){showNotif('No scene found','error');return;}
+  var statusEl=document.getElementById('scene-video-status-'+idx);
+  if(statusEl)statusEl.textContent='⚡ Building VEO 3 prompt...';
+  // ─── Call Claude VEO 3 brain ───
+  var optimizedPrompt='';
+  try{
+    var vpRes=await fetch('/api/video-prompt',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        sceneNum:scene.num,
+        scenePrompt:scene.videoPrompt||scene.imagePrompt||scene.visual||'',
+        voiceover:scene.voiceover||'',
+        avatarDesc:autoProject?.avatar_desc||document.getElementById('auto-avatar-prompt')?.value||'',
+        clientName:autoProject?.client_name||'',
+        product:autoProject?.product||'',
+        brandPersonality:autoProject?.tone||'Friendly, relatable',
+        audience:autoProject?.audience||'',
+        videoSize:autoProject?.video_size||'9:16',
+        pricePoint:'Mid',tool:tool
+      })
+    });
+    var vpData=await vpRes.json();
+    if(vpData.success&&vpData.prompt){optimizedPrompt=vpData.prompt;if(statusEl)statusEl.textContent='✅ Prompt ready!';}
+  }catch(e){console.log('VEO brain error:',e);}
+  // Fallback
+  if(!optimizedPrompt){
+    var sizeTag=(autoProject?.video_size||'').includes('1:1')?'1:1 square':'9:16 vertical portrait, mobile-optimized';
+    optimizedPrompt=(scene.videoPrompt||scene.imagePrompt||scene.visual||'Filipino UGC video clip')+' '+sizeTag+', natural iPhone camera feel, handheld micro-jitter, RAW UGC look, natural lighting, no filters, no studio look. Captured as a real iPhone video frame, natural lighting, casual handheld framing, slight imperfections, visible pores, natural skin texture, candid moment. Negative: AI look, CGI, plastic skin, beauty filter, studio lighting, gimbal smooth.';
+    if(autoProject?.avatar_desc)optimizedPrompt='Featuring: '+autoProject.avatar_desc+'. '+optimizedPrompt;
+  }
+  updateSideDashboard(idx,'video',{tool:tool,prompt:optimizedPrompt});
+  if(tool==='higgsfield'){
+    navigator.clipboard.writeText(optimizedPrompt).catch(function(){});
+    window.open('https://higgsfield.ai/create','_blank');
+    if(statusEl)statusEl.innerHTML='✅ Copied! <span style="color:var(--yellow)">Paste in Higgsfield →</span>';
+    autoOutputs[idx]=autoOutputs[idx]||{};autoOutputs[idx].videoTool='higgsfield';autoOutputs[idx].videoPrompt=optimizedPrompt;
+    showNotif('VEO 3 prompt copied — paste in Higgsfield! 🎬','success');
+  } else {
+    var apiKey=getSecureApiKey(tool)||getToolSetting(tool+'-api-key');
+    if(!apiKey){showNotif('No API key for '+tool+' — set in Settings!','error');showPage('settings');return;}
+    try{
+      var endpoint=tool==='grok'?'/api/grok-generate':'/api/veo-generate';
+      var model=tool==='grok'?getToolSetting('grok-model','grok-imagine-video-1.5-preview'):getToolSetting('veo-model','veo-3');
+      var res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({prompt:optimizedPrompt,model:model,duration:8,type:'video'})});
+      var d=await res.json();
+      if(d.url){
+        if(statusEl)statusEl.innerHTML='✅ Video ready! <a href="'+d.url+'" target="_blank" style="color:var(--yellow)">Open →</a>';
+        if(autoProject?.id){await sb.from('project_outputs').insert({project_id:autoProject.id,user_id:currentUser.id,url:d.url,type:'video',label:'Scene '+scene.num+' video ('+tool+')'}).catch(function(){});}
+        autoOutputs[idx]=autoOutputs[idx]||{};autoOutputs[idx].videoUrl=d.url;autoOutputs[idx].videoTool=tool;
+        updateSideDashboard(idx,'video_done',{tool:tool,url:d.url});
+        showNotif('Scene '+scene.num+' video done! ✓','success');
+        var phase4=document.getElementById('auto-phase4');if(phase4){phase4.style.opacity='1';phase4.style.pointerEvents='auto';}
+      } else if(d.status==='processing'){
+        if(statusEl)statusEl.textContent='⏳ Processing...';
+      } else {
+        if(statusEl)statusEl.textContent='❌ '+(d.error||'Failed');
+        showNotif(tool+' error: '+(d.error||'Failed'),'error');
+      }
+    }catch(e){if(statusEl)statusEl.textContent='❌ '+e.message;}
+  }
 }
 
 function animateAllScenes(){
@@ -3555,8 +3572,7 @@ generateAvatar=async function(){
       var result=document.getElementById('avatar-result');
       if(preview)preview.src=permanentUrl;
       if(result)result.style.display='block';
-      if(status)status.textContent='✅ Avatar saved to storage!';
-      updateSideDashboard(-1,'avatar',{url:permanentUrl});
+      if(status)status.textContent='✅ Avatar saved to storage!';updateSideDashboard(-1,'avatar',{url:permanentUrl});
       // Save permanent URL to project outputs
       if(autoProject?.id){
         await sb.from('project_outputs').insert({
