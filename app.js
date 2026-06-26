@@ -1847,7 +1847,7 @@ var autoProject=null;
 var autoScenes=[];
 var autoAvatarUrl=null;
 var autoOutputs=[];
-var autoReferenceImageUrl=null; // Reference image URL for face consistency
+var autoReferenceImageUrl=null;
 
 async function loadAutomationProjects(){
   var sel=document.getElementById('auto-project-select');
@@ -1895,6 +1895,14 @@ async function loadAutomationProject(){
     var baseDesc=avatarParts.length>0?avatarParts.join(', '):'Filipino person';
     avatarEl.value=baseDesc+', ultra realistic 4K, natural Filipino look, UGC model';
   }
+  // Reset reference image when new project loaded
+  autoReferenceImageUrl=null;
+  var refStatus=document.getElementById('ref-image-status');
+  var refPreview=document.getElementById('ref-image-preview');
+  var refInput=document.getElementById('ref-image-input');
+  if(refStatus)refStatus.textContent='No reference — AI will generate from description';
+  if(refPreview)refPreview.style.display='none';
+  if(refInput)refInput.value='';
 }
 
 function renderAutomationScenes(){
@@ -2056,39 +2064,38 @@ async function generateAllScenes(){
 
 
 // ═══════════════════════════════════════
-// REFERENCE IMAGE UPLOAD — Phase 1
-// User uploads their own model photo
+// REFERENCE IMAGE — Upload your own model
 // ═══════════════════════════════════════
 
 function initReferenceUpload(){
-  var avatarSection=document.getElementById('auto-phase1');
-  if(!avatarSection||document.getElementById('ref-upload-section'))return;
-
+  if(document.getElementById('ref-upload-section'))return;
+  var genBtn=document.getElementById('gen-avatar-btn');
+  if(!genBtn)return;
   var refSection=document.createElement('div');
   refSection.id='ref-upload-section';
-  refSection.style.cssText='margin-top:12px;padding:12px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg)';
+  refSection.style.cssText='margin-top:10px;padding:12px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg)';
   refSection.innerHTML=
-    '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">📸 Use your own model photo</div>'
-    +'<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Upload a reference photo — AI will match this look for all scenes</div>'
+    '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px">📸 Use your own model photo</div>'
+    +'<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Upload a reference — AI will match this look for all scenes. No need to generate avatar!</div>'
     +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
-    +'<label style="cursor:pointer;padding:8px 14px;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.3);border-radius:var(--radius);color:var(--yellow);font-size:12px;font-weight:600">'
+    +'<label id="ref-upload-label" style="cursor:pointer;padding:8px 14px;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.3);border-radius:var(--radius);color:var(--yellow);font-size:12px;font-weight:600">'
     +'📁 Upload photo'
-    +'<input type="file" accept="image/*" id="ref-image-input" style="display:none" onchange="handleReferenceUpload(event)"/>'
+    +'<input type="file" accept="image/*" id="ref-image-input" style="display:none"/>'
     +'</label>'
-    +'<span id="ref-image-status" style="font-size:11px;color:var(--text3)">No reference — AI will generate from description</span>'
+    +'<span id="ref-image-status" style="font-size:11px;color:var(--text3)">No reference — AI generates from description</span>'
     +'</div>'
-    +'<div id="ref-image-preview" style="display:none;margin-top:10px">'
-    +'<img id="ref-preview-img" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius);border:1.5px solid var(--yellow)"/>'
-    +'<button onclick="clearReferenceImage()" style="margin-left:8px;font-size:10px;padding:3px 8px;background:var(--red-dim);border:0.5px solid rgba(239,68,68,0.3);color:var(--red);border-radius:var(--radius);cursor:pointer">✕ Remove</button>'
+    +'<div id="ref-image-preview" style="display:none;margin-top:10px;display:none;align-items:center;gap:10px">'
+    +'<img id="ref-preview-img" style="width:70px;height:70px;object-fit:cover;border-radius:var(--radius);border:2px solid var(--yellow)"/>'
+    +'<div>'
+    +'<div style="font-size:11px;font-weight:600;color:var(--green);margin-bottom:4px">✅ Reference set! Proceeding to scenes...</div>'
+    +'<button onclick="clearReferenceImage()" style="font-size:10px;padding:3px 8px;background:var(--red-dim);border:0.5px solid rgba(239,68,68,0.3);color:var(--red);border-radius:var(--radius);cursor:pointer">✕ Remove</button>'
+    +'</div>'
     +'</div>';
-
-  // Insert after avatar prompt textarea
-  var avatarResult=document.getElementById('avatar-result');
-  if(avatarResult){
-    avatarResult.parentNode.insertBefore(refSection,avatarResult.nextSibling);
-  } else {
-    avatarSection.appendChild(refSection);
-  }
+  // Insert after the generate avatar button
+  genBtn.parentNode.insertBefore(refSection,genBtn.parentNode.querySelector('#avatar-result')||genBtn.nextSibling);
+  // Attach file input handler
+  var fileInput=document.getElementById('ref-image-input');
+  if(fileInput)fileInput.addEventListener('change',handleReferenceUpload);
 }
 
 async function handleReferenceUpload(e){
@@ -2097,49 +2104,67 @@ async function handleReferenceUpload(e){
   var statusEl=document.getElementById('ref-image-status');
   var previewDiv=document.getElementById('ref-image-preview');
   var previewImg=document.getElementById('ref-preview-img');
-  if(statusEl)statusEl.textContent='⚡ Uploading to storage...';
+  if(statusEl)statusEl.textContent='⚡ Uploading...';
 
-  try{
-    // Read file as base64
-    var reader=new FileReader();
-    reader.onload=async function(ev){
-      var base64=ev.target.result;
-      // Show preview
-      if(previewImg)previewImg.src=base64;
-      if(previewDiv)previewDiv.style.display='block';
+  // Read as base64 first for preview
+  var reader=new FileReader();
+  reader.onload=async function(ev){
+    var base64=ev.target.result;
+    // Show preview immediately
+    if(previewImg)previewImg.src=base64;
+    if(previewDiv){previewDiv.style.display='flex';}
 
-      // Upload to Supabase Storage
+    // Try upload to Supabase Storage
+    try{
       var blob=await(await fetch(base64)).blob();
       var fileName='ref-'+Date.now()+'.jpg';
-      var{data,error}=await sb.storage.from('Ai creatives system storage').upload('references/'+fileName,blob,{
+      var filePath='references/'+fileName;
+      var{data,error}=await sb.storage.from('Ai creatives system storage').upload(filePath,blob,{
         contentType:'image/jpeg',upsert:true
       });
-      if(error){
-        if(statusEl)statusEl.textContent='❌ Upload failed — using base64';
-        // Fallback: use base64 directly
-        autoReferenceImageUrl=base64;
-      } else {
-        var{data:urlData}=sb.storage.from('Ai creatives system storage').getPublicUrl('references/'+fileName);
+      if(!error){
+        var{data:urlData}=sb.storage.from('Ai creatives system storage').getPublicUrl(filePath);
         autoReferenceImageUrl=urlData?.publicUrl||base64;
-        if(statusEl)statusEl.innerHTML='✅ Reference uploaded! <span style="color:var(--green);font-weight:600">Face will be used in all scenes</span>';
+      } else {
+        // Fallback to base64
+        autoReferenceImageUrl=base64;
+        console.log('Storage upload failed, using base64:',error.message);
       }
-      showNotif('Reference image set! All scenes will match this look 🔥','success');
-    };
-    reader.readAsDataURL(file);
-  }catch(err){
-    if(statusEl)statusEl.textContent='Error: '+err.message;
-  }
+    }catch(err){
+      autoReferenceImageUrl=base64;
+    }
+
+    if(statusEl)statusEl.innerHTML='✅ <strong style="color:var(--green)">Reference ready!</strong> Skipping avatar generation...';
+    showNotif('Reference image set! Proceeding to scenes 🔥','success');
+    
+    // AUTO-PROCEED — skip avatar generation, unlock scenes directly
+    setTimeout(function(){
+      autoAvatarUrl=autoReferenceImageUrl; // Use reference as avatar
+      var phase2=document.getElementById('auto-phase2');
+      if(phase2){phase2.style.opacity='1';phase2.style.pointerEvents='auto';}
+      var p1status=document.getElementById('phase1-status');
+      if(p1status){p1status.textContent='✅ Reference set';p1status.style.color='var(--green)';}
+      var p2status=document.getElementById('phase2-status');
+      if(p2status)p2status.textContent='Reference image active — generating scenes...';
+      updateSideDashboard(-1,'avatar',{url:autoReferenceImageUrl});
+    },800);
+  };
+  reader.readAsDataURL(file);
 }
 
 function clearReferenceImage(){
   autoReferenceImageUrl=null;
+  autoAvatarUrl=null;
   var statusEl=document.getElementById('ref-image-status');
   var previewDiv=document.getElementById('ref-image-preview');
-  var input=document.getElementById('ref-image-input');
-  if(statusEl)statusEl.textContent='No reference — AI will generate from description';
+  var fileInput=document.getElementById('ref-image-input');
+  if(statusEl)statusEl.textContent='No reference — AI generates from description';
   if(previewDiv)previewDiv.style.display='none';
-  if(input)input.value='';
-  showNotif('Reference cleared','success');
+  if(fileInput)fileInput.value='';
+  // Lock phase 2 back
+  var phase2=document.getElementById('auto-phase2');
+  if(phase2){phase2.style.opacity='0.4';phase2.style.pointerEvents='none';}
+  showNotif('Reference removed','success');
 }
 
 // ═══════════════════════════════════════
@@ -2164,13 +2189,10 @@ function initSideDashboard(){
   wrapper.appendChild(leftCol);
   wrapper.appendChild(rightCol);
   autoPage.appendChild(wrapper);
-  // Init reference upload after dashboard
-  setTimeout(function(){initReferenceUpload();},500);
+  setTimeout(function(){initReferenceUpload();},400);
 }
 
 function updateSideDashboard(idx,type,data){
-  var dash=document.getElementById('auto-side-dashboard');
-  if(!dash)return;
   if(type==='avatar'&&data.url)sideDashboardData.avatar=data.url;
   else if(type==='scene_done'&&data.url)sideDashboardData.scenes[idx]={url:data.url,num:data.num};
   else if(type==='video'&&data.prompt){sideDashboardData.videos[idx]=sideDashboardData.videos[idx]||{};sideDashboardData.videos[idx].tool=data.tool;sideDashboardData.videos[idx].prompt=data.prompt;}
@@ -2186,11 +2208,9 @@ function renderSideDashboard(){
   var doneVideos=Object.values(sideDashboardData.videos).filter(function(v){return v.url;}).length;
   var pct=total>0?Math.round(((doneScenes+doneVideos)/(total*2))*100):0;
   var html='<div style="font-size:12px;font-weight:600;color:var(--text)">⚡ Generation tracker</div>';
-  // Reference badge
   if(autoReferenceImageUrl){
-    html+='<div style="background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.3);border-radius:var(--radius);padding:8px 10px;font-size:11px;color:var(--yellow);font-weight:600">📸 Reference image active — face consistency ON</div>';
+    html+='<div style="background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.3);border-radius:var(--radius);padding:8px 10px;font-size:11px;color:var(--yellow);font-weight:600">📸 Reference active — face consistent</div>';
   }
-  // Progress
   html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
     +'<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;color:var(--text2);font-weight:600">Overall</span><span style="font-size:11px;color:var(--yellow);font-weight:700">'+pct+'%</span></div>'
     +'<div style="height:5px;background:var(--bg4);border-radius:99px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--yellow);border-radius:99px;transition:width 0.4s"></div></div>'
@@ -2201,7 +2221,7 @@ function renderSideDashboard(){
     +'</div></div>';
   if(sideDashboardData.avatar){
     html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
-      +'<div style="font-size:11px;font-weight:600;color:var(--yellow);margin-bottom:6px">👤 Avatar</div>'
+      +'<div style="font-size:11px;font-weight:600;color:var(--yellow);margin-bottom:6px">👤 '+(autoReferenceImageUrl?'Reference':'Avatar')+'</div>'
       +'<img src="'+sideDashboardData.avatar+'" style="width:100%;border-radius:var(--radius);object-fit:cover;max-height:180px"/>'
       +'</div>';
   }
@@ -2232,7 +2252,7 @@ function renderSideDashboard(){
   dash.innerHTML=html;
 }
 
-// Generate video per scene with VEO 3 brain
+// VEO 3 brain video generation
 async function generateSceneVideo(idx,tool){
   var scene=autoScenes[idx];
   if(!scene){showNotif('No scene found','error');return;}
@@ -2260,7 +2280,7 @@ async function generateSceneVideo(idx,tool){
   }catch(e){console.log('VEO brain error:',e);}
   if(!optimizedPrompt){
     var sizeTag=(autoProject?.video_size||'').includes('1:1')?'1:1 square':'9:16 vertical portrait, mobile-optimized';
-    optimizedPrompt=(scene.videoPrompt||scene.imagePrompt||scene.visual||'Filipino UGC video clip')+' '+sizeTag+', natural iPhone camera feel, handheld micro-jitter, RAW UGC look, natural lighting. Negative: AI look, CGI, plastic skin, studio lighting.';
+    optimizedPrompt=(scene.videoPrompt||scene.imagePrompt||scene.visual||'Filipino UGC video')+' '+sizeTag+', real iPhone camera feel, handheld micro-jitter, natural lighting, no filters, no studio look. Negative: AI look, CGI, plastic skin, studio lighting, beauty filter.';
     if(autoProject?.avatar_desc)optimizedPrompt='Featuring: '+autoProject.avatar_desc+'. '+optimizedPrompt;
   }
   updateSideDashboard(idx,'video',{tool:tool,prompt:optimizedPrompt});
@@ -2284,7 +2304,7 @@ async function generateSceneVideo(idx,tool){
         if(autoProject?.id){await sb.from('project_outputs').insert({project_id:autoProject.id,user_id:currentUser.id,url:d.url,type:'video',label:'Scene '+scene.num+' ('+tool+')'}).catch(function(){});}
         autoOutputs[idx]=autoOutputs[idx]||{};autoOutputs[idx].videoUrl=d.url;autoOutputs[idx].videoTool=tool;
         updateSideDashboard(idx,'video_done',{tool:tool,url:d.url});
-        showNotif('Scene '+scene.num+' video done! ✓','success');
+        showNotif('Scene '+scene.num+' done! ✓','success');
         var phase4=document.getElementById('auto-phase4');if(phase4){phase4.style.opacity='1';phase4.style.pointerEvents='auto';}
       } else if(d.status==='processing'){
         if(statusEl)statusEl.textContent='⏳ Processing...';
@@ -3671,8 +3691,7 @@ generateAvatar=async function(){
       var result=document.getElementById('avatar-result');
       if(preview)preview.src=permanentUrl;
       if(result)result.style.display='block';
-      if(status)status.textContent='✅ Avatar saved to storage!';
-      updateSideDashboard(-1,'avatar',{url:permanentUrl});
+      if(status)status.textContent='✅ Avatar saved to storage!';updateSideDashboard(-1,'avatar',{url:permanentUrl});
       // Save permanent URL to project outputs
       if(autoProject?.id){
         await sb.from('project_outputs').insert({
