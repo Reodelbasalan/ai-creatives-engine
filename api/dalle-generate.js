@@ -13,27 +13,67 @@ export default async function handler(req, res) {
     }
 
     // ═══════════════════════════════════════
-    // MASTER REALISM TRIGGER — appended to ALL
+    // UGC MODEL FORGE AI — ELITE REALISM ENGINE
+    // Source: Custom GPT system prompt (exact)
     // ═══════════════════════════════════════
-    const REALISM_SUFFIX = ` Shot on iPhone 15 Pro, natural daylight from window, casual handheld framing, slight imperfections, visible skin pores, natural uneven skin texture, real facial asymmetry, candid unposed moment, zero filters, zero retouching, zero beauty enhancement, shallow depth of field, subtle film grain, real-life soft shadows, human imperfections present. Negative prompt: AI-generated, CGI, plastic skin, beauty filter, symmetrical perfection, studio lighting, artificial glow, over-smooth skin, fashion shoot, overly perfect, posed model, magazine look, rendered, 3D, cartoon, anime, warped hands, extra fingers, text overlays, logos, watermarks.`;
+
+    const AVATAR_PREFIX = [
+      // CORE OBJECTIVE
+      "Ultra-realistic 4K-8K human model photo, indistinguishable from a real person captured on a real iPhone in a real-life candid moment.",
+
+      // CAMERA REALISM SYSTEM
+      "Shot on iPhone-quality camera, 35mm or 50mm lens equivalent, natural shallow depth of field, slightly imperfect focus (NOT hyper sharp everywhere).",
+
+      // LIGHTING — STRICT
+      "Natural lighting ONLY: window light or soft daylight, mild sun exposure, soft light falloff, realistic shadow behavior under chin, nose, neck. NO studio lighting, NO artificial glow.",
+
+      // IMAGE CHARACTERISTICS
+      "Slight grain RAW unprocessed feel, natural dynamic range, no HDR overkill, slight exposure imperfections.",
+
+      // HUMAN REALISM ENGINE — CRITICAL
+      "Skin and facial details: visible pores, natural skin texture NO smoothing, small blemishes or natural imperfections, faint under-eye circles, natural lips not glossy or perfect, slight facial asymmetry face is NOT perfectly balanced, baby hairs and flyaway strands.",
+
+      // EXPRESSION
+      "Natural facial expression relaxed not posed, micro-expressions subtle emotion, slight imperfection in gaze or posture.",
+
+      // UGC AUTHENTICITY
+      "Image feels candid caught in the moment, unpolished NOT commercial-perfect, real-life scenario not staged. Slightly imperfect framing, casual handheld camera angle, real environment interaction.",
+
+      // ENVIRONMENT
+      "Background feels lived-in not empty or fake, natural clutter or imperfections, real-life environment: room, cafe, street, or office. Lighting interacts naturally with environment.",
+
+      // ANTI-AI DETECTION — VERY STRICT
+      "STRICTLY NO: plastic or overly smooth skin, unrealistic symmetry, overly perfect lighting, CGI 3D rendered look, overly sharp or HDR-heavy images, artificial glow or beauty filter, unrealistic eyes or reflections, perfect hair strands must have randomness.",
+
+      // AD PERFORMANCE LAYER
+      "Relatable Filipino look morena or light morena, emotion-driven expression, scroll-stopping but natural, message-first visual potential.",
+
+    ].join(" ");
+
+    // MASTER REALISM TRIGGER — EXACT from custom GPT
+    const MASTER_TRIGGER = "Captured as a real iPhone photo, natural window lighting, casual framing, slight imperfections, visible pores, natural skin texture, candid moment, unpolished RAW look, no filters, no retouching, shallow depth of field, subtle grain, real-life lighting behavior.";
+
+    const NEGATIVE = "Negative: AI-generated, CGI, cartoon, plastic skin, beauty filter, over-smooth skin, artificial glow, unrealistic symmetry, studio lighting, HDR, over-edited, fashion shoot, posed model, magazine look, rendered, 3D, anime, distorted face, warped hands, extra fingers, text overlays, logos, watermarks, perfect hair, artificial eyes.";
 
     // ═══════════════════════════════════════
-    // AVATAR — UGC Model Forge AI
-    // Ultra-realistic Filipino human, NOT a model
+    // SCENE — VEO 3 PH UGC aligned
     // ═══════════════════════════════════════
-    const AVATAR_PREFIX = `Hyperrealistic candid photo of a real Filipino person, 4K, indistinguishable from an actual iPhone snapshot. NOT a model, NOT a photoshoot — a real everyday person. Natural face with slight imperfections: visible pores, uneven skin tone, faint blemishes, natural under-eye area, slightly asymmetrical features, real hair with flyaways and baby hairs. Natural relaxed expression — not posed, not smiling perfectly, just existing naturally. Soft natural window light, realistic shadow falloff under nose and chin. Authentic Filipino look — morena or light morena skin tone, natural Filipino facial features. Real casual environment in background — blurred but recognizable Filipino home or café setting. Handheld iPhone camera feel — slight perspective imperfection, not perfectly centered. RAW unedited look, no beauty filter, no AI smoothing, no perfect lighting setup. `;
+    const SCENE_PREFIX = [
+      "Ultra-realistic Filipino UGC ad scene photo, looks exactly like a real iPhone candid shot.",
+      "Real Filipino everyday environment: lived-in home, condo, local cafe, vanity, or office with authentic Filipino details and natural clutter.",
+      "Person in scene looks like a real Filipino not a model, natural skin texture, real proportions, casual brand-appropriate attire.",
+      "Natural lighting from windows or ambient indoor light, realistic soft shadows, NO studio setup.",
+      "Brand props placed naturally: product packaging, phone in hand, receipts, everyday items.",
+      "Slightly imperfect handheld framing, natural depth of field, authentic UGC energy.",
+      "NOT staged, NOT commercial shoot, NOT over-lit. Real Filipino creator energy.",
+    ].join(" ");
 
-    // ═══════════════════════════════════════
-    // SCENE — VEO 3 PH UGC System
-    // Brand-aligned, real Filipino environment
-    // ═══════════════════════════════════════
-    const SCENE_PREFIX = `Hyperrealistic Filipino UGC ad scene, looks like a real iPhone candid photo. Real Filipino everyday environment — lived-in home, condo unit, local café, vanity corner, or small office with authentic Filipino details and natural clutter. The person in the scene must look like a real Filipino, not a model — natural skin texture, real proportions, casual attire appropriate to brand. Natural lighting from windows or ambient indoor light, realistic soft shadows. Brand-appropriate props — product packaging placed naturally, phone in hand, receipts, everyday items. Slightly imperfect framing as if handheld shot, natural depth of field, authentic UGC energy. NOT staged, NOT commercial shoot, NOT over-lit. Real Filipino creator energy. `;
-
+    // Build final prompt
     let enhancedPrompt;
     if (type === 'avatar') {
-      enhancedPrompt = AVATAR_PREFIX + prompt + REALISM_SUFFIX;
+      enhancedPrompt = AVATAR_PREFIX + " " + prompt + " " + MASTER_TRIGGER + " " + NEGATIVE;
     } else {
-      enhancedPrompt = SCENE_PREFIX + prompt + REALISM_SUFFIX;
+      enhancedPrompt = SCENE_PREFIX + " " + prompt + " " + MASTER_TRIGGER + " " + NEGATIVE;
     }
 
     const response = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro/predictions', {
