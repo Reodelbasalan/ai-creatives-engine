@@ -414,7 +414,7 @@ function showPage(page){
   if(page==='worklog')loadWorkLog();
   if(page==='client-dashboard')loadClientDashboard();
   if(page==='settings'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadSettings();}
-  if(page==='automation'){loadAutomationProjects();setTimeout(function(){initSideDashboard();},300);}
+  if(page==='automation'){loadAutomationProjects();setTimeout(function(){sideDashboardData={avatar:null,scenes:{},videos:{}};initSideDashboard();},300);}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
@@ -2022,7 +2022,20 @@ async function generateSceneImage(idx){
     var res=await fetch('/api/dalle-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,size:'1024x1024',type:'scene',referenceImageUrl:autoReferenceImageUrl||null})
+      body:JSON.stringify({
+        prompt:prompt,
+        size:'1024x1024',
+        type:'scene',
+        referenceImageUrl:autoReferenceImageUrl||null,
+        clientName:autoProject?.client_name||'',
+        product:autoProject?.product||'',
+        brandType:autoProject?.business_type||'',
+        audience:autoProject?.audience||'',
+        avatarDesc:autoProject?.avatar_desc||document.getElementById('auto-avatar-prompt')?.value||'',
+        tone:autoProject?.tone||'',
+        sceneNum:idx+1,
+        totalScenes:autoScenes.length
+      })
     });
     var d=await res.json();
     if(d.url){
@@ -3701,23 +3714,33 @@ var STORAGE_BUCKET='Ai creatives system storage';
 // Returns permanent Supabase URL or original URL if fails
 async function uploadImageToStorage(imageUrl, fileName){
   try{
-    // Fetch the image
-    var response=await fetch(imageUrl);
-    if(!response.ok)throw new Error('Failed to fetch image');
-    var blob=await response.blob();
+    var blob;
+    // Handle base64 data URL (from gpt-image-1)
+    if(imageUrl.startsWith('data:')){
+      var res=await fetch(imageUrl);
+      blob=await res.blob();
+    } else {
+      // Handle regular URL (from Flux/Replicate)
+      var response=await fetch(imageUrl);
+      if(!response.ok)throw new Error('Failed to fetch image');
+      blob=await response.blob();
+    }
     // Upload to Supabase Storage
     var filePath='images/'+fileName;
     var{data,error}=await sb.storage.from(STORAGE_BUCKET).upload(filePath,blob,{
       contentType:'image/png',
       upsert:true
     });
-    if(error){console.error('Storage upload error:',error);return imageUrl;}
-    // Get public URL
+    if(error){
+      console.error('Storage upload error:',error);
+      // For base64, return as-is (still displays in <img>)
+      return imageUrl;
+    }
     var{data:urlData}=sb.storage.from(STORAGE_BUCKET).getPublicUrl(filePath);
     return urlData?.publicUrl||imageUrl;
   }catch(e){
     console.error('Storage upload failed:',e);
-    return imageUrl; // Fallback to original URL
+    return imageUrl;
   }
 }
 
