@@ -1880,10 +1880,25 @@ async function loadAutomationProject(){
     autoScenes=parseBlueprint(data.blueprint);
     renderAutomationScenes();
   }
+  // AUTO-FILL avatar description with ultra realistic suffix
   var avatarEl=document.getElementById('auto-avatar-prompt');
-  if(avatarEl&&data.avatar_desc){avatarEl.value=data.avatar_desc+', 9:16 portrait, photorealistic, studio lighting';}
-  var avatarEl=document.getElementById('auto-avatar-prompt');
-  if(avatarEl&&data.avatar_desc){avatarEl.value=data.avatar_desc+', 9:16 portrait, photorealistic, studio lighting';}
+  if(avatarEl){
+    // Build smart avatar description from all available client details
+    var avatarParts=[];
+    if(data.avatar_desc)avatarParts.push(data.avatar_desc);
+    else if(data.voice_actor)avatarParts.push(data.voice_actor);
+    // Add brand/product context
+    if(data.business_type)avatarParts.push(data.business_type+' brand');
+    if(data.audience){
+      // Extract age/gender hints from audience
+      var aud=data.audience.toLowerCase();
+      if(aud.includes('women')||aud.includes('babae'))avatarParts.push('female');
+      else if(aud.includes('men')||aud.includes('lalaki'))avatarParts.push('male');
+    }
+    // Always append ultra realistic suffix
+    var baseDesc=avatarParts.length>0?avatarParts.join(', '):'Filipino person';
+    avatarEl.value=baseDesc+', ultra realistic 4K, natural Filipino look, UGC model';
+  }
 }
 
 function renderAutomationScenes(){
@@ -2085,7 +2100,6 @@ function renderSideDashboard(){
   var doneVideos=Object.values(sideDashboardData.videos).filter(function(v){return v.url;}).length;
   var pct=total>0?Math.round(((doneScenes+doneVideos)/(total*2))*100):0;
   var html='<div style="font-size:12px;font-weight:600;color:var(--text)">⚡ Generation tracker</div>';
-  // Progress
   html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
     +'<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;color:var(--text2);font-weight:600">Overall</span><span style="font-size:11px;color:var(--yellow);font-weight:700">'+pct+'%</span></div>'
     +'<div style="height:5px;background:var(--bg4);border-radius:99px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--yellow);border-radius:99px;transition:width 0.4s"></div></div>'
@@ -2094,14 +2108,12 @@ function renderSideDashboard(){
     +'<div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--amber)">'+doneScenes+'/'+total+'</div><div style="font-size:9px;color:var(--text3)">Scenes</div></div>'
     +'<div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--purple)">'+doneVideos+'/'+total+'</div><div style="font-size:9px;color:var(--text3)">Videos</div></div>'
     +'</div></div>';
-  // Avatar
   if(sideDashboardData.avatar){
     html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
       +'<div style="font-size:11px;font-weight:600;color:var(--yellow);margin-bottom:6px">👤 Avatar</div>'
       +'<img src="'+sideDashboardData.avatar+'" style="width:100%;border-radius:var(--radius);object-fit:cover;max-height:180px"/>'
       +'</div>';
   }
-  // Scenes grid
   if(doneScenes>0){
     html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
       +'<div style="font-size:11px;font-weight:600;color:var(--amber);margin-bottom:6px">🎨 Scenes ('+doneScenes+'/'+total+')</div>'
@@ -2113,15 +2125,14 @@ function renderSideDashboard(){
     }
     html+='</div></div>';
   }
-  // Videos
   if(Object.keys(sideDashboardData.videos).length>0){
     html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
-      +'<div style="font-size:11px;font-weight:600;color:var(--purple);margin-bottom:6px">🎬 Video prompts</div>';
+      +'<div style="font-size:11px;font-weight:600;color:var(--purple);margin-bottom:6px">🎬 Videos</div>';
     Object.keys(sideDashboardData.videos).forEach(function(i){
       var v=sideDashboardData.videos[i];
       html+='<div style="padding:5px;background:var(--bg3);border-radius:var(--radius);margin-bottom:4px">'
         +'<div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:10px;font-weight:600;color:var(--text2)">Scene '+(parseInt(i)+1)+'</span><span style="font-size:9px;color:var(--purple)">'+(v.tool||'')+'</span></div>';
-      if(v.url){html+='<a href="'+v.url+'" target="_blank" style="font-size:10px;color:var(--yellow)">▶ Open video</a>';}
+      if(v.url){html+='<a href="'+v.url+'" target="_blank" style="font-size:10px;color:var(--yellow)">▶ Open</a>';}
       else if(v.prompt){html+='<div style="font-size:9px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+v.prompt.substring(0,70)+'...</div>';}
       html+='</div>';
     });
@@ -2136,7 +2147,6 @@ async function generateSceneVideo(idx,tool){
   if(!scene){showNotif('No scene found','error');return;}
   var statusEl=document.getElementById('scene-video-status-'+idx);
   if(statusEl)statusEl.textContent='⚡ Building VEO 3 prompt...';
-  // ─── Call Claude VEO 3 brain ───
   var optimizedPrompt='';
   try{
     var vpRes=await fetch('/api/video-prompt',{
@@ -2157,10 +2167,9 @@ async function generateSceneVideo(idx,tool){
     var vpData=await vpRes.json();
     if(vpData.success&&vpData.prompt){optimizedPrompt=vpData.prompt;if(statusEl)statusEl.textContent='✅ Prompt ready!';}
   }catch(e){console.log('VEO brain error:',e);}
-  // Fallback
   if(!optimizedPrompt){
     var sizeTag=(autoProject?.video_size||'').includes('1:1')?'1:1 square':'9:16 vertical portrait, mobile-optimized';
-    optimizedPrompt=(scene.videoPrompt||scene.imagePrompt||scene.visual||'Filipino UGC video clip')+' '+sizeTag+', natural iPhone camera feel, handheld micro-jitter, RAW UGC look, natural lighting, no filters, no studio look. Captured as a real iPhone video frame, natural lighting, casual handheld framing, slight imperfections, visible pores, natural skin texture, candid moment. Negative: AI look, CGI, plastic skin, beauty filter, studio lighting, gimbal smooth.';
+    optimizedPrompt=(scene.videoPrompt||scene.imagePrompt||scene.visual||'Filipino UGC video clip')+' '+sizeTag+', natural iPhone camera feel, handheld micro-jitter, RAW UGC look, natural lighting, no filters. Captured as a real iPhone video frame, natural lighting, casual handheld framing, candid moment. Negative: AI look, CGI, plastic skin, beauty filter, studio lighting.';
     if(autoProject?.avatar_desc)optimizedPrompt='Featuring: '+autoProject.avatar_desc+'. '+optimizedPrompt;
   }
   updateSideDashboard(idx,'video',{tool:tool,prompt:optimizedPrompt});
@@ -2169,10 +2178,10 @@ async function generateSceneVideo(idx,tool){
     window.open('https://higgsfield.ai/create','_blank');
     if(statusEl)statusEl.innerHTML='✅ Copied! <span style="color:var(--yellow)">Paste in Higgsfield →</span>';
     autoOutputs[idx]=autoOutputs[idx]||{};autoOutputs[idx].videoTool='higgsfield';autoOutputs[idx].videoPrompt=optimizedPrompt;
-    showNotif('VEO 3 prompt copied — paste in Higgsfield! 🎬','success');
+    showNotif('VEO 3 prompt copied! 🎬','success');
   } else {
     var apiKey=getSecureApiKey(tool)||getToolSetting(tool+'-api-key');
-    if(!apiKey){showNotif('No API key for '+tool+' — set in Settings!','error');showPage('settings');return;}
+    if(!apiKey){showNotif('No API key for '+tool,'error');showPage('settings');return;}
     try{
       var endpoint=tool==='grok'?'/api/grok-generate':'/api/veo-generate';
       var model=tool==='grok'?getToolSetting('grok-model','grok-imagine-video-1.5-preview'):getToolSetting('veo-model','veo-3');
@@ -2180,8 +2189,8 @@ async function generateSceneVideo(idx,tool){
         body:JSON.stringify({prompt:optimizedPrompt,model:model,duration:8,type:'video'})});
       var d=await res.json();
       if(d.url){
-        if(statusEl)statusEl.innerHTML='✅ Video ready! <a href="'+d.url+'" target="_blank" style="color:var(--yellow)">Open →</a>';
-        if(autoProject?.id){await sb.from('project_outputs').insert({project_id:autoProject.id,user_id:currentUser.id,url:d.url,type:'video',label:'Scene '+scene.num+' video ('+tool+')'}).catch(function(){});}
+        if(statusEl)statusEl.innerHTML='✅ Ready! <a href="'+d.url+'" target="_blank" style="color:var(--yellow)">Open →</a>';
+        if(autoProject?.id){await sb.from('project_outputs').insert({project_id:autoProject.id,user_id:currentUser.id,url:d.url,type:'video',label:'Scene '+scene.num+' ('+tool+')'}).catch(function(){});}
         autoOutputs[idx]=autoOutputs[idx]||{};autoOutputs[idx].videoUrl=d.url;autoOutputs[idx].videoTool=tool;
         updateSideDashboard(idx,'video_done',{tool:tool,url:d.url});
         showNotif('Scene '+scene.num+' video done! ✓','success');
@@ -2190,7 +2199,6 @@ async function generateSceneVideo(idx,tool){
         if(statusEl)statusEl.textContent='⏳ Processing...';
       } else {
         if(statusEl)statusEl.textContent='❌ '+(d.error||'Failed');
-        showNotif(tool+' error: '+(d.error||'Failed'),'error');
       }
     }catch(e){if(statusEl)statusEl.textContent='❌ '+e.message;}
   }
