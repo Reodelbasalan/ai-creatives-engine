@@ -1869,12 +1869,34 @@ async function loadAutomationProject(){
   var{data}=await sb.from('projects').select('*').eq('id',sel.value).maybeSingle();
   autoProject=data;
   if(!data)return;
-  // Show project info
+  // Show ALL project info — full client details
   var info=document.getElementById('auto-project-info');
   if(info){
     info.style.display='block';
-    info.innerHTML='<strong>'+data.client_name+'</strong> · '+data.business_type+' · '+data.video_size
-      +'<br><span style="color:var(--text3);font-size:11px">Blueprint: '+( data.blueprint?data.blueprint.length+' chars':'Not generated')+'</span>';
+    var fields=[
+      ['Client',data.client_name],
+      ['Business Type',data.business_type],
+      ['Product',data.product],
+      ['Target Audience',data.audience],
+      ['Pain Point',data.pain_point],
+      ['USP',data.usp],
+      ['Goal',data.goal],
+      ['Language',data.language],
+      ['Video Size',data.video_size],
+      ['Tone',data.tone],
+      ['Avatar/Model',data.avatar_desc||data.voice_actor],
+      ['Brand Color',data.color_primary],
+      ['Emphasize',data.emphasize],
+    ].filter(function(f){return f[1];});
+    info.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">'
+      +fields.map(function(f){
+        return '<div style="background:var(--bg4);border-radius:var(--radius);padding:6px 8px">'
+          +'<div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:2px">'+f[0]+'</div>'
+          +'<div style="font-size:11px;color:var(--text2)">'+f[1]+'</div>'
+          +'</div>';
+      }).join('')
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--text3)">Blueprint: '+(data.blueprint?data.blueprint.length+' chars':'Not generated')+'</div>';
   }
   // Parse scenes from blueprint
   if(data.blueprint){
