@@ -4,20 +4,37 @@ export default async function handler(req, res) {
   }
   try {
     const { prompt, size = '1024x1024', type = 'scene' } = req.body;
-    if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
-
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
+    }
     const apiToken = process.env.REPLICATE_API_TOKEN;
-    if (!apiToken) return res.status(500).json({ error: 'REPLICATE_API_TOKEN not set in Vercel env vars' });
+    if (!apiToken) {
+      return res.status(500).json({ error: 'REPLICATE_API_TOKEN not set in Vercel env vars' });
+    }
 
-    const REALISM_SUFFIX = ` Captured as a real iPhone photo, natural window lighting, casual framing, slight imperfections, visible pores, natural skin texture, candid moment, unpolished RAW look, no filters, no retouching, shallow depth of field, subtle grain, real-life lighting behavior. Negative: AI look, CGI, cartoon, plastic skin, beauty filter, over-smooth skin, artificial glow, distorted face, warped hands, extra fingers, text overlays, logos, watermarks.`;
+    // ═══════════════════════════════════════
+    // MASTER REALISM TRIGGER — appended to ALL
+    // ═══════════════════════════════════════
+    const REALISM_SUFFIX = ` Shot on iPhone 15 Pro, natural daylight from window, casual handheld framing, slight imperfections, visible skin pores, natural uneven skin texture, real facial asymmetry, candid unposed moment, zero filters, zero retouching, zero beauty enhancement, shallow depth of field, subtle film grain, real-life soft shadows, human imperfections present. Negative prompt: AI-generated, CGI, plastic skin, beauty filter, symmetrical perfection, studio lighting, artificial glow, over-smooth skin, fashion shoot, overly perfect, posed model, magazine look, rendered, 3D, cartoon, anime, warped hands, extra fingers, text overlays, logos, watermarks.`;
 
-    const AVATAR_PREFIX = `Ultra-realistic 4K Filipino UGC human model, indistinguishable from real smartphone photo. iPhone-quality camera, 35mm lens, natural shallow depth of field, slightly imperfect focus. Natural lighting only — window light, soft daylight, realistic shadows. Slight grain, RAW unprocessed feel. Visible pores, natural skin texture, no smoothing, slight facial asymmetry, baby hairs, flyaway strands, faint under-eye circles, natural lips. Candid natural expression, micro-expressions. Slightly imperfect framing, handheld camera feel. Filipino UGC ad model, relatable Pinay look, emotion-driven, scroll-stopping but natural. `;
+    // ═══════════════════════════════════════
+    // AVATAR — UGC Model Forge AI
+    // Ultra-realistic Filipino human, NOT a model
+    // ═══════════════════════════════════════
+    const AVATAR_PREFIX = `Hyperrealistic candid photo of a real Filipino person, 4K, indistinguishable from an actual iPhone snapshot. NOT a model, NOT a photoshoot — a real everyday person. Natural face with slight imperfections: visible pores, uneven skin tone, faint blemishes, natural under-eye area, slightly asymmetrical features, real hair with flyaways and baby hairs. Natural relaxed expression — not posed, not smiling perfectly, just existing naturally. Soft natural window light, realistic shadow falloff under nose and chin. Authentic Filipino look — morena or light morena skin tone, natural Filipino facial features. Real casual environment in background — blurred but recognizable Filipino home or café setting. Handheld iPhone camera feel — slight perspective imperfection, not perfectly centered. RAW unedited look, no beauty filter, no AI smoothing, no perfect lighting setup. `;
 
-    const SCENE_PREFIX = `Ultra-realistic Filipino UGC ad scene, iPhone camera feel, 35mm lens, natural shallow depth of field. Real Filipino environment — lived-in bahay, condo, café, vanity, kitchen, or office with natural clutter. Natural lighting only — window light, soft daylight, realistic shadows. Filipino model in scene must look consistent — same face, skin tone, hairstyle, natural expression, visible pores, no beauty filter. Brand-aligned attire — casual pambahay for budget, clean minimalist for premium, polished natural for beauty. Include believable props — product packaging, phone, receipts, demo items. Slightly imperfect framing, handheld camera feel, candid moment. Real Filipino UGC creator energy — authentic, not staged. `;
+    // ═══════════════════════════════════════
+    // SCENE — VEO 3 PH UGC System
+    // Brand-aligned, real Filipino environment
+    // ═══════════════════════════════════════
+    const SCENE_PREFIX = `Hyperrealistic Filipino UGC ad scene, looks like a real iPhone candid photo. Real Filipino everyday environment — lived-in home, condo unit, local café, vanity corner, or small office with authentic Filipino details and natural clutter. The person in the scene must look like a real Filipino, not a model — natural skin texture, real proportions, casual attire appropriate to brand. Natural lighting from windows or ambient indoor light, realistic soft shadows. Brand-appropriate props — product packaging placed naturally, phone in hand, receipts, everyday items. Slightly imperfect framing as if handheld shot, natural depth of field, authentic UGC energy. NOT staged, NOT commercial shoot, NOT over-lit. Real Filipino creator energy. `;
 
-    const enhancedPrompt = type === 'avatar'
-      ? AVATAR_PREFIX + prompt + REALISM_SUFFIX
-      : SCENE_PREFIX + prompt + REALISM_SUFFIX;
+    let enhancedPrompt;
+    if (type === 'avatar') {
+      enhancedPrompt = AVATAR_PREFIX + prompt + REALISM_SUFFIX;
+    } else {
+      enhancedPrompt = SCENE_PREFIX + prompt + REALISM_SUFFIX;
+    }
 
     const response = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro/predictions', {
       method: 'POST',
@@ -32,20 +49,26 @@ export default async function handler(req, res) {
           aspect_ratio: size === '1024x1024' ? '1:1' : '9:16',
           output_format: 'jpg',
           output_quality: 95,
-          safety_tolerance: 2
+          safety_tolerance: 2,
+          prompt_upsampling: true
         }
       })
     });
 
     const data = await response.json();
     if (!response.ok) {
-      return res.status(response.status).json({ error: data.detail || data.error || 'Replicate API error' });
+      return res.status(response.status).json({
+        error: data.detail || data.error || 'Replicate API error'
+      });
     }
 
     const imageUrl = Array.isArray(data.output) ? data.output[0] : data.output;
-    if (!imageUrl) return res.status(500).json({ error: 'No image generated' });
+    if (!imageUrl) {
+      return res.status(500).json({ error: 'No image generated' });
+    }
 
     return res.status(200).json({ success: true, url: imageUrl });
+
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
