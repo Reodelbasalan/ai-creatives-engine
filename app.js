@@ -3771,10 +3771,14 @@ generateAvatar=async function(){
     });
     var d=await res.json();
     if(d.url){
-      if(status)status.textContent='⚡ Saving to storage...';
-      // Upload to Supabase Storage
-      var fileName=genFileName('avatar');
-      var permanentUrl=await uploadImageToStorage(d.url,fileName);
+      if(status)status.textContent='⚡ Saving...';
+      var permanentUrl;
+      if(d.url.startsWith('data:')){
+        var fileName=genFileName('avatar');
+        permanentUrl=await uploadImageToStorage(d.url,fileName);
+      } else {
+        permanentUrl=d.url;
+      }
       autoAvatarUrl=permanentUrl;
       var preview=document.getElementById('avatar-preview');
       var result=document.getElementById('avatar-result');
@@ -3826,9 +3830,16 @@ generateSceneImage=async function(idx,dalleSize){
     var d=await res.json();
     if(d.url){
       if(statusEl)statusEl.textContent='💾';
-      // Upload to Supabase Storage
-      var fileName=genFileName('scene',idx);
-      var permanentUrl=await uploadImageToStorage(d.url,fileName);
+      var permanentUrl;
+      // If server already returned a permanent Supabase URL, use it directly
+      if(d.url.startsWith('data:')){
+        // base64 fallback — still upload from client side
+        var fileName=genFileName('scene',idx);
+        permanentUrl=await uploadImageToStorage(d.url,fileName);
+      } else {
+        // Already a permanent URL from server-side upload
+        permanentUrl=d.url;
+      }
       if(container){
         var aspectStyle=isSquare?'aspect-ratio:1/1':'aspect-ratio:9/16';
         container.innerHTML='<img src="'+permanentUrl+'" style="width:100%;height:100%;object-fit:cover;max-height:200px"/>'
