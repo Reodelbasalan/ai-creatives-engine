@@ -73,6 +73,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border3);border-radius:4px}
 ::-webkit-scrollbar-thumb:hover{background:var(--yellow)}
+
+/* AUTH */
 #auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);background-image:radial-gradient(ellipse at 20% 50%,rgba(250,204,21,0.03) 0%,transparent 60%)}
 .auth-box{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-xl);padding:2.5rem;width:400px;box-shadow:var(--shadow-lg);animation:fadeUp 0.4s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
@@ -86,8 +88,12 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .auth-btn:hover{background:var(--yellow2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(250,204,21,0.3)}
 .auth-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
 .auth-err{color:var(--red);font-size:12px;margin-top:8px;display:none;padding:8px 12px;background:var(--red-dim);border-radius:var(--radius)}
+
+/* LAYOUT */
 #app{display:none;min-height:100vh}
 .layout{display:flex;min-height:100vh}
+
+/* SIDEBAR */
 .sidebar{width:224px;background:var(--bg2);border-right:0.5px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh}
 .sidebar-logo{padding:1.25rem;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px}
 .logo-icon{width:30px;height:30px;background:var(--yellow);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -107,6 +113,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .user-email{font-size:11px;color:var(--yellow);margin-top:2px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .logout-btn{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;margin-top:8px;transition:color 0.15s}
 .logout-btn:hover{color:var(--red)}
+
+/* MAIN */
 .main-content{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:54px;border-bottom:0.5px solid var(--border);background:var(--bg);flex-shrink:0}
 .topbar-left{display:flex;align-items:center;gap:12px}
@@ -117,9 +125,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .yellow-btn:hover{background:var(--yellow2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(250,204,21,0.25)}
 .yellow-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
 .content{flex:1;overflow-y:auto;padding:1.5rem}
+
+/* PAGES */
 .page{display:none;animation:fadeIn 0.2s ease}
 .page.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* STATS */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
 .stat-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem 1.25rem;transition:all 0.2s;position:relative;overflow:hidden}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
@@ -132,6 +144,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .stat-icon svg{width:14px;height:14px}
 .stat-label{font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.07em;font-weight:600}
 .stat-val{font-size:28px;font-weight:700;letter-spacing:-1.5px;line-height:1}
+
+/* PIPELINE */
 .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1.5rem}
 .pipe-col{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px;min-height:140px}
 .pipe-col-head{display:flex;align-items:center;gap:6px;margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px solid var(--border)}
@@ -143,8 +157,12 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .pipe-card-name{font-size:11.5px;color:var(--text);font-weight:600;margin-bottom:2px}
 .pipe-card-type{font-size:9px;color:var(--text3);text-transform:uppercase}
 .pipe-empty{font-size:11px;color:var(--text4);text-align:center;padding:1.5rem 0}
+
+/* SECTION */
 .section-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;font-weight:600}
 .section-divider{height:0.5px;background:var(--border);margin:1.25rem 0}
+
+/* TABLE */
 .data-table{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
 .table-head{display:grid;padding:10px 16px;border-bottom:0.5px solid var(--border);background:var(--bg3)}
 .table-head span{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;font-weight:600}
@@ -158,6 +176,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .row-date{font-size:10px;color:var(--text3)}
 .table-empty{text-align:center;padding:3rem;color:var(--text3);font-size:13px}
 .table-empty-icon{font-size:28px;margin-bottom:8px;opacity:0.3}
+
+/* BADGES */
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;padding:3px 9px;border-radius:20px;font-weight:600;white-space:nowrap}
 .badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .badge-new{background:var(--bg4);color:var(--text2);border:0.5px solid var(--border3)}
@@ -170,6 +190,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .badge-prod::before{background:var(--amber)}
 .badge-done{background:#0f2a0f;color:#4caf50;border:0.5px solid rgba(76,175,80,0.2)}
 .badge-done::before{background:#4caf50}
+
+/* FORM */
 .form-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:12px}
 .form-card-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
 .form-card-title span{font-size:14px}
@@ -187,6 +209,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .tone-opt{padding:10px 6px;font-size:11px;text-align:center;border:0.5px solid var(--border2);border-radius:var(--radius);cursor:pointer;color:var(--text3);background:var(--bg3);transition:all 0.15s;line-height:1.4;font-weight:500}
 .tone-opt:hover{color:var(--text2);background:var(--bg4)}
 .tone-opt.selected{background:var(--yellow-dim);color:var(--yellow);border-color:var(--yellow);font-weight:600}
+
+/* UPLOAD */
 .upload-area{border:1px dashed var(--border2);border-radius:var(--radius-lg);padding:1.5rem;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
 .upload-area:hover{border-color:var(--yellow);background:var(--yellow-dim)}
 .upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
@@ -195,6 +219,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .upload-label span{color:var(--yellow);font-weight:500}
 .uploaded-images{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-top:10px}
 .uploaded-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;border:0.5px solid var(--border2)}
+
+/* NOTES */
 .notes-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 .note-item{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
 .note-dot{width:6px;height:6px;border-radius:50%;background:var(--yellow);flex-shrink:0;margin-top:6px}
@@ -206,9 +232,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .note-input:focus{border-color:var(--yellow)}
 .note-add-btn{background:var(--bg4);border:0.5px solid var(--border2);border-radius:var(--radius);padding:8px 14px;color:var(--text2);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;transition:all 0.15s}
 .note-add-btn:hover{background:var(--yellow-dim);color:var(--yellow);border-color:var(--yellow)}
+
+/* TABS */
 .input-tab{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:8px 16px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;font-family:"Inter",sans-serif;transition:all 0.15s}
 .input-tab:hover{color:var(--text2);background:var(--bg4)}
 .input-tab.active{background:var(--yellow-dim);color:var(--yellow);border-color:var(--yellow);font-weight:600}
+
+/* GENERATE AREA */
 .generate-area{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-top:12px}
 .blueprint-box{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:1.25rem;font-size:11.5px;line-height:1.9;color:var(--text2);white-space:pre-wrap;max-height:500px;overflow-y:auto;font-family:'Courier New',monospace;word-break:break-word}
 .blueprint-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
@@ -216,6 +246,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .ghost-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--border3)}
 .spinner{display:inline-block;width:13px;height:13px;border:2px solid var(--border2);border-top-color:var(--yellow);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
 .modal-overlay.open{display:flex;animation:fadeIn 0.2s ease}
 .modal{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-xl);width:100%;max-width:780px;max-height:90vh;overflow-y:auto;padding:1.5rem;box-shadow:var(--shadow-lg)}
@@ -229,739 +261,1324 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .detail-val{font-size:13px;color:var(--text);font-weight:500}
 .status-select{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:7px 10px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none}
 .status-select:focus{border-color:var(--yellow)}
+
+/* EDITOR */
 .editor-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:10px;transition:all 0.2s}
 .editor-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
 .editor-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:1rem}
 .editor-card-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
 .editor-card-meta{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em}
 .editor-card-actions{display:flex;gap:8px}
+
+/* USERS */
 .user-table-cols{grid-template-columns:2fr 1fr 1fr 80px}
 .user-role-badge{display:inline-block;font-size:9.5px;padding:3px 9px;border-radius:20px;font-weight:600}
 .role-admin{background:var(--yellow-dim);color:var(--yellow);border:0.5px solid rgba(250,204,21,0.2)}
 .role-editor{background:var(--purple-dim);color:var(--purple);border:0.5px solid rgba(127,119,221,0.2)}
 .add-user-form{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.25rem}
+
+/* NOTIF */
 .notif{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:12px 18px;font-size:13px;color:var(--text);z-index:999;display:none;box-shadow:var(--shadow-lg);animation:slideIn 0.3s ease;font-weight:500}
 @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 .notif.show{display:flex;align-items:center;gap:8px}
 .notif.success{border-color:rgba(34,197,94,0.3);color:var(--green)}
 .notif.error{border-color:rgba(239,68,68,0.3);color:var(--red)}
-.session-warning{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--amber-dim);border:0.5px solid var(--amber);border-radius:var(--radius-lg);padding:10px 20px;font-size:12px;color:var(--amber);font-weight:600;z-index:9999;display:none;box-shadow:var(--shadow-lg);}
+/* SECURITY STYLES */
+.session-warning{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:var(--amber-dim);border:0.5px solid var(--amber);
+  border-radius:var(--radius-lg);padding:10px 20px;font-size:12px;
+  color:var(--amber);font-weight:600;z-index:9999;display:none;
+  box-shadow:var(--shadow-lg);
+}
+/* AUTO-SAVE PULSE */
 @keyframes savePulse{0%{opacity:1}50%{opacity:0.5}100%{opacity:1}}
 #draft-saved-indicator.saving{animation:savePulse 1s infinite;}
-
-/* ─── ENHANCED ROOT VARIABLES ─── */
-:root {
-  --yellow-glow: rgba(250,204,21,0.12);
-  --yellow-glow-strong: rgba(250,204,21,0.2);
-  --gold-border: rgba(250,204,21,0.15);
-  --shadow-gold: 0 0 20px rgba(250,204,21,0.08);
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.4);
-  --shadow-hover: 0 8px 32px rgba(0,0,0,0.6);
-  --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
-}
-
-/* ─── PREMIUM SCROLLBAR ─── */
-::-webkit-scrollbar { width: 3px; height: 3px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--yellow-dim); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--yellow); }
-
-/* ─── PREMIUM AUTH SCREEN ─── */
-#auth-screen {
-  background: var(--bg);
-  background-image: 
-    radial-gradient(ellipse at 20% 50%, rgba(250,204,21,0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(250,204,21,0.02) 0%, transparent 50%);
-}
-
-.auth-box {
-  border: 0.5px solid var(--gold-border);
-  box-shadow: var(--shadow-gold), 0 24px 64px rgba(0,0,0,0.8);
-  position: relative;
-  overflow: hidden;
-}
-
-.auth-box::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--yellow), transparent);
-  opacity: 0.6;
-}
-
-.auth-logo {
-  font-size: 22px;
-  letter-spacing: -0.8px;
-  background: linear-gradient(135deg, var(--yellow), var(--yellow2));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.auth-input:focus {
-  border-color: var(--yellow);
-  box-shadow: 0 0 0 3px var(--yellow-glow), 0 0 12px rgba(250,204,21,0.1);
-}
-
-.auth-btn {
-  background: var(--yellow);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  box-shadow: 0 4px 16px rgba(250,204,21,0.2);
-  transition: var(--transition);
-}
-
-.auth-btn:hover {
-  background: var(--yellow2);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(250,204,21,0.35);
-}
-
-/* ─── PREMIUM SIDEBAR ─── */
-.sidebar {
-  background: var(--bg2);
-  border-right: 0.5px solid var(--gold-border);
-  position: relative;
-}
-
-.sidebar::after {
-  content: '';
-  position: absolute;
-  top: 0; right: -1px;
-  width: 1px; height: 100%;
-  background: linear-gradient(180deg, transparent, rgba(250,204,21,0.08), transparent);
-}
-
-.sidebar-logo {
-  padding: 1.1rem 1.25rem;
-  border-bottom: 0.5px solid var(--gold-border);
-}
-
-.logo-icon {
-  background: var(--yellow);
-  box-shadow: 0 2px 12px rgba(250,204,21,0.3);
-  transition: var(--transition);
-}
-
-.logo-mark {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: -0.4px;
-}
-
-.nav-section {
-  font-size: 9px;
-  color: rgba(250,204,21,0.3);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  padding: 14px 10px 4px;
-  font-weight: 600;
-}
-
-.nav-item {
-  padding: 7px 10px;
-  font-size: 12.5px;
-  color: var(--text3);
-  border-radius: var(--radius);
-  transition: var(--transition);
-  position: relative;
-}
-
-.nav-item:hover {
-  color: var(--text2);
-  background: rgba(255,255,255,0.03);
-}
-
-.nav-item.active {
-  color: var(--yellow);
-  background: var(--yellow-dim);
-  border: 0.5px solid var(--gold-border);
-  font-weight: 600;
-}
-
-.nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: -8px; top: 50%;
-  transform: translateY(-50%);
-  width: 3px; height: 60%;
-  background: var(--yellow);
-  border-radius: 0 3px 3px 0;
-  box-shadow: 0 0 8px var(--yellow);
-}
-
-.nav-badge {
-  background: var(--yellow);
-  color: #111;
-  font-size: 9px;
-  font-weight: 800;
-  padding: 1px 6px;
-  border-radius: 20px;
-  box-shadow: 0 2px 6px rgba(250,204,21,0.3);
-}
-
-.user-card {
-  background: var(--bg3);
-  border: 0.5px solid var(--gold-border);
-  border-radius: var(--radius);
-}
-
-/* ─── PREMIUM TOPBAR ─── */
-.topbar {
-  background: var(--bg);
-  border-bottom: 0.5px solid var(--gold-border);
-  backdrop-filter: blur(10px);
-}
-
-.topbar-title {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
-}
-
-.yellow-btn {
-  background: var(--yellow);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  box-shadow: 0 2px 8px rgba(250,204,21,0.2);
-  transition: var(--transition);
-}
-
-.yellow-btn:hover:not(:disabled) {
-  background: var(--yellow2);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(250,204,21,0.35);
-}
-
-.yellow-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-/* ─── PREMIUM STAT CARDS ─── */
-.stat-card {
-  background: var(--bg2);
-  border: 0.5px solid rgba(255,255,255,0.04);
-  border-radius: var(--radius-lg);
-  padding: 1.1rem 1.25rem;
-  transition: var(--transition);
-  position: relative;
-  overflow: hidden;
-  cursor: default;
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  transition: var(--transition);
-}
-
-.stat-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0; right: 0;
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  opacity: 0.04;
-  transition: var(--transition);
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--gold-border);
-  box-shadow: var(--shadow-hover), var(--shadow-gold);
-}
-
-.stat-card:hover::after { opacity: 0.08; }
-
-.stat-card.c-yellow::before { background: var(--yellow); box-shadow: 0 0 8px rgba(250,204,21,0.4); }
-.stat-card.c-yellow::after { background: var(--yellow); }
-.stat-card.c-purple::before { background: var(--purple); box-shadow: 0 0 8px rgba(127,119,221,0.3); }
-.stat-card.c-purple::after { background: var(--purple); }
-.stat-card.c-green::before { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,0.3); }
-.stat-card.c-green::after { background: var(--green); }
-.stat-card.c-amber::before { background: var(--amber); box-shadow: 0 0 8px rgba(245,158,11,0.3); }
-.stat-card.c-amber::after { background: var(--amber); }
-
-.stat-label {
-  font-size: 10px;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.stat-val {
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -2px;
-  line-height: 1;
-}
-
-.stat-icon {
-  width: 30px; height: 30px;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ─── PREMIUM PIPELINE ─── */
-.pipeline {
-  display: grid;
-  grid-template-columns: repeat(5,1fr);
-  gap: 8px;
-  margin-bottom: 1.5rem;
-}
-
-.pipe-col {
-  background: var(--bg2);
-  border: 0.5px solid rgba(255,255,255,0.04);
-  border-radius: var(--radius-lg);
-  padding: 12px;
-  min-height: 140px;
-  transition: var(--transition);
-}
-
-.pipe-col:hover {
-  border-color: var(--gold-border);
-}
-
-.pipe-col-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 0.5px solid rgba(255,255,255,0.04);
-}
-
-.pipe-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  box-shadow: 0 0 6px currentColor;
-  flex-shrink: 0;
-}
-
-.pipe-card {
-  background: var(--bg3);
-  border: 0.5px solid rgba(255,255,255,0.04);
-  border-radius: var(--radius);
-  padding: 9px 10px;
-  margin-bottom: 6px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.pipe-card:hover {
-  background: var(--bg4);
-  border-color: var(--yellow);
-  transform: translateX(2px);
-  box-shadow: -2px 0 8px rgba(250,204,21,0.1);
-}
-
-.pipe-card-name {
-  font-size: 12px;
-  color: var(--text);
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-.pipe-card-type {
-  font-size: 9px;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* ─── PREMIUM DATA TABLE ─── */
-.data-table {
-  background: var(--bg2);
-  border: 0.5px solid rgba(255,255,255,0.04);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.table-head {
-  background: var(--bg3);
-  border-bottom: 0.5px solid var(--gold-border);
-  padding: 10px 16px;
-}
-
-.table-head span {
-  font-size: 9px;
-  color: rgba(250,204,21,0.4);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 700;
-}
-
-.table-row {
-  border-bottom: 0.5px solid rgba(255,255,255,0.03);
-  transition: var(--transition);
-}
-
-.table-row:hover {
-  background: rgba(250,204,21,0.02);
-}
-
-.row-name {
-  font-size: 13px;
-  color: var(--text);
-  font-weight: 600;
-  letter-spacing: -0.1px;
-}
-
-.row-sub { font-size: 10px; color: var(--text3); }
-.row-meta { font-size: 11.5px; color: var(--text2); }
-.row-date { font-size: 10px; color: var(--text3); }
-
-/* ─── PREMIUM BADGES ─── */
-.badge {
-  font-size: 9.5px;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.badge-new { background: rgba(255,255,255,0.05); color: var(--text2); border: 0.5px solid rgba(255,255,255,0.08); }
-.badge-ai { background: var(--purple-dim); color: var(--purple); border: 0.5px solid rgba(127,119,221,0.25); }
-.badge-ready { background: var(--green-dim); color: var(--green); border: 0.5px solid rgba(34,197,94,0.25); }
-.badge-prod { background: var(--amber-dim); color: var(--amber); border: 0.5px solid rgba(245,158,11,0.25); }
-.badge-done { background: rgba(76,175,80,0.08); color: #4caf50; border: 0.5px solid rgba(76,175,80,0.2); }
-
-/* ─── PREMIUM FORM INPUTS ─── */
-.form-card {
-  background: var(--bg2);
-  border: 0.5px solid rgba(255,255,255,0.04);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
-  margin-bottom: 12px;
-  transition: var(--transition);
-}
-
-.form-card:hover {
-  border-color: var(--gold-border);
-}
-
-.form-card-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(250,204,21,0.5);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.form-input, .form-select, .form-textarea {
-  background: var(--bg3);
-  border: 0.5px solid rgba(255,255,255,0.06);
-  color: var(--text);
-  transition: var(--transition);
-}
-
-.form-input:hover, .form-select:hover, .form-textarea:hover {
-  border-color: rgba(255,255,255,0.1);
-}
-
-.form-input:focus, .form-select:focus, .form-textarea:focus {
-  border-color: var(--yellow);
-  background: var(--bg4);
-  box-shadow: 0 0 0 3px var(--yellow-glow), 0 0 16px rgba(250,204,21,0.06);
-}
-
-.form-label {
-  font-size: 11px;
-  color: var(--text2);
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-
-/* ─── PREMIUM GHOST BUTTON ─── */
-.ghost-btn {
-  background: transparent;
-  border: 0.5px solid rgba(255,255,255,0.08);
-  border-radius: var(--radius);
-  color: var(--text2);
-  font-family: 'Inter', sans-serif;
-  transition: var(--transition);
-}
-
-.ghost-btn:hover {
-  background: rgba(255,255,255,0.04);
-  border-color: rgba(255,255,255,0.15);
-  color: var(--text);
-}
-
-/* ─── PREMIUM MODAL ─── */
-.modal {
-  background: var(--bg2);
-  border: 0.5px solid var(--gold-border);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 32px 80px rgba(0,0,0,0.9), var(--shadow-gold);
-  position: relative;
-}
-
-.modal::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(250,204,21,0.3), transparent);
-}
-
-.modal-overlay {
-  background: rgba(0,0,0,0.85);
-  backdrop-filter: blur(8px);
-}
-
-.modal-title {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.4px;
-}
-
-.modal-close {
-  background: var(--bg3);
-  border: 0.5px solid rgba(255,255,255,0.06);
-  border-radius: 6px;
-  color: var(--text3);
-  transition: var(--transition);
-  width: 28px; height: 28px;
-}
-
-.modal-close:hover {
-  background: var(--red-dim);
-  border-color: rgba(239,68,68,0.2);
-  color: var(--red);
-}
-
-.detail-item {
-  background: var(--bg3);
-  border: 0.5px solid rgba(255,255,255,0.04);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  transition: var(--transition);
-}
-
-.detail-item:hover { border-color: var(--gold-border); }
-
-.detail-label {
-  font-size: 9px;
-  color: rgba(250,204,21,0.35);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.detail-val {
-  font-size: 13px;
-  color: var(--text);
-  font-weight: 500;
-}
-
-/* ─── PREMIUM EDITOR CARDS ─── */
-.editor-card {
-  background: var(--bg2);
-  border: 0.5px solid rgba(255,255,255,0.04);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
-  margin-bottom: 10px;
-  transition: var(--transition);
-}
-
-.editor-card:hover {
-  border-color: var(--gold-border);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-hover), var(--shadow-gold);
-}
-
-.editor-card-name {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-}
-
-/* ─── PREMIUM TONE OPTIONS ─── */
-.tone-opt {
-  background: var(--bg3);
-  border: 0.5px solid rgba(255,255,255,0.05);
-  border-radius: var(--radius);
-  transition: var(--transition);
-  font-weight: 500;
-}
-
-.tone-opt:hover {
-  background: var(--bg4);
-  border-color: rgba(255,255,255,0.1);
-}
-
-.tone-opt.selected {
-  background: var(--yellow-dim);
-  color: var(--yellow);
-  border-color: var(--yellow);
-  box-shadow: 0 0 12px var(--yellow-glow);
-}
-
-/* ─── PREMIUM NOTIF ─── */
-.notif {
-  background: var(--bg2);
-  border: 0.5px solid var(--gold-border);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6), var(--shadow-gold);
-}
-
-.notif.success {
-  border-color: rgba(34,197,94,0.3);
-  background: rgba(10,42,26,0.95);
-}
-
-.notif.error {
-  border-color: rgba(239,68,68,0.3);
-  background: rgba(42,10,10,0.95);
-}
-
-/* ─── SECTION LABELS ─── */
-.section-label {
-  font-size: 9.5px;
-  color: rgba(250,204,21,0.4);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  margin-bottom: 10px;
-  font-weight: 700;
-}
-
-/* ─── PIPELINE PHASE CARDS (Automation) ─── */
-#auto-phase1, #auto-phase2, #auto-phase3, #auto-phase4 {
-  position: relative;
-  overflow: hidden;
-}
-
-#auto-phase1::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(250,204,21,0.2), transparent);
-}
-
-/* ─── INPUT TABS ─── */
-.input-tab {
-  background: var(--bg3);
-  border: 0.5px solid rgba(255,255,255,0.05);
-  transition: var(--transition);
-}
-
-.input-tab:hover {
-  background: var(--bg4);
-  border-color: rgba(255,255,255,0.1);
-}
-
-.input-tab.active {
-  background: var(--yellow-dim);
-  color: var(--yellow);
-  border-color: var(--yellow);
-  box-shadow: 0 0 12px var(--yellow-glow);
-}
-
-/* ─── UPLOAD AREA ─── */
-.upload-area {
-  border: 1px dashed rgba(250,204,21,0.15);
-  transition: var(--transition);
-}
-
-.upload-area:hover {
-  border-color: rgba(250,204,21,0.4);
-  background: var(--yellow-dim);
-  box-shadow: inset 0 0 20px rgba(250,204,21,0.03);
-}
-
-/* ─── STATUS SELECT ─── */
-.status-select {
-  background: var(--bg3);
-  border: 0.5px solid rgba(255,255,255,0.06);
-  border-radius: var(--radius);
-  color: var(--text);
-  transition: var(--transition);
-}
-
-.status-select:focus {
-  border-color: var(--yellow);
-  box-shadow: 0 0 0 3px var(--yellow-glow);
-}
-
-/* ─── BLUEPRINT BOX ─── */
-.blueprint-box {
-  background: rgba(0,0,0,0.4);
-  border: 0.5px solid var(--gold-border);
-  border-radius: var(--radius-lg);
-  font-size: 11.5px;
-  line-height: 1.9;
-  color: var(--text2);
-}
-
-/* ─── PULSE DOT ─── */
-.pulse-dot {
-  background: var(--green);
-  box-shadow: 0 0 6px var(--green);
-}
-
-/* ─── USER ROLE BADGES ─── */
-.role-admin {
-  background: var(--yellow-dim);
-  color: var(--yellow);
-  border: 0.5px solid rgba(250,204,21,0.2);
-  box-shadow: 0 0 8px var(--yellow-glow);
-}
-
-.role-editor {
-  background: var(--purple-dim);
-  color: var(--purple);
-  border: 0.5px solid rgba(127,119,221,0.2);
-}
-
-/* ─── GENERATE AREA ─── */
-.generate-area {
-  background: rgba(250,204,21,0.02);
-  border: 0.5px solid var(--gold-border);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
-  margin-top: 12px;
-}
-
-/* ─── PAGE TRANSITION ─── */
-.page.active {
-  animation: premiumFadeIn 0.25s cubic-bezier(0.4,0,0.2,1);
-}
-
-@keyframes premiumFadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ─── CHAT ─── */
-#page-chat .msg-row:hover { background: rgba(255,255,255,0.02); border-radius: var(--radius); }
-
-/* ─── SIDEBAR FOOTER ─── */
-.sidebar-footer {
-  padding: 10px 8px;
-  border-top: 0.5px solid var(--gold-border);
-}
-
-/* ─── TOPBAR USER AREA ─── */
-#user-name-display {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-}
 </style>
 </head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">AI Creatives Engine</div>
+    <div class="auth-sub">Production system — authorized access only</div>
+    <div class="auth-divider"></div>
+    <label class="auth-label">Email address</label>
+    <input class="auth-input" type="email" id="login-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <label class="auth-label">Password</label>
+    <input class="auth-input" type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="auth-btn" onclick="doLogin()" id="login-btn">Sign in →</button>
+    <div class="auth-err" id="auth-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+      <div>
+        <div class="logo-mark">AI Creatives</div>
+        <div class="logo-sub">Production Engine</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item admin-only" onclick="showPage('new-project')" id="nav-new-project">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        New project
+      </div>
+      <div class="nav-item" onclick="showPage('all-projects')" id="nav-all-projects">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 10h16M4 14h10"/></svg>
+        All projects
+      </div>
+      <div class="nav-section">Workspace</div>
+      <div class="nav-item" onclick="showPage('editor-portal')" id="nav-editor-portal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-3-3v6M5 21h14a2 2 0 002-2V7l-5-5H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        My tasks
+        <span class="nav-badge" id="tasks-badge" style="display:none">0</span>
+      </div>
+      <div class="nav-section admin-only">Admin</div>
+      <div class="nav-item admin-only" onclick="showPage('users')" id="nav-users">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Team members
+      </div>
+      <div class="nav-item" onclick="showPage('automation')" id="nav-automation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Automation
+      </div>
+      <div class="nav-item" onclick="showPage('clients')" id="nav-clients">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        Clients
+        <span class="nav-badge" id="clients-badge" style="display:none">0</span>
+      </div>
+      <div class="nav-item" onclick="showPage('attendance')" id="nav-attendance">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Attendance
+      </div>
+      <div class="nav-item" onclick="showPage('activity')" id="nav-activity">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Activity log
+      </div>
+      <div class="nav-item admin-only" onclick="showPage('outputs')" id="nav-outputs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Output tracker
+        <span class="nav-badge" id="outputs-badge" style="display:none">0</span>
+      </div>
+      <div class="nav-item admin-only" onclick="showPage('analytics')" id="nav-analytics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analytics
+      </div>
+      <div class="nav-item admin-only" onclick="showPage('submission')" id="nav-submission">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Client form
+      </div>
+      <div class="nav-item" onclick="showPage('worklog')" id="nav-worklog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
+        Work log
+      </div>
+      <div class="nav-item" onclick="showPage('profile')" id="nav-profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My profile
+      </div>
+      <div class="nav-item" onclick="showPage('chat')" id="nav-chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Team chat
+        <span class="nav-badge" id="chat-badge" style="display:none">0</span>
+      </div>
+      <div class="nav-item admin-only" onclick="showPage('settings')" id="nav-settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Settings
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-role" id="user-role-label">—</div>
+        <div class="user-email" id="user-email-label">—</div>
+      </div>
+      <div class="logout-btn" onclick="doLogout()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Sign out
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)">
+          <span class="pulse-dot"></span> Live
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="admin-only" style="position:relative;cursor:pointer" onclick="toggleNotifPanel()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <div id="notif-bell-count" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:8px;font-weight:700;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center">0</div>
+        </div>
+        <div id="notif-panel" style="display:none;position:absolute;top:54px;right:80px;width:320px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:1000;overflow:hidden">
+          <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:11px;font-weight:600;color:var(--text2)">Notifications</div>
+            <button onclick="markAllRead()" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer">Mark all read</button>
+          </div>
+          <div id="notif-list" style="max-height:300px;overflow-y:auto"></div>
+        </div>
+        <button class="yellow-btn admin-only" onclick="showPage('new-project')" id="new-project-topbar-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New project
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card c-yellow">
+            <div class="stat-icon" style="background:var(--yellow-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+            <div class="stat-label">Total projects</div>
+            <div class="stat-val" id="stat-total">0</div>
+          </div>
+          <div class="stat-card c-purple">
+            <div class="stat-icon" style="background:var(--purple-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+            <div class="stat-label">Generating AI</div>
+            <div class="stat-val" style="color:var(--purple)" id="stat-ai">0</div>
+          </div>
+          <div class="stat-card c-green">
+            <div class="stat-icon" style="background:var(--green-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+            <div class="stat-label">Ready for editor</div>
+            <div class="stat-val" style="color:var(--green)" id="stat-ready">0</div>
+          </div>
+          <div class="stat-card c-amber">
+            <div class="stat-icon" style="background:var(--amber-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+            <div class="stat-label">Approved / done</div>
+            <div class="stat-val" style="color:var(--amber)" id="stat-done">0</div>
+          </div>
+        </div>
+        <div class="section-label">Pipeline tracker</div>
+        <div class="pipeline">
+          <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#444"></div><span class="pipe-col-label">New input</span><span class="pipe-count" id="count-new">0</span></div><div id="pipe-new"><div class="pipe-empty">—</div></div></div>
+          <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#7F77DD"></div><span class="pipe-col-label">Generating AI</span><span class="pipe-count" id="count-ai">0</span></div><div id="pipe-ai"><div class="pipe-empty">—</div></div></div>
+          <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#22c55e"></div><span class="pipe-col-label">Ready</span><span class="pipe-count" id="count-ready">0</span></div><div id="pipe-ready"><div class="pipe-empty">—</div></div></div>
+          <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#f59e0b"></div><span class="pipe-col-label">In production</span><span class="pipe-count" id="count-prod">0</span></div><div id="pipe-prod"><div class="pipe-empty">—</div></div></div>
+          <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#4caf50"></div><span class="pipe-col-label">Done</span><span class="pipe-count" id="count-done">0</span></div><div id="pipe-done"><div class="pipe-empty">—</div></div></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+          <div class="section-label" style="margin:0">Recent projects</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="date" class="form-input" id="dash-date-from" placeholder="From" style="max-width:140px;font-size:11px" onchange="loadDashboard()"/>
+            <span style="font-size:11px;color:var(--text3)">to</span>
+            <input type="date" class="form-input" id="dash-date-to" placeholder="To" style="max-width:140px;font-size:11px" onchange="loadDashboard()"/>
+            <button class="ghost-btn" onclick="document.getElementById('dash-date-from').value='';document.getElementById('dash-date-to').value='';loadDashboard()" style="font-size:10px;padding:4px 8px">Clear</button>
+          </div>
+        </div>
+        <div class="data-table">
+          <div class="table-head projects-cols"><span>Client / project</span><span>Type</span><span>Status</span><span>Date</span></div>
+          <div id="recent-projects-body"></div>
+        </div>
+      </div>
+
+      <!-- NEW PROJECT -->
+      <div class="page" id="page-new-project">
+
+        <!-- INPUT MODE TOGGLE -->
+        <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+          <button class="input-tab active" id="tab-manual" onclick="switchTab('manual')">📝 Manual form</button>
+          <button class="input-tab" id="tab-paste" onclick="switchTab('paste')">📋 Paste client brief</button>
+        </div>
+        <!-- TEMPLATES -->
+        <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Quick templates:</span>
+          <button class="ghost-btn" onclick="applyTemplate('aesthetics')" style="font-size:11px;padding:5px 12px">💎 Aesthetics</button>
+          <button class="ghost-btn" onclick="applyTemplate('food')" style="font-size:11px;padding:5px 12px">🍜 Food</button>
+          <button class="ghost-btn" onclick="applyTemplate('fashion')" style="font-size:11px;padding:5px 12px">👗 Fashion</button>
+          <button class="ghost-btn" onclick="applyTemplate('fitness')" style="font-size:11px;padding:5px 12px">💪 Fitness</button>
+        </div>
+
+        <!-- MANUAL FORM -->
+        <div id="input-manual">
+          <div class="form-card">
+            <div class="form-card-title"><span>🏢</span> Business info</div>
+            <div class="form-grid">
+              <div class="form-field"><label class="form-label">Client name</label><input class="form-input" id="f-client" placeholder="e.g. Cosmetic Cocoon PH"/></div>
+              <div class="form-field"><label class="form-label">Business type</label><select class="form-select" id="f-biztype"><option value="">Select type...</option><option>E-Commerce</option><option>Service-Based</option><option>Hybrid</option></select></div>
+              <div class="form-field"><label class="form-label">FB Page URL <span class="opt">(optional)</span></label><input class="form-input" id="f-fb" placeholder="https://facebook.com/yourpage"/></div>
+              <div class="form-field"><label class="form-label">Website URL <span class="opt">(optional)</span></label><input class="form-input" id="f-website" placeholder="https://yourwebsite.com"/></div>
+              <div class="form-field full"><label class="form-label">Core product / service</label><textarea class="form-textarea" id="f-product" placeholder="Describe what you are selling or offering..."></textarea></div>
+              <div class="form-field"><label class="form-label">Brand primary color</label><input class="form-input" id="f-color1" placeholder="e.g. Deep Rose #C2447A"/></div>
+              <div class="form-field"><label class="form-label">Brand secondary color</label><input class="form-input" id="f-color2" placeholder="e.g. Cream White #FDF6F0"/></div>
+            </div>
+          </div>
+          <div class="form-card">
+            <div class="form-card-title"><span>🎯</span> Target &amp; creative direction</div>
+            <div class="form-grid">
+              <div class="form-field"><label class="form-label">Target audience</label><input class="form-input" id="f-audience" placeholder="e.g. Women 25-45, Metro Manila"/></div>
+              <div class="form-field"><label class="form-label">Main goal</label><select class="form-select" id="f-goal"><option value="">Select goal...</option><option>Awareness</option><option>Lead Generation</option><option>Sales / Conversion</option><option>Bookings / Appointments</option></select></div>
+              <div class="form-field full"><label class="form-label">Key pain point</label><textarea class="form-textarea" id="f-pain" placeholder="What problem does this solve?" style="min-height:60px"></textarea></div>
+              <div class="form-field full"><label class="form-label">Core USP</label><textarea class="form-textarea" id="f-usp" placeholder="Why should they choose you?" style="min-height:60px"></textarea></div>
+              <div class="form-field full"><label class="form-label">Intro / opening line idea <span class="opt">(optional)</span></label><input class="form-input" id="f-intro" placeholder="e.g. Tired of falling hair? We have the solution..."/></div>
+              <div class="form-field full"><label class="form-label">Things to emphasize</label><textarea class="form-textarea" id="f-emphasize" placeholder="Key messages, promos, features to highlight..." style="min-height:60px"></textarea></div>
+              <div class="form-field"><label class="form-label">Voice actor / avatar style</label><input class="form-input" id="f-voice" placeholder="e.g. AI avatar, voiceover only"/></div>
+              <div class="form-field"><label class="form-label">Model description</label><input class="form-input" id="f-avatar" placeholder="e.g. Women, 25, white Pinay, professional"/></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASTE BRIEF -->
+        <div id="input-paste" style="display:none">
+          <div class="form-card">
+            <div class="form-card-title"><span>📋</span> Paste client brief <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">— copy-paste the complete client form submission</span></div>
+            <div class="form-field">
+              <label class="form-label">Client brief <span class="opt">(from Google Form, email, chat, etc.)</span></label>
+              <textarea class="form-textarea" id="f-brief" placeholder="Paste the entire client brief here...
+
+Example:
+Client Name: Cosmetic Cocoon PH
+FB Page: https://facebook.com/cosmeticcocoonph
+Website: cosmeticcocoonph.com
+Business Type: Service-Based
+Product: Hair loss treatment — 5-step proven process
+Brand Colors: Rose Pink #C2447A / Cream White #FDF6F0
+Target Audience: Women 25-45, Metro Manila, beauty-conscious
+Pain Point: Nagtatanggal ng buhok, may dandruff
+USP: FDA-approved 5-step treatment, results in 30 days
+Goal: Lead Generation
+Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-size:13px"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- CLIENT MATERIALS / REFERENCES -->
+        <div class="form-card">
+          <div class="form-card-title"><span>📁</span> Client materials &amp; references <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">— optional</span></div>
+          <div class="form-grid">
+            <div class="form-field">
+              <label class="form-label">📁 GDrive folder / reference files</label>
+              <input class="form-input" id="f-gdrive" placeholder="https://drive.google.com/drive/folders/..."/>
+            </div>
+            <div class="form-field">
+              <label class="form-label">🖼️ Reference images / moodboard</label>
+              <input class="form-input" id="f-moodboard" placeholder="https://drive.google.com/... or any link"/>
+            </div>
+            <div class="form-field">
+              <label class="form-label">🎬 Sample videos / inspirations</label>
+              <input class="form-input" id="f-sample-video" placeholder="https://drive.google.com/... or YouTube link"/>
+            </div>
+            <div class="form-field">
+              <label class="form-label">📝 Additional notes from client</label>
+              <input class="form-input" id="f-client-extra" placeholder="Any extra details, links, or requests..."/>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIDEO SPECS (shared) -->
+        <div class="form-card">
+          <div class="form-card-title"><span>🎬</span> Video specs</div>
+          <div class="form-grid-3">
+            <div class="form-field"><label class="form-label">Video size</label><select class="form-select" id="f-size"><option>9:16 Vertical — TikTok / Reels / Shorts</option><option>1:1 Square — Feed</option><option>16:9 Landscape — YouTube</option></select></div>
+            <div class="form-field"><label class="form-label">Language</label><select class="form-select" id="f-lang"><option>Taglish</option><option>Pure Tagalog</option><option>English</option></select></div>
+            <div class="form-field"><label class="form-label">Duration</label><select class="form-select" id="f-duration"><option>30 seconds</option><option>45 seconds</option><option>60 seconds</option></select></div>
+          </div>
+          <div style="margin-top:12px">
+            <label class="form-label" style="margin-bottom:8px;display:block">Tone of voice</label>
+            <div class="tone-grid">
+              <div class="tone-opt" onclick="selectTone(this)">⚡ Energetic &amp; hype</div>
+              <div class="tone-opt" onclick="selectTone(this)">🤝 Calm &amp; trustworthy</div>
+              <div class="tone-opt" onclick="selectTone(this)">💎 Luxurious &amp; aspirational</div>
+              <div class="tone-opt" onclick="selectTone(this)">🔥 Urgent &amp; direct</div>
+              <div class="tone-opt" onclick="selectTone(this)">😊 Friendly &amp; relatable</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCRIPT (shared, optional) -->
+        <div class="form-card">
+          <div class="form-card-title"><span>🎙️</span> Script <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+          <textarea class="form-textarea" id="f-script" placeholder="Paste existing script here if client has one, or leave blank to auto-generate..." style="min-height:80px"></textarea>
+        </div>
+
+        <!-- NOTES (shared) -->
+        <div class="form-card">
+          <div class="form-card-title"><span>📝</span> Internal notes</div>
+          <div class="form-grid">
+            <div class="form-field">
+              <label class="form-label">Admin notes <span class="opt">(internal only)</span></label>
+              <div class="notes-list" id="admin-notes-list"></div>
+              <div class="note-input-row">
+                <input class="note-input" id="admin-note-input" placeholder="Add admin note..." onkeydown="if(event.key==='Enter')addNote('admin')"/>
+                <button class="note-add-btn" onclick="addNote('admin')">+ Add</button>
+              </div>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Client requests / special instructions</label>
+              <div class="notes-list" id="client-notes-list"></div>
+              <div class="note-input-row">
+                <input class="note-input" id="client-note-input" placeholder="Add client request..." onkeydown="if(event.key==='Enter')addNote('client')"/>
+                <button class="note-add-btn" onclick="addNote('client')">+ Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GENERATE -->
+        <div class="generate-area">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span id="draft-saved-indicator" style="font-size:10px;color:var(--green);opacity:0;transition:opacity 0.3s">✓ Draft saved</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+              <label style="font-size:11px;color:var(--text2);font-weight:500;white-space:nowrap">👤 Auto-assign to:</label>
+              <select class="form-select" id="f-assign-to" style="max-width:220px;font-size:12px">
+                <option value="">Unassigned (assign later)</option>
+              </select>
+            </div>
+          <button class="ghost-btn" id="save-details-btn" onclick="saveClientDetails()" style="color:var(--green);border-color:rgba(34,197,94,0.3)">💾 Save details only</button>
+          <button class="yellow-btn" id="generate-btn" onclick="generateBlueprint()">⚡ Generate blueprint</button>
+            <span id="gen-status" style="font-size:12px;color:var(--text3)"></span>
+          </div>
+          <div id="blueprint-output" style="display:none;margin-top:1rem">
+            <div class="blueprint-box" id="blueprint-text"></div>
+            <div class="blueprint-actions">
+              <button class="ghost-btn" onclick="copyBlueprint()">📋 Copy blueprint</button>
+              <button class="yellow-btn" onclick="saveProject()" id="save-btn">💾 Save client details</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALL PROJECTS -->
+      <div class="page" id="page-all-projects">
+        <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+          <input class="form-input" id="search-projects" placeholder="Search projects..." oninput="filterProjects()" style="max-width:220px"/>
+          <select class="form-select" id="filter-status" onchange="filterProjects()" style="max-width:160px">
+            <option value="">All statuses</option>
+            <option>New Input</option><option>Generating AI</option><option>Ready for Editor</option><option>In Production</option><option>Approved / Done</option>
+          </select>
+          <select class="form-select" id="filter-priority" onchange="filterProjects()" style="max-width:130px">
+            <option value="">All priorities</option>
+            <option value="urgent">🔴 Urgent</option>
+            <option value="normal">🟡 Normal</option>
+            <option value="low">⚪ Low</option>
+          </select>
+          <input type="date" class="form-input" id="proj-date-from" style="max-width:140px;font-size:11px" onchange="filterProjects()"/>
+          <span style="font-size:11px;color:var(--text3)">→</span>
+          <input type="date" class="form-input" id="proj-date-to" style="max-width:140px;font-size:11px" onchange="filterProjects()"/>
+          <button class="ghost-btn" onclick="clearProjectFilters()" style="font-size:11px">Clear</button>
+          <button class="ghost-btn" onclick="exportCSV()" style="font-size:11px;margin-left:auto">📥 Export CSV</button>
+        </div>
+        <!-- BULK ACTION BAR -->
+        <div id="bulk-action-bar" style="display:none;gap:8px;margin-bottom:10px;padding:10px 14px;background:var(--yellow-dim);border:0.5px solid var(--yellow);border-radius:var(--radius);align-items:center;flex-wrap:wrap">
+          <span id="bulk-count" style="font-size:12px;color:var(--yellow);font-weight:600">0 selected</span>
+          <button class="ghost-btn" onclick="bulkApprove()" style="font-size:11px;color:var(--green);border-color:rgba(34,197,94,0.3)">✓ Approve all</button>
+          <button class="ghost-btn" onclick="bulkAssign()" style="font-size:11px;color:var(--purple);border-color:rgba(127,119,221,0.3)">👤 Assign all</button>
+          <button class="ghost-btn" onclick="bulkDelete()" style="font-size:11px;color:var(--red);border-color:rgba(239,68,68,0.2)">🗑 Delete all</button>
+          <button class="ghost-btn" onclick="clearSelection()" style="font-size:11px;margin-left:auto">✕ Clear</button>
+        </div>
+        <div class="data-table">
+          <div class="table-head" style="grid-template-columns:32px 2fr 1fr 1.2fr 0.8fr 80px"><span></span><span>Client / project</span><span>Type</span><span>Status</span><span>Date</span><span>Deadline</span></div>
+          <div id="all-projects-body"></div>
+        </div>
+      </div>
+
+      <!-- EDITOR PORTAL -->
+      <div class="page" id="page-editor-portal">
+        <div style="display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start">
+          <!-- LEFT: Assigned Projects -->
+          <div>
+            <div class="section-label" style="margin-bottom:1rem">My assigned projects</div>
+            <div id="editor-projects-body"></div>
+          </div>
+          <!-- RIGHT: Submit Output -->
+          <div>
+            <div class="section-label" style="margin-bottom:1rem">📤 Submit completed output</div>
+            <div class="form-card">
+              <div class="form-field" style="margin-bottom:10px">
+                <label class="form-label">Project / Client</label>
+                <select class="form-select" id="submit-project-select"></select>
+              </div>
+              <!-- Project/Client select with expand -->
+              <div class="form-field" style="margin-bottom:8px">
+                <label class="form-label">Project / Client</label>
+                <div style="display:flex;gap:6px">
+                  <select class="form-select" id="submit-project-select" style="flex:1" onchange="loadSubmitClientDetails()">
+                    <option value="">Select project...</option>
+                  </select>
+                  <button onclick="toggleClientDetails()" class="ghost-btn" style="font-size:11px;padding:4px 10px;white-space:nowrap" id="view-client-btn" title="View client details">👁</button>
+                </div>
+              </div>
+              <!-- Client details (hidden by default, expandable) -->
+              <div id="submit-client-details" style="display:none;background:var(--bg4);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;font-size:11px;color:var(--text2);line-height:1.8"></div>
+              <!-- GDrive link -->
+              <div class="form-field" style="margin-bottom:8px">
+                <label class="form-label">📁 Google Drive / Video Link</label>
+                <input class="form-input" id="submit-output-url" placeholder="https://drive.google.com/..."/>
+              </div>
+              <!-- Excel/Sheet link -->
+              <div class="form-field" style="margin-bottom:8px">
+                <label class="form-label">📊 Excel / Google Sheet Link <span class="opt">(optional)</span></label>
+                <input class="form-input" id="submit-output-sheet" placeholder="https://docs.google.com/spreadsheets/..."/>
+              </div>
+              <!-- Output type -->
+              <div class="form-field" style="margin-bottom:8px">
+                <label class="form-label">Output type</label>
+                <select class="form-select" id="submit-output-type">
+                  <option value="video">🎬 Video</option>
+                  <option value="image">🖼️ Images</option>
+                  <option value="blueprint">📄 Blueprint</option>
+                  <option value="other">📎 Other</option>
+                </select>
+              </div>
+              <!-- Notes -->
+              <div class="form-field" style="margin-bottom:12px">
+                <label class="form-label">Notes <span class="opt">(optional)</span></label>
+                <textarea class="form-textarea" id="submit-output-notes" placeholder="Add notes about this output..." style="min-height:50px"></textarea>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="yellow-btn" onclick="submitEditorOutput()" style="flex:1">📤 Submit output</button>
+                <button class="ghost-btn" onclick="submitAndMarkDone()" style="font-size:12px;color:var(--green);border-color:rgba(34,197,94,0.3)">✅ Submit &amp; Mark Done</button>
+              </div>
+            </div>
+            <!-- My Recent Outputs -->
+            <div class="section-label" style="margin:1rem 0 0.5rem">My recent outputs</div>
+            <div id="editor-recent-outputs"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEAM CHAT PAGE -->
+      <div class="page" id="page-chat">
+        <div style="display:grid;grid-template-columns:240px 1fr;gap:0;height:calc(100vh - 120px);background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
+          
+          <!-- SIDEBAR CHANNELS -->
+          <div style="border-right:0.5px solid var(--border);display:flex;flex-direction:column;background:var(--bg3)">
+            <div style="padding:14px 16px;border-bottom:0.5px solid var(--border)">
+              <div style="font-size:13px;font-weight:700;color:var(--text)">AI Creatives</div>
+              <div style="font-size:10px;color:var(--green);display:flex;align-items:center;gap:4px;margin-top:2px"><span class="pulse-dot" style="width:5px;height:5px"></span> Team online</div>
+            </div>
+            <div style="padding:8px;flex:1;overflow-y:auto">
+              <!-- CHANNELS -->
+              <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:0.12em;padding:10px 8px 4px;font-weight:600">Channels</div>
+              <div class="ch-item" data-room="announcements" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span>📢</span><span style="font-size:12px;color:var(--text2);font-weight:500">announcements</span></div>
+                <span class="ch-badge" id="badge-announcements" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
+              </div>
+              <div class="ch-item" data-room="general" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.2)">
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--yellow)">#</span><span style="font-size:12px;color:var(--yellow);font-weight:600">general</span></div>
+                <span class="ch-badge" id="badge-general" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
+              </div>
+              <div class="ch-item" data-room="editors" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3)">#</span><span style="font-size:12px;color:var(--text2);font-weight:500">editors</span></div>
+                <span class="ch-badge" id="badge-editors" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
+              </div>
+              <div class="ch-item admin-only" data-room="admin" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span>🔐</span><span style="font-size:12px;color:var(--text2);font-weight:500">admin</span></div>
+                <span class="ch-badge" id="badge-admin" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
+              </div>
+              <div class="ch-item" data-room="revisions" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span>✏️</span><span style="font-size:12px;color:var(--text2);font-weight:500">revisions</span></div>
+                <span class="ch-badge" id="badge-revisions" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
+              </div>
+              <div class="ch-item" data-room="images" style="padding:7px 10px;border-radius:var(--radius);cursor:pointer;margin-bottom:1px;display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:6px"><span>🖼️</span><span style="font-size:12px;color:var(--text2);font-weight:500">images</span></div>
+                <span class="ch-badge" id="badge-images" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px">0</span>
+              </div>
+              <!-- DMs -->
+              <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:0.12em;padding:14px 8px 4px;font-weight:600">Direct Messages</div>
+              <div id="dm-list"></div>
+            </div>
+          </div>
+
+          <!-- MAIN CHAT AREA -->
+          <div style="display:flex;flex-direction:column;overflow:hidden">
+            <!-- CHAT HEADER -->
+            <div style="padding:12px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2)">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text)" id="chat-room-title"># general</div>
+                <div style="font-size:10px;color:var(--text3)" id="chat-room-desc">Team chat — everyone</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button id="pin-toggle-btn" class="ghost-btn" onclick="togglePinnedMessages()" style="font-size:11px;padding:4px 10px">📌 Pinned</button>
+              </div>
+            </div>
+
+            <!-- PINNED MESSAGES (hidden by default) -->
+            <div id="pinned-section" style="display:none;padding:10px 16px;background:var(--amber-dim);border-bottom:0.5px solid rgba(245,158,11,0.2)">
+              <div style="font-size:10px;color:var(--amber);font-weight:600;margin-bottom:6px">📌 PINNED MESSAGES</div>
+              <div id="pinned-messages"></div>
+            </div>
+
+            <!-- MESSAGES -->
+            <div id="chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:2px"></div>
+
+            <!-- REPLY PREVIEW -->
+            <div id="reply-preview" style="display:none;padding:8px 16px;background:var(--bg3);border-top:0.5px solid var(--border);border-left:3px solid var(--yellow)">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="font-size:11px;color:var(--text3)">Replying to <span id="reply-to-name" style="color:var(--yellow);font-weight:600"></span></div>
+                <button onclick="cancelReply()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px">✕</button>
+              </div>
+              <div id="reply-preview-text" style="font-size:11px;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+            </div>
+
+            <!-- ANNOUNCEMENTS NOTICE -->
+            <div id="announce-notice" style="display:none;padding:8px 16px;background:var(--purple-dim);border-top:0.5px solid rgba(127,119,221,0.2)">
+              <div style="font-size:11px;color:var(--purple)">📢 Only admins can post in #announcements</div>
+            </div>
+
+            <!-- INPUT -->
+            <div style="padding:12px 16px;border-top:0.5px solid var(--border)">
+              <div id="emoji-picker" style="display:none;flex-wrap:wrap;gap:3px;margin-bottom:8px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">
+                <span onclick="insertEmoji('😊')" style="cursor:pointer;font-size:18px;padding:3px">😊</span>
+                <span onclick="insertEmoji('🔥')" style="cursor:pointer;font-size:18px;padding:3px">🔥</span>
+                <span onclick="insertEmoji('✅')" style="cursor:pointer;font-size:18px;padding:3px">✅</span>
+                <span onclick="insertEmoji('❌')" style="cursor:pointer;font-size:18px;padding:3px">❌</span>
+                <span onclick="insertEmoji('👍')" style="cursor:pointer;font-size:18px;padding:3px">👍</span>
+                <span onclick="insertEmoji('👀')" style="cursor:pointer;font-size:18px;padding:3px">👀</span>
+                <span onclick="insertEmoji('🎬')" style="cursor:pointer;font-size:18px;padding:3px">🎬</span>
+                <span onclick="insertEmoji('💎')" style="cursor:pointer;font-size:18px;padding:3px">💎</span>
+                <span onclick="insertEmoji('⚡')" style="cursor:pointer;font-size:18px;padding:3px">⚡</span>
+                <span onclick="insertEmoji('🚀')" style="cursor:pointer;font-size:18px;padding:3px">🚀</span>
+                <span onclick="insertEmoji('💪')" style="cursor:pointer;font-size:18px;padding:3px">💪</span>
+                <span onclick="insertEmoji('🎯')" style="cursor:pointer;font-size:18px;padding:3px">🎯</span>
+                <span onclick="insertEmoji('📋')" style="cursor:pointer;font-size:18px;padding:3px">📋</span>
+                <span onclick="insertEmoji('⏰')" style="cursor:pointer;font-size:18px;padding:3px">⏰</span>
+                <span onclick="insertEmoji('💰')" style="cursor:pointer;font-size:18px;padding:3px">💰</span>
+                <span onclick="insertEmoji('🤝')" style="cursor:pointer;font-size:18px;padding:3px">🤝</span>
+                <span onclick="insertEmoji('😎')" style="cursor:pointer;font-size:18px;padding:3px">😎</span>
+                <span onclick="insertEmoji('🙏')" style="cursor:pointer;font-size:18px;padding:3px">🙏</span>
+                <span onclick="insertEmoji('😂')" style="cursor:pointer;font-size:18px;padding:3px">😂</span>
+                <span onclick="insertEmoji('👏')" style="cursor:pointer;font-size:18px;padding:3px">👏</span>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <button onclick="toggleEmojiPicker()" style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:7px 9px;cursor:pointer;font-size:16px;line-height:1;flex-shrink:0">😊</button>
+                <input class="form-input" id="chat-input" placeholder="Message #general..." style="flex:1;font-size:13px" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"/>
+                <button class="yellow-btn" onclick="sendMessage()" style="padding:8px 16px;flex-shrink:0">Send ↵</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WORK LOG PAGE -->
+      <div class="page" id="page-worklog">
+        <div style="max-width:760px">
+          <!-- ACTIVE SESSION BANNER -->
+          <div id="worklog-session-banner" style="display:none;background:var(--green-dim);border:0.5px solid rgba(34,197,94,0.2);border-radius:var(--radius-lg);padding:12px 16px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--green)">🟢 Active session</div>
+              <div style="font-size:11px;color:var(--text3)" id="session-elapsed">0h 0m elapsed</div>
+            </div>
+            <button onclick="openTimeOutModal()" style="font-size:11px;padding:6px 14px;background:var(--red-dim);border:0.5px solid rgba(239,68,68,0.3);border-radius:var(--radius);color:var(--red);cursor:pointer;font-weight:600">🔴 Time Out</button>
+          </div>
+
+          <!-- MY TASKS TODAY -->
+          <div class="form-card" style="margin-bottom:12px">
+            <div class="form-card-title"><span>📋</span> My tasks today</div>
+            <div id="worklog-tasks"></div>
+          </div>
+
+          <!-- ADD WORK UPDATE -->
+          <div class="form-card" style="margin-bottom:12px">
+            <div class="form-card-title"><span>📝</span> Add work update</div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label class="form-label">Project</label>
+                <select class="form-select" id="worklog-project-select"></select>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="worklog-status-select">
+                  <option value="in-progress">🔄 In Progress</option>
+                  <option value="done">✅ Done</option>
+                  <option value="blocked">🚫 Blocked</option>
+                  <option value="review">👀 For Review</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Est. completion</label>
+                <input class="form-input" type="time" id="worklog-eta" placeholder="e.g. 5:00 PM"/>
+              </div>
+              <div class="form-field full">
+                <label class="form-label">Update / notes</label>
+                <textarea class="form-textarea" id="worklog-update-text" placeholder="What did you do? Any blockers? What's next?" style="min-height:80px"></textarea>
+              </div>
+            </div>
+            <button class="yellow-btn" onclick="submitWorkUpdate()" style="margin-top:10px">📤 Submit update</button>
+          </div>
+
+          <!-- TODAY'S UPDATES -->
+          <div class="form-card">
+            <div class="form-card-title"><span>📊</span> Today's updates</div>
+            <div id="worklog-updates-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE PAGE -->
+      <div class="page" id="page-profile">
+        <div style="max-width:600px">
+          <div class="form-card" style="margin-bottom:12px">
+            <div class="form-card-title"><span>👤</span> My profile</div>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:1.5rem;padding:1rem;background:var(--bg3);border-radius:var(--radius-lg);border:0.5px solid var(--border2)">
+              <div style="width:56px;height:56px;border-radius:50%;background:var(--yellow-dim);border:2px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--yellow);flex-shrink:0" id="profile-avatar">?</div>
+              <div>
+                <div style="font-size:15px;font-weight:700;color:var(--text)" id="profile-name-display">Loading...</div>
+                <div style="font-size:11px;color:var(--yellow);margin-top:2px" id="profile-email-display">—</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:0.08em;font-weight:600" id="profile-role-display">—</div>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-field full">
+                <label class="form-label">Display name</label>
+                <input class="form-input" id="profile-name-input" placeholder="Your name" oninput="document.getElementById('profile-name-display').textContent=this.value||'?';document.getElementById('profile-avatar').textContent=(this.value||'?')[0].toUpperCase()"/>
+              </div>
+            </div>
+            <button class="yellow-btn" onclick="saveProfile()" style="margin-top:12px">💾 Save profile</button>
+          </div>
+
+          <div class="form-card" style="margin-bottom:12px">
+            <div class="form-card-title"><span>🔒</span> Change password</div>
+            <div class="form-field">
+              <label class="form-label">New password</label>
+              <input class="form-input" type="password" id="profile-new-pass" placeholder="Min. 6 characters"/>
+            </div>
+            <button class="ghost-btn" onclick="changePassword()" style="margin-top:12px">🔑 Change password</button>
+          </div>
+
+          <div class="form-card">
+            <div class="form-card-title"><span>📊</span> My stats</div>
+            <div id="profile-stats"><div style="color:var(--text3);font-size:12px">Loading stats...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div class="page" id="page-settings">
+        <div style="max-width:760px">
+          
+          <!-- HIGGSFIELD -->
+          <div class="form-card" style="margin-bottom:16px">
+            <div class="form-card-title" style="margin-bottom:1rem">
+              <span>🎬</span> Higgsfield
+              <span style="font-size:10px;color:var(--green);background:var(--green-dim);padding:2px 8px;border-radius:20px;font-weight:600">Image + Video</span>
+              <span style="font-size:9px;padding:2px 8px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);font-weight:600;margin-left:auto">🔐 Admin only</span>
+            </div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">Connect Higgsfield — uses your existing credits.</div>
+            <div style="display:flex;gap:8px;margin-bottom:1rem">
+              <button id="higgs-btn-account" onclick="switchToolMode('higgs','account')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--yellow);background:var(--yellow-dim);color:var(--yellow)">🌐 Own Account</button>
+              <button id="higgs-btn-api" onclick="switchToolMode('higgs','api')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg3);color:var(--text3)">🔑 API Key</button>
+            </div>
+            <div id="higgs-account-section">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label">Default model</label>
+                  <select class="form-select" id="higgs-model" onchange="saveToolSetting('higgs-model',this.value)">
+                    <option value="soul-2">SOUL 2 (Recommended)</option>
+                    <option value="dop-lite">DOP Lite (Fast)</option>
+                    <option value="animate">Animate</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Default duration</label>
+                  <select class="form-select" id="higgs-duration" onchange="saveToolSetting('higgs-duration',this.value)">
+                    <option value="4">4 seconds</option>
+                    <option value="6">6 seconds</option>
+                    <option value="8">8 seconds</option>
+                  </select>
+                </div>
+              </div>
+              <button class="yellow-btn" onclick="testConnection('higgsfield')" style="font-size:12px;margin-top:10px">🔗 Open Higgsfield</button>
+            </div>
+            <div id="higgs-api-section" style="display:none">
+              <label class="form-label">API Key (cloud.higgsfield.ai)</label>
+              <div style="display:flex;gap:8px;margin-bottom:10px">
+                <input class="form-input" id="higgs-api-key" placeholder="higgs-xxxxxxxxx" type="password" style="flex:1"/>
+                <button class="yellow-btn" onclick="saveApiKey('higgs')" style="font-size:12px;white-space:nowrap">💾 Save</button>
+              </div>
+              <div id="higgs-key-status" style="font-size:11px;color:var(--text3)"></div>
+            </div>
+          </div>
+
+          <!-- DALL-E -->
+          <div class="form-card" style="margin-bottom:16px">
+            <div class="form-card-title" style="margin-bottom:1rem">
+              <span>🎨</span> DALL-E (OpenAI)
+              <span style="font-size:10px;color:var(--green);background:var(--green-dim);padding:2px 8px;border-radius:20px;font-weight:600">Images</span>
+              <span style="font-size:9px;padding:2px 8px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);font-weight:600;margin-left:auto">🔐 Admin only</span>
+            </div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">DALL-E 3 — Avatar + Scene image generation. ~$0.04-0.08 per image.</div>
+            <label class="form-label">API Key (sk-proj-...)</label>
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+              <input class="form-input" id="dalle-api-key" placeholder="sk-proj-xxxxxxxxxxxxxxxxx" type="password" style="flex:1"/>
+              <button class="yellow-btn" onclick="saveApiKey('dalle')" style="font-size:12px;white-space:nowrap">💾 Save</button>
+            </div>
+            <div id="dalle-key-status" style="font-size:11px;color:var(--text3);margin-bottom:10px"></div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label class="form-label">Quality</label>
+                <select class="form-select" id="dalle-quality" onchange="saveToolSetting('dalle-quality',this.value)">
+                  <option value="hd">HD (Recommended)</option>
+                  <option value="standard">Standard (Faster)</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Style</label>
+                <select class="form-select" id="dalle-style" onchange="saveToolSetting('dalle-style',this.value)">
+                  <option value="vivid">Vivid (Dramatic)</option>
+                  <option value="natural">Natural (Realistic)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- GROK -->
+          <div class="form-card" style="margin-bottom:16px">
+            <div class="form-card-title" style="margin-bottom:1rem">
+              <span>⚡</span> Grok (xAI)
+              <span style="font-size:10px;color:var(--purple);background:var(--purple-dim);padding:2px 8px;border-radius:20px;font-weight:600">Video</span>
+              <span style="font-size:9px;padding:2px 8px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);font-weight:600;margin-left:auto">🔐 Admin only</span>
+            </div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">xAI Grok Imagine — text-to-video. API: $0.06/second.</div>
+            <!-- MODE TOGGLE -->
+            <div style="display:flex;gap:8px;margin-bottom:1rem">
+              <button id="grok-btn-api" onclick="switchToolMode('grok','api')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--yellow);background:var(--yellow-dim);color:var(--yellow)">🔑 API Key</button>
+              <button id="grok-btn-account" onclick="switchToolMode('grok','account')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg3);color:var(--text3)">🌐 Own Account</button>
+            </div>
+            <!-- API KEY MODE -->
+            <div id="grok-api-section" style="margin-bottom:1rem">
+              <label class="form-label">API Key (xai-...)</label>
+              <div style="display:flex;gap:8px;margin-bottom:10px">
+                <input class="form-input" id="grok-api-key" placeholder="xai-xxxxxxxxxxxxxxxxx" type="password" style="flex:1"/>
+                <button class="yellow-btn" onclick="saveApiKey('grok')" style="font-size:12px;white-space:nowrap">💾 Save</button>
+              </div>
+              <div id="grok-key-status" style="font-size:11px;color:var(--text3);margin-bottom:8px"></div>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label">Model</label>
+                  <select class="form-select" id="grok-model" onchange="saveToolSetting('grok-model',this.value)">
+                    <option value="grok-imagine-video-1.5-preview">Grok Imagine Video 1.5</option>
+                    <option value="grok-imagine-video-1.0">Grok Imagine Video 1.0</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Duration</label>
+                  <select class="form-select" id="grok-duration" onchange="saveToolSetting('grok-duration',this.value)">
+                    <option value="5">5 seconds</option>
+                    <option value="8">8 seconds</option>
+                    <option value="10">10 seconds</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <!-- ACCOUNT MODE -->
+            <div id="grok-account-section" style="display:none;margin-bottom:1rem;padding:12px;background:var(--bg3);border-radius:var(--radius);border:0.5px solid var(--border2)">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Opens grok.com + auto-copies prompt to clipboard</div>
+              <button class="ghost-btn" onclick="testConnection('grok')" style="font-size:12px">🔗 Open Grok</button>
+              <span id="grok-status" style="font-size:11px;color:var(--green);margin-left:8px"></span>
+            </div>
+          </div>
+
+          <!-- VEO -->
+          <div class="form-card">
+            <div class="form-card-title" style="margin-bottom:1rem">
+              <span>🎥</span> Veo (Google)
+              <span style="font-size:10px;color:var(--amber);background:var(--amber-dim);padding:2px 8px;border-radius:20px;font-weight:600">Video</span>
+              <span style="font-size:9px;padding:2px 8px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);font-weight:600;margin-left:auto">🔐 Admin only</span>
+            </div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">Google Veo 3 via AI Studio. Free: 50 req/day. Paid: ~$0.35-0.50/second.</div>
+            <!-- MODE TOGGLE -->
+            <div style="display:flex;gap:8px;margin-bottom:1rem">
+              <button id="veo-btn-api" onclick="switchToolMode('veo','api')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--yellow);background:var(--yellow-dim);color:var(--yellow)">🔑 API Key</button>
+              <button id="veo-btn-account" onclick="switchToolMode('veo','account')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg3);color:var(--text3)">🌐 Own Account</button>
+            </div>
+            <!-- API KEY MODE -->
+            <div id="veo-api-section" style="margin-bottom:1rem">
+              <label class="form-label">Google AI Studio API Key</label>
+              <div style="display:flex;gap:8px;margin-bottom:10px">
+                <input class="form-input" id="veo-api-key" placeholder="AIzaSy-xxxxxxxxxxxxxxxxx" type="password" style="flex:1"/>
+                <button class="yellow-btn" onclick="saveApiKey('veo')" style="font-size:12px;white-space:nowrap">💾 Save</button>
+              </div>
+              <div id="veo-key-status" style="font-size:11px;color:var(--text3);margin-bottom:8px"></div>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label">Model</label>
+                  <select class="form-select" id="veo-model" onchange="saveToolSetting('veo-model',this.value)">
+                    <option value="veo-003">Veo 3 (Latest)</option>
+                    <option value="veo-002">Veo 2</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Duration</label>
+                  <select class="form-select" id="veo-duration" onchange="saveToolSetting('veo-duration',this.value)">
+                    <option value="5">5 seconds</option>
+                    <option value="8">8 seconds</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <!-- ACCOUNT MODE -->
+            <div id="veo-account-section" style="display:none;margin-bottom:1rem;padding:12px;background:var(--bg3);border-radius:var(--radius);border:0.5px solid var(--border2)">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Opens Google AI Studio + auto-copies prompt</div>
+              <button class="ghost-btn" onclick="testConnection('veo')" style="font-size:12px">🔗 Open AI Studio</button>
+              <span id="veo-status" style="font-size:11px;color:var(--green);margin-left:8px"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CLIENT SUBMISSION FORM -->
+      <div class="page" id="page-submission">
+        <div style="max-width:700px;margin:0 auto">
+          <div style="text-align:center;margin-bottom:2rem">
+            <div style="font-size:20px;font-weight:700;color:var(--yellow);margin-bottom:6px">📋 Client Submission Form</div>
+            <div style="font-size:12px;color:var(--text3)">Share this link with your clients to submit their brief</div>
+            <div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 14px;margin-top:12px;display:flex;align-items:center;gap:10px">
+              <code style="font-size:11px;color:var(--yellow);flex:1" id="form-link-display">https://ai-creatives-engine.vercel.app/client-form</code>
+              <button class="ghost-btn" style="font-size:11px" onclick="navigator.clipboard.writeText('https://ai-creatives-engine.vercel.app/client-form');showNotif('Link copied! ✓','success')">Copy link</button>
+            </div>
+          </div>
+          <div class="form-card">
+            <div class="form-card-title"><span>👁️</span> Form preview</div>
+            <div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:1.5rem">
+              <div style="font-size:16px;font-weight:700;color:var(--yellow);margin-bottom:4px">Video Ad Brief</div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:1.5rem">Fill this out completely for best results</div>
+              <div class="form-grid" style="gap:12px">
+                <div class="form-field"><label class="form-label">Business / Brand name</label><input class="form-input" placeholder="e.g. Cosmetic Cocoon PH" disabled/></div>
+                <div class="form-field"><label class="form-label">Business type</label><input class="form-input" placeholder="Service / E-commerce / Hybrid" disabled/></div>
+                <div class="form-field"><label class="form-label">FB Page URL</label><input class="form-input" placeholder="https://facebook.com/yourpage" disabled/></div>
+                <div class="form-field"><label class="form-label">Website URL</label><input class="form-input" placeholder="https://yourwebsite.com" disabled/></div>
+                <div class="form-field full"><label class="form-label">Product / Service description</label><textarea class="form-textarea" placeholder="Describe what you're selling..." disabled></textarea></div>
+                <div class="form-field full"><label class="form-label">Target audience</label><input class="form-input" placeholder="e.g. Women 25-45, Metro Manila" disabled/></div>
+                <div class="form-field full"><label class="form-label">Main pain point you solve</label><textarea class="form-textarea" placeholder="What problem does your product solve?" disabled style="min-height:60px"></textarea></div>
+                <div class="form-field full"><label class="form-label">Your unique advantage (USP)</label><textarea class="form-textarea" placeholder="Why should they choose you?" disabled style="min-height:60px"></textarea></div>
+                <div class="form-field full"><label class="form-label">Key messages to emphasize</label><textarea class="form-textarea" placeholder="Promos, features, CTAs..." disabled style="min-height:60px"></textarea></div>
+                <div class="form-field"><label class="form-label">Brand primary color</label><input class="form-input" placeholder="e.g. Rose Pink #C2447A" disabled/></div>
+                <div class="form-field"><label class="form-label">Brand secondary color</label><input class="form-input" placeholder="e.g. Cream White #FDF6F0" disabled/></div>
+              </div>
+              <div style="margin-top:1rem;padding:12px;background:var(--yellow-dim);border:0.5px solid var(--yellow);border-radius:var(--radius);font-size:11px;color:var(--yellow)">
+                ⚠️ This is a preview only — the actual client form is coming soon! For now, clients can email their brief or use the Paste Brief tab.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ATTENDANCE PAGE -->
+      <div class="page" id="page-attendance">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+          <div class="section-label" style="margin:0">🕐 Attendance tracker</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <input type="date" class="form-input" id="attendance-date" style="max-width:160px;font-size:11px" onchange="loadAttendance()"/>
+            <select class="form-select" id="attendance-editor-filter" style="max-width:180px;font-size:11px" onchange="loadAttendance()">
+              <option value="">All editors</option>
+            </select>
+            <button class="ghost-btn" onclick="exportAttendanceCSV()" style="font-size:11px">📥 Export</button>
+          </div>
+        </div>
+
+        <!-- SUMMARY CARDS -->
+        <div id="attendance-stats" class="stats-grid" style="margin-bottom:1rem"></div>
+
+        <!-- ATTENDANCE TABLE -->
+        <div class="data-table">
+          <div class="table-head" style="grid-template-columns:1.5fr 1fr 1fr 1fr 1fr 1fr">
+            <span>Editor</span><span>Date</span><span>Time In</span><span>Time Out</span><span>Duration</span><span>Status</span>
+          </div>
+          <div id="attendance-body"></div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY LOG PAGE -->
+      <div class="page" id="page-activity">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div class="section-label" style="margin:0">Activity log</div>
+          <div style="display:flex;gap:8px">
+            <input type="date" class="form-input" id="activity-date-from" style="max-width:140px;font-size:11px" onchange="loadActivityLog()"/>
+            <span style="font-size:11px;color:var(--text3);line-height:32px">→</span>
+            <input type="date" class="form-input" id="activity-date-to" style="max-width:140px;font-size:11px" onchange="loadActivityLog()"/>
+            <button class="ghost-btn" onclick="document.getElementById('activity-date-from').value='';document.getElementById('activity-date-to').value='';loadActivityLog()" style="font-size:11px">All time</button>
+          </div>
+        </div>
+        <div class="data-table">
+          <div class="table-head" style="grid-template-columns:1.5fr 1fr 2fr 1fr">
+            <span>User</span><span>Action</span><span>Details</span><span>Time</span>
+          </div>
+          <div id="activity-log-body"></div>
+        </div>
+      </div>
+
+      <!-- AUTOMATION PIPELINE PAGE -->
+      <div class="page" id="page-automation">
+        <div style="max-width:900px">
+
+          <!-- PROJECT SELECTOR -->
+          <div class="form-card" style="margin-bottom:16px">
+            <div class="form-card-title" style="margin-bottom:1rem"><span>⚡</span> Automation Pipeline</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">Select a project with a blueprint to start automated generation.</div>
+            <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
+              <select class="form-select" id="auto-project-select" style="flex:1" onchange="loadAutomationProject()">
+                <option value="">Select project...</option>
+              </select>
+              <button class="ghost-btn" onclick="loadAutomationProjects()" style="font-size:12px">🔄 Refresh</button>
+            </div>
+            <div id="auto-project-info" style="display:none;padding:10px 14px;background:var(--bg3);border-radius:var(--radius);border:0.5px solid var(--border2);font-size:12px;color:var(--text2)"></div>
+          </div>
+
+          <!-- PHASE 1 — AVATAR -->
+          <div class="form-card" style="margin-bottom:16px" id="auto-phase1">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--yellow-dim);border:1.5px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--yellow)">1</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">Avatar Generation</div>
+                <div style="font-size:11px;color:var(--text3)">Generate the client avatar/character first</div>
+              </div>
+              <span id="phase1-status" style="margin-left:auto;font-size:11px;color:var(--text3)">Pending</span>
+            </div>
+            <div class="form-field" style="margin-bottom:10px">
+              <label class="form-label">Avatar description (from client brief)</label>
+              <textarea class="form-textarea" id="auto-avatar-prompt" placeholder="e.g. Filipino woman, 25-35 years old, professional appearance, wearing white lab coat, confident smile, studio lighting, white background, 9:16 portrait aspect ratio, photorealistic" style="min-height:80px"></textarea>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <button class="yellow-btn" id="gen-avatar-btn" onclick="generateAvatar()">🎨 Generate Avatar (DALL-E)</button>
+              <button class="ghost-btn" onclick="generateAvatar()" style="font-size:12px">🔄 Regenerate</button>
+              <span id="avatar-gen-status" style="font-size:11px;color:var(--text3)"></span>
+            </div>
+            <div id="avatar-result" style="margin-top:12px;display:none">
+              <img id="avatar-preview" style="width:120px;height:213px;object-fit:cover;border-radius:var(--radius);border:0.5px solid var(--border2)" src=""/>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button onclick="approveAvatar()" class="yellow-btn" style="font-size:12px">✅ Approve — proceed to scenes</button>
+                <button onclick="generateAvatar()" class="ghost-btn" style="font-size:12px">🔄 Regenerate</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PHASE 2 — SCENE IMAGES -->
+          <div class="form-card" style="margin-bottom:16px;opacity:0.5;pointer-events:none" id="auto-phase2">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--bg4);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text3)">2</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">Scene Images</div>
+                <div style="font-size:11px;color:var(--text3)">Generate all scene images using DALL-E</div>
+              </div>
+              <span id="phase2-status" style="margin-left:auto;font-size:11px;color:var(--text3)">Waiting for avatar...</span>
+            </div>
+            <div id="auto-scenes-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:1rem"></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="yellow-btn" id="gen-all-scenes-btn" onclick="generateAllScenes()">🎨 Generate All Scenes</button>
+              <span id="scenes-progress" style="font-size:12px;color:var(--text3)"></span>
+            </div>
+          </div>
+
+          <!-- PHASE 3 — ANIMATE -->
+          <div class="form-card" style="margin-bottom:16px;opacity:0.5;pointer-events:none" id="auto-phase3">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--bg4);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text3)">3</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">Animate Scenes</div>
+                <div style="font-size:11px;color:var(--text3)">Animate each image via Higgsfield (8-10 sec per clip)</div>
+              </div>
+              <span id="phase3-status" style="margin-left:auto;font-size:11px;color:var(--text3)">Waiting for images...</span>
+            </div>
+            <div id="auto-animate-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:1rem"></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="yellow-btn" id="animate-all-btn" onclick="animateAllScenes()">🎬 Animate All via Higgsfield</button>
+              <span id="animate-progress" style="font-size:12px;color:var(--text3)"></span>
+            </div>
+          </div>
+
+          <!-- PHASE 4 — COMPILE & DOWNLOAD -->
+          <div class="form-card" style="opacity:0.5;pointer-events:none" id="auto-phase4">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--bg4);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text3)">4</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">Compile & Deliver</div>
+                <div style="font-size:11px;color:var(--text3)">Download all assets for CapCut editing</div>
+              </div>
+              <span id="phase4-status" style="margin-left:auto;font-size:11px;color:var(--text3)">Waiting...</span>
+            </div>
+            <div id="auto-outputs-list" style="margin-bottom:1rem"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="yellow-btn" id="download-all-btn" onclick="downloadAllOutputs()">📥 Download All Assets</button>
+              <button class="ghost-btn" onclick="copyAllLinks()" style="font-size:12px">📋 Copy all links</button>
+              <button class="ghost-btn" onclick="notifyClientDone()" style="font-size:12px;color:var(--green);border-color:rgba(34,197,94,0.3)">✅ Notify client — done!</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENTS PAGE -->
+      <div class="page" id="page-clients">
+
+        <!-- ADD CLIENT FORM -->
+        <div class="add-user-form" style="margin-bottom:1.25rem">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:1rem">➕ Add new client</div>
+          <div class="form-grid">
+            <div class="form-field"><label class="form-label">Full name</label><input class="form-input" id="new-client-name" placeholder="Juan dela Cruz"/></div>
+            <div class="form-field"><label class="form-label">Company / Brand</label><input class="form-input" id="new-client-company" placeholder="Cosmetic Cocoon PH"/></div>
+            <div class="form-field"><label class="form-label">Email</label><input class="form-input" id="new-client-email" placeholder="client@email.com"/></div>
+            <div class="form-field"><label class="form-label">Phone</label><input class="form-input" id="new-client-phone" placeholder="+63 9XX XXX XXXX"/></div>
+            <div class="form-field"><label class="form-label">Password</label><input class="form-input" type="password" id="new-client-pass" placeholder="Min. 6 characters"/></div>
+            <div class="form-field"><label class="form-label">Plan</label>
+              <select class="form-select" id="new-client-plan">
+                <option value="basic">Basic</option>
+                <option value="standard">Standard</option>
+                <option value="premium">Premium</option>
+              </select>
+            </div>
+            <div class="form-field"><label class="form-label">Payment due date</label><input class="form-input" type="date" id="new-client-due"/></div>
+            <div class="form-field"><label class="form-label">Payment status</label>
+              <select class="form-select" id="new-client-payment">
+                <option value="paid">✅ Paid</option>
+                <option value="unpaid">❌ Unpaid</option>
+                <option value="overdue">⚠️ Overdue</option>
+              </select>
+            </div>
+          </div>
+          <button class="yellow-btn" style="margin-top:1rem" onclick="addClient()" id="add-client-btn">Add client</button>
+        </div>
+
+        <!-- CLIENTS STATS -->
+        <div class="stats-grid" style="margin-bottom:1rem" id="clients-stats"></div>
+
+        <!-- CLIENTS TABLE -->
+        <div class="section-label">All clients</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <input class="form-input" id="search-clients" placeholder="Search clients..." oninput="filterClients()" style="max-width:220px"/>
+          <select class="form-select" id="filter-payment" onchange="filterClients()" style="max-width:160px">
+            <option value="">All payments</option>
+            <option value="paid">✅ Paid</option>
+            <option value="unpaid">❌ Unpaid</option>
+            <option value="overdue">⚠️ Overdue</option>
+          </select>
+        </div>
+        <div class="data-table">
+          <div class="table-head" style="grid-template-columns:2fr 1.5fr 1fr 1fr 1fr 100px">
+            <span>Client / Company</span><span>Contact</span><span>Plan</span><span>Payment</span><span>Due date</span><span>Actions</span>
+          </div>
+          <div id="clients-body"></div>
+        </div>
+      </div>
+
+      <!-- CLIENT DASHBOARD (for client role) -->
+      <div class="page" id="page-client-dashboard">
+        <div style="margin-bottom:1.5rem">
+          <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px">Welcome back! 👋</div>
+          <div style="font-size:12px;color:var(--text3)">Here are your projects and their current status.</div>
+        </div>
+        <div class="stats-grid" id="client-stats"></div>
+        <div class="section-label" style="margin-top:1rem">My projects</div>
+        <div id="client-projects-body"></div>
+
+        <!-- SUBMIT NEW BRIEF -->
+        <div class="generate-area" style="margin-top:1.5rem">
+          <div class="form-card-title" style="margin-bottom:1rem"><span>📋</span> Submit new brief</div>
+          <textarea class="form-textarea" id="client-brief-input" placeholder="Describe your project...&#10;&#10;Include:&#10;- Brand name&#10;- Product/service&#10;- Target audience&#10;- Goals&#10;- Any special requests" style="min-height:160px"></textarea>
+          <div class="form-grid-3" style="margin-top:10px">
+            <div class="form-field">
+              <label class="form-label">Video size</label>
+              <select class="form-select" id="client-size"><option>9:16 Vertical — TikTok / Reels / Shorts</option><option>1:1 Square — Feed</option><option>16:9 Landscape — YouTube</option></select>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Language</label>
+              <select class="form-select" id="client-lang"><option>Taglish</option><option>Pure Tagalog</option><option>English</option></select>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Duration</label>
+              <select class="form-select" id="client-duration"><option>30 seconds</option><option>45 seconds</option><option>60 seconds</option></select>
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+            <button class="yellow-btn" id="client-submit-btn" onclick="submitClientBrief()">⚡ Submit & Auto-generate blueprint</button>
+            <span id="client-submit-status" style="font-size:12px;color:var(--text3)"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div class="page" id="page-analytics">
+        <div style="display:flex;gap:8px;margin-bottom:1rem;align-items:center;flex-wrap:wrap">
+          <input type="month" class="form-input" id="analytics-month-filter" onchange="loadAnalytics()" style="max-width:180px"/>
+          <button class="ghost-btn" onclick="document.getElementById('analytics-month-filter').value='';loadAnalytics()" style="font-size:11px">All time</button>
+          <input type="date" class="form-input" id="analytics-date-from" style="max-width:140px;font-size:11px" onchange="loadAnalytics()"/>
+          <span style="font-size:11px;color:var(--text3)">→</span>
+          <input type="date" class="form-input" id="analytics-date-to" style="max-width:140px;font-size:11px" onchange="loadAnalytics()"/>
+          <button class="ghost-btn" onclick="generateWeeklyReport()" style="font-size:12px;margin-left:auto">📊 Weekly report</button>
+        </div>
+        <div class="stats-grid" id="analytics-stats"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem">
+          <div class="data-table">
+            <div style="padding:12px 16px;border-bottom:0.5px solid var(--border);background:var(--bg3)">
+              <div class="section-label" style="margin:0">Projects by status</div>
+            </div>
+            <div id="analytics-status"></div>
+          </div>
+          <div class="data-table">
+            <div style="padding:12px 16px;border-bottom:0.5px solid var(--border);background:var(--bg3)">
+              <div class="section-label" style="margin:0">Editor workload</div>
+            </div>
+            <div id="analytics-activity"></div>
+          </div>
+        </div>
+        <div class="section-label">All projects overview</div>
+        <div class="data-table">
+          <div class="table-head" style="grid-template-columns:2fr 1fr 1fr 1fr">
+            <span>Client</span><span>Status</span><span>Editor</span><span>Date</span>
+          </div>
+          <div id="analytics-projects"></div>
+        </div>
+      </div>
+
+      <!-- OUTPUTS TABLE (Admin) -->
+      <div class="page" id="page-outputs">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+          <div class="section-label" style="margin:0">📦 All Editor Outputs</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select class="form-select" id="outputs-editor-filter" onchange="loadOutputsTable()" style="max-width:180px;font-size:11px">
+              <option value="">All editors</option>
+            </select>
+            <select class="form-select" id="outputs-type-filter" onchange="loadOutputsTable()" style="max-width:140px;font-size:11px">
+              <option value="">All types</option>
+              <option value="video">🎬 Video</option>
+              <option value="image">🖼️ Image</option>
+              <option value="blueprint">📄 Blueprint</option>
+              <option value="other">📎 Other</option>
+            </select>
+            <input type="date" class="form-input" id="outputs-date-from" style="max-width:140px;font-size:11px" onchange="loadOutputsTable()"/>
+            <span style="font-size:11px;color:var(--text3);line-height:32px">→</span>
+            <input type="date" class="form-input" id="outputs-date-to" style="max-width:140px;font-size:11px" onchange="loadOutputsTable()"/>
+            <button class="ghost-btn" onclick="exportOutputsCSV()" style="font-size:11px">📥 Export CSV</button>
+          </div>
+        </div>
+        <!-- Summary Stats -->
+        <div class="stats-grid" style="margin-bottom:1rem" id="outputs-stats"></div>
+        <!-- Outputs Table -->
+        <div class="data-table">
+          <div class="table-head" style="grid-template-columns:1.5fr 1.5fr 1fr 1fr 2fr 1fr">
+            <span>Editor</span><span>Client / Project</span><span>Type</span><span>Status</span><span>Output Link</span><span>Date</span>
+          </div>
+          <div id="outputs-table-body"></div>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div class="page" id="page-users">
+        <div class="add-user-form">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:1rem">Add new team member</div>
+          <div class="form-grid">
+            <div class="form-field"><label class="form-label">Full name</label><input class="form-input" id="new-user-name" placeholder="e.g. Juan dela Cruz"/></div>
+            <div class="form-field"><label class="form-label">Email</label><input class="form-input" id="new-user-email" placeholder="editor@email.com"/></div>
+            <div class="form-field"><label class="form-label">Password</label><input class="form-input" type="password" id="new-user-pass" placeholder="Min. 6 characters"/></div>
+            <div class="form-field"><label class="form-label">Role</label><select class="form-select" id="new-user-role"><option value="editor">Editor</option><option value="admin">Admin</option></select></div>
+          </div>
+          <button class="yellow-btn" style="margin-top:1rem" onclick="addUser()" id="add-user-btn">Add team member</button>
+        </div>
+        <div class="section-label">Team members</div>
+        <div class="data-table">
+          <div class="table-head user-table-cols"><span>Name / email</span><span>Role</span><span>Joined</span><span></span></div>
+          <div id="users-body"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="project-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="modal-client-name">Project</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px" id="modal-date"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="detail-grid" id="modal-detail-grid"></div>
+    <div id="modal-notes-section" style="margin-bottom:1rem;display:none">
+      <div class="section-label">Notes</div>
+      <div id="modal-notes-content" style="font-size:12px;color:var(--text2);background:var(--bg3);border-radius:var(--radius);padding:10px 12px;line-height:1.8"></div>
+    </div>
+    <div class="section-divider"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--text2);font-weight:500">Status:</span>
+      <select class="status-select" id="modal-status-select" onchange="updateProjectStatus()">
+        <option>New Input</option><option>Generating AI</option><option>Ready for Editor</option><option>In Production</option><option>Approved / Done</option>
+      </select>
+      <button class="ghost-btn" onclick="deleteProject()" style="margin-left:auto;color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--text2);font-weight:500">Priority:</span>
+      <select class="status-select" id="modal-priority-select" onchange="setPriority(currentProjectId,this.value)">
+        <option value="normal">🟡 Normal</option>
+        <option value="urgent">🔴 Urgent</option>
+        <option value="low">⚪ Low</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap" id="modal-deadline-row">
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--text2);font-weight:500">Assign to:</span>
+      <select class="status-select" id="modal-assign-select" onchange="assignProject()">
+        <option value="">Unassigned</option>
+      </select>
+    </div>
+    <div class="section-label">Comments</div>
+    <div id="modal-comments" style="margin-bottom:10px;max-height:160px;overflow-y:auto"></div>
+    <div style="display:flex;gap:8px;margin-bottom:1.25rem">
+      <input class="form-input" id="modal-comment-input" placeholder="Add a comment..." style="font-size:12px" onkeydown="if(event.key==='Enter')addComment()"/>
+      <button class="ghost-btn" onclick="addComment()" style="white-space:nowrap">+ Add</button>
+    </div>
+    <div class="section-label">Blueprint</div>
+    <div class="blueprint-box" id="modal-blueprint" style="max-height:320px"></div>
+    <div class="blueprint-actions" style="margin-top:10px">
+      <button class="ghost-btn" onclick="copyModalBlueprint()">📋 Copy blueprint</button>
+      <button class="ghost-btn" onclick="exportPDF()">📄 Export PDF</button>
+    </div>
+    <div class="section-divider"></div>
+    <!-- OUTPUT TRACKER -->
+    <div class="section-label">📦 Output files</div>
+    <div id="modal-outputs" style="margin-bottom:10px"></div>
+    <!-- REVISION TRACKER -->
+    <div id="modal-revisions-section" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em">Revisions</div>
+        <span id="revision-count-badge" style="font-size:9px;padding:1px 7px;border-radius:20px;background:var(--amber-dim);color:var(--amber);font-weight:700">0</span>
+      </div>
+      <div id="modal-revisions"></div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <input class="form-input" id="revision-input" placeholder="Describe the revision needed..." style="flex:1;font-size:12px"/>
+        <button class="ghost-btn" onclick="addRevision()" style="white-space:nowrap;font-size:12px;color:var(--amber);border-color:rgba(245,158,11,0.3)">+ Request</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap">
+      <input class="form-input" id="output-url-input" placeholder="Paste video/image URL or Google Drive link..." style="flex:1;font-size:12px"/>
+      <select class="form-select" id="output-type-select" style="max-width:120px;font-size:12px">
+        <option value="video">🎬 Video</option>
+        <option value="image">🖼️ Image</option>
+        <option value="blueprint">📄 Blueprint</option>
+        <option value="other">📎 Other</option>
+      </select>
+      <button class="ghost-btn" onclick="addOutput()" style="white-space:nowrap;font-size:12px">+ Add</button>
+    </div>
+    <div class="section-divider"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="section-label" style="margin:0">🎬 Generate per scene</div>
+      <button class="ghost-btn" onclick="showPage('settings')" style="font-size:10px;padding:3px 10px">⚙️ Tool settings</button>
+    </div>
+    <div id="modal-scenes" style="max-height:400px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
