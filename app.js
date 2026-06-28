@@ -399,7 +399,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   if(page==='all-projects')loadAllProjects();
   if(page==='new-project')loadAssignDropdown();
@@ -414,7 +414,7 @@ function showPage(page){
   if(page==='worklog')loadWorkLog();
   if(page==='client-dashboard')loadClientDashboard();
   if(page==='settings'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadSettings();}
-  if(page==='automation'){loadAutomationProjects();setTimeout(function(){sideDashboardData={avatar:null,scenes:{},videos:{}};initSideDashboard();},300);}
+  if(page==='automation'){loadAutomationProjects();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
@@ -1847,7 +1847,6 @@ var autoProject=null;
 var autoScenes=[];
 var autoAvatarUrl=null;
 var autoOutputs=[];
-var autoReferenceImageUrl=null;
 
 async function loadAutomationProjects(){
   var sel=document.getElementById('auto-project-select');
@@ -1869,34 +1868,12 @@ async function loadAutomationProject(){
   var{data}=await sb.from('projects').select('*').eq('id',sel.value).maybeSingle();
   autoProject=data;
   if(!data)return;
-  // Show ALL project info — full client details
+  // Show project info
   var info=document.getElementById('auto-project-info');
   if(info){
     info.style.display='block';
-    var fields=[
-      ['Client',data.client_name],
-      ['Business Type',data.business_type],
-      ['Product',data.product],
-      ['Target Audience',data.audience],
-      ['Pain Point',data.pain_point],
-      ['USP',data.usp],
-      ['Goal',data.goal],
-      ['Language',data.language],
-      ['Video Size',data.video_size],
-      ['Tone',data.tone],
-      ['Avatar/Model',data.avatar_desc||data.voice_actor],
-      ['Brand Color',data.color_primary],
-      ['Emphasize',data.emphasize],
-    ].filter(function(f){return f[1];});
-    info.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">'
-      +fields.map(function(f){
-        return '<div style="background:var(--bg4);border-radius:var(--radius);padding:6px 8px">'
-          +'<div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:2px">'+f[0]+'</div>'
-          +'<div style="font-size:11px;color:var(--text2)">'+f[1]+'</div>'
-          +'</div>';
-      }).join('')
-      +'</div>'
-      +'<div style="font-size:10px;color:var(--text3)">Blueprint: '+(data.blueprint?data.blueprint.length+' chars':'Not generated')+'</div>';
+    info.innerHTML='<strong>'+data.client_name+'</strong> · '+data.business_type+' · '+data.video_size
+      +'<br><span style="color:var(--text3);font-size:11px">Blueprint: '+( data.blueprint?data.blueprint.length+' chars':'Not generated')+'</span>';
   }
   // Parse scenes from blueprint
   if(data.blueprint){
@@ -1904,27 +1881,9 @@ async function loadAutomationProject(){
     renderAutomationScenes();
   }
   var avatarEl=document.getElementById('auto-avatar-prompt');
-  if(avatarEl){
-    var avatarParts=[];
-    if(data.avatar_desc)avatarParts.push(data.avatar_desc);
-    else if(data.voice_actor)avatarParts.push(data.voice_actor);
-    if(data.business_type)avatarParts.push(data.business_type+' brand');
-    if(data.audience){
-      var aud=data.audience.toLowerCase();
-      if(aud.includes('women')||aud.includes('babae'))avatarParts.push('female');
-      else if(aud.includes('men')||aud.includes('lalaki'))avatarParts.push('male');
-    }
-    var baseDesc=avatarParts.length>0?avatarParts.join(', '):'Filipino person';
-    avatarEl.value=baseDesc+', ultra realistic 4K, natural Filipino look, UGC model';
-  }
-  // Reset reference image when new project loaded
-  autoReferenceImageUrl=null;
-  var refStatus=document.getElementById('ref-image-status');
-  var refPreview=document.getElementById('ref-image-preview');
-  var refInput=document.getElementById('ref-image-input');
-  if(refStatus)refStatus.textContent='No reference — AI will generate from description';
-  if(refPreview)refPreview.style.display='none';
-  if(refInput)refInput.value='';
+  if(avatarEl&&data.avatar_desc){avatarEl.value=data.avatar_desc+', 9:16 portrait, photorealistic, studio lighting';}
+  var avatarEl=document.getElementById('auto-avatar-prompt');
+  if(avatarEl&&data.avatar_desc){avatarEl.value=data.avatar_desc+', 9:16 portrait, photorealistic, studio lighting';}
 }
 
 function renderAutomationScenes(){
@@ -1952,7 +1911,9 @@ async function generateAvatar(){
   var promptEl=document.getElementById('auto-avatar-prompt');
   var prompt=promptEl?.value?.trim();
   if(!prompt){showNotif('Add avatar description first','error');return;}
-    var btn=document.getElementById('gen-avatar-btn');
+  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
+  if(!apiKey){showNotif('Set DALL-E API key in Settings first!','error');showPage('settings');return;}
+  var btn=document.getElementById('gen-avatar-btn');
   var status=document.getElementById('avatar-gen-status');
   if(btn)btn.disabled=true;
   if(status)status.textContent='⚡ Generating avatar...';
@@ -1962,7 +1923,10 @@ async function generateAvatar(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',
-        size:'1024x1024'
+        apiKey:apiKey,
+        size:'1024x1792',
+        quality:getToolSetting('dalle-quality','hd'),
+        style:getToolSetting('dalle-style','vivid')
       })
     });
     var d=await res.json();
@@ -2009,7 +1973,9 @@ function approveAvatar(){
 async function generateSceneImage(idx){
   var scene=autoScenes[idx];
   if(!scene)return;
-    var statusEl=document.getElementById('scene-status-'+idx);
+  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
+  if(!apiKey){showNotif('Set DALL-E API key in Settings!','error');return;}
+  var statusEl=document.getElementById('scene-status-'+idx);
   var container=document.getElementById('scene-img-container-'+idx);
   if(statusEl)statusEl.textContent='⏳';
   // Build prompt — include avatar context
@@ -2022,20 +1988,9 @@ async function generateSceneImage(idx){
     var res=await fetch('/api/dalle-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        prompt:prompt,
-        size:'1024x1024',
-        type:'scene',
-        referenceImageUrl:autoReferenceImageUrl||null,
-        clientName:autoProject?.client_name||'',
-        product:autoProject?.product||'',
-        brandType:autoProject?.business_type||'',
-        audience:autoProject?.audience||'',
-        avatarDesc:autoProject?.avatar_desc||document.getElementById('auto-avatar-prompt')?.value||'',
-        tone:autoProject?.tone||'',
-        sceneNum:idx+1,
-        totalScenes:autoScenes.length
-      })
+      body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:'1024x1792',
+        quality:getToolSetting('dalle-quality','hd'),
+        style:getToolSetting('dalle-style','vivid')})
     });
     var d=await res.json();
     if(d.url){
@@ -2095,381 +2050,6 @@ async function generateAllScenes(){
   }
   if(progress)progress.textContent='All scenes generated! Review and approve each.';
   if(btn)btn.disabled=false;
-}
-
-
-// ═══════════════════════════════════════
-// REFERENCE IMAGE — Upload your own model
-// ═══════════════════════════════════════
-
-function initReferenceUpload(){
-  if(document.getElementById('ref-upload-section'))return;
-  var genBtn=document.getElementById('gen-avatar-btn');
-  if(!genBtn)return;
-  var refSection=document.createElement('div');
-  refSection.id='ref-upload-section';
-  refSection.style.cssText='margin-top:10px;padding:12px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg)';
-  refSection.innerHTML=
-    '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px">📸 Use your own model photo</div>'
-    +'<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Upload a reference — AI will match this look for all scenes. No need to generate avatar!</div>'
-    +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
-    +'<label id="ref-upload-label" style="cursor:pointer;padding:8px 14px;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.3);border-radius:var(--radius);color:var(--yellow);font-size:12px;font-weight:600">'
-    +'📁 Upload photo'
-    +'<input type="file" accept="image/*" id="ref-image-input" style="display:none"/>'
-    +'</label>'
-    +'<span id="ref-image-status" style="font-size:11px;color:var(--text3)">No reference — AI generates from description</span>'
-    +'</div>'
-    +'<div id="ref-image-preview" style="display:none;margin-top:10px;display:none;align-items:center;gap:10px">'
-    +'<img id="ref-preview-img" style="width:70px;height:70px;object-fit:cover;border-radius:var(--radius);border:2px solid var(--yellow)"/>'
-    +'<div>'
-    +'<div style="font-size:11px;font-weight:600;color:var(--green);margin-bottom:4px">✅ Reference set! Proceeding to scenes...</div>'
-    +'<button onclick="clearReferenceImage()" style="font-size:10px;padding:3px 8px;background:var(--red-dim);border:0.5px solid rgba(239,68,68,0.3);color:var(--red);border-radius:var(--radius);cursor:pointer">✕ Remove</button>'
-    +'</div>'
-    +'</div>';
-  // Insert after the generate avatar button
-  genBtn.parentNode.insertBefore(refSection,genBtn.parentNode.querySelector('#avatar-result')||genBtn.nextSibling);
-  // Attach file input handler
-  var fileInput=document.getElementById('ref-image-input');
-  if(fileInput)fileInput.addEventListener('change',handleReferenceUpload);
-}
-
-async function handleReferenceUpload(e){
-  var file=e.target.files[0];
-  if(!file)return;
-  var statusEl=document.getElementById('ref-image-status');
-  var previewDiv=document.getElementById('ref-image-preview');
-  var previewImg=document.getElementById('ref-preview-img');
-  if(statusEl)statusEl.textContent='⚡ Uploading...';
-
-  // Read as base64 first for preview
-  var reader=new FileReader();
-  reader.onload=async function(ev){
-    var base64=ev.target.result;
-    // Show preview immediately
-    if(previewImg)previewImg.src=base64;
-    if(previewDiv){previewDiv.style.display='flex';}
-
-    // Try upload to Supabase Storage
-    try{
-      var blob=await(await fetch(base64)).blob();
-      var fileName='ref-'+Date.now()+'.jpg';
-      var filePath='references/'+fileName;
-      var{data,error}=await sb.storage.from('Ai creatives system storage').upload(filePath,blob,{
-        contentType:'image/jpeg',upsert:true
-      });
-      if(!error){
-        var{data:urlData}=sb.storage.from('Ai creatives system storage').getPublicUrl(filePath);
-        autoReferenceImageUrl=urlData?.publicUrl||base64;
-      } else {
-        // Fallback to base64
-        autoReferenceImageUrl=base64;
-        console.log('Storage upload failed, using base64:',error.message);
-      }
-    }catch(err){
-      autoReferenceImageUrl=base64;
-    }
-
-    if(statusEl)statusEl.innerHTML='✅ <strong style="color:var(--green)">Reference ready!</strong> Skipping avatar generation...';
-    showNotif('Reference image set! Proceeding to scenes 🔥','success');
-    
-    // AUTO-PROCEED — skip avatar generation, unlock scenes directly
-    setTimeout(function(){
-      autoAvatarUrl=autoReferenceImageUrl; // Use reference as avatar
-
-      // ─── HIDE avatar generate section — not needed anymore ───
-      var avatarPromptBox=document.querySelector('#auto-phase1 textarea, [id="auto-avatar-prompt"]');
-      var avatarPromptLabel=document.querySelector('[for="auto-avatar-prompt"], .avatar-prompt-label');
-      var genAvatarBtn=document.getElementById('gen-avatar-btn');
-      var regenBtn=document.querySelector('[onclick="generateAvatar()"]');
-      var avatarDescSection=document.getElementById('avatar-desc-section');
-      // Hide description box + label + generate button
-      if(avatarPromptBox){avatarPromptBox.closest('div')&&avatarPromptBox.closest('div').previousElementSibling?avatarPromptBox.closest('div').previousElementSibling.style.display='none':'';avatarPromptBox.style.display='none';}
-      if(genAvatarBtn){genAvatarBtn.style.display='none';}
-      // Also hide the label "Avatar description (from client brief)"
-      document.querySelectorAll('#auto-phase1 label, #auto-phase1 .field-label').forEach(function(el){
-        if(el.textContent.toLowerCase().includes('avatar'))el.style.display='none';
-      });
-      // Hide the textarea wrapper
-      var avatarTextarea=document.getElementById('auto-avatar-prompt');
-      if(avatarTextarea){
-        // Hide label above it
-        var wrapper=avatarTextarea.parentElement;
-        if(wrapper){
-          var prevSibling=wrapper.previousElementSibling;
-          if(prevSibling)prevSibling.style.display='none';
-          wrapper.style.display='none';
-        }
-        avatarTextarea.style.display='none';
-      }
-      // Hide generate + regenerate buttons
-      document.querySelectorAll('#gen-avatar-btn, [onclick*="generateAvatar"]').forEach(function(el){el.style.display='none';});
-
-      // Unlock Phase 2
-      var phase2=document.getElementById('auto-phase2');
-      if(phase2){phase2.style.opacity='1';phase2.style.pointerEvents='auto';}
-      var p1status=document.getElementById('phase1-status');
-      if(p1status){p1status.textContent='✅ Reference set';p1status.style.color='var(--green)';}
-      var p2status=document.getElementById('phase2-status');
-      if(p2status)p2status.textContent='Reference image active — generating scenes...';
-      updateSideDashboard(-1,'avatar',{url:autoReferenceImageUrl});
-    },800);
-  };
-  reader.readAsDataURL(file);
-}
-
-function clearReferenceImage(){
-  autoReferenceImageUrl=null;
-  autoAvatarUrl=null;
-  var statusEl=document.getElementById('ref-image-status');
-  var previewDiv=document.getElementById('ref-image-preview');
-  var fileInput=document.getElementById('ref-image-input');
-  if(statusEl)statusEl.textContent='No reference — AI generates from description';
-  if(previewDiv)previewDiv.style.display='none';
-  if(fileInput)fileInput.value='';
-
-  // ─── RESTORE avatar section ───
-  var avatarTextarea=document.getElementById('auto-avatar-prompt');
-  if(avatarTextarea){
-    var wrapper=avatarTextarea.parentElement;
-    if(wrapper){
-      var prevSibling=wrapper.previousElementSibling;
-      if(prevSibling)prevSibling.style.display='';
-      wrapper.style.display='';
-    }
-    avatarTextarea.style.display='';
-  }
-  document.querySelectorAll('#gen-avatar-btn, [onclick*="generateAvatar"]').forEach(function(el){el.style.display='';});
-
-  // Lock phase 2 back
-  var phase2=document.getElementById('auto-phase2');
-  if(phase2){phase2.style.opacity='0.4';phase2.style.pointerEvents='none';}
-  showNotif('Reference removed — generate avatar to proceed','success');
-}
-
-// ═══════════════════════════════════════
-// SIDE DASHBOARD
-// ═══════════════════════════════════════
-var sideDashboardData={avatar:null,scenes:{},videos:{}};
-
-function initSideDashboard(){
-  var autoPage=document.getElementById('page-automation');
-  if(!autoPage||document.getElementById('auto-side-dashboard'))return;
-  var wrapper=document.createElement('div');
-  wrapper.id='auto-wrapper';
-  wrapper.style.cssText='display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start';
-  var leftCol=document.createElement('div');
-  leftCol.id='auto-left-col';
-  while(autoPage.firstChild){leftCol.appendChild(autoPage.firstChild);}
-  var rightCol=document.createElement('div');
-  rightCol.id='auto-side-dashboard';
-  rightCol.style.cssText='position:sticky;top:0;overflow-y:auto;max-height:100vh;display:flex;flex-direction:column;gap:10px;padding:8px 0';
-  rightCol.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--text)">⚡ Generation tracker</div>'
-    +'<div style="font-size:11px;color:var(--text3)">Assets will appear here as they generate.</div>';
-  wrapper.appendChild(leftCol);
-  wrapper.appendChild(rightCol);
-  autoPage.appendChild(wrapper);
-  setTimeout(function(){initReferenceUpload();},400);
-}
-
-function updateSideDashboard(idx,type,data){
-  if(type==='avatar'&&data.url)sideDashboardData.avatar=data.url;
-  else if(type==='scene_done'&&data.url)sideDashboardData.scenes[idx]={url:data.url,num:data.num};
-  else if(type==='video'&&data.prompt){sideDashboardData.videos[idx]=sideDashboardData.videos[idx]||{};sideDashboardData.videos[idx].tool=data.tool;sideDashboardData.videos[idx].prompt=data.prompt;}
-  else if(type==='video_done'&&data.url){sideDashboardData.videos[idx]=sideDashboardData.videos[idx]||{};sideDashboardData.videos[idx].url=data.url;sideDashboardData.videos[idx].tool=data.tool;}
-  renderSideDashboard();
-}
-
-function renderSideDashboard(){
-  var dash=document.getElementById('auto-side-dashboard');
-  if(!dash)return;
-  var total=autoScenes.length||0;
-  var doneScenes=Object.keys(sideDashboardData.scenes).length;
-  var doneVideos=Object.values(sideDashboardData.videos).filter(function(v){return v.url;}).length;
-  var pct=total>0?Math.round(((doneScenes+doneVideos)/(total*2))*100):0;
-  var html='<div style="font-size:12px;font-weight:600;color:var(--text)">⚡ Generation tracker</div>';
-  if(autoReferenceImageUrl){
-    html+='<div style="background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.3);border-radius:var(--radius);padding:8px 10px;font-size:11px;color:var(--yellow);font-weight:600">📸 Reference active — face consistent</div>';
-  }
-  html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
-    +'<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;color:var(--text2);font-weight:600">Overall</span><span style="font-size:11px;color:var(--yellow);font-weight:700">'+pct+'%</span></div>'
-    +'<div style="height:5px;background:var(--bg4);border-radius:99px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:var(--yellow);border-radius:99px;transition:width 0.4s"></div></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:8px">'
-    +'<div style="text-align:center"><div style="font-size:14px;font-weight:700;color:'+(sideDashboardData.avatar?'var(--green)':'var(--text3)')+'">'+( sideDashboardData.avatar?'✅':'⏳')+'</div><div style="font-size:9px;color:var(--text3)">Avatar</div></div>'
-    +'<div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--amber)">'+doneScenes+'/'+total+'</div><div style="font-size:9px;color:var(--text3)">Scenes</div></div>'
-    +'<div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--purple)">'+doneVideos+'/'+total+'</div><div style="font-size:9px;color:var(--text3)">Videos</div></div>'
-    +'</div></div>';
-  if(sideDashboardData.avatar){
-    html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
-      +'<div style="font-size:11px;font-weight:600;color:var(--yellow);margin-bottom:6px">👤 '+(autoReferenceImageUrl?'Reference':'Avatar')+'</div>'
-      +'<img src="'+sideDashboardData.avatar+'" style="width:100%;border-radius:var(--radius);object-fit:cover;max-height:180px"/>'
-      +'</div>';
-  }
-  if(doneScenes>0){
-    html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
-      +'<div style="font-size:11px;font-weight:600;color:var(--amber);margin-bottom:6px">🎨 Scenes ('+doneScenes+'/'+total+')</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">';
-    for(var i=0;i<total;i++){
-      var s=sideDashboardData.scenes[i];
-      if(s){html+='<div style="position:relative;border-radius:4px;overflow:hidden"><img src="'+s.url+'" style="width:100%;aspect-ratio:9/16;object-fit:cover"/><div style="position:absolute;bottom:2px;left:2px;font-size:8px;background:rgba(0,0,0,0.7);color:#fff;padding:1px 3px;border-radius:2px">S'+(s.num||i+1)+'</div></div>';}
-      else{html+='<div style="aspect-ratio:9/16;background:var(--bg4);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3)">'+(i+1)+'</div>';}
-    }
-    html+='</div></div>';
-  }
-  if(Object.keys(sideDashboardData.videos).length>0){
-    html+='<div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:10px">'
-      +'<div style="font-size:11px;font-weight:600;color:var(--purple);margin-bottom:6px">🎬 Videos</div>';
-    Object.keys(sideDashboardData.videos).forEach(function(i){
-      var v=sideDashboardData.videos[i];
-      html+='<div style="padding:5px;background:var(--bg3);border-radius:var(--radius);margin-bottom:4px">'
-        +'<div style="display:flex;justify-content:space-between"><span style="font-size:10px;font-weight:600;color:var(--text2)">Scene '+(parseInt(i)+1)+'</span><span style="font-size:9px;color:var(--purple)">'+(v.tool||'')+'</span></div>';
-      if(v.url)html+='<a href="'+v.url+'" target="_blank" style="font-size:10px;color:var(--yellow)">▶ Open</a>';
-      else if(v.prompt)html+='<div style="font-size:9px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+v.prompt.substring(0,70)+'...</div>';
-      html+='</div>';
-    });
-    html+='</div>';
-  }
-  dash.innerHTML=html;
-}
-
-// VEO 3 brain video generation
-async function generateSceneVideo(idx,tool){
-  var scene=autoScenes[idx];
-  if(!scene){showNotif('No scene found','error');return;}
-  var statusEl=document.getElementById('scene-video-status-'+idx);
-  if(statusEl)statusEl.textContent='⚡ Building VEO 3 prompt...';
-  var optimizedPrompt='';
-  try{
-    var vpRes=await fetch('/api/video-prompt',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        sceneNum:scene.num,
-        scenePrompt:scene.videoPrompt||scene.imagePrompt||scene.visual||'',
-        voiceover:scene.voiceover||'',
-        avatarDesc:autoProject?.avatar_desc||document.getElementById('auto-avatar-prompt')?.value||'',
-        clientName:autoProject?.client_name||'',
-        product:autoProject?.product||'',
-        brandPersonality:autoProject?.tone||'Friendly, relatable',
-        audience:autoProject?.audience||'',
-        videoSize:autoProject?.video_size||'9:16',
-        pricePoint:'Mid',tool:tool
-      })
-    });
-    var vpData=await vpRes.json();
-    if(vpData.success&&vpData.prompt){optimizedPrompt=vpData.prompt;if(statusEl)statusEl.textContent='✅ Prompt ready!';}
-  }catch(e){console.log('VEO brain error:',e);}
-  if(!optimizedPrompt){
-    var sizeTag=(autoProject?.video_size||'').includes('1:1')?'1:1 square':'9:16 vertical portrait, mobile-optimized';
-    optimizedPrompt=(scene.videoPrompt||scene.imagePrompt||scene.visual||'Filipino UGC video')+' '+sizeTag+', real iPhone camera feel, handheld micro-jitter, natural lighting, no filters, no studio look. Negative: AI look, CGI, plastic skin, studio lighting, beauty filter.';
-    if(autoProject?.avatar_desc)optimizedPrompt='Featuring: '+autoProject.avatar_desc+'. '+optimizedPrompt;
-  }
-  updateSideDashboard(idx,'video',{tool:tool,prompt:optimizedPrompt});
-  if(tool==='higgsfield'){
-    navigator.clipboard.writeText(optimizedPrompt).catch(function(){});
-    window.open('https://higgsfield.ai/create','_blank');
-    if(statusEl)statusEl.innerHTML='✅ Copied! <span style="color:var(--yellow)">Paste in Higgsfield →</span>';
-    autoOutputs[idx]=autoOutputs[idx]||{};autoOutputs[idx].videoTool='higgsfield';autoOutputs[idx].videoPrompt=optimizedPrompt;
-    showNotif('VEO 3 prompt copied! 🎬','success');
-  } else {
-    var apiKey=getSecureApiKey(tool)||getToolSetting(tool+'-api-key');
-    if(!apiKey){showNotif('No API key for '+tool,'error');showPage('settings');return;}
-    try{
-      var endpoint=tool==='grok'?'/api/grok-generate':'/api/veo-generate';
-      var model=tool==='grok'?getToolSetting('grok-model','grok-imagine-video-1.5-preview'):getToolSetting('veo-model','veo-3');
-      var res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({prompt:optimizedPrompt,model:model,duration:8,type:'video'})});
-      var d=await res.json();
-      if(d.url){
-        if(statusEl)statusEl.innerHTML='✅ Ready! <a href="'+d.url+'" target="_blank" style="color:var(--yellow)">Open →</a>';
-        if(autoProject?.id){await sb.from('project_outputs').insert({project_id:autoProject.id,user_id:currentUser.id,url:d.url,type:'video',label:'Scene '+scene.num+' ('+tool+')'}).catch(function(){});}
-        autoOutputs[idx]=autoOutputs[idx]||{};autoOutputs[idx].videoUrl=d.url;autoOutputs[idx].videoTool=tool;
-        updateSideDashboard(idx,'video_done',{tool:tool,url:d.url});
-        showNotif('Scene '+scene.num+' done! ✓','success');
-        var phase4=document.getElementById('auto-phase4');if(phase4){phase4.style.opacity='1';phase4.style.pointerEvents='auto';}
-      } else if(d.status==='processing'){
-        if(statusEl)statusEl.textContent='⏳ Processing...';
-      } else {
-        if(statusEl)statusEl.textContent='❌ '+(d.error||'Failed');
-      }
-    }catch(e){if(statusEl)statusEl.textContent='❌ '+e.message;}
-  }
-}
-
-
-// ═══════════════════════════════════════
-// SCENE UPLOAD — Use your own image per scene
-// Skips AI generation, uploads to storage
-// ═══════════════════════════════════════
-
-async function handleSceneUpload(idx, inputEl){
-  var file=inputEl.files[0];
-  if(!file)return;
-  var scene=autoScenes[idx];
-  var statusEl=document.getElementById('scene-status-'+idx);
-  var container=document.getElementById('scene-img-container-'+idx);
-  if(statusEl)statusEl.textContent='⚡';
-
-  var reader=new FileReader();
-  reader.onload=async function(ev){
-    var base64=ev.target.result;
-
-    // Show preview immediately
-    if(container){
-      container.innerHTML='<img src="'+base64+'" style="width:100%;height:100%;object-fit:cover;max-height:200px"/>'
-        +'<div style="position:absolute;top:4px;left:4px;font-size:9px;background:rgba(34,197,94,0.9);color:#fff;padding:2px 6px;border-radius:3px;font-weight:600">📁 Uploaded</div>'
-        +'<div style="position:absolute;bottom:4px;right:4px;display:flex;gap:3px">'
-        +'<button class="regen-scene" data-idx="'+idx+'" style="font-size:9px;padding:2px 6px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:3px;cursor:pointer">🔄</button>'
-        +'<button class="approve-scene" data-idx="'+idx+'" data-url="'+base64+'" style="font-size:9px;padding:2px 6px;background:rgba(34,197,94,0.8);color:#fff;border:none;border-radius:3px;cursor:pointer">✅</button>'
-        +'</div>';
-      container.style.position='relative';
-      container.querySelectorAll('.regen-scene').forEach(function(b){
-        b.addEventListener('click',function(){
-          // Reset to empty state for re-upload or AI gen
-          container.innerHTML='<div style="font-size:10px;color:var(--text3);text-align:center;padding:8px">Scene '+(scene.num||idx+1)+'</div>';
-          inputEl.value='';
-          if(statusEl)statusEl.textContent='';
-          delete autoOutputs[idx];
-        });
-      });
-      container.querySelectorAll('.approve-scene').forEach(function(b){
-        b.addEventListener('click',function(){approveSceneImage(parseInt(this.dataset.idx),this.dataset.url);});
-      });
-    }
-
-    // Upload to Supabase storage
-    if(statusEl)statusEl.textContent='💾';
-    var permanentUrl=await uploadImageToStorage(base64, genFileName('scene-upload',idx));
-
-    // Save to autoOutputs
-    autoOutputs[idx]=autoOutputs[idx]||{};
-    autoOutputs[idx].url=permanentUrl;
-    autoOutputs[idx].type='image';
-    autoOutputs[idx].scene=scene;
-    autoOutputs[idx].isUploaded=true;
-
-    // Update container with permanent URL
-    if(container){
-      var approveBtn=container.querySelector('.approve-scene');
-      if(approveBtn)approveBtn.dataset.url=permanentUrl;
-    }
-
-    // Update side dashboard
-    updateSideDashboard(idx,'scene_done',{url:permanentUrl,num:scene.num||idx+1});
-
-    if(statusEl)statusEl.textContent='✅';
-
-    // Save to project outputs DB
-    if(autoProject?.id){
-      await sb.from('project_outputs').insert({
-        project_id:autoProject.id,
-        user_id:currentUser.id,
-        url:permanentUrl,
-        type:'image',
-        label:'Scene '+(scene.num||idx+1)+' (uploaded)'
-      }).catch(function(){});
-    }
-    showNotif('Scene '+(idx+1)+' image uploaded! ✅','success');
-  };
-  reader.readAsDataURL(file);
 }
 
 function animateAllScenes(){
@@ -2768,7 +2348,7 @@ async function generateHiggsfield(prompt, apiKey, type){
     var res=await fetch('/api/higgs-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,type:type,
+      body:JSON.stringify({prompt:prompt,apiKey:apiKey,type:type,
         model:getToolSetting('higgs-model','soul-2'),
         duration:parseInt(getToolSetting('higgs-duration','4'))})
     });
@@ -2802,7 +2382,7 @@ async function generateGrok(prompt, apiKey, type){
     var res=await fetch('/api/grok-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,model:model,duration:duration,type:type})
+      body:JSON.stringify({prompt:prompt,apiKey:apiKey,model:model,duration:duration,type:type})
     });
     var d=await res.json();
     if(d.url){
@@ -2834,7 +2414,7 @@ async function generateVeo(prompt, apiKey, type){
     var res=await fetch('/api/veo-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,model:model,duration:duration,type:type})
+      body:JSON.stringify({prompt:prompt,apiKey:apiKey,model:model,duration:duration,type:type})
     });
     var d=await res.json();
     if(d.url){
@@ -3636,23 +3216,17 @@ function renderAutomationScenes(){
   grid.innerHTML=autoScenes.map(function(s,i){
     var aspectStyle=isSquare?'aspect-ratio:1/1':'aspect-ratio:9/16';
     return '<div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);overflow:hidden" id="scene-card-'+i+'">'
-      // ─── Image container ───
       +'<div style="'+aspectStyle+';background:var(--bg4);display:flex;align-items:center;justify-content:center;position:relative;max-height:200px" id="scene-img-container-'+i+'">'
       +'<div style="font-size:10px;color:var(--text3);text-align:center;padding:8px">Scene '+s.num+'<br><span style="font-size:9px;color:var(--yellow)">'+sizeLabel+'</span></div>'
       +'</div>'
       +'<div style="padding:8px">'
-      // ─── Scene script snippet ───
       +'<div style="font-size:9px;color:var(--text3);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(s.voiceover||s.imagePrompt||'').substring(0,50)+'...</div>'
-      // ─── TOGGLE: AI Generate OR Upload own image ───
-      +'<div style="display:flex;gap:4px;margin-bottom:6px;align-items:center">'
-      +'<button class="gen-scene-btn" data-idx="'+i+'" data-size="'+dalleSize+'" style="flex:1;font-size:10px;padding:4px;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.2);border-radius:4px;color:var(--yellow);cursor:pointer;font-weight:600">🎨 AI Generate</button>'
-      +'<label style="flex:1;cursor:pointer;font-size:10px;padding:4px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:4px;color:var(--text2);text-align:center;font-weight:600">'
-      +'📁 Upload'
-      +'<input type="file" accept="image/*" class="scene-upload-input" data-idx="'+i+'" style="display:none"/>'
-      +'</label>'
-      +'<span id="scene-status-'+i+'" style="font-size:9px;color:var(--text3);display:flex;align-items:center;padding:0 2px"></span>'
+      // Image generation
+      +'<div style="display:flex;gap:4px;margin-bottom:6px">'
+      +'<button class="gen-scene-btn" data-idx="'+i+'" data-size="'+dalleSize+'" style="flex:1;font-size:10px;padding:4px;background:var(--yellow-dim);border:0.5px solid rgba(250,204,21,0.2);border-radius:4px;color:var(--yellow);cursor:pointer;font-weight:600">🎨 Gen Image</button>'
+      +'<span id="scene-status-'+i+'" style="font-size:9px;color:var(--text3);display:flex;align-items:center;padding:0 4px"></span>'
       +'</div>'
-      // ─── Video generation ───
+      // Video generation — editor picks model
       +'<div style="font-size:9px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase">🎬 Generate Video:</div>'
       +'<div style="display:flex;gap:3px;flex-wrap:wrap">'
       +'<button class="gen-video-btn" data-idx="'+i+'" data-tool="higgsfield" style="font-size:9px;padding:3px 6px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer">Higgsfield</button>'
@@ -3667,13 +3241,6 @@ function renderAutomationScenes(){
   grid.querySelectorAll('.gen-scene-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
       generateSceneImage(parseInt(this.dataset.idx),this.dataset.size);
-    });
-  });
-
-  // Attach scene upload handlers
-  grid.querySelectorAll('.scene-upload-input').forEach(function(input){
-    input.addEventListener('change',function(){
-      handleSceneUpload(parseInt(this.dataset.idx),this);
     });
   });
 
@@ -3719,7 +3286,7 @@ async function generateSceneVideo(idx,tool){
       var endpoint=tool==='grok'?'/api/grok-generate':'/api/veo-generate';
       var model=tool==='grok'?getToolSetting('grok-model','grok-imagine-video-1.5-preview'):getToolSetting('veo-model','veo-3');
       var res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({prompt:prompt,model:model,duration:8,type:'video'})});
+        body:JSON.stringify({prompt:prompt,apiKey:apiKey,model:model,duration:8,type:'video'})});
       var d=await res.json();
       if(d.url){
         if(statusEl)statusEl.innerHTML='✅ Video ready! <a href="'+d.url+'" target="_blank" style="color:var(--yellow)">Open →</a>';
@@ -3751,7 +3318,9 @@ async function generateSceneVideo(idx,tool){
 async function generateSceneImage(idx, dalleSize){
   var scene=autoScenes[idx];
   if(!scene)return;
-    var statusEl=document.getElementById('scene-status-'+idx);
+  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
+  if(!apiKey){showNotif('Set DALL-E API key in Settings!','error');showPage('settings');return;}
+  var statusEl=document.getElementById('scene-status-'+idx);
   var container=document.getElementById('scene-img-container-'+idx);
   if(statusEl)statusEl.textContent='⏳';
   var videoSize=autoProject?.video_size||'9:16';
@@ -3764,7 +3333,7 @@ async function generateSceneImage(idx, dalleSize){
   prompt+=' '+sizeTag+', photorealistic, cinematic lighting, no text, no logos';
   try{
     var res=await fetch('/api/dalle-generate',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,size:imgSize})});
+      body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:imgSize,quality:getToolSetting('dalle-quality','hd'),style:getToolSetting('dalle-style','vivid')})});
     var d=await res.json();
     if(d.url){
       if(container){
@@ -3805,33 +3374,23 @@ var STORAGE_BUCKET='Ai creatives system storage';
 // Returns permanent Supabase URL or original URL if fails
 async function uploadImageToStorage(imageUrl, fileName){
   try{
-    var blob;
-    // Handle base64 data URL (from gpt-image-1)
-    if(imageUrl.startsWith('data:')){
-      var res=await fetch(imageUrl);
-      blob=await res.blob();
-    } else {
-      // Handle regular URL (from Flux/Replicate)
-      var response=await fetch(imageUrl);
-      if(!response.ok)throw new Error('Failed to fetch image');
-      blob=await response.blob();
-    }
+    // Fetch the image
+    var response=await fetch(imageUrl);
+    if(!response.ok)throw new Error('Failed to fetch image');
+    var blob=await response.blob();
     // Upload to Supabase Storage
     var filePath='images/'+fileName;
     var{data,error}=await sb.storage.from(STORAGE_BUCKET).upload(filePath,blob,{
       contentType:'image/png',
       upsert:true
     });
-    if(error){
-      console.error('Storage upload error:',error);
-      // For base64, return as-is (still displays in <img>)
-      return imageUrl;
-    }
+    if(error){console.error('Storage upload error:',error);return imageUrl;}
+    // Get public URL
     var{data:urlData}=sb.storage.from(STORAGE_BUCKET).getPublicUrl(filePath);
     return urlData?.publicUrl||imageUrl;
   }catch(e){
     console.error('Storage upload failed:',e);
-    return imageUrl;
+    return imageUrl; // Fallback to original URL
   }
 }
 
@@ -3848,7 +3407,9 @@ generateAvatar=async function(){
   var promptEl=document.getElementById('auto-avatar-prompt');
   var prompt=promptEl?.value?.trim();
   if(!prompt){showNotif('Add avatar description first','error');return;}
-    var btn=document.getElementById('gen-avatar-btn');
+  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
+  if(!apiKey){showNotif('Set DALL-E API key in Settings first!','error');showPage('settings');return;}
+  var btn=document.getElementById('gen-avatar-btn');
   var status=document.getElementById('avatar-gen-status');
   if(btn)btn.disabled=true;
   if(status)status.textContent='⚡ Generating avatar...';
@@ -3857,25 +3418,24 @@ generateAvatar=async function(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',size:'1024x1024'
+        prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',
+        apiKey:apiKey,size:'1024x1792',
+        quality:getToolSetting('dalle-quality','hd'),
+        style:getToolSetting('dalle-style','vivid')
       })
     });
     var d=await res.json();
     if(d.url){
-      if(status)status.textContent='⚡ Saving...';
-      var permanentUrl;
-      if(d.url.startsWith('data:')){
-        var fileName=genFileName('avatar');
-        permanentUrl=await uploadImageToStorage(d.url,fileName);
-      } else {
-        permanentUrl=d.url;
-      }
+      if(status)status.textContent='⚡ Saving to storage...';
+      // Upload to Supabase Storage
+      var fileName=genFileName('avatar');
+      var permanentUrl=await uploadImageToStorage(d.url,fileName);
       autoAvatarUrl=permanentUrl;
       var preview=document.getElementById('avatar-preview');
       var result=document.getElementById('avatar-result');
       if(preview)preview.src=permanentUrl;
       if(result)result.style.display='block';
-      if(status)status.textContent='✅ Avatar saved to storage!';updateSideDashboard(-1,'avatar',{url:permanentUrl});
+      if(status)status.textContent='✅ Avatar saved to storage!';
       // Save permanent URL to project outputs
       if(autoProject?.id){
         await sb.from('project_outputs').insert({
@@ -3901,7 +3461,9 @@ var _origGenerateSceneImage=generateSceneImage;
 generateSceneImage=async function(idx,dalleSize){
   var scene=autoScenes[idx];
   if(!scene)return;
-    var statusEl=document.getElementById('scene-status-'+idx);
+  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
+  if(!apiKey){showNotif('Set DALL-E API key in Settings!','error');showPage('settings');return;}
+  var statusEl=document.getElementById('scene-status-'+idx);
   var container=document.getElementById('scene-img-container-'+idx);
   if(statusEl)statusEl.textContent='⏳';
   var videoSize=autoProject?.video_size||'9:16';
@@ -3916,31 +3478,16 @@ generateSceneImage=async function(idx,dalleSize){
     var res=await fetch('/api/dalle-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        prompt:prompt,
-        size:imgSize,
-        type:'scene',
-        clientName:autoProject?.client_name||'',
-        product:autoProject?.product||'',
-        brandType:autoProject?.business_type||'',
-        avatarDesc:autoProject?.avatar_desc||document.getElementById('auto-avatar-prompt')?.value||'',
-        tone:autoProject?.tone||'',
-        sceneNum:idx+1
-      })
+      body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:imgSize,
+        quality:getToolSetting('dalle-quality','hd'),
+        style:getToolSetting('dalle-style','vivid')})
     });
     var d=await res.json();
     if(d.url){
       if(statusEl)statusEl.textContent='💾';
-      var permanentUrl;
-      // If server already returned a permanent Supabase URL, use it directly
-      if(d.url.startsWith('data:')){
-        // base64 fallback — still upload from client side
-        var fileName=genFileName('scene',idx);
-        permanentUrl=await uploadImageToStorage(d.url,fileName);
-      } else {
-        // Already a permanent URL from server-side upload
-        permanentUrl=d.url;
-      }
+      // Upload to Supabase Storage
+      var fileName=genFileName('scene',idx);
+      var permanentUrl=await uploadImageToStorage(d.url,fileName);
       if(container){
         var aspectStyle=isSquare?'aspect-ratio:1/1':'aspect-ratio:9/16';
         container.innerHTML='<img src="'+permanentUrl+'" style="width:100%;height:100%;object-fit:cover;max-height:200px"/>'
@@ -3957,7 +3504,6 @@ generateSceneImage=async function(idx,dalleSize){
       autoOutputs[idx].url=permanentUrl;
       autoOutputs[idx].type='image';
       autoOutputs[idx].scene=scene;
-      updateSideDashboard(idx,'scene_done',{url:permanentUrl,num:scene.num});
       // Save permanent URL to DB
       if(autoProject?.id){
         await sb.from('project_outputs').insert({
@@ -4289,4 +3835,409 @@ async function doQuickAssign(projectId, editorId, editorName){
   // Update local allProjects so tag shows immediately
   allProjects=allProjects.map(function(p){return p.id===projectId?Object.assign({},p,{assigned_to:editorId}):p;});
   loadDashboard();
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   AI IMAGE CREATIVES — JS FUNCTIONS
+   Paste at the END of app.js (before the last closing lines)
+   ═══════════════════════════════════════════════════════════ */
+
+// ─── STATE ───
+var icState = {
+  prompts: [],           // array of 15 {name, tagline, subheadline, imagePrompt, bullets, cta}
+  images: [],            // generated image URLs
+  currentIdx: 0,         // which prompt is being generated
+  batchNumber: 1,        // current batch
+  usedAngles: [],        // track used creative angles across batches
+  isRunning: false,      // auto-generate running
+  stopRequested: false   // stop signal
+};
+
+// ─── MEGA SYSTEM PROMPT (from doc) ───
+function getICSystemPrompt() {
+  return `Act as a senior graphic designer, creative strategist, direct-response copywriter, and performance marketer for the Philippine market in 2026.
+
+Your task is to generate HIGH-CONVERTING STATIC IMAGE AD CREATIVE STRATEGIES for Facebook and Instagram Ads.
+
+The goal is to create message-first, scroll-stopping, conversion-focused 1080x1080 static image ads.
+
+RULES:
+- Tagline/Headline must be the BIGGEST visual element
+- Logo must be minimal only — small corner placement
+- Image must instantly communicate the offer within 1-2 seconds
+- Must be Meta Ads Policy and Community Standards compliant
+- No misleading claims, no guaranteed results, no before-and-after exaggeration
+- No direct personal callouts about sensitive topics
+- Use UGC-style ultra-realistic iPhone photo visuals
+- Natural skin, visible pores, candid real Philippine environment
+- Performance over aesthetics. Message-first always.
+
+FOR EACH CREATIVE, respond with ONLY valid JSON. No markdown, no explanation.`;
+}
+
+// ─── BUILD USER PROMPT ───
+function buildICUserPrompt(batchNum, usedAngles) {
+  var brand = document.getElementById('ic-brand').value.trim();
+  var biztype = document.getElementById('ic-biztype').value;
+  var product = document.getElementById('ic-product').value.trim();
+  var audience = document.getElementById('ic-audience').value.trim();
+  var goal = document.getElementById('ic-goal').value;
+  var usp = document.getElementById('ic-usp').value.trim();
+  var pain = document.getElementById('ic-pain').value.trim();
+  var price = document.getElementById('ic-price').value.trim();
+  var colors = document.getElementById('ic-colors').value.trim();
+  var tone = document.getElementById('ic-tone').value;
+  var notes = document.getElementById('ic-notes').value.trim();
+
+  var avoidAngles = usedAngles.length > 0
+    ? 'IMPORTANT: Do NOT repeat these angles already used in previous batches: ' + usedAngles.join(', ') + '. Generate 15 completely new and different angles.'
+    : '';
+
+  return `Generate exactly 15 high-converting static image ad creative strategies (Batch ${batchNum}) for the following business:
+
+BRAND: ${brand}
+BUSINESS TYPE: ${biztype}
+PRODUCT/SERVICE: ${product}
+TARGET AUDIENCE: ${audience}
+MAIN GOAL: ${goal}
+KEY BENEFITS/USP: ${usp}
+PAIN POINTS: ${pain}
+PRICE/OFFER: ${price || 'Not specified'}
+BRAND COLORS: ${colors || 'Not specified'}
+BRAND TONE: ${tone}
+ADDITIONAL NOTES: ${notes || 'None'}
+
+${avoidAngles}
+
+Return ONLY a valid JSON array of exactly 15 objects. Each object must have these exact keys:
+{
+  "id": 1,
+  "name": "Creative Name",
+  "angle": "brief angle description for tracking",
+  "tagline": "Main headline — biggest text in design",
+  "subheadline": "One supporting line",
+  "bullets": ["Bullet 1", "Bullet 2", "Bullet 3", "Bullet 4"],
+  "cta": "CTA text",
+  "colorStyle": "Color direction",
+  "imagePrompt": "Complete detailed image generation prompt for Flux/DALL-E. Must be 1080x1080. Include: scene description, UGC iPhone photo style, natural lighting, realistic Filipino model details if needed, text overlay hierarchy with tagline as biggest text, benefits list as secondary, small logo corner, premium ad layout, Meta-compliant visual. NO misleading claims."
+}
+
+Return ONLY the JSON array. No markdown, no explanation, no extra text.`;
+}
+
+// ─── STEP 1: GENERATE 15 PROMPTS ───
+async function generateICPrompts() {
+  var brand = document.getElementById('ic-brand').value.trim();
+  var product = document.getElementById('ic-product').value.trim();
+  if (!brand || !product) {
+    showNotif('Fill in Brand Name and Product/Service first!', 'error');
+    return;
+  }
+
+  var btn = document.getElementById('ic-gen-prompts-btn');
+  var status = document.getElementById('ic-prompt-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating 15 strategies...';
+  status.textContent = 'Calling Claude AI...';
+
+  try {
+    var res = await fetch('/api/video-prompt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: getICSystemPrompt(),
+        prompt: buildICUserPrompt(icState.batchNumber, icState.usedAngles),
+        max_tokens: 8000
+      })
+    });
+
+    // Fallback: try Anthropic directly if video-prompt not available
+    if (!res.ok) {
+      res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 8000,
+          system: getICSystemPrompt(),
+          messages: [{ role: 'user', content: buildICUserPrompt(icState.batchNumber, icState.usedAngles) }]
+        })
+      });
+    }
+
+    var data = await res.json();
+    var text = '';
+
+    // Handle both response formats
+    if (data.content && Array.isArray(data.content)) {
+      text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    } else if (data.result) {
+      text = data.result;
+    } else if (data.text) {
+      text = data.text;
+    }
+
+    // Parse JSON
+    var jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error('No JSON array found in response');
+
+    icState.prompts = JSON.parse(jsonMatch[0]);
+    icState.images = new Array(icState.prompts.length).fill(null);
+
+    // Track angles for future batches
+    icState.prompts.forEach(function(p) {
+      if (p.angle) icState.usedAngles.push(p.angle);
+    });
+
+    renderICPromptsList();
+    document.getElementById('ic-step2').style.display = 'block';
+    document.getElementById('ic-batch-badge').style.display = 'inline-flex';
+    document.getElementById('ic-batch-badge').textContent = 'Batch ' + icState.batchNumber;
+    status.textContent = '✅ 15 strategies ready!';
+
+  } catch(e) {
+    console.error(e);
+    showNotif('Error generating strategies: ' + e.message, 'error');
+    status.textContent = 'Error: ' + e.message;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '⚡ Generate 15 Image Strategies';
+}
+
+// ─── RENDER PROMPTS LIST ───
+function renderICPromptsList() {
+  var list = document.getElementById('ic-prompts-list');
+  list.innerHTML = '';
+  icState.prompts.forEach(function(p, i) {
+    var div = document.createElement('div');
+    div.style.cssText = 'background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:flex-start;gap:12px;transition:all 0.2s';
+    div.id = 'ic-prompt-row-' + i;
+    div.innerHTML = `
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--yellow-dim);border:1.5px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--yellow);flex-shrink:0">${i+1}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">${p.name}</div>
+        <div style="font-size:11px;color:var(--yellow);margin-bottom:3px">"${p.tagline}"</div>
+        <div style="font-size:10px;color:var(--text3)">${p.subheadline || ''}</div>
+      </div>
+      <div id="ic-prompt-status-${i}" style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">Pending</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// ─── STEP 3: AUTO-GENERATE IMAGES ───
+async function startAutoGenerate() {
+  var apiKey = localStorage.getItem('dalle-api-key') || localStorage.getItem('replicate-key');
+  if (!apiKey) {
+    showNotif('Set your image API key in Settings first!', 'error');
+    return;
+  }
+
+  icState.isRunning = true;
+  icState.stopRequested = false;
+  icState.currentIdx = 0;
+  icState.images = new Array(icState.prompts.length).fill(null);
+
+  document.getElementById('ic-step3').style.display = 'block';
+  document.getElementById('ic-images-grid').innerHTML = '';
+  document.getElementById('ic-download-all-wrap').style.display = 'none';
+  document.getElementById('ic-stop-btn').style.display = 'inline-flex';
+  document.getElementById('ic-start-btn').disabled = true;
+  document.getElementById('ic-start-btn').textContent = '⏳ Generating...';
+
+  // Pre-render empty cards
+  var grid = document.getElementById('ic-images-grid');
+  icState.prompts.forEach(function(p, i) {
+    var card = document.createElement('div');
+    card.id = 'ic-card-' + i;
+    card.style.cssText = 'background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;position:relative';
+    card.innerHTML = `
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:var(--bg4)" id="ic-card-img-${i}">
+        <div style="text-align:center;color:var(--text3)">
+          <div style="font-size:18px;margin-bottom:4px">🖼️</div>
+          <div style="font-size:9px">${i+1}. ${p.name}</div>
+        </div>
+      </div>
+      <div style="padding:8px">
+        <div style="font-size:10px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.tagline}</div>
+        <div style="font-size:9px;color:var(--text3)">${p.cta || 'Message Us'}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Generate one by one
+  for (var i = 0; i < icState.prompts.length; i++) {
+    if (icState.stopRequested) break;
+
+    icState.currentIdx = i;
+    updateICProgress(i);
+
+    // Update prompt row status
+    var row = document.getElementById('ic-prompt-row-' + i);
+    var rowStatus = document.getElementById('ic-prompt-status-' + i);
+    if (row) row.style.borderColor = 'rgba(250,204,21,0.4)';
+    if (rowStatus) rowStatus.innerHTML = '<span class="spinner"></span>';
+
+    // Update card
+    var cardImg = document.getElementById('ic-card-img-' + i);
+    if (cardImg) {
+      cardImg.innerHTML = '<div style="text-align:center;color:var(--yellow)"><span class="spinner" style="width:20px;height:20px"></span><div style="font-size:9px;margin-top:6px">Generating...</div></div>';
+    }
+
+    try {
+      var imgUrl = await generateSingleICImage(icState.prompts[i], i);
+      icState.images[i] = imgUrl;
+
+      // Update card with image
+      if (cardImg && imgUrl) {
+        cardImg.innerHTML = `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover" />`;
+      }
+
+      // Add download button
+      var card = document.getElementById('ic-card-' + i);
+      if (card) {
+        var dlBtn = document.createElement('button');
+        dlBtn.style.cssText = 'position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.7);border:0.5px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;font-size:10px;padding:3px 8px;cursor:pointer;backdrop-filter:blur(4px)';
+        dlBtn.textContent = '↓ Save';
+        dlBtn.onclick = (function(url, name) {
+          return function() { downloadICImage(url, name); };
+        })(imgUrl, icState.prompts[i].name);
+        card.appendChild(dlBtn);
+      }
+
+      if (row) row.style.borderColor = 'rgba(34,197,94,0.3)';
+      if (rowStatus) rowStatus.innerHTML = '<span style="color:var(--green)">✓ Done</span>';
+
+    } catch(e) {
+      console.error('Error on image', i, e);
+      if (cardImg) {
+        cardImg.innerHTML = '<div style="text-align:center;color:var(--red);font-size:10px;padding:8px">Error<br>' + e.message + '</div>';
+      }
+      if (rowStatus) rowStatus.innerHTML = '<span style="color:var(--red)">✗ Error</span>';
+    }
+
+    // Small delay between generations
+    if (!icState.stopRequested) {
+      await new Promise(r => setTimeout(r, 800));
+    }
+  }
+
+  // Done
+  icState.isRunning = false;
+  document.getElementById('ic-stop-btn').style.display = 'none';
+  document.getElementById('ic-start-btn').disabled = false;
+  document.getElementById('ic-start-btn').textContent = '🎨 Auto-Generate All Images';
+
+  var successCount = icState.images.filter(Boolean).length;
+  updateICProgress(icState.prompts.length, true);
+
+  if (successCount > 0) {
+    document.getElementById('ic-download-all-wrap').style.display = 'block';
+    document.getElementById('ic-new-batch-btn').style.display = 'inline-flex';
+    document.getElementById('ic-batch-info').textContent = successCount + '/' + icState.prompts.length + ' images generated';
+    showNotif('✅ ' + successCount + ' creatives generated!', 'success');
+  }
+}
+
+// ─── GENERATE SINGLE IMAGE ───
+async function generateSingleICImage(promptObj, idx) {
+  var finalPrompt = promptObj.imagePrompt;
+
+  // Try /api/dalle-generate (existing endpoint)
+  var res = await fetch('/api/dalle-generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt: finalPrompt,
+      mode: 'scene',
+      sceneIndex: idx,
+      size: '1024x1024',
+      clientName: document.getElementById('ic-brand').value.trim() || 'client'
+    })
+  });
+
+  var data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Generation failed');
+  if (!data.imageUrl) throw new Error('No image URL returned');
+
+  return data.imageUrl;
+}
+
+// ─── PROGRESS ───
+function updateICProgress(current, done) {
+  var total = icState.prompts.length;
+  var pct = done ? 100 : Math.round((current / total) * 100);
+  document.getElementById('ic-progress-bar').style.width = pct + '%';
+  document.getElementById('ic-gen-progress').textContent = done
+    ? '✅ Complete — ' + icState.images.filter(Boolean).length + '/' + total + ' generated'
+    : 'Generating ' + (current + 1) + ' of ' + total + '...';
+}
+
+// ─── STOP ───
+function stopImageCreatives() {
+  icState.stopRequested = true;
+  icState.isRunning = false;
+  showNotif('Stopping after current image...', 'error');
+  document.getElementById('ic-stop-btn').style.display = 'none';
+  document.getElementById('ic-stop-btn2').style.display = 'none';
+}
+
+// ─── DOWNLOAD SINGLE ───
+function downloadICImage(url, name) {
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = (name || 'creative').replace(/[^a-z0-9]/gi, '-') + '.png';
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// ─── DOWNLOAD ALL ───
+async function downloadAllICImages() {
+  var generated = icState.images.filter(Boolean);
+  if (generated.length === 0) {
+    showNotif('No images to download!', 'error');
+    return;
+  }
+  showNotif('Downloading ' + generated.length + ' images...', 'success');
+  for (var i = 0; i < icState.images.length; i++) {
+    if (icState.images[i]) {
+      await new Promise(r => setTimeout(r, 300));
+      downloadICImage(icState.images[i], icState.prompts[i] ? icState.prompts[i].name : ('creative-' + (i+1)));
+    }
+  }
+}
+
+// ─── NEW BATCH ───
+function newICBatch() {
+  icState.batchNumber++;
+  icState.prompts = [];
+  icState.images = [];
+  icState.currentIdx = 0;
+  icState.isRunning = false;
+  icState.stopRequested = false;
+
+  // Reset UI
+  document.getElementById('ic-step2').style.display = 'none';
+  document.getElementById('ic-step3').style.display = 'none';
+  document.getElementById('ic-images-grid').innerHTML = '';
+  document.getElementById('ic-prompts-list').innerHTML = '';
+  document.getElementById('ic-progress-bar').style.width = '0%';
+  document.getElementById('ic-gen-progress').textContent = '';
+  document.getElementById('ic-download-all-wrap').style.display = 'none';
+  document.getElementById('ic-new-batch-btn').style.display = 'none';
+  document.getElementById('ic-stop-btn').style.display = 'none';
+  document.getElementById('ic-batch-badge').textContent = 'Batch ' + icState.batchNumber;
+  document.getElementById('ic-prompt-status').textContent = '';
+  document.getElementById('ic-start-btn').textContent = '🎨 Auto-Generate All Images';
+  document.getElementById('ic-start-btn').disabled = false;
+
+  showNotif('Ready for Batch ' + icState.batchNumber + ' — ' + icState.usedAngles.length + ' angles will be avoided!', 'success');
+
+  // Auto-generate new prompts
+  generateICPrompts();
 }
