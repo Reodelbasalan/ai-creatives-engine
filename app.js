@@ -109,7 +109,7 @@ async function addOutput(){
       type:'output',
       project_id:currentProjectId,
       is_read:false
-    }).catch(function(){});
+    }).then(function(){},function(){});
   }
 }
 
@@ -219,7 +219,7 @@ async function notifyEditorAssigned(editorId,projectName){
     message:'New project assigned to you: "'+projectName+'"',
     type:'assignment',
     is_read:false
-  }).catch(function(){});
+  }).then(function(){},function(){});
 }
 
 
@@ -1090,7 +1090,7 @@ async function assignProject(){
       user_id:assignedTo,
       message:'🎯 New project assigned to you: "'+(proj?.client_name||'Project')+'" — check My Tasks!',
       type:'assignment',project_id:currentProjectId,is_read:false
-    }).catch(function(){});
+    }).then(function(){},function(){});
     showNotif('Assigned! Editor notified ✓','success');
   } else {
     showNotif('Unassigned.','success');
@@ -2122,7 +2122,7 @@ async function downloadAllOutputs(){
         project_id:autoProject.id,user_id:currentUser.id,
         url:approved[i].url,type:'image',
         label:'Scene '+(i+1)+' image'
-      }).catch(function(){});
+      }).then(function(){},function(){});
     }
     loadOutputs(autoProject.id);
   }
@@ -2149,7 +2149,7 @@ async function notifyClientDone(){
       user_id:autoProject.client_id,
       message:'Your project "'+autoProject.client_name+'" is complete and ready for review!',
       type:'output',is_read:false
-    }).catch(function(){});
+    }).then(function(){},function(){});
   }
   await sb.from('projects').update({status:'Approved / Done',updated_at:new Date().toISOString()}).eq('id',autoProject.id);
   showNotif('Client notified! Project marked complete ✅','success');
@@ -2763,7 +2763,7 @@ async function submitWorkUpdate(){
   await sb.from('notifications').insert({
     user_id:null,message:'Work update: '+notes.substring(0,60),
     type:'work_update',is_read:false
-  }).catch(function(){});
+  }).then(function(){},function(){});
   loadWorkUpdates();
   loadWorkLogTasks();
 }
@@ -3348,7 +3348,7 @@ async function generateSceneVideo(idx,tool){
         if(statusEl)statusEl.innerHTML='✅ Video ready! <a href="'+d.url+'" target="_blank" style="color:var(--yellow)">Open →</a>';
         // Save to outputs
         if(autoProject?.id){
-          await sb.from('project_outputs').insert({project_id:autoProject.id,user_id:currentUser.id,url:d.url,type:'video',label:'Scene '+scene.num+' video ('+tool+')'}).catch(function(){});
+          try{await sb.from('project_outputs').insert({project_id:autoProject.id,user_id:currentUser.id,url:d.url,type:'video',label:'Scene '+scene.num+' video ('+tool+')'});}catch(err){}
         }
         autoOutputs[idx]=autoOutputs[idx]||{};
         autoOutputs[idx].videoUrl=d.url;
@@ -3408,7 +3408,7 @@ async function generateSceneImage(idx, dalleSize){
       autoOutputs[idx].url=d.url;autoOutputs[idx].type='image';autoOutputs[idx].scene=scene;
       // Save to DB
       if(autoProject?.id){
-        await sb.from('project_outputs').insert({project_id:autoProject.id,user_id:currentUser.id,url:d.url,type:'image',label:'Scene '+scene.num+' image'}).catch(function(){});
+        try{await sb.from('project_outputs').insert({project_id:autoProject.id,user_id:currentUser.id,url:d.url,type:'image',label:'Scene '+scene.num+' image'});}catch(err){}
       }
     } else {
       if(statusEl)statusEl.textContent='❌';
@@ -3573,10 +3573,12 @@ generateSceneImage=async function(idx,dalleSize){
       autoOutputs[idx].scene=scene;
       // Save permanent URL to DB
       if(autoProject?.id){
-        await sb.from('project_outputs').insert({
-          project_id:autoProject.id,user_id:currentUser.id,
-          url:permanentUrl,type:'image',label:'Scene '+scene.num+' image'
-        }).catch(function(){});
+        try{
+          await sb.from('project_outputs').insert({
+            project_id:autoProject.id,user_id:currentUser.id,
+            url:permanentUrl,type:'image',label:'Scene '+scene.num+' image'
+          });
+        }catch(err){}
       }
     } else {
       if(statusEl)statusEl.textContent='❌';
