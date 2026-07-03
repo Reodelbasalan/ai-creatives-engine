@@ -1,4 +1,3 @@
-
 const SUPABASE_URL='https://csyrwvimhvhqurqlrkkw.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzeXJ3dmltaHZocXVycWxya2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0MDE1ODUsImV4cCI6MjA5Njk3NzU4NX0.APMpi2u9sbzuWNJ1-y__FDMCxYb1KPoe11K_Xjnl4p0';
 const{createClient}=supabase;
@@ -1957,6 +1956,47 @@ async function generateAvatar(){
   }
 }
 
+async function uploadOwnAvatar(e){
+  var file=e.target.files&&e.target.files[0];
+  if(!file)return;
+  var status=document.getElementById('avatar-gen-status');
+  if(status)status.textContent='⚡ Uploading your avatar...';
+  try{
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var pv=document.getElementById('avatar-preview');
+      var rs=document.getElementById('avatar-result');
+      if(pv)pv.src=ev.target.result;
+      if(rs)rs.style.display='block';
+    };
+    reader.readAsDataURL(file);
+    var ext=(file.name.split('.').pop()||'png').toLowerCase();
+    var filePath='images/uploaded-avatar-'+Date.now()+'.'+ext;
+    var upl=await sb.storage.from(STORAGE_BUCKET).upload(filePath,file,{contentType:file.type||'image/png',upsert:true});
+    if(upl.error){
+      console.error('Avatar upload error:',upl.error);
+      if(status)status.textContent='⚠️ Preview only (storage failed) — pwede ka pa ring mag-proceed.';
+      return;
+    }
+    var urlData=sb.storage.from(STORAGE_BUCKET).getPublicUrl(filePath);
+    autoAvatarUrl=urlData?.data?.publicUrl||null;
+    if(autoAvatarUrl){
+      var pv2=document.getElementById('avatar-preview');
+      if(pv2)pv2.src=autoAvatarUrl;
+    }
+    if(status)status.textContent='✅ Avatar uploaded! Ito na mismong mukha ang gagamitin sa lahat ng scenes.';
+    if(autoProject&&autoProject.id){
+      try{await sb.from('project_outputs').insert({project_id:autoProject.id,user_id:currentUser.id,url:autoAvatarUrl,type:'image',label:'Avatar (uploaded)'});}catch(err){}
+    }
+    if(typeof logActivity==='function')logActivity('AVATAR_UPLOADED',autoProject?.client_name||'');
+  }catch(err){
+    if(status)status.textContent='Error: '+err.message;
+    showNotif('Upload error: '+err.message,'error');
+  }finally{
+    e.target.value='';
+  }
+}
+
 function approveAvatar(){
   // Unlock Phase 2
   var phase2=document.getElementById('auto-phase2');
@@ -3419,7 +3459,12 @@ generateAvatar=async function(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',
-        apiKey:apiKey,size:'1024x1792',
+        apiKey:apiKey,
+        type:'avatar',
+        avatarDesc:prompt,
+        brandType:autoProject?.business_type||'',
+        sceneNum:1,
+        size:'1024x1792',
         quality:getToolSetting('dalle-quality','hd'),
         style:getToolSetting('dalle-style','vivid')
       })
@@ -3479,6 +3524,11 @@ generateSceneImage=async function(idx,dalleSize){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:imgSize,
+        type:'scene',
+        avatarDesc:autoProject?.avatar_desc||'',
+        brandType:autoProject?.business_type||'',
+        product:autoProject?.product||'',
+        sceneNum:idx+1,
         quality:getToolSetting('dalle-quality','hd'),
         style:getToolSetting('dalle-style','vivid')})
     });
