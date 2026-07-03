@@ -3525,6 +3525,7 @@ generateSceneImage=async function(idx,dalleSize){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:imgSize,
         type:'scene',
+        avatarUrl:autoAvatarUrl||'',
         avatarDesc:autoProject?.avatar_desc||'',
         brandType:autoProject?.business_type||'',
         product:autoProject?.product||'',
