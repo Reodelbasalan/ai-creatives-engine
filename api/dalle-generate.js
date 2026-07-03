@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   try {
     const {
       prompt, size = '1024x1024', type = 'scene',
-      product, brandType, avatarDesc, tone, sceneNum
+      product, brandType, avatarDesc, tone, sceneNum, avatarUrl
     } = req.body;
 
     if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
@@ -152,17 +152,52 @@ export default async function handler(req, res) {
 
     const imageSize = size === '1024x1024' ? '1024x1024' : '1024x1536';
 
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
-      body: JSON.stringify({
-        model: 'gpt-image-1',
-        prompt: finalPrompt,
-        n: 1,
-        size: imageSize,
-        quality: 'medium'
-      })
-    });
+    // ═══════════════════════════════════════
+    // FACE LOCK (Level 2) — if an approved avatar image is provided,
+    // use it as a VISUAL REFERENCE via the image EDITS endpoint
+    // (image-to-image). This keeps the SAME FACE across every scene.
+    // Falls back to plain text-to-image if no avatar or fetch fails.
+    // ═══════════════════════════════════════
+    let response;
+    let usedFaceLock = false;
+
+    if (avatarUrl && /^https?:\/\//.test(avatarUrl)) {
+      try {
+        const refResp = await fetch(avatarUrl);
+        if (refResp.ok) {
+          const refBuf = Buffer.from(await refResp.arrayBuffer());
+          const form = new FormData();
+          form.append('model', 'gpt-image-1');
+          form.append('prompt', finalPrompt);
+          form.append('size', imageSize);
+          form.append('quality', 'medium');
+          form.append('n', '1');
+          form.append('image', new Blob([refBuf], { type: 'image/png' }), 'avatar.png');
+          response = await fetch('https://api.openai.com/v1/images/edits', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${openaiKey}` },
+            body: form
+          });
+          usedFaceLock = true;
+        }
+      } catch (e) {
+        console.log('Face-lock reference fetch failed, falling back to text-to-image:', e.message);
+      }
+    }
+
+    if (!response) {
+      response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
+        body: JSON.stringify({
+          model: 'gpt-image-1',
+          prompt: finalPrompt,
+          n: 1,
+          size: imageSize,
+          quality: 'medium'
+        })
+      });
+    }
 
     const data = await response.json();
     if (!response.ok) {
@@ -195,7 +230,7 @@ export default async function handler(req, res) {
 
         if (uploadRes.ok) {
           const publicUrl = `${supabaseUrl}/storage/v1/object/public/${encodeURIComponent(bucketName)}/${filePath}`;
-          return res.status(200).json({ success: true, url: publicUrl, mode: 'gpt-image-1' });
+          return res.status(200).json({ success: true, url: publicUrl, mode: 'gpt-image-1', faceLock: usedFaceLock });
         }
         const errText = await uploadRes.text();
         console.log('Storage failed:', errText);
@@ -208,7 +243,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       url: `data:image/png;base64,${base64Image}`,
-      mode: 'gpt-image-1-base64'
+      mode: 'gpt-image-1-base64',
+      faceLock: usedFaceLock
     });
 
   } catch (error) {
