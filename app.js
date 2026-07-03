@@ -2481,27 +2481,43 @@ async function generateVeo(prompt, apiKey, type){
 // Parse blueprint and extract scenes with prompts
 function parseBlueprint(blueprintText){
   var scenes=[];
-  var scenePattern=/SCENE\s+(\d+)[^]*?(?=SCENE\s+\d+|$)/gi;
-  var imagePattern=/IMAGE PROMPT[:\s]+([^\n]+)/i;
-  var videoPattern=/VIDEO PROMPT[:\s]+([^\n]+)/i;
-  var voPattern=/VOICEOVER[:\s]+([^\n]+)/i;
-  var visualPattern=/VISUAL[:\s]+([^\n]+)/i;
+
+  // Clean a captured value: strip markdown (**, ▸, #), surrounding quotes, and labels.
+  function cleanVal(s){
+    if(!s) return '';
+    s=s.replace(/\*\*/g,'').replace(/[▸►#]/g,'').trim();
+    // If the label has a "(...)" qualifier before the colon we already skipped it in the regex.
+    // Prefer text inside the first pair of double quotes (that's the real prompt).
+    var q=s.match(/[\"\u201c]([^\"\u201d]+)[\"\u201d]/);
+    if(q) return q[1].trim();
+    return s.replace(/^["'\u201c\u201d\s:]+|["'\u201c\u201d\s]+$/g,'').trim();
+  }
+
+  // Grab the FIRST match of a label that may have an optional "(label)" before the colon.
+  // e.g. "IMAGE PROMPT (PRIMARY — Woman):", "**IMAGE PROMPT:**", "VIDEO PROMPT:"
+  function grab(block, label){
+    // Matches:  LABEL: value  |  LABEL — value  |  LABEL (qualifier): value  |  **LABEL:** value
+    // Optional (qualifier) in parens, then a separator (: or – or — or -), then the value.
+    var re=new RegExp(label+'\\s*(?:\\([^)]*\\))?\\s*[:\\u2013\\u2014\\-]+\\s*\\**\\s*([^\\n]+)','i');
+    var m=block.match(re);
+    return m?cleanVal(m[1]):'';
+  }
 
   var matches=blueprintText.match(/SCENE\s+\d+[^]*?(?=SCENE\s+\d+|(?:PRODUCTION|═{5}|$))/gi)||[];
   matches.forEach(function(block){
     var numMatch=block.match(/SCENE\s+(\d+)/i);
-    var nameMatch=block.match(/SCENE\s+\d+\s*[-\u2014]\s*([^\n(]+)/i);
-    var imgMatch=block.match(imagePattern);
-    var vidMatch=block.match(videoPattern);
-    var voMatch=block.match(voPattern);
-    var visMatch=block.match(visualPattern);
+    var nameMatch=block.match(/SCENE\s+\d+\s*[-\u2014]\s*\**\s*([^\n(*]+)/i);
+    var img=grab(block,'IMAGE PROMPT');
+    var vid=grab(block,'VIDEO PROMPT');
+    var vo=grab(block,'VOICEOVER');
+    var vis=grab(block,'VISUAL');
     scenes.push({
       num:numMatch?numMatch[1]:'?',
-      name:nameMatch?nameMatch[1].trim():'Scene',
-      imagePrompt:imgMatch?imgMatch[1].trim():'',
-      videoPrompt:vidMatch?vidMatch[1].trim():'',
-      voiceover:voMatch?voMatch[1].trim():'',
-      visual:visMatch?visMatch[1].trim():''
+      name:nameMatch?nameMatch[1].replace(/\*/g,'').trim():'Scene',
+      imagePrompt:img,
+      videoPrompt:vid,
+      voiceover:vo,
+      visual:vis
     });
   });
   return scenes;
