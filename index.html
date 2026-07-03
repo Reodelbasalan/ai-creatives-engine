@@ -2147,7 +2147,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px">
       <div>
         <div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.4px">⚡ Image Creatives — Prompt Copilot</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:3px">AI generates 15 ready-to-paste ad prompts — copy each one to ChatGPT to generate the images</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px">AI generates ready-to-paste prompts — copy each one to ChatGPT to generate the images/designs</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <div id="icp-batch-badge" style="display:none;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);border:0.5px solid rgba(250,204,21,0.3)">Batch 1</div>
@@ -2155,6 +2155,124 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       </div>
     </div>
 
+<!-- MODE TOGGLE -->
+<div style="display:flex;gap:8px;margin-bottom:1.25rem">
+  <button class="ghost-btn" id="icp-mode-ads-btn" onclick="icpSwitchMode('ads')" style="font-size:12px;font-weight:700;background:var(--yellow-dim);color:var(--yellow);border-color:rgba(250,204,21,0.4)">🎯 Ad Creatives</button>
+  <button class="ghost-btn" id="icp-mode-design-btn" onclick="icpSwitchMode('design')" style="font-size:12px;font-weight:700">🎨 Design Studio</button>
+</div>
+
+<div id="icp-mode-design" style="display:none">
+
+  <!-- DESIGN STEP 1 -->
+  <div class="form-card" id="dsg-step1">
+    <div class="form-card-title"><span>📝</span> Step 1 — Image & Design Details</div>
+    <div class="form-grid" style="gap:10px">
+      <div class="form-field">
+        <label class="form-label">🏷️ Business / Brand Name</label>
+        <input class="form-input" id="dsg-brand" placeholder="e.g. La Rose Manila"/>
+      </div>
+      <div class="form-field">
+        <label class="form-label">🎯 What do you need? (Asset Type)</label>
+        <select class="form-select" id="dsg-asset">
+          <option>Static Images / Social Media Creatives</option>
+          <option>Facebook Cover Photo</option>
+          <option>Poster</option>
+          <option>Flyer / Promo Flyer</option>
+          <option>Banner</option>
+          <option>Tarpaulin Layout</option>
+          <option>Menu Board / Restaurant Menu</option>
+          <option>Product Catalog</option>
+          <option>Service Catalog</option>
+          <option>Brochure (Bi-fold / Tri-fold)</option>
+          <option>Logo Concept</option>
+          <option>Logo Refinement</option>
+          <option>Promo Graphics</option>
+          <option>Testimonial Creatives</option>
+          <option>Product Launch Creatives</option>
+          <option>Offer Creatives</option>
+          <option>Event Graphics</option>
+          <option>Price List / Service Menu Layout</option>
+          <option>One-page Business Profile</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">🎯 Main Goal</label>
+        <select class="form-select" id="dsg-goal">
+          <option>Posting</option>
+          <option>Ads Testing</option>
+          <option>Branding</option>
+          <option>Promotion</option>
+          <option>Product Launch</option>
+          <option>Awareness</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">🗣️ Preferred Language</label>
+        <select class="form-select" id="dsg-lang">
+          <option>Taglish</option>
+          <option>English</option>
+          <option>Tagalog</option>
+        </select>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">📝 What to HIGHLIGHT — products, services, offers, details, contact info, exact text needed</label>
+        <textarea class="form-textarea" id="dsg-highlight" placeholder="Lahat ng gusto ni client lumabas sa design — offers, price list, promo details, contact number, address, FB page..." style="min-height:80px"></textarea>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">🚫 What the client does NOT want to see</label>
+        <input class="form-input" id="dsg-avoid" placeholder="e.g. Ayaw ng red, ayaw ng cluttered text, walang cartoon style..."/>
+      </div>
+      <div class="form-field">
+        <label class="form-label">🎨 Brand Colors <span style="font-size:10px;color:var(--text3)">(if any)</span></label>
+        <input class="form-input" id="dsg-colors" placeholder="e.g. Rose gold, white, black"/>
+      </div>
+      <div class="form-field">
+        <label class="form-label">📐 Preferred Size / Platform</label>
+        <input class="form-input" id="dsg-size" placeholder="e.g. FB Post 1080x1080, Story 1080x1920, A4 Flyer"/>
+      </div>
+      <div class="form-field">
+        <label class="form-label">🔢 How many concepts?</label>
+        <select class="form-select" id="dsg-count">
+          <option value="3">3 concepts</option>
+          <option value="5" selected>5 concepts</option>
+          <option value="10">10 concepts</option>
+          <option value="15">15 concepts</option>
+        </select>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">📸 Client Materials — BRAND LOCK <span style="font-size:10px;color:var(--text3)">(max 4 — logo, product photos, brand assets, design pegs, menu list)</span></label>
+        <input type="file" id="dsg-photos" accept="image/*" multiple onchange="dsgHandlePhotos(event)" style="display:none"/>
+        <div onclick="document.getElementById('dsg-photos').click()" style="border:1px dashed var(--border2);border-radius:var(--radius);padding:16px;text-align:center;cursor:pointer;font-size:12px;color:var(--text3)" id="dsg-photo-drop">
+          🔒 Click to upload client materials — AI will LOCK the brand identity from these
+        </div>
+        <div id="dsg-photo-previews" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap">
+      <button class="primary-btn" id="dsg-gen-btn" onclick="dsgGenerate()" style="font-size:13px">🎨 Generate Design Strategies</button>
+      <span id="dsg-status" style="font-size:11px;color:var(--text3)"></span>
+      <div id="dsg-batch-badge" style="display:none;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);border:0.5px solid rgba(250,204,21,0.3)">Batch 1</div>
+      <button class="ghost-btn" onclick="dsgNewBatch()" id="dsg-new-batch-btn" style="display:none;font-size:12px;color:var(--purple);border-color:rgba(127,119,221,0.3)">🔄 New Batch</button>
+    </div>
+  </div>
+
+  <!-- DESIGN STEP 2 -->
+  <div id="dsg-step2" style="display:none;margin-top:1.25rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div class="form-card-title" style="margin:0"><span>📋</span> Step 2 — Copy production prompt to ChatGPT <span style="font-size:10px;color:var(--text3);font-weight:400">(attach din yung client materials!)</span></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="dsg-progress" style="font-size:12px;font-weight:700;color:var(--yellow)">0 / 0 done</div>
+      </div>
+    </div>
+    <div style="height:6px;background:var(--bg3);border-radius:10px;overflow:hidden;margin-bottom:14px">
+      <div id="dsg-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--yellow),#22c55e);transition:width 0.3s"></div>
+    </div>
+    <div id="dsg-cards"></div>
+  </div>
+
+</div>
+
+<div id="icp-mode-ads">
     <!-- STEP 1: CLIENT DETAILS -->
     <div class="form-card" id="icp-step1">
       <div class="form-card-title"><span>🏢</span> Step 1 — Client Details</div>
@@ -2224,6 +2342,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       </div>
       <div id="icp-cards"></div>
     </div>
+</div>
 
   </div>
 </div>
@@ -2530,6 +2649,203 @@ function icpUpdateProgress() {
     if (typeof logActivity === 'function') logActivity('IC_BATCH_COMPLETED', 'Batch ' + icpState.batchNumber + ' — ' + (icpState.clientDetails ? icpState.clientDetails.pageName : ''));
   }
 }
+
+/* ═══ DESIGN STUDIO MODE ═══ */
+var dsgState = { strategies: [], done: [], batchNumber: 1, usedNames: [], details: null };
+var dsgPhotos = [];
+
+function icpSwitchMode(mode) {
+  var adsWrap = document.getElementById('icp-mode-ads');
+  var dsgWrap = document.getElementById('icp-mode-design');
+  var adsBtn = document.getElementById('icp-mode-ads-btn');
+  var dsgBtn = document.getElementById('icp-mode-design-btn');
+  var active = 'font-size:12px;font-weight:700;background:var(--yellow-dim);color:var(--yellow);border-color:rgba(250,204,21,0.4)';
+  var inactive = 'font-size:12px;font-weight:700';
+  if (mode === 'design') {
+    adsWrap.style.display = 'none';
+    dsgWrap.style.display = 'block';
+    adsBtn.style.cssText = inactive;
+    dsgBtn.style.cssText = active;
+  } else {
+    adsWrap.style.display = 'block';
+    dsgWrap.style.display = 'none';
+    adsBtn.style.cssText = active;
+    dsgBtn.style.cssText = inactive;
+  }
+}
+
+function dsgHandlePhotos(e) {
+  var files = Array.from(e.target.files).slice(0, 4);
+  dsgPhotos = [];
+  var previews = document.getElementById('dsg-photo-previews');
+  previews.innerHTML = '';
+  files.forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        var scale = Math.min(1, 1024 / Math.max(img.width, img.height));
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        dsgPhotos.push({ media_type: 'image/jpeg', data: dataUrl.split(',')[1] });
+        var thumb = document.createElement('img');
+        thumb.src = dataUrl;
+        thumb.style.cssText = 'width:64px;height:64px;object-fit:cover;border-radius:8px;border:0.5px solid var(--border2)';
+        previews.appendChild(thumb);
+        document.getElementById('dsg-photo-drop').innerHTML = '🔒 ' + dsgPhotos.length + ' material(s) locked — click to change';
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function dsgGenerate(isNewBatch) {
+  var d = isNewBatch ? dsgState.details : {
+    brandName: document.getElementById('dsg-brand').value.trim(),
+    assetType: document.getElementById('dsg-asset').value,
+    goal: document.getElementById('dsg-goal').value,
+    language: document.getElementById('dsg-lang').value,
+    highlight: document.getElementById('dsg-highlight').value.trim(),
+    avoid: document.getElementById('dsg-avoid').value.trim(),
+    brandColors: document.getElementById('dsg-colors').value.trim(),
+    sizePlatform: document.getElementById('dsg-size').value.trim(),
+    count: document.getElementById('dsg-count').value
+  };
+  if (!d.brandName || !d.highlight) { showNotif('Fill in Brand Name and What to Highlight first!', 'error'); return; }
+  if (!isNewBatch) { dsgState.batchNumber = 1; dsgState.usedNames = []; }
+  dsgState.details = d;
+
+  var btn = document.getElementById('dsg-gen-btn');
+  var status = document.getElementById('dsg-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Absorbing brand + generating...';
+  status.textContent = 'AI is locking the brand and building ' + d.count + ' design strategies... (30-90 secs)';
+
+  try {
+    var res = await fetch('/api/design-strategies', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.assign({}, d, { batchNumber: dsgState.batchNumber, usedNames: dsgState.usedNames, images: dsgPhotos }))
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    dsgState.strategies = data.strategies || [];
+    dsgState.done = new Array(dsgState.strategies.length).fill(false);
+    dsgState.strategies.forEach(function(s) { if (s.name) dsgState.usedNames.push(s.name); });
+
+    dsgRenderCards();
+    document.getElementById('dsg-step2').style.display = 'block';
+    document.getElementById('dsg-batch-badge').style.display = 'inline-block';
+    document.getElementById('dsg-batch-badge').textContent = 'Batch ' + dsgState.batchNumber;
+    document.getElementById('dsg-new-batch-btn').style.display = 'inline-block';
+    status.textContent = '';
+    showNotif(dsgState.strategies.length + ' design strategies ready! ✓', 'success');
+    if (typeof logActivity === 'function') logActivity('DESIGN_STRATEGIES_GENERATED', 'Batch ' + dsgState.batchNumber + ' — ' + d.brandName + ' (' + d.assetType + ')');
+    document.getElementById('dsg-step2').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    status.textContent = '';
+    showNotif('Error: ' + e.message, 'error');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '🎨 Generate Design Strategies';
+}
+
+function dsgNewBatch() {
+  dsgState.batchNumber++;
+  dsgGenerate(true);
+}
+
+function dsgRenderCards() {
+  var wrap = document.getElementById('dsg-cards');
+  wrap.innerHTML = '';
+  dsgState.strategies.forEach(function(s, i) {
+    var sections = (s.sections || []).map(function(b) { return '<div style="font-size:11px;color:var(--text2);padding:1px 0">✓ ' + b + '</div>'; }).join('');
+    var card = document.createElement('div');
+    card.className = 'form-card';
+    card.id = 'dsg-card-' + i;
+    card.style.cssText = 'margin-bottom:12px;transition:opacity 0.3s,border-color 0.3s';
+    card.innerHTML =
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+      + '<div style="flex:1;min-width:200px">'
+      +   '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+      +     '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:var(--yellow-dim);color:var(--yellow)">#' + (i + 1) + '</span>'
+      +     '<span style="font-size:13px;font-weight:700;color:var(--text)">' + (s.name || 'Design ' + (i + 1)) + '</span>'
+      +     '<span style="font-size:9px;color:var(--text3);padding:2px 6px;border:0.5px solid var(--border2);border-radius:10px">' + (s.best_for || '') + '</span>'
+      +   '</div>'
+      +   '<div style="font-size:15px;font-weight:800;color:var(--yellow);margin:6px 0 2px">"' + (s.headline || '') + '"</div>'
+      +   '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">' + (s.support || '') + '</div>'
+      +   sections
+      +   '<div style="font-size:10px;color:var(--text3);margin-top:8px">🧠 ' + (s.trigger || '') + ' &nbsp;•&nbsp; 🛡️ ' + (s.objection || '') + '</div>'
+      +   '<div style="font-size:10px;color:var(--text3);margin-top:3px">🎨 ' + (s.colors || '') + ' &nbsp;•&nbsp; 🔤 ' + (s.fonts || '') + ' &nbsp;•&nbsp; 📢 ' + (s.cta || '') + '</div>'
+      +   '<div style="font-size:10px;color:var(--green);margin-top:3px">✅ ' + (s.safety || '') + '</div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;gap:6px;min-width:130px">'
+      +   '<button class="primary-btn" onclick="dsgCopyPrompt(' + i + ')" id="dsg-copy-' + i + '" style="font-size:11px;padding:7px 12px">📋 Copy Prompt</button>'
+      +   '<button class="ghost-btn" onclick="dsgToggleDetails(' + i + ')" style="font-size:11px;padding:6px 12px">👁️ View Prompt</button>'
+      +   '<button class="ghost-btn" onclick="dsgMarkDone(' + i + ')" id="dsg-done-' + i + '" style="font-size:11px;padding:6px 12px;color:var(--green);border-color:rgba(34,197,94,0.3)">✓ Mark Done</button>'
+      + '</div>'
+      + '</div>'
+      + '<div id="dsg-detail-' + i + '" style="display:none;margin-top:10px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:12px">'
+      +   '<div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Production Prompt — paste this to ChatGPT (with client materials attached)</div>'
+      +   '<div style="font-size:11px;color:var(--text2);white-space:pre-wrap;line-height:1.6">' + (s.production_prompt || '') + '</div>'
+      +   '<div style="font-size:10px;color:var(--text3);margin-top:10px"><b>Layout:</b> ' + (s.layout || '') + '</div>'
+      +   '<div style="font-size:10px;color:var(--text3);margin-top:4px"><b>Production Notes:</b> ' + (s.production_notes || '') + '</div>'
+      + '</div>';
+    wrap.appendChild(card);
+  });
+  dsgUpdateProgress();
+}
+
+function dsgCopyPrompt(i) {
+  var s = dsgState.strategies[i];
+  if (!s) return;
+  navigator.clipboard.writeText(s.production_prompt || '').then(function() {
+    var btn = document.getElementById('dsg-copy-' + i);
+    btn.innerHTML = '✓ Copied!';
+    setTimeout(function() { btn.innerHTML = '📋 Copy Prompt'; }, 1600);
+    showNotif('Production prompt #' + (i + 1) + ' copied! ✓', 'success');
+  });
+}
+
+function dsgToggleDetails(i) {
+  var el = document.getElementById('dsg-detail-' + i);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function dsgMarkDone(i) {
+  dsgState.done[i] = !dsgState.done[i];
+  var card = document.getElementById('dsg-card-' + i);
+  var btn = document.getElementById('dsg-done-' + i);
+  if (dsgState.done[i]) {
+    card.style.opacity = '0.55';
+    card.style.borderColor = 'rgba(34,197,94,0.4)';
+    btn.innerHTML = '✓ Done!';
+    btn.style.background = 'rgba(34,197,94,0.12)';
+  } else {
+    card.style.opacity = '1';
+    card.style.borderColor = '';
+    btn.innerHTML = '✓ Mark Done';
+    btn.style.background = '';
+  }
+  dsgUpdateProgress();
+}
+
+function dsgUpdateProgress() {
+  var doneCount = dsgState.done.filter(Boolean).length;
+  var total = dsgState.strategies.length || 0;
+  document.getElementById('dsg-progress').textContent = doneCount + ' / ' + total + ' done';
+  document.getElementById('dsg-progress-bar').style.width = total ? (doneCount / total * 100) + '%' : '0%';
+  if (doneCount === total && total > 0) {
+    showNotif('🎉 All ' + total + ' designs done! Upload to Drive and log the link sa project.', 'success');
+    if (typeof logActivity === 'function') logActivity('DESIGN_BATCH_COMPLETED', 'Batch ' + dsgState.batchNumber + ' — ' + (dsgState.details ? dsgState.details.brandName : ''));
+  }
+}
+
 </script>
 
 </body>
