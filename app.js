@@ -2086,7 +2086,7 @@ async function generateAllScenes(){
   for(var i=0;i<autoScenes.length;i++){
     if(progress)progress.textContent='Generating scene '+(i+1)+' of '+autoScenes.length+'...';
     await generateSceneImage(i);
-    await new Promise(function(r){setTimeout(r,2000);}); // 2s delay between calls
+    await new Promise(function(r){setTimeout(r,13000);}); // 13s delay — avoids gpt-image-1 input-images rate limit (5/min)
   }
   if(progress)progress.textContent='All scenes generated! Review and approve each.';
   if(btn)btn.disabled=false;
