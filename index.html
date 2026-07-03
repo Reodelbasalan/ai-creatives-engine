@@ -1022,6 +1022,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         Automation
       </div>
+      <div class="nav-item" onclick="showPage('image-creatives')" id="nav-image-creatives">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Image Creatives
+      </div>
       <div class="nav-item" onclick="showPage('clients')" id="nav-clients">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
         Clients
@@ -2136,6 +2140,86 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
       </div>
 
+      <div class="page" id="page-image-creatives">
+  <div style="max-width:1000px">
+
+    <!-- HEADER -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.4px">⚡ Image Creatives — Prompt Copilot</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px">AI generates 15 ready-to-paste ad prompts — copy each one to ChatGPT to generate the images</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div id="icp-batch-badge" style="display:none;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);border:0.5px solid rgba(250,204,21,0.3)">Batch 1</div>
+        <button class="ghost-btn" onclick="icpNewBatch()" id="icp-new-batch-btn" style="display:none;font-size:12px;color:var(--purple);border-color:rgba(127,119,221,0.3)">🔄 New Batch (15 more)</button>
+      </div>
+    </div>
+
+    <!-- STEP 1: CLIENT DETAILS -->
+    <div class="form-card" id="icp-step1">
+      <div class="form-card-title"><span>🏢</span> Step 1 — Client Details</div>
+      <div class="form-grid" style="gap:10px">
+        <div class="form-field">
+          <label class="form-label">Facebook Page Name</label>
+          <input class="form-input" id="icp-page" placeholder="e.g. Cosmetic Cocoon PH"/>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Type of Business</label>
+          <input class="form-input" id="icp-biztype" placeholder="e.g. Beauty & Aesthetics Clinic"/>
+        </div>
+        <div class="form-field full">
+          <label class="form-label">Offer / Services</label>
+          <textarea class="form-textarea" id="icp-offer" placeholder="List the offers and services to promote" style="min-height:60px"></textarea>
+        </div>
+        <div class="form-field full">
+          <label class="form-label">Business Details</label>
+          <textarea class="form-textarea" id="icp-details" placeholder="Location, branches, what makes this business different, inclusions, trust signals..." style="min-height:70px"></textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label">I WANT TO MARKET THE...</label>
+          <input class="form-input" id="icp-market" placeholder="e.g. Underarm whitening package promo"/>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Target Audience / Persona <span style="font-size:10px;color:var(--text3)">(optional — AI can decide)</span></label>
+          <input class="form-input" id="icp-audience" placeholder="e.g. Women 25-45, Metro Manila"/>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Brand Colors / Palette <span style="font-size:10px;color:var(--text3)">(optional)</span></label>
+          <input class="form-input" id="icp-colors" placeholder="e.g. Rose gold, white, soft pink"/>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Promo / Freebies / Price <span style="font-size:10px;color:var(--text3)">(optional)</span></label>
+          <input class="form-input" id="icp-promo" placeholder="e.g. Free consultation + 50% off first session"/>
+        </div>
+        <div class="form-field full">
+          <label class="form-label">Website <span style="font-size:10px;color:var(--text3)">(optional)</span></label>
+          <input class="form-input" id="icp-website" placeholder="https://..."/>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap">
+        <button class="primary-btn" id="icp-gen-btn" onclick="icpGenerate()" style="font-size:13px">🧠 Generate 15 Strategies</button>
+        <span id="icp-status" style="font-size:11px;color:var(--text3)"></span>
+      </div>
+    </div>
+
+    <!-- STEP 2: STRATEGY CARDS -->
+    <div id="icp-step2" style="display:none;margin-top:1.25rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div class="form-card-title" style="margin:0"><span>📋</span> Step 2 — Copy each prompt to ChatGPT, then mark ✓ Done</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div id="icp-progress" style="font-size:12px;font-weight:700;color:var(--yellow)">0 / 15 done</div>
+          <button class="ghost-btn" onclick="icpCopyAll()" style="font-size:11px">📄 Copy All Prompts</button>
+        </div>
+      </div>
+      <div id="icp-progress-bar-wrap" style="height:6px;background:var(--bg3);border-radius:10px;overflow:hidden;margin-bottom:14px">
+        <div id="icp-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--yellow),#22c55e);transition:width 0.3s"></div>
+      </div>
+      <div id="icp-cards"></div>
+    </div>
+
+  </div>
+</div>
+
       <!-- USERS -->
       <div class="page" id="page-users">
         <div class="add-user-form">
@@ -2249,5 +2333,164 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 <div class="notif" id="notif"></div>
 
 <script src="app.js"></script>
+<script>
+/* ═══ IMAGE CREATIVES PROMPT COPILOT ═══ */
+var icpState = { strategies: [], done: [], batchNumber: 1, usedNames: [], clientDetails: null };
+
+function icpGetDetails() {
+  return {
+    pageName: document.getElementById('icp-page').value.trim(),
+    businessType: document.getElementById('icp-biztype').value.trim(),
+    offer: document.getElementById('icp-offer').value.trim(),
+    businessDetails: document.getElementById('icp-details').value.trim(),
+    marketFocus: document.getElementById('icp-market').value.trim(),
+    audience: document.getElementById('icp-audience').value.trim(),
+    brandColors: document.getElementById('icp-colors').value.trim(),
+    promo: document.getElementById('icp-promo').value.trim(),
+    website: document.getElementById('icp-website').value.trim()
+  };
+}
+
+async function icpGenerate(isNewBatch) {
+  var d = isNewBatch ? icpState.clientDetails : icpGetDetails();
+  if (!d || !d.pageName || !d.offer) { showNotif('Fill in Page Name and Offer/Services first!', 'error'); return; }
+  if (!isNewBatch) { icpState.batchNumber = 1; icpState.usedNames = []; }
+  icpState.clientDetails = d;
+
+  var btn = document.getElementById('icp-gen-btn');
+  var status = document.getElementById('icp-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating 15 strategies...';
+  status.textContent = 'AI is analyzing the business and building strategies... (30-60 secs)';
+
+  try {
+    var res = await fetch('/api/ic-strategies', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.assign({}, d, { batchNumber: icpState.batchNumber, usedNames: icpState.usedNames }))
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    icpState.strategies = data.strategies || [];
+    icpState.done = new Array(icpState.strategies.length).fill(false);
+    icpState.strategies.forEach(function(s) { if (s.name) icpState.usedNames.push(s.name); });
+
+    icpRenderCards();
+    document.getElementById('icp-step2').style.display = 'block';
+    document.getElementById('icp-batch-badge').style.display = 'inline-block';
+    document.getElementById('icp-batch-badge').textContent = 'Batch ' + icpState.batchNumber;
+    document.getElementById('icp-new-batch-btn').style.display = 'inline-block';
+    status.textContent = '';
+    showNotif('15 strategies ready! ✓', 'success');
+    if (typeof logActivity === 'function') logActivity('IC_STRATEGIES_GENERATED', 'Batch ' + icpState.batchNumber + ' — ' + d.pageName);
+    document.getElementById('icp-step2').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    status.textContent = '';
+    showNotif('Error: ' + e.message, 'error');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '🧠 Generate 15 Strategies';
+}
+
+function icpNewBatch() {
+  icpState.batchNumber++;
+  icpGenerate(true);
+}
+
+function icpRenderCards() {
+  var wrap = document.getElementById('icp-cards');
+  wrap.innerHTML = '';
+  icpState.strategies.forEach(function(s, i) {
+    var bullets = (s.bullets || []).map(function(b) { return '<div style="font-size:11px;color:var(--text2);padding:1px 0">✓ ' + b + '</div>'; }).join('');
+    var card = document.createElement('div');
+    card.className = 'form-card';
+    card.id = 'icp-card-' + i;
+    card.style.cssText = 'margin-bottom:12px;transition:opacity 0.3s,border-color 0.3s';
+    card.innerHTML =
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+      + '<div style="flex:1;min-width:200px">'
+      +   '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+      +     '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:var(--yellow-dim);color:var(--yellow)">#' + (i + 1) + '</span>'
+      +     '<span style="font-size:13px;font-weight:700;color:var(--text)">' + (s.name || 'Creative ' + (i + 1)) + '</span>'
+      +   '</div>'
+      +   '<div style="font-size:15px;font-weight:800;color:var(--yellow);margin:6px 0 2px">"' + (s.tagline || '') + '"</div>'
+      +   '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">' + (s.subhead || '') + '</div>'
+      +   bullets
+      +   '<div style="font-size:10px;color:var(--text3);margin-top:8px">🎯 ' + (s.audience || '') + ' &nbsp;•&nbsp; 💔 ' + (s.pain || '') + ' &nbsp;•&nbsp; ✨ ' + (s.desire || '') + '</div>'
+      +   '<div style="font-size:10px;color:var(--text3);margin-top:3px">🎨 ' + (s.colors || '') + ' &nbsp;•&nbsp; 📢 CTA: ' + (s.cta || '') + '</div>'
+      +   '<div style="font-size:10px;color:var(--green);margin-top:3px">🛡️ ' + (s.safety || '') + '</div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;gap:6px;min-width:130px">'
+      +   '<button class="primary-btn" onclick="icpCopyPrompt(' + i + ')" id="icp-copy-' + i + '" style="font-size:11px;padding:7px 12px">📋 Copy Prompt</button>'
+      +   '<button class="ghost-btn" onclick="icpToggleDetails(' + i + ')" style="font-size:11px;padding:6px 12px">👁️ View Prompt</button>'
+      +   '<button class="ghost-btn" onclick="icpMarkDone(' + i + ')" id="icp-done-' + i + '" style="font-size:11px;padding:6px 12px;color:var(--green);border-color:rgba(34,197,94,0.3)">✓ Mark Done</button>'
+      + '</div>'
+      + '</div>'
+      + '<div id="icp-detail-' + i + '" style="display:none;margin-top:10px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:12px">'
+      +   '<div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Full Image Prompt — paste this to ChatGPT</div>'
+      +   '<div style="font-size:11px;color:var(--text2);white-space:pre-wrap;line-height:1.6">' + (s.image_prompt || '') + '</div>'
+      +   '<div style="font-size:10px;color:var(--text3);margin-top:10px"><b>Layout:</b> ' + (s.layout || '') + '</div>'
+      + '</div>';
+    wrap.appendChild(card);
+  });
+  icpUpdateProgress();
+}
+
+function icpCopyPrompt(i) {
+  var s = icpState.strategies[i];
+  if (!s) return;
+  navigator.clipboard.writeText(s.image_prompt || '').then(function() {
+    var btn = document.getElementById('icp-copy-' + i);
+    btn.innerHTML = '✓ Copied!';
+    setTimeout(function() { btn.innerHTML = '📋 Copy Prompt'; }, 1600);
+    showNotif('Prompt #' + (i + 1) + ' copied — paste it in ChatGPT! ✓', 'success');
+  });
+}
+
+function icpCopyAll() {
+  var all = icpState.strategies.map(function(s, i) {
+    return '=== CREATIVE #' + (i + 1) + ': ' + (s.name || '') + ' ===\n' + (s.image_prompt || '');
+  }).join('\n\n');
+  navigator.clipboard.writeText(all).then(function() {
+    showNotif('All 15 prompts copied! ✓', 'success');
+  });
+}
+
+function icpToggleDetails(i) {
+  var el = document.getElementById('icp-detail-' + i);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function icpMarkDone(i) {
+  icpState.done[i] = !icpState.done[i];
+  var card = document.getElementById('icp-card-' + i);
+  var btn = document.getElementById('icp-done-' + i);
+  if (icpState.done[i]) {
+    card.style.opacity = '0.55';
+    card.style.borderColor = 'rgba(34,197,94,0.4)';
+    btn.innerHTML = '✓ Done!';
+    btn.style.background = 'rgba(34,197,94,0.12)';
+  } else {
+    card.style.opacity = '1';
+    card.style.borderColor = '';
+    btn.innerHTML = '✓ Mark Done';
+    btn.style.background = '';
+  }
+  icpUpdateProgress();
+}
+
+function icpUpdateProgress() {
+  var doneCount = icpState.done.filter(Boolean).length;
+  var total = icpState.strategies.length || 15;
+  document.getElementById('icp-progress').textContent = doneCount + ' / ' + total + ' done';
+  document.getElementById('icp-progress-bar').style.width = (doneCount / total * 100) + '%';
+  if (doneCount === total && total > 0) {
+    showNotif('🎉 All ' + total + ' creatives done! Upload them to Drive and log the link in the project.', 'success');
+    if (typeof logActivity === 'function') logActivity('IC_BATCH_COMPLETED', 'Batch ' + icpState.batchNumber + ' — ' + (icpState.clientDetails ? icpState.clientDetails.pageName : ''));
+  }
+}
+</script>
+
 </body>
 </html>
