@@ -2156,9 +2156,17 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     </div>
 
 <!-- MODE TOGGLE -->
-<div style="display:flex;gap:8px;margin-bottom:1.25rem">
-  <button class="ghost-btn" id="icp-mode-ads-btn" onclick="icpSwitchMode('ads')" style="font-size:12px;font-weight:700;background:var(--yellow-dim);color:var(--yellow);border-color:rgba(250,204,21,0.4)">🎯 Ad Creatives</button>
-  <button class="ghost-btn" id="icp-mode-design-btn" onclick="icpSwitchMode('design')" style="font-size:12px;font-weight:700">🎨 Design Studio</button>
+<div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap">
+  <button class="ghost-btn" id="icp-mode-ads-btn" onclick="icpSwitchMode('ads')" style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;padding:9px 16px;background:rgba(250,204,21,0.12);color:#facc15;border:1px solid rgba(250,204,21,0.5);border-radius:10px">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+    Ad Creatives
+    <span style="font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;background:rgba(250,204,21,0.18)">15 STRATEGIES</span>
+  </button>
+  <button class="ghost-btn" id="icp-mode-design-btn" onclick="icpSwitchMode('design')" style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;padding:9px 16px;background:transparent;color:rgba(196,144,253,0.55);border:1px solid rgba(196,144,253,0.2);border-radius:10px">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 0 0 20 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a5 5 0 0 0 5-5c0-5.5-4.5-10-10-10z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg>
+    Design Studio
+    <span style="font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;background:rgba(196,144,253,0.12)">FLYERS • MENU • LOGO</span>
+  </button>
 </div>
 
 <div id="icp-mode-design" style="display:none">
@@ -2174,25 +2182,25 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <div class="form-field">
         <label class="form-label">🎯 What do you need? (Asset Type)</label>
         <select class="form-select" id="dsg-asset">
-          <option>Static Images / Social Media Creatives</option>
-          <option>Facebook Cover Photo</option>
-          <option>Poster</option>
-          <option>Flyer / Promo Flyer</option>
-          <option>Banner</option>
-          <option>Tarpaulin Layout</option>
-          <option>Menu Board / Restaurant Menu</option>
-          <option>Product Catalog</option>
-          <option>Service Catalog</option>
-          <option>Brochure (Bi-fold / Tri-fold)</option>
-          <option>Logo Concept</option>
-          <option>Logo Refinement</option>
-          <option>Promo Graphics</option>
-          <option>Testimonial Creatives</option>
-          <option>Product Launch Creatives</option>
-          <option>Offer Creatives</option>
-          <option>Event Graphics</option>
-          <option>Price List / Service Menu Layout</option>
-          <option>One-page Business Profile</option>
+          <option>🖼️ Static Images / Social Media Creatives</option>
+          <option>🏞️ Facebook Cover Photo</option>
+          <option>📌 Poster</option>
+          <option>📄 Flyer / Promo Flyer</option>
+          <option>🎏 Banner</option>
+          <option>🪧 Tarpaulin Layout</option>
+          <option>🍽️ Menu Board / Restaurant Menu</option>
+          <option>📦 Product Catalog</option>
+          <option>🛎️ Service Catalog</option>
+          <option>📑 Brochure (Bi-fold / Tri-fold)</option>
+          <option>✨ Logo Concept</option>
+          <option>🔧 Logo Refinement</option>
+          <option>🏷️ Promo Graphics</option>
+          <option>💬 Testimonial Creatives</option>
+          <option>🚀 Product Launch Creatives</option>
+          <option>🎁 Offer Creatives</option>
+          <option>🎪 Event Graphics</option>
+          <option>💰 Price List / Service Menu Layout</option>
+          <option>🏢 One-page Business Profile</option>
         </select>
       </div>
       <div class="form-field">
@@ -2659,18 +2667,21 @@ function icpSwitchMode(mode) {
   var dsgWrap = document.getElementById('icp-mode-design');
   var adsBtn = document.getElementById('icp-mode-ads-btn');
   var dsgBtn = document.getElementById('icp-mode-design-btn');
-  var active = 'font-size:12px;font-weight:700;background:var(--yellow-dim);color:var(--yellow);border-color:rgba(250,204,21,0.4)';
-  var inactive = 'font-size:12px;font-weight:700';
+  var base = 'display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;padding:9px 16px;border-radius:10px;';
+  var adsActive = base + 'background:rgba(250,204,21,0.12);color:#facc15;border:1px solid rgba(250,204,21,0.5)';
+  var adsIdle = base + 'background:transparent;color:rgba(250,204,21,0.5);border:1px solid rgba(250,204,21,0.18)';
+  var dsgActive = base + 'background:rgba(196,144,253,0.14);color:#c490fd;border:1px solid rgba(196,144,253,0.55)';
+  var dsgIdle = base + 'background:transparent;color:rgba(196,144,253,0.55);border:1px solid rgba(196,144,253,0.2)';
   if (mode === 'design') {
     adsWrap.style.display = 'none';
     dsgWrap.style.display = 'block';
-    adsBtn.style.cssText = inactive;
-    dsgBtn.style.cssText = active;
+    adsBtn.style.cssText = adsIdle;
+    dsgBtn.style.cssText = dsgActive;
   } else {
     adsWrap.style.display = 'block';
     dsgWrap.style.display = 'none';
-    adsBtn.style.cssText = active;
-    dsgBtn.style.cssText = inactive;
+    adsBtn.style.cssText = adsActive;
+    dsgBtn.style.cssText = dsgIdle;
   }
 }
 
@@ -2706,7 +2717,7 @@ function dsgHandlePhotos(e) {
 async function dsgGenerate(isNewBatch) {
   var d = isNewBatch ? dsgState.details : {
     brandName: document.getElementById('dsg-brand').value.trim(),
-    assetType: document.getElementById('dsg-asset').value,
+    assetType: document.getElementById('dsg-asset').value.replace(/^[^A-Za-z]+/, ''),
     goal: document.getElementById('dsg-goal').value,
     language: document.getElementById('dsg-lang').value,
     highlight: document.getElementById('dsg-highlight').value.trim(),
