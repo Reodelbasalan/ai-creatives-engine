@@ -166,11 +166,26 @@ export default async function handler(req, res) {
         const refResp = await fetch(avatarUrl);
         if (refResp.ok) {
           const refBuf = Buffer.from(await refResp.arrayBuffer());
+          // Preservation-focused prompt — do NOT re-describe the face,
+          // just tell it to KEEP the reference person's identity and only
+          // change scene/pose/outfit/background. This is what tightens the lock.
+          const editPrompt = [
+            "Using the person shown in the provided reference image, create a new photo of the EXACT SAME person.",
+            "Keep her identity identical: same face structure, same facial features, same skin tone, same eyes, same nose, same lips, same hair. Do NOT change her face or make her look like a different person.",
+            "Only change the pose, outfit, and background as described:",
+            `Outfit: ${attire}.`,
+            `Background: ${background}.`,
+            product ? `Brand product featured: ${product} — held naturally in hand or placed casually nearby.` : '',
+            `Scene action: ${prompt}.`,
+            "Ultra-realistic UGC iPhone photo, natural window lighting, visible pores and real skin texture, candid authentic Filipino creator look. NO studio lighting, NO beauty filter, NO over-editing."
+          ].filter(Boolean).join(' ');
+
           const form = new FormData();
           form.append('model', 'gpt-image-1');
-          form.append('prompt', finalPrompt);
+          form.append('prompt', editPrompt);
           form.append('size', imageSize);
-          form.append('quality', 'medium');
+          form.append('quality', 'high');
+          form.append('input_fidelity', 'high');
           form.append('n', '1');
           form.append('image', new Blob([refBuf], { type: 'image/png' }), 'avatar.png');
           response = await fetch('https://api.openai.com/v1/images/edits', {
