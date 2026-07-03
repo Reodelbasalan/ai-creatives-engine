@@ -12,6 +12,22 @@ export default async function handler(req, res) {
 
     if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
 
+    // ═══════════════════════════════════════
+    // PRODUCT SANITIZER — kung ang product field ay mukhang intake/form
+    // text (mahaba, may URL, may form-question words), HUWAG isama sa
+    // prompt. Kung isasama 'yon, iginuguhit ng AI na hawak ng tao ang
+    // papel na may nakasulat na form text sa BAWAT scene.
+    // ═══════════════════════════════════════
+    let productClean = (product || '').trim();
+    if (
+      productClean.length > 120 ||
+      /https?:\/\//i.test(productClean) ||
+      /\n/.test(productClean) ||
+      /editor assign|client name|order\s+(june|jan|feb|mar|apr|may|jul|aug|sep|oct|nov|dec)|page name|website link|voice actor|main goal|input here/i.test(productClean)
+    ) {
+      productClean = '';
+    }
+
     const openaiKey = process.env.OPENAI_API_KEY;
     if (!openaiKey) return res.status(500).json({ error: 'OPENAI_API_KEY not set' });
 
@@ -140,7 +156,7 @@ export default async function handler(req, res) {
         `She is wearing: ${attire}.`,
         `Background setting: ${background}.`,
         "Natural ambient or window lighting ONLY — no studio, no ring light, no artificial setup.",
-        product ? `Brand product featured: ${product} — held naturally in hand or placed casually nearby, visible but not forced.` : '',
+        productClean ? `Brand product featured: ${productClean} — held naturally in hand or placed casually nearby, visible but not forced.` : '',
         // *** KEY FIX — actual blueprint scene prompt goes here ***
         `Scene details from script: ${prompt}`,
         "Slightly imperfect handheld framing, natural depth of field, authentic Filipino UGC creator energy.",
@@ -198,7 +214,7 @@ export default async function handler(req, res) {
             "Keep the SAME outfit as the reference person.",
             "ONLY change these: the background/setting, the person's action and hand gesture, the prop or product they hold, and the camera framing.",
             background ? `Background/setting: ${background}.` : '',
-            product ? `Prop/product they are holding or showing: ${product}.` : '',
+            productClean ? `Prop/product they are holding or showing: ${productClean}.` : '',
             `Action in this scene: ${prompt}.`,
             "Output style: RAW candid iPhone photo, natural available light, realistic, visible pores, natural skin texture, unedited UGC look.",
             "Negative: no different face, no different person, no younger face, no lighter or different skin tone, no different hairstyle, no generic influencer face, no plastic skin, no over-smoothed face, no beauty filter, no AI look, no cartoon, no 3D."
