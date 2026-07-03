@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   try {
     const {
       pageName, offer, businessType, businessDetails, marketFocus,
-      audience, brandColors, website, promo, batchNumber, usedNames
+      audience, brandColors, website, promo, batchNumber, usedNames, images
     } = req.body;
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -150,6 +150,25 @@ Return ONLY a valid JSON array of exactly 15 objects. No markdown, no code fence
   "safety": "One-line ads policy safety check: why this is compliant, what risky angle was avoided"
 }`;
 
+    // Fetch website content so the AI knows the REAL services/details
+    let websiteContent = '';
+    if (website && website.startsWith('http')) {
+      try {
+        const controller = new AbortController();
+        const t = setTimeout(() => controller.abort(), 8000);
+        const wres = await fetch(website, { signal: controller.signal, headers: { 'User-Agent': 'Mozilla/5.0' } });
+        clearTimeout(t);
+        let html = await wres.text();
+        websiteContent = html
+          .replace(/<script[\s\S]*?<\/script>/gi, '')
+          .replace(/<style[\s\S]*?<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 4000);
+      } catch (e) { websiteContent = ''; }
+    }
+
     let userPrompt = `Here are the client details:
 
 Facebook Page Name(s): ${pageName || 'N/A'}
@@ -165,6 +184,13 @@ Promo / Freebies / Price: ${promo || 'N/A'}
 Image Size: 1080 x 1080 px
 
 Please go through all the details so you fully understand the business. Analyze everything as an expert in this business. Make sure you identify the right PERSONA, MASS DESIRE, and BEST PROBLEM.
+
+${websiteContent ? '\n\nWEBSITE CONTENT (scraped from the client website — this is the REAL business info, use it as ground truth):\n' + websiteContent : ''}
+
+CRITICAL ANTI-HALLUCINATION RULES:
+- Base ALL claims, services, prices, promos, and inclusions ONLY on the details, website content, and reference photos provided above. Do NOT invent services, prices, locations, or claims that were not given.
+- If reference photos are attached: study them carefully. Describe the ACTUAL products, ACTUAL model/person appearance (skin tone, hair, age range, style), ACTUAL branding elements, and ACTUAL environment you see. Every image_prompt must describe visuals consistent with these photos, and must include the instruction "match the attached reference photos" so the editor's image tool uses them.
+- If something is unknown, leave it out rather than guessing.
 
 Generate the Top 15 creative strategies now as a JSON array.`;
 
@@ -183,7 +209,16 @@ Generate the Top 15 creative strategies now as a JSON array.`;
         model: 'claude-sonnet-4-6',
         max_tokens: 30000,
         system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }]
+        messages: [{
+          role: 'user',
+          content: [
+            ...(Array.isArray(images) ? images.slice(0, 4).map(img => ({
+              type: 'image',
+              source: { type: 'base64', media_type: img.media_type || 'image/jpeg', data: img.data }
+            })) : []),
+            { type: 'text', text: userPrompt }
+          ]
+        }]
       })
     });
 
