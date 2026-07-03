@@ -162,11 +162,25 @@ export default async function handler(req, res) {
     let usedFaceLock = false;
     let refFetchError = null;
 
-    if (avatarUrl && /^https?:\/\//.test(avatarUrl)) {
+    // Accept BOTH a base64 data URL and an http(s) URL as the reference.
+    // (When Supabase storage upload fails, the avatar comes as a data URL —
+    // we must still be able to use it for face-lock.)
+    const isDataUrl = typeof avatarUrl === 'string' && avatarUrl.startsWith('data:image');
+    const isHttpUrl = typeof avatarUrl === 'string' && /^https?:\/\//.test(avatarUrl);
+
+    if (avatarUrl && (isDataUrl || isHttpUrl)) {
       try {
-        const refResp = await fetch(avatarUrl);
-        if (refResp.ok) {
-          const refBuf = Buffer.from(await refResp.arrayBuffer());
+        let refBuf = null;
+        if (isDataUrl) {
+          const b64 = avatarUrl.split(',')[1] || '';
+          if (b64) refBuf = Buffer.from(b64, 'base64');
+          else refFetchError = 'Avatar data URL was empty.';
+        } else {
+          const refResp = await fetch(avatarUrl);
+          if (refResp.ok) refBuf = Buffer.from(await refResp.arrayBuffer());
+          else refFetchError = 'Could not fetch approved avatar image (HTTP ' + refResp.status + '). Is the storage bucket public?';
+        }
+        if (refBuf) {
           // ═══════════════════════════════════════
           // STRICT IDENTITY LOCK — 100% reference-driven, ZERO hardcoded
           // description. No gender/skin/age assumptions. The reference
@@ -204,11 +218,9 @@ export default async function handler(req, res) {
             body: form
           });
           if (response.ok) usedFaceLock = true; // only true on SUCCESS
-        } else {
-          refFetchError = 'Could not fetch approved avatar image (HTTP ' + refResp.status + '). Is the storage bucket public?';
         }
       } catch (e) {
-        refFetchError = 'Avatar reference fetch error: ' + e.message;
+        refFetchError = 'Avatar reference error: ' + e.message;
       }
     }
 
