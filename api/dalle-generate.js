@@ -160,6 +160,7 @@ export default async function handler(req, res) {
     // ═══════════════════════════════════════
     let response;
     let usedFaceLock = false;
+    let refFetchError = null;
 
     if (avatarUrl && /^https?:\/\//.test(avatarUrl)) {
       try {
@@ -171,18 +172,22 @@ export default async function handler(req, res) {
           // description. No gender/skin/age assumptions. The reference
           // image defines WHO the person is; we only lock + set the scene.
           // ═══════════════════════════════════════
-          const changeOutfit = (sceneNum && sceneNum > 1); // scene 1 keeps ref outfit
+          // ═══════════════════════════════════════
+          // MINIMAL-DELTA LOCK — GPT rule: pass the master reference and
+          // ONLY change background / action / prop. Keep the SAME outfit
+          // to minimize what the model regenerates → tightest face lock.
+          // 100% reference-driven, zero hardcoded identity.
+          // ═══════════════════════════════════════
           const editPrompt = [
-            "Use the person in the reference image as the EXACT identity. This must be the SAME person — not a lookalike, not a similar-looking person.",
-            "LOCK and do NOT change ANY of these from the reference: face shape, jawline, cheeks, nose, eyes, eyebrows, lips, hairline, hairstyle, hair length, hair color, exact skin tone, age, and body build.",
-            "Do NOT make the person younger, older, prettier, lighter or darker skinned, slimmer, or more symmetrical. Keep their real natural face and features exactly as shown.",
-            "Keep the same natural skin texture with visible pores. No smoothing, no beautifying, no idealizing.",
-            changeOutfit ? (attire ? `New outfit: ${attire}.` : '') : "Keep the same outfit as the reference.",
-            background ? `New background/setting: ${background}.` : '',
-            product ? `The person is holding or showing this product: ${product}.` : '',
-            `What the person is doing in this scene: ${prompt}.`,
-            "Style: RAW candid iPhone photo, natural available light, realistic, unedited authentic look.",
-            "Negative: no identity change, no different person, no different face, no different skin tone, no different hairstyle, no age change, no plastic skin, no over-smoothed face, no beauty filter, no glamour retouch, no AI look, no cartoon, no anime, no 3D render."
+            "Use the person in the reference image as the master character. This is the EXACT SAME person — copy their identity from the image, do not invent a new person.",
+            "Keep 100% identical to the reference and do NOT change: face, face shape, jawline, cheeks, nose, eyes, eyebrows, lips, smile, hairline, hairstyle, hair length, hair color, exact skin tone, age, and skin texture with visible pores.",
+            "Keep the SAME outfit as the reference person.",
+            "ONLY change these: the background/setting, the person's action and hand gesture, the prop or product they hold, and the camera framing.",
+            background ? `Background/setting: ${background}.` : '',
+            product ? `Prop/product they are holding or showing: ${product}.` : '',
+            `Action in this scene: ${prompt}.`,
+            "Output style: RAW candid iPhone photo, natural available light, realistic, visible pores, natural skin texture, unedited UGC look.",
+            "Negative: no different face, no different person, no younger face, no lighter or different skin tone, no different hairstyle, no generic influencer face, no plastic skin, no over-smoothed face, no beauty filter, no AI look, no cartoon, no 3D."
           ].filter(Boolean).join(' ');
 
           const form = new FormData();
@@ -198,13 +203,32 @@ export default async function handler(req, res) {
             headers: { 'Authorization': `Bearer ${openaiKey}` },
             body: form
           });
-          usedFaceLock = true;
+          if (response.ok) usedFaceLock = true; // only true on SUCCESS
+        } else {
+          refFetchError = 'Could not fetch approved avatar image (HTTP ' + refResp.status + '). Is the storage bucket public?';
         }
       } catch (e) {
-        console.log('Face-lock reference fetch failed, falling back to text-to-image:', e.message);
+        refFetchError = 'Avatar reference fetch error: ' + e.message;
       }
     }
 
+    // ═══════════════════════════════════════
+    // NO SILENT FALLBACK FOR SCENES (GPT's key fix).
+    // A scene MUST use the face-lock. If the avatar is missing or the
+    // reference fetch failed, we return a LOUD error instead of quietly
+    // generating a brand-new (different) face from text.
+    // Text-to-image fallback is allowed ONLY for avatar generation.
+    // ═══════════════════════════════════════
+    if (type === 'scene') {
+      if (!avatarUrl) {
+        return res.status(400).json({ error: 'Scene needs an approved avatar. Generate/upload and APPROVE an avatar first.', faceLock: false });
+      }
+      if (!response) {
+        return res.status(400).json({ error: 'Face-lock failed — ' + (refFetchError || 'avatar reference unavailable') + '. Scene was NOT generated to avoid a different face.', faceLock: false });
+      }
+    }
+
+    // Avatar (or non-scene) may fall back to text-to-image generation.
     if (!response) {
       response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
@@ -221,7 +245,7 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     if (!response.ok) {
-      return res.status(response.status).json({ error: data.error?.message || 'OpenAI API error' });
+      return res.status(response.status).json({ error: (data.error?.message || 'OpenAI API error') + (type==='scene' ? ' (face-lock edits call failed)' : ''), faceLock: false });
     }
 
     const base64Image = data.data?.[0]?.b64_json;
