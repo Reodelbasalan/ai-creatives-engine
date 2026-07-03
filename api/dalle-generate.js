@@ -166,28 +166,24 @@ export default async function handler(req, res) {
         const refResp = await fetch(avatarUrl);
         if (refResp.ok) {
           const refBuf = Buffer.from(await refResp.arrayBuffer());
-          // Preservation-focused prompt — do NOT re-describe the face,
-          // just tell it to KEEP the reference person's identity and only
-          // change scene/pose/outfit/background. This is what tightens the lock.
           // ═══════════════════════════════════════
-          // STRICT IDENTITY LOCK — no re-description, no beauty words.
-          // When a reference image is provided, we ONLY give lock rules
-          // + the scene action. Re-describing the face or adding beauty
-          // words makes gpt-image-1 blend and drift into a new person.
+          // STRICT IDENTITY LOCK — 100% reference-driven, ZERO hardcoded
+          // description. No gender/skin/age assumptions. The reference
+          // image defines WHO the person is; we only lock + set the scene.
           // ═══════════════════════════════════════
           const changeOutfit = (sceneNum && sceneNum > 1); // scene 1 keeps ref outfit
           const editPrompt = [
-            "Use the person in the reference image as the EXACT identity. This must be the SAME person, not a lookalike.",
-            "LOCK and do NOT change: face shape, jawline, cheeks, nose, eyes, eyebrows, lips, hairline, hairstyle, hair length, and the exact morena skin tone.",
-            "Do NOT make her younger, prettier, lighter-skinned, slimmer-faced, or more symmetrical. Keep her real natural face exactly as in the reference.",
-            "Keep the same natural skin texture with visible pores. No smoothing, no beautifying.",
-            changeOutfit ? `New outfit: ${attire}.` : "Keep the same outfit as the reference.",
-            `New background/setting: ${background}.`,
-            product ? `She is holding or showing this product: ${product}.` : '',
-            `What she is doing in this scene: ${prompt}.`,
-            "Style: RAW candid iPhone photo, natural available light, realistic, unedited UGC look.",
-            "Negative: no face change, no different person, no different skin tone, no different hairstyle, no plastic skin, no over-smoothed face, no beauty filter, no glamour, no AI look, no cartoon, no 3D."
-          ].filter(Boolean).join(' ')
+            "Use the person in the reference image as the EXACT identity. This must be the SAME person — not a lookalike, not a similar-looking person.",
+            "LOCK and do NOT change ANY of these from the reference: face shape, jawline, cheeks, nose, eyes, eyebrows, lips, hairline, hairstyle, hair length, hair color, exact skin tone, age, and body build.",
+            "Do NOT make the person younger, older, prettier, lighter or darker skinned, slimmer, or more symmetrical. Keep their real natural face and features exactly as shown.",
+            "Keep the same natural skin texture with visible pores. No smoothing, no beautifying, no idealizing.",
+            changeOutfit ? (attire ? `New outfit: ${attire}.` : '') : "Keep the same outfit as the reference.",
+            background ? `New background/setting: ${background}.` : '',
+            product ? `The person is holding or showing this product: ${product}.` : '',
+            `What the person is doing in this scene: ${prompt}.`,
+            "Style: RAW candid iPhone photo, natural available light, realistic, unedited authentic look.",
+            "Negative: no identity change, no different person, no different face, no different skin tone, no different hairstyle, no age change, no plastic skin, no over-smoothed face, no beauty filter, no glamour retouch, no AI look, no cartoon, no anime, no 3D render."
+          ].filter(Boolean).join(' ');
 
           const form = new FormData();
           form.append('model', 'gpt-image-1');
