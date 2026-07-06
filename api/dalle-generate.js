@@ -250,15 +250,17 @@ export default async function handler(req, res) {
           const sceneOnly = stripCharacterDesc(prompt);
 
           const editPrompt = [
-            "Use the person in the reference image as the master character. This is the EXACT SAME person — copy their identity from the image, do not invent a new person.",
-            "Keep 100% identical to the reference and do NOT change: face, face shape, jawline, cheeks, nose, eyes, eyebrows, lips, smile, hairline, hairstyle, hair length, hair color, exact skin tone, age, and skin texture with visible pores.",
-            "Keep the SAME outfit as the reference person.",
-            "ONLY change these: the background/setting, the person's action and hand gesture, the prop or product they hold, and the camera framing.",
-            background ? `Background/setting: ${background}.` : '',
+            // ── MAXIMUM IDENTITY LOCK ──
+            "CRITICAL: The person in the reference image is a REAL specific individual. Reproduce their face with photographic, biometric accuracy — treat this like a photo of the same person taken on a different day, NOT a new character inspired by them.",
+            "PRESERVE EXACTLY, pixel-for-pixel where possible: the exact face geometry, exact distance between the eyes, exact nose shape and width, exact lip shape and thickness, exact jawline and chin, exact cheekbone structure, exact eyebrow shape and thickness, exact eye shape and color, exact hairline shape, exact hairstyle and hair length, exact skin tone and undertone, exact age, exact facial hair if any, and all unique features like moles, freckles, or asymmetries.",
+            "The face in the output MUST be recognizable as the same person by facial-recognition standards. Do NOT beautify, slim, youthen, lighten, or 'improve' the face in any way. Keep every imperfection.",
+            "Keep the SAME outfit / clothing as the reference person — same style, same color, same collar and neckline.",
+            "ONLY change these four things: (1) the background/setting, (2) the person's body pose, action and hand gesture, (3) any prop or product they hold, (4) the camera framing/angle. Everything about the person's identity stays locked.",
+            background ? `New background/setting for this scene: ${background}.` : '',
             productClean ? `Prop/product they are holding or showing: ${productClean}.` : '',
             sceneOnly ? `Scene action and setting: ${sceneOnly}.` : `Scene action: ${prompt}.`,
             "Output style: RAW candid iPhone photo, natural available light, realistic, visible pores, natural skin texture, unedited UGC look.",
-            "Negative: no different face, no different person, no younger face, no lighter or different skin tone, no different hairstyle, no generic influencer face, no plastic skin, no over-smoothed face, no beauty filter, no AI look, no cartoon, no 3D."
+            "NEGATIVE (must avoid): different face, different person, new face, younger face, older face, slimmer face, rounder face, lighter skin, different skin tone, different hairstyle, different hair length, generic influencer face, model face, plastic skin, over-smoothed skin, airbrushed, beauty filter, face retouching, symmetrical perfect face, AI face, cartoon, 3D render, different eye color, different nose."
           ].filter(Boolean).join(' ');
 
           const ext = refMime === 'image/jpeg' ? 'jpg' : (refMime === 'image/webp' ? 'webp' : 'png');
