@@ -3384,7 +3384,7 @@ async function generateSceneImage(idx, dalleSize){
   var imgSize=dalleSize||(isSquare?'1024x1024':'1024x1792');
   var sizeTag=isSquare?'1:1 square format, equal dimensions':'9:16 vertical portrait, mobile-optimized';
   var prompt=scene.imagePrompt||scene.videoPrompt||scene.visual||'';
-  if(autoAvatarUrl&&autoProject?.avatar_desc)prompt='Featuring the same character: '+autoProject.avatar_desc+'. Scene: '+prompt;
+  
   if(autoProject?.color_primary)prompt+='. Brand color: '+autoProject.color_primary;
   prompt+=' '+sizeTag+', photorealistic, cinematic lighting, no text, no logos';
   try{
@@ -3532,7 +3532,7 @@ generateSceneImage=async function(idx,dalleSize){
   var imgSize=dalleSize||(isSquare?'1024x1024':'1024x1792');
   var sizeTag=isSquare?'1:1 square format':'9:16 vertical portrait, mobile-optimized';
   var prompt=scene.imagePrompt||scene.videoPrompt||scene.visual||'';
-  if(autoAvatarUrl&&autoProject?.avatar_desc)prompt='Featuring the same character: '+autoProject.avatar_desc+'. Scene: '+prompt;
+  
   if(autoProject?.color_primary)prompt+='. Brand color: '+autoProject.color_primary;
   prompt+=' '+sizeTag+', photorealistic, cinematic lighting, no text, no logos';
   try{
