@@ -2235,54 +2235,49 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
       </div>
      <div class="page" id="page-for-upload">
-  <div style="max-width:1200px">
+  <div style="max-width:1150px">
 
-    <div class="form-card" style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
-        <div style="width:34px;height:34px;border-radius:8px;background:var(--yellow-dim);border:0.5px solid var(--yellow);display:flex;align-items:center;justify-content:center">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <div style="background:linear-gradient(135deg,rgba(250,204,21,0.07),rgba(127,119,221,0.05));border:0.5px solid rgba(250,204,21,0.18);border-radius:var(--radius-xl);padding:1.5rem;margin-bottom:18px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(250,204,21,0.4),transparent)"></div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:42px;height:42px;border-radius:12px;background:var(--yellow);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(250,204,21,0.35);flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </div>
-        <div>
-          <div style="font-size:17px;font-weight:700;color:var(--text)">For Upload</div>
-          <div style="font-size:11px;color:var(--text3)">Approved creatives ready for publishing</div>
+        <div style="flex:1">
+          <div style="font-size:19px;font-weight:700;color:var(--text);letter-spacing:-0.4px">For Upload</div>
+          <div style="font-size:11.5px;color:var(--text3);margin-top:1px">Approved creatives ready for publishing</div>
         </div>
-      </div>
-      <div style="display:flex;gap:16px;margin-top:10px;font-size:12px">
-        <div style="color:var(--text2)">📤 <strong id="fu-waiting-count" style="color:var(--yellow)">0</strong> tasks waiting to be uploaded</div>
-        <div style="color:var(--text2)">✅ <strong id="fu-published-count" style="color:var(--green)">0</strong> published (auto-removes in 48h)</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:7px;padding:8px 14px;background:rgba(250,204,21,0.08);border:0.5px solid rgba(250,204,21,0.22);border-radius:12px">
+            <span style="font-size:15px">📤</span>
+            <div><div style="font-size:16px;font-weight:700;color:var(--yellow);line-height:1" id="fu-waiting-count">0</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px">Waiting</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;padding:8px 14px;background:rgba(34,197,94,0.08);border:0.5px solid rgba(34,197,94,0.22);border-radius:12px">
+            <span style="font-size:15px">✅</span>
+            <div><div style="font-size:16px;font-weight:700;color:var(--green);line-height:1" id="fu-published-count">0</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px">Published</div></div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="form-card" style="margin-bottom:16px">
-      <div class="form-card-title"><span>➕</span> Add creative</div>
+    <div class="form-card" style="margin-bottom:18px;border:0.5px solid rgba(255,255,255,0.05)">
+      <div class="form-card-title" style="color:var(--yellow)"><span>➕</span> Add creative</div>
       <div class="form-grid">
-        <div class="form-field">
-          <label class="form-label">Link to project <span class="opt">(optional — auto-fill)</span></label>
-          <select class="form-select" id="fu-project-link" onchange="fuProjectPicked()">
-            <option value="">— Manual (walang project link) —</option>
-          </select>
-        </div>
         <div class="form-field">
           <label class="form-label">Project name</label>
           <input class="form-input" id="fu-project-name" placeholder="e.g. RICHNAE 1"/>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Gender</label>
-          <select class="form-select" id="fu-gender">
-            <option>All</option><option>Women</option><option>Men</option>
-          </select>
         </div>
         <div class="form-field">
           <label class="form-label">Content type</label>
           <input class="form-input" id="fu-content-type" placeholder="e.g. UGC / Static / Video"/>
         </div>
         <div class="form-field">
-          <label class="form-label">File link <span class="opt">(GDrive / video)</span></label>
-          <input class="form-input" id="fu-file-link" placeholder="https://drive.google.com/..."/>
-        </div>
-        <div class="form-field">
           <label class="form-label">Headline</label>
           <input class="form-input" id="fu-headline" placeholder="e.g. She Thought Something..."/>
+        </div>
+        <div class="form-field">
+          <label class="form-label">File link <span class="opt">(GDrive / video)</span></label>
+          <input class="form-input" id="fu-file-link" placeholder="https://drive.google.com/..."/>
         </div>
         <div class="form-field full">
           <label class="form-label">Ad copy <span class="opt">(optional)</span></label>
@@ -2292,22 +2287,22 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <button class="yellow-btn" id="fu-add-btn" onclick="fuAddCreative()" style="margin-top:12px">➕ Add creative</button>
     </div>
 
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-      <input class="form-input" id="fu-search" placeholder="Search..." oninput="filterForUpload()" style="max-width:220px"/>
-      <select class="form-select" id="fu-owner-filter" onchange="filterForUpload()" style="max-width:180px">
-        <option value="">All Owners</option>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <input class="form-input" id="fu-search" placeholder="🔍 Search creatives..." oninput="filterForUpload()" style="max-width:240px"/>
+      <select class="form-select" id="fu-owner-filter" onchange="filterForUpload()" style="max-width:190px">
+        <option value="">All staff</option>
       </select>
-      <select class="form-select" id="fu-status-filter" onchange="filterForUpload()" style="max-width:160px">
-        <option value="">All Status</option>
+      <select class="form-select" id="fu-status-filter" onchange="filterForUpload()" style="max-width:170px">
+        <option value="">All status</option>
         <option value="Unpublished">Unpublished</option>
         <option value="Published">Published</option>
       </select>
     </div>
 
-    <div class="data-table">
-      <div class="table-head" style="grid-template-columns:1fr 1.4fr 0.7fr 0.9fr 0.7fr 0.7fr 1.1fr 1fr 1.1fr">
-        <span>Owner</span><span>Project name</span><span>Gender</span><span>Content type</span>
-        <span>Ad copy</span><span>File link</span><span>Headline</span><span>Date upload</span><span>Status</span>
+    <div class="data-table" style="border:0.5px solid rgba(255,255,255,0.05)">
+      <div class="table-head" style="grid-template-columns:1.1fr 1.5fr 0.9fr 0.7fr 0.8fr 1.3fr 1fr 1.2fr">
+        <span>Staff</span><span>Project name</span><span>Content type</span>
+        <span>Ad copy</span><span>File link</span><span>Headline</span><span>Date uploaded</span><span>Status</span>
       </div>
       <div id="fu-table-body"></div>
     </div>
