@@ -268,7 +268,10 @@ export default async function handler(req, res) {
           form.append('model', 'gpt-image-1');
           form.append('prompt', editPrompt);
           form.append('size', imageSize);
-          form.append('quality', 'high');
+          // quality:medium — mas mabilis, iwas 504 Gateway Timeout (60s Vercel limit).
+          // Ang FACE-LOCK ay galing sa input_fidelity:high, HINDI sa quality —
+          // kaya bumibilis tayo nang hindi nasasakripisyo ang mukha.
+          form.append('quality', 'medium');
           form.append('input_fidelity', 'high');
           form.append('n', '1');
           form.append('image', new Blob([refBuf], { type: refMime }), 'avatar.' + ext);
