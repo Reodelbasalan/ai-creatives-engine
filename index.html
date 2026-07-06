@@ -2006,10 +2006,13 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <textarea class="form-textarea" id="auto-avatar-prompt" placeholder="e.g. Filipino woman, 25-35 years old, professional appearance, wearing white lab coat, confident smile, studio lighting, white background, 9:16 portrait aspect ratio, photorealistic" style="min-height:80px"></textarea>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <button class="yellow-btn" id="gen-avatar-btn" onclick="generateAvatar()">🎨 Generate Avatar (DALL-E)</button>
-              <button class="ghost-btn" onclick="generateAvatar()" style="font-size:12px">🔄 Regenerate</button>
-              <span id="avatar-gen-status" style="font-size:11px;color:var(--text3)"></span>
-            </div>
+  <button class="yellow-btn" id="gen-avatar-btn" onclick="generateAvatar()">🎨 Generate Avatar (DALL-E)</button>
+  <button class="ghost-btn" onclick="generateAvatar()" style="font-size:12px">🔄 Regenerate</button>
+  <span style="font-size:11px;color:var(--text3)">o</span>
+  <input type="file" id="avatar-upload-input" accept="image/*" onchange="uploadOwnAvatar(event)" style="display:none"/>
+  <button class="ghost-btn" onclick="document.getElementById('avatar-upload-input').click()" style="font-size:12px;color:var(--purple);border-color:rgba(127,119,221,0.3)">📤 Upload own avatar</button>
+  <span id="avatar-gen-status" style="font-size:11px;color:var(--text3)"></span>
+</div>
             <div id="avatar-result" style="margin-top:12px;display:none">
               <img id="avatar-preview" style="width:120px;height:213px;object-fit:cover;border-radius:var(--radius);border:0.5px solid var(--border2)" src=""/>
               <div style="display:flex;gap:8px;margin-top:8px">
