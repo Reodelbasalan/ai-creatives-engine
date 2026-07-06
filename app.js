@@ -248,7 +248,7 @@ function initSecurityListeners(){
 
 // ROLE-BASED PAGE PROTECTION
 var ADMIN_PAGES=['dashboard','new-project','all-projects','users','clients','analytics','submission','settings','chat','activity','attendance'];
-var EDITOR_PAGES=['editor-portal','all-projects','chat','profile','worklog','automation','clients','activity','attendance'];
+var EDITOR_PAGES=['editor-portal','all-projects','chat','profile','worklog','automation','clients','activity','attendance','for-upload'];
 var CLIENT_PAGES=['client-dashboard','profile'];
 
 function canAccessPage(page){
@@ -352,7 +352,7 @@ function applyRoleUI(){
     // Hide admin-only elements first
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
     // Show editor-allowed nav items — force show even if admin-only class
-    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance'];
+    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance','nav-for-upload'];
     editorNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el){el.style.display='flex';el.style.setProperty('display','flex','important');}
@@ -408,6 +408,7 @@ function showPage(page){
   if(page==='analytics')loadAnalytics();
   if(page==='outputs'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadOutputsTable();}
   if(page==='clients')loadClients();
+  if(page==='for-upload')loadForUpload();
   if(page==='activity')loadActivityLog();
   if(page==='attendance'){var today=new Date().toISOString().slice(0,10);var df=document.getElementById('attendance-date');if(df&&!df.value)df.value=today;loadAttendance();}
   if(page==='worklog')loadWorkLog();
@@ -4309,4 +4310,194 @@ function newICBatch() {
 
   // Auto-generate new prompts
   generateICPrompts();
+}
+// ═══════════════════════════════════════════════════════════
+// FOR UPLOAD — CREATIVES SECTION
+// ═══════════════════════════════════════════════════════════
+
+var forUploadState = { items: [], filtered: [] };
+
+async function loadForUpload(){
+  var nowIso = new Date().toISOString();
+  try {
+    await sb.from('creatives_upload').delete().lt('expires_at', nowIso).not('expires_at','is',null);
+  } catch(e){ console.log('Cleanup skip:', e.message); }
+
+  var { data } = await sb.from('creatives_upload')
+    .select('*')
+    .order('created_at', { ascending:false });
+  forUploadState.items = data || [];
+
+  var ownerFilter = document.getElementById('fu-owner-filter');
+  if (ownerFilter && ownerFilter.options.length <= 1){
+    var owners = [...new Set(forUploadState.items.map(function(c){ return c.owner_name; }).filter(Boolean))];
+    owners.forEach(function(name){
+      var opt = document.createElement('option');
+      opt.value = name; opt.textContent = name;
+      ownerFilter.appendChild(opt);
+    });
+  }
+
+  loadForUploadProjectSelect();
+
+  var waiting = forUploadState.items.filter(function(c){ return c.status !== 'Published'; }).length;
+  var published = forUploadState.items.filter(function(c){ return c.status === 'Published'; }).length;
+  var wEl = document.getElementById('fu-waiting-count');
+  var pEl = document.getElementById('fu-published-count');
+  if (wEl) wEl.textContent = waiting;
+  if (pEl) pEl.textContent = published;
+
+  filterForUpload();
+}
+
+async function loadForUploadProjectSelect(){
+  var sel = document.getElementById('fu-project-link');
+  if (!sel) return;
+  var { data } = await sb.from('projects').select('id,client_name,business_type,goal').order('created_at',{ascending:false});
+  sel.innerHTML = '<option value="">— Manual (walang project link) —</option>' +
+    (data||[]).map(function(p){
+      return '<option value="'+p.id+'" data-name="'+(p.client_name||'')+'" data-type="'+(p.business_type||'')+'">'+p.client_name+'</option>';
+    }).join('');
+}
+
+function fuProjectPicked(){
+  var sel = document.getElementById('fu-project-link');
+  if (!sel || !sel.value) return;
+  var opt = sel.options[sel.selectedIndex];
+  var nameInput = document.getElementById('fu-project-name');
+  if (nameInput && !nameInput.value) nameInput.value = opt.dataset.name || '';
+}
+
+function filterForUpload(){
+  var q = (document.getElementById('fu-search')?.value || '').toLowerCase();
+  var owner = document.getElementById('fu-owner-filter')?.value || '';
+  var status = document.getElementById('fu-status-filter')?.value || '';
+  forUploadState.filtered = forUploadState.items.filter(function(c){
+    var matchQ = !q ||
+      (c.project_name||'').toLowerCase().includes(q) ||
+      (c.owner_name||'').toLowerCase().includes(q) ||
+      (c.headline||'').toLowerCase().includes(q) ||
+      (c.ad_copy||'').toLowerCase().includes(q);
+    var matchOwner = !owner || c.owner_name === owner;
+    var matchStatus = !status || c.status === status;
+    return matchQ && matchOwner && matchStatus;
+  });
+  renderForUpload();
+}
+
+function fuCountdown(expiresAt){
+  if (!expiresAt) return '';
+  var ms = new Date(expiresAt) - new Date();
+  if (ms <= 0) return '<span style="font-size:9px;color:var(--red)">Removing...</span>';
+  var h = Math.floor(ms / (1000*60*60));
+  var m = Math.floor((ms % (1000*60*60)) / (1000*60));
+  var label = h > 0 ? ('Removes in ' + h + 'h') : ('Removes in ' + m + 'm');
+  return '<div style="font-size:9px;color:var(--text3);margin-top:3px">' + label + '</div>';
+}
+
+function renderForUpload(){
+  var body = document.getElementById('fu-table-body');
+  if (!body) return;
+  var items = forUploadState.filtered;
+  if (!items.length){
+    body.innerHTML = '<div class="table-empty"><div class="table-empty-icon">📤</div>Wala pang creatives. Add one below!</div>';
+    return;
+  }
+  body.innerHTML = items.map(function(c){
+    var date = new Date(c.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
+    var isPublished = c.status === 'Published';
+    var statusColor = isPublished ? 'var(--green)' : 'var(--red)';
+    var statusBg = isPublished ? 'var(--green-dim)' : 'var(--red-dim)';
+    var genderBadge = '<span style="font-size:9px;padding:2px 8px;border-radius:12px;background:var(--purple-dim);color:var(--purple);font-weight:600">'+(c.gender||'All')+'</span>';
+    var typeBadge = c.content_type ? '<span style="font-size:9px;padding:2px 8px;border-radius:12px;background:var(--green-dim);color:var(--green);font-weight:600">'+c.content_type+'</span>' : '—';
+    var adCopy = c.ad_copy ? '<span style="cursor:pointer;color:var(--yellow)" title="'+escapeHtml(c.ad_copy)+'">📋 View</span>' : '—';
+    var fileLink = c.file_link ? '<a href="'+c.file_link+'" target="_blank" style="color:var(--yellow);font-size:11px">🔗 Open</a>' : '—';
+    var headline = c.headline ? escapeHtml(c.headline.substring(0,22)) + (c.headline.length>22?'…':'') : '—';
+    return '<div class="table-row" style="grid-template-columns:1fr 1.4fr 0.7fr 0.9fr 0.7fr 0.7fr 1.1fr 1fr 1.1fr">'
+      + '<div class="row-meta">'+(c.owner_name||'—')+'</div>'
+      + '<div><div class="row-name">'+escapeHtml(c.project_name||'—')+'</div></div>'
+      + '<div>'+genderBadge+'</div>'
+      + '<div>'+typeBadge+'</div>'
+      + '<div style="font-size:11px">'+adCopy+'</div>'
+      + '<div style="font-size:11px">'+fileLink+'</div>'
+      + '<div style="font-size:11px;color:var(--text2)">'+headline+'</div>'
+      + '<div class="row-date">'+date+'</div>'
+      + '<div>'
+      +   '<select class="fu-status-select" data-id="'+c.id+'" style="font-size:10px;padding:5px 8px;border-radius:20px;font-weight:700;border:none;cursor:pointer;background:'+statusBg+';color:'+statusColor+'">'
+      +     '<option value="Unpublished"'+(!isPublished?' selected':'')+'>Unpublished</option>'
+      +     '<option value="Published"'+(isPublished?' selected':'')+'>Published</option>'
+      +   '</select>'
+      +   (isPublished ? fuCountdown(c.expires_at) : '')
+      +   ' <button class="fu-del-btn" data-id="'+c.id+'" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:12px;margin-left:4px">✕</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+
+  body.querySelectorAll('.fu-status-select').forEach(function(sel){
+    sel.addEventListener('change', function(){ fuSetStatus(this.dataset.id, this.value); });
+  });
+  body.querySelectorAll('.fu-del-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){ fuDelete(this.dataset.id); });
+  });
+}
+
+async function fuSetStatus(id, status){
+  var update = { status: status };
+  if (status === 'Published'){
+    var now = new Date();
+    var expires = new Date(now.getTime() + 48*60*60*1000);
+    update.published_at = now.toISOString();
+    update.expires_at = expires.toISOString();
+  } else {
+    update.published_at = null;
+    update.expires_at = null;
+  }
+  var { error } = await sb.from('creatives_upload').update(update).eq('id', id);
+  if (error){ showNotif('Error: '+error.message, 'error'); return; }
+  showNotif(status === 'Published' ? 'Published! Auto-removes in 48h ✓' : 'Set to Unpublished ✓', 'success');
+  if (typeof logActivity === 'function') logActivity('CREATIVE_'+status.toUpperCase(), id);
+  loadForUpload();
+}
+
+async function fuAddCreative(){
+  var projectName = document.getElementById('fu-project-name')?.value?.trim();
+  if (!projectName){ showNotif('Project name required', 'error'); return; }
+  var btn = document.getElementById('fu-add-btn');
+  if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Adding...'; }
+
+  var ownerName = currentUser?.email || 'Unknown';
+  try {
+    var { data:prof } = await sb.from('profiles').select('name').eq('id', currentUser.id).maybeSingle();
+    if (prof?.name) ownerName = prof.name;
+  } catch(e){}
+
+  var { error } = await sb.from('creatives_upload').insert({
+    owner_id: currentUser?.id,
+    owner_name: ownerName,
+    project_name: projectName,
+    gender: document.getElementById('fu-gender')?.value || 'All',
+    content_type: document.getElementById('fu-content-type')?.value?.trim() || null,
+    ad_copy: document.getElementById('fu-ad-copy')?.value?.trim() || null,
+    file_link: document.getElementById('fu-file-link')?.value?.trim() || null,
+    headline: document.getElementById('fu-headline')?.value?.trim() || null,
+    status: 'Unpublished'
+  });
+
+  if (btn){ btn.disabled = false; btn.innerHTML = '➕ Add creative'; }
+  if (error){ showNotif('Error: '+error.message, 'error'); return; }
+  showNotif('Creative added! ✓', 'success');
+  if (typeof logActivity === 'function') logActivity('CREATIVE_ADDED', projectName);
+
+  ['fu-project-name','fu-content-type','fu-ad-copy','fu-file-link','fu-headline'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var linkSel = document.getElementById('fu-project-link'); if (linkSel) linkSel.value = '';
+  loadForUpload();
+}
+
+async function fuDelete(id){
+  if (!confirm('Delete this creative?')) return;
+  await sb.from('creatives_upload').delete().eq('id', id);
+  showNotif('Deleted.', 'success');
+  loadForUpload();
 }
