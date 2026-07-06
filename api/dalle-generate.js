@@ -45,6 +45,35 @@ export default async function handler(req, res) {
     const CHARACTER_LOCK = `CHARACTER CONSISTENCY REQUIRED: The woman in this image MUST look like this specific person: ${characterDesc}. Lock these features: same face structure, same skin tone, same hair color and length, same eye shape. Do NOT change her appearance. This is the same character across all scenes.`;
 
     // ═══════════════════════════════════════
+    // CHARACTER-DESCRIPTION STRIPPER (FACE-LOCK MODE)
+    // Kapag may reference image (avatarUrl), ang MUKHA at DAMIT ay
+    // 100% galing sa reference. Kaya i-strip natin ang anumang
+    // paglalarawan ng tao sa scene prompt (age, gender, smile, attire)
+    // para HINDI mag-conflict sa reference at magbago ang mukha.
+    // Ang matitira: eksena, aksyon, background, lighting, composition.
+    // ═══════════════════════════════════════
+    function stripCharacterDesc(text) {
+      if (!text) return '';
+      return text
+        // "professional Filipina businesswoman", "young Filipino man", etc.
+        .replace(/\b(professional\s+|young\s+|beautiful\s+|attractive\s+)?(filipina|filipino|pinay|pinoy|asian|businesswoman|businessman|woman|man|lady|girl|guy|male|female|model|person)\b/gi, '')
+        // "age 28", "25 years old", "28-year-old"
+        .replace(/\b(age\s+\d+|\d+\s*years?\s*old|\d+[- ]year[- ]old)\b/gi, '')
+        // facial/expression descriptors: "confident smile", "direct eye contact", "warm expression"
+        .replace(/\b(confident|warm|friendly|bright|genuine|soft|natural|curious|inviting|subtle)?\s*(smile|smiling|eye contact|expression|gaze|looking at camera|face|facial)\b[^,.]*/gi, '')
+        // attire (outfit-lock na galing reference): "business casual attire", "wearing blazer"
+        .replace(/\b(business casual|blazer|attire|outfit|wearing|dressed in|clothing|jewelry|makeup)\b[^,.]*/gi, '')
+        // skin/hair descriptors that fight the reference
+        .replace(/\b(morena|fair skin|warm brown skin|long (dark )?(brown |black )?(wavy |straight )?hair|petite build)\b[^,.]*/gi, '')
+        // Linisin: double commas, leading commas, extra spaces
+        .replace(/\s*,\s*(,\s*)+/g, ', ')
+        .replace(/^[\s,]+/, '')
+        .replace(/\s{2,}/g, ' ')
+        .replace(/\s+,/g, ',')
+        .trim();
+    }
+
+    // ═══════════════════════════════════════
     // BRAND-AWARE ATTIRE — per scene rotation
     // ═══════════════════════════════════════
     const getBrandAttire = (b, n) => {
@@ -187,27 +216,39 @@ export default async function handler(req, res) {
     if (avatarUrl && (isDataUrl || isHttpUrl)) {
       try {
         let refBuf = null;
+        let refMime = 'image/png';
         if (isDataUrl) {
+          const mimeMatch = avatarUrl.match(/^data:(image\/\w+)/);
+          if (mimeMatch) refMime = mimeMatch[1];
           const b64 = avatarUrl.split(',')[1] || '';
           if (b64) refBuf = Buffer.from(b64, 'base64');
           else refFetchError = 'Avatar data URL was empty.';
         } else {
           const refResp = await fetch(avatarUrl);
-          if (refResp.ok) refBuf = Buffer.from(await refResp.arrayBuffer());
-          else refFetchError = 'Could not fetch approved avatar image (HTTP ' + refResp.status + '). Is the storage bucket public?';
+          if (refResp.ok) {
+            refBuf = Buffer.from(await refResp.arrayBuffer());
+            // Detect actual MIME from response header (di na hardcoded PNG)
+            const ct = refResp.headers.get('content-type');
+            if (ct && /^image\/(png|jpe?g|webp)/i.test(ct)) refMime = ct.split(';')[0].trim();
+          } else {
+            refFetchError = 'Could not fetch approved avatar image (HTTP ' + refResp.status + '). Is the storage bucket public?';
+          }
         }
         if (refBuf) {
           // ═══════════════════════════════════════
-          // STRICT IDENTITY LOCK — 100% reference-driven, ZERO hardcoded
-          // description. No gender/skin/age assumptions. The reference
-          // image defines WHO the person is; we only lock + set the scene.
+          // MINIMAL-DELTA LOCK — pass the master reference and ONLY
+          // change background / action / prop. Keep the SAME outfit +
+          // SAME face to minimize what the model regenerates → tightest
+          // face lock. 100% reference-driven, zero hardcoded identity.
+          //
+          // CRITICAL FIX: i-STRIP ang character description mula sa scene
+          // prompt. Kung iiwan ang "professional Filipina, age 28,
+          // confident smile", nakikipag-away 'yon sa reference image at
+          // nagbabago ang mukha per scene. Ang reference lang ang bahala
+          // sa mukha at damit — ang prompt ay para sa EKSENA lang.
           // ═══════════════════════════════════════
-          // ═══════════════════════════════════════
-          // MINIMAL-DELTA LOCK — GPT rule: pass the master reference and
-          // ONLY change background / action / prop. Keep the SAME outfit
-          // to minimize what the model regenerates → tightest face lock.
-          // 100% reference-driven, zero hardcoded identity.
-          // ═══════════════════════════════════════
+          const sceneOnly = stripCharacterDesc(prompt);
+
           const editPrompt = [
             "Use the person in the reference image as the master character. This is the EXACT SAME person — copy their identity from the image, do not invent a new person.",
             "Keep 100% identical to the reference and do NOT change: face, face shape, jawline, cheeks, nose, eyes, eyebrows, lips, smile, hairline, hairstyle, hair length, hair color, exact skin tone, age, and skin texture with visible pores.",
@@ -215,11 +256,12 @@ export default async function handler(req, res) {
             "ONLY change these: the background/setting, the person's action and hand gesture, the prop or product they hold, and the camera framing.",
             background ? `Background/setting: ${background}.` : '',
             productClean ? `Prop/product they are holding or showing: ${productClean}.` : '',
-            `Action in this scene: ${prompt}.`,
+            sceneOnly ? `Scene action and setting: ${sceneOnly}.` : `Scene action: ${prompt}.`,
             "Output style: RAW candid iPhone photo, natural available light, realistic, visible pores, natural skin texture, unedited UGC look.",
             "Negative: no different face, no different person, no younger face, no lighter or different skin tone, no different hairstyle, no generic influencer face, no plastic skin, no over-smoothed face, no beauty filter, no AI look, no cartoon, no 3D."
           ].filter(Boolean).join(' ');
 
+          const ext = refMime === 'image/jpeg' ? 'jpg' : (refMime === 'image/webp' ? 'webp' : 'png');
           const form = new FormData();
           form.append('model', 'gpt-image-1');
           form.append('prompt', editPrompt);
@@ -227,7 +269,7 @@ export default async function handler(req, res) {
           form.append('quality', 'high');
           form.append('input_fidelity', 'high');
           form.append('n', '1');
-          form.append('image', new Blob([refBuf], { type: 'image/png' }), 'avatar.png');
+          form.append('image', new Blob([refBuf], { type: refMime }), 'avatar.' + ext);
           response = await fetch('https://api.openai.com/v1/images/edits', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${openaiKey}` },
@@ -283,7 +325,8 @@ export default async function handler(req, res) {
     if (supabaseUrl && supabaseKey) {
       try {
         const buffer = Buffer.from(base64Image, 'base64');
-        const fileName = `gen-${type}-${sceneNum||0}-${Date.now()}.png`;
+        const rand = Math.random().toString(36).slice(2, 8); // anti-collision suffix
+        const fileName = `gen-${type}-${sceneNum||0}-${Date.now()}-${rand}.png`;
         const bucketName = 'Ai creatives system storage';
         const filePath = `images/${fileName}`;
 
