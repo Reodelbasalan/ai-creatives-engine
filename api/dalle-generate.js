@@ -195,7 +195,7 @@ export default async function handler(req, res) {
       ].filter(Boolean).join(" ");
     }
 
-    const imageSize = size === '1024x1024' ? '1024x1024' : '1024x1536';
+    const imageSize = '1024x1536'; // laging 9:16 — master at scenes dapat same ratio para tight ang face-lock
 
     // ═══════════════════════════════════════
     // FACE LOCK (Level 2) — if an approved avatar image is provided,
@@ -260,7 +260,7 @@ export default async function handler(req, res) {
             productClean ? `Prop/product they are holding or showing: ${productClean}.` : '',
             sceneOnly ? `Scene action and setting: ${sceneOnly}.` : `Scene action: ${prompt}.`,
             "Output style: RAW candid iPhone photo, natural available light, realistic, visible pores, natural skin texture, unedited UGC look.",
-            "NEGATIVE (must avoid): different face, different person, new face, younger face, older face, slimmer face, rounder face, lighter skin, different skin tone, different hairstyle, different hair length, generic influencer face, model face, plastic skin, over-smoothed skin, airbrushed, beauty filter, face retouching, symmetrical perfect face, AI face, cartoon, 3D render, different eye color, different nose."
+            "This is a real photo of this exact same individual, same face, same identity, photographed in a new setting."
           ].filter(Boolean).join(' ');
 
           const ext = refMime === 'image/jpeg' ? 'jpg' : (refMime === 'image/webp' ? 'webp' : 'png');
@@ -313,7 +313,7 @@ export default async function handler(req, res) {
           prompt: finalPrompt,
           n: 1,
           size: imageSize,
-          quality: 'medium'
+          quality: type === 'avatar' ? 'high' : 'medium'
         })
       });
     }
