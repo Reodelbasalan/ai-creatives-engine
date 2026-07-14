@@ -265,9 +265,29 @@ export default async function handler(req, res) {
           ].filter(Boolean).join(' ');
 
           const ext = refMime === 'image/jpeg' ? 'jpg' : (refMime === 'image/webp' ? 'webp' : 'png');
-          const form = new FormData();
+
+// — FACE CROP (multi-reference): close-up ng mukha para mas kapit ang identity —
+let faceBuf = null;
+try {
+  const sharp = (await import('sharp')).default;
+  const srcBuf = Buffer.from(refBuf);
+  const meta = await sharp(srcBuf).metadata();
+  const cw = Math.round(meta.width * 0.62);   // gitnang 62% width
+  const chh = Math.round(meta.height * 0.48); // taas na 48% height (kung saan ang mukha sa portrait)
+  const left = Math.round((meta.width - cw) / 2);
+  const top = Math.round(meta.height * 0.04);
+  faceBuf = await sharp(srcBuf).extract({ left, top, width: cw, height: chh }).png().toBuffer();
+} catch (e) {
+  faceBuf = null; // kung pumalya ang crop, tuloy pa rin sa single reference — walang sasabog
+}
+
+const finalEditPrompt = faceBuf
+  ? editPrompt + " Two reference images are provided: the first shows the person's full appearance and outfit; the second is a tight close-up of the SAME person's face. Match the face in the close-up with maximum fidelity — exact eyes, eyebrows, nose, lips, and face shape."
+  : editPrompt;
+
+const form = new FormData();
           form.append('model', 'gpt-image-1');
-          form.append('prompt', editPrompt);
+          form.append('prompt', finalEditPrompt);
           form.append('size', imageSize);
           // quality:medium — mas mabilis, iwas 504 Gateway Timeout (60s Vercel limit).
           // Ang FACE-LOCK ay galing sa input_fidelity:high, HINDI sa quality —
@@ -275,7 +295,8 @@ export default async function handler(req, res) {
           form.append('quality', 'medium');
           form.append('input_fidelity', 'high');
           form.append('n', '1');
-          form.append('image', new Blob([refBuf], { type: refMime }), 'avatar.' + ext);
+          form.append('image[]', new Blob([refBuf], { type: refMime }), 'avatar.' + ext);
+if (faceBuf) form.append('image[]', new Blob([faceBuf], { type: 'image/png' }), 'face.png');
           response = await fetch('https://api.openai.com/v1/images/edits', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${openaiKey}` },
