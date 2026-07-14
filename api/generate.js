@@ -45,8 +45,8 @@ Total words: ~[X] words | Estimated duration: [X] seconds
 
 SCENE 1 — [SCENE NAME] ([X]-[X] seconds)
 ▸ VISUAL: [Detailed shot description. Always end with: "9:16 vertical aspect ratio, mobile-optimized, portrait orientation"]
-▸ IMAGE PROMPT: [Detailed DALL-E/Midjourney prompt. Photorealistic, no text/logos, studio lighting, 9:16 vertical aspect ratio, mobile-optimized composition, portrait orientation]
-▸ VIDEO PROMPT: [Higgsfield/Veo command: camera movement, motion, duration]
+▸ IMAGE PROMPT: [Describe ONLY the scene: action, pose, hand gesture, background setting, props, camera angle and framing. DO NOT describe the person's face, age, gender, ethnicity, hair, makeup, outfit, or expression — the character comes from a locked reference image. Natural lighting only (window light, ambient indoor, golden hour) — NEVER studio lighting. Candid iPhone photo quality, no text/logos, 9:16 vertical aspect ratio, portrait orientation]
+▸ VIDEO PROMPT: [Higgsfield/Veo command: camera movement, motion, duration. Always include: "preserve the exact face and appearance of the person in the source image, no morphing"]
 ▸ VOICEOVER: "[Exact words spoken in this scene]"
 ▸ TEXT OVERLAY: [On-screen text if any, or "None"]
 ▸ TRANSITION: [Cut type to next scene]
