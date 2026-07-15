@@ -1925,7 +1925,7 @@ async function generateAvatar(){
         prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',
         type:'avatar',
         apiKey:apiKey,
-        size:'1024x1792',
+        size:'1024x1536',
         quality:getToolSetting('dalle-quality','hd'),
         style:getToolSetting('dalle-style','vivid')
       })
@@ -2087,7 +2087,7 @@ async function generateAllScenes(){
   for(var i=0;i<autoScenes.length;i++){
     if(progress)progress.textContent='Generating scene '+(i+1)+' of '+autoScenes.length+'...';
     await generateSceneImage(i);
-    await new Promise(function(r){setTimeout(r,13000);}); // 13s delay — avoids gpt-image-1 input-images rate limit (5/min)
+    await new Promise(function(r){setTimeout(r,8000);}); // 8s delay — respeto sa Gemini rate limits, iwas 429
   }
   if(progress)progress.textContent='All scenes generated! Review and approve each.';
   if(btn)btn.disabled=false;
@@ -3268,7 +3268,7 @@ function renderAutomationScenes(){
   var videoSize=autoProject?.video_size||'9:16';
   var isSquare=videoSize.includes('1:1');
   var sizeLabel=isSquare?'1:1':'9:16';
-  var dalleSize=isSquare?'1024x1024':'1024x1792';
+  var dalleSize=isSquare?'1024x1024':'1024x1536';
 
   grid.innerHTML=autoScenes.map(function(s,i){
     var aspectStyle=isSquare?'aspect-ratio:1/1':'aspect-ratio:9/16';
@@ -3382,12 +3382,12 @@ async function generateSceneImage(idx, dalleSize){
   if(statusEl)statusEl.textContent='⏳';
   var videoSize=autoProject?.video_size||'9:16';
   var isSquare=videoSize.includes('1:1');
-  var imgSize=dalleSize||(isSquare?'1024x1024':'1024x1792');
+  var imgSize=dalleSize||(isSquare?'1024x1024':'1024x1536');
   var sizeTag=isSquare?'1:1 square format, equal dimensions':'9:16 vertical portrait, mobile-optimized';
   var prompt=scene.imagePrompt||scene.videoPrompt||scene.visual||'';
   
   if(autoProject?.color_primary)prompt+='. Brand color: '+autoProject.color_primary;
-  prompt+=' '+sizeTag+', photorealistic, cinematic lighting, no text, no logos';
+  prompt+=' '+sizeTag+', photorealistic, natural lighting, no text, no logos';
   try{
     var res=await fetch('/api/nano-generate',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:imgSize,quality:getToolSetting('dalle-quality','hd'),style:getToolSetting('dalle-style','vivid')})});
@@ -3465,7 +3465,7 @@ generateAvatar=async function(){
   var prompt=promptEl?.value?.trim();
   if(!prompt){showNotif('Add avatar description first','error');return;}
   var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
-  if(!apiKey){showNotif('Set DALL-E API key in Settings first!','error');showPage('settings');return;}
+  // Nano Banana: server-side GEMINI_API_KEY na ang gamit — hindi na required ang DALL-E key
   var btn=document.getElementById('gen-avatar-btn');
   var status=document.getElementById('avatar-gen-status');
   if(btn)btn.disabled=true;
@@ -3481,7 +3481,7 @@ generateAvatar=async function(){
         avatarDesc:prompt,
         brandType:autoProject?.business_type||'',
         sceneNum:1,
-        size:'1024x1792',
+        size:'1024x1536',
         quality:getToolSetting('dalle-quality','hd'),
         style:getToolSetting('dalle-style','vivid')
       })
@@ -3524,18 +3524,18 @@ generateSceneImage=async function(idx,dalleSize){
   var scene=autoScenes[idx];
   if(!scene)return;
   var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
-  if(!apiKey){showNotif('Set DALL-E API key in Settings!','error');showPage('settings');return;}
+  // Nano Banana: server-side GEMINI_API_KEY na ang gamit — hindi na required ang DALL-E key
   var statusEl=document.getElementById('scene-status-'+idx);
   var container=document.getElementById('scene-img-container-'+idx);
   if(statusEl)statusEl.textContent='⏳';
   var videoSize=autoProject?.video_size||'9:16';
   var isSquare=videoSize.includes('1:1');
-  var imgSize=dalleSize||(isSquare?'1024x1024':'1024x1792');
+  var imgSize=dalleSize||(isSquare?'1024x1024':'1024x1536');
   var sizeTag=isSquare?'1:1 square format':'9:16 vertical portrait, mobile-optimized';
   var prompt=scene.imagePrompt||scene.videoPrompt||scene.visual||'';
   
   if(autoProject?.color_primary)prompt+='. Brand color: '+autoProject.color_primary;
-  prompt+=' '+sizeTag+', photorealistic, cinematic lighting, no text, no logos';
+  prompt+=' '+sizeTag+', photorealistic, natural lighting, no text, no logos';
   try{
     var res=await fetch('/api/nano-generate',{
       method:'POST',
