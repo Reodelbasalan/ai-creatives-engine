@@ -36,21 +36,8 @@ export default async function handler(req, res) {
       } catch (e) {
         return res.status(400).json({ error: 'Avatar reference unreachable: ' + e.message + ' — regenerate or re-upload the avatar.' });
       }
-    } {
-      try {
-        const refResp = await fetch(avatarUrl);
-        if (refResp.ok) {
-          const refArrayBuf = await refResp.arrayBuffer();
-          const refMime = refResp.headers.get('content-type') || 'image/png';
-          const refB64 = Buffer.from(refArrayBuf).toString('base64');
-          parts.push({ inline_data: { mime_type: refMime, data: refB64 } });
-          hasReference = true;
-        }
-      } catch (e) {
-        // tuloy pa rin nang walang reference — pero ilalagay sa response na walang lock
-      }
-    }
-
+    } 
+    
     // ── Prompt construction ──
     let finalPrompt;
     if (hasReference) {
