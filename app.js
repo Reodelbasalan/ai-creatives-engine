@@ -2014,24 +2014,23 @@ function approveAvatar(){
 async function generateSceneImage(idx){
   var scene=autoScenes[idx];
   if(!scene)return;
-  var apiKey=getSecureApiKey('dalle')||getToolSetting('dalle-api-key');
-  if(!apiKey){showNotif('Set DALL-E API key in Settings!','error');return;}
   var statusEl=document.getElementById('scene-status-'+idx);
   var container=document.getElementById('scene-img-container-'+idx);
   if(statusEl)statusEl.textContent='⏳';
-  // Build prompt — include avatar context
+  // SCENE-ONLY prompt — ang mukha ay galing sa avatarUrl reference, hindi sa text
   var prompt=scene.imagePrompt||scene.videoPrompt||scene.visual||'';
-  if(autoAvatarUrl&&autoProject?.avatar_desc){
-    prompt='Featuring the same character: '+autoProject.avatar_desc+'. Scene: '+prompt;
-  }
-  prompt+=' 9:16 vertical portrait, mobile-optimized, photorealistic';
   try{
     var res=await fetch('/api/dalle-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:'1024x1792',
-        quality:getToolSetting('dalle-quality','hd'),
-        style:getToolSetting('dalle-style','vivid')})
+      body:JSON.stringify({
+        prompt:prompt,
+        type:'scene',
+        sceneNum:idx+1,
+        avatarUrl:autoAvatarUrl||'',
+        avatarDesc:autoProject?.avatar_desc||'',
+        size:'1024x1536'
+      })
     });
     var d=await res.json();
     if(d.url){
@@ -2040,7 +2039,7 @@ async function generateSceneImage(idx){
         container.innerHTML='<img src="'+d.url+'" style="width:100%;height:100%;object-fit:cover"/>'
           +'<div style="position:absolute;bottom:4px;right:4px;display:flex;gap:3px">'
           +'<button class="regen-scene" data-idx="'+idx+'" style="font-size:9px;padding:2px 6px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:3px;cursor:pointer">🔄</button>'
-          +'<button class="approve-scene" data-idx="'+idx+'" data-url="'+d.url+'" style="font-size:9px;padding:2px 6px;background:rgba(34,197,94,0.8);color:#fff;border:none;border-radius:3px;cursor:pointer">✅</button>'
+          +'<button class="approve-scene" data-idx="'+idx+'" data-url="'+d.url+'" style="font-size:9px;padding:2px 6px;background:rgba(34,197,94,0.8);color:#fff;border:none;border-radius:3px;cursor:pointer">✓</button>'
           +'</div>';
         container.style.position='relative';
         container.querySelectorAll('.regen-scene').forEach(function(b){b.addEventListener('click',function(){generateSceneImage(parseInt(this.dataset.idx));});});
