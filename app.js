@@ -1918,7 +1918,7 @@ async function generateAvatar(){
   if(btn)btn.disabled=true;
   if(status)status.textContent='⚡ Generating avatar...';
   try{
-    var res=await fetch('/api/dalle-generate',{
+    var res=await fetch('/api/nano-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -2020,7 +2020,7 @@ async function generateSceneImage(idx){
   // SCENE-ONLY prompt — ang mukha ay galing sa avatarUrl reference, hindi sa text
   var prompt=scene.imagePrompt||scene.videoPrompt||scene.visual||'';
   try{
-    var res=await fetch('/api/dalle-generate',{
+    var res=await fetch('/api/nano-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -3388,7 +3388,7 @@ async function generateSceneImage(idx, dalleSize){
   if(autoProject?.color_primary)prompt+='. Brand color: '+autoProject.color_primary;
   prompt+=' '+sizeTag+', photorealistic, cinematic lighting, no text, no logos';
   try{
-    var res=await fetch('/api/dalle-generate',{method:'POST',headers:{'Content-Type':'application/json'},
+    var res=await fetch('/api/nano-generate',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:imgSize,quality:getToolSetting('dalle-quality','hd'),style:getToolSetting('dalle-style','vivid')})});
     var d=await res.json();
     if(d.url){
@@ -3470,7 +3470,7 @@ generateAvatar=async function(){
   if(btn)btn.disabled=true;
   if(status)status.textContent='⚡ Generating avatar...';
   try{
-    var res=await fetch('/api/dalle-generate',{
+    var res=await fetch('/api/nano-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -3536,7 +3536,7 @@ generateSceneImage=async function(idx,dalleSize){
   if(autoProject?.color_primary)prompt+='. Brand color: '+autoProject.color_primary;
   prompt+=' '+sizeTag+', photorealistic, cinematic lighting, no text, no logos';
   try{
-    var res=await fetch('/api/dalle-generate',{
+    var res=await fetch('/api/nano-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({prompt:prompt,apiKey:apiKey,size:imgSize,
