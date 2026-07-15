@@ -1923,6 +1923,7 @@ async function generateAvatar(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         prompt:prompt+' 9:16 vertical portrait aspect ratio, mobile-optimized',
+        type:'avatar',
         apiKey:apiKey,
         size:'1024x1792',
         quality:getToolSetting('dalle-quality','hd'),
