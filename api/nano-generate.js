@@ -21,7 +21,22 @@ export default async function handler(req, res) {
     const parts = [];
     let hasReference = false;
 
-    if (avatarUrl && type === 'scene') {
+    if (type === 'scene') {
+      if (!avatarUrl) {
+        return res.status(400).json({ error: 'No avatar reference — approve an avatar first before generating scenes.' });
+      }
+      try {
+        const refResp = await fetch(avatarUrl);
+        if (!refResp.ok) throw new Error('Avatar fetch failed: ' + refResp.status);
+        const refArrayBuf = await refResp.arrayBuffer();
+        const refMime = refResp.headers.get('content-type') || 'image/png';
+        const refB64 = Buffer.from(refArrayBuf).toString('base64');
+        parts.push({ inline_data: { mime_type: refMime, data: refB64 } });
+        hasReference = true;
+      } catch (e) {
+        return res.status(400).json({ error: 'Avatar reference unreachable: ' + e.message + ' — regenerate or re-upload the avatar.' });
+      }
+    } {
       try {
         const refResp = await fetch(avatarUrl);
         if (refResp.ok) {
@@ -40,12 +55,13 @@ export default async function handler(req, res) {
     let finalPrompt;
     if (hasReference) {
       finalPrompt = [
-        "Using the person in the provided reference image, generate a NEW photo of this EXACT SAME individual.",
-        "CRITICAL: Preserve their exact face — same face shape and width, same eyes, eyebrows, nose, lips, jawline, skin tone, and hairstyle. Do not beautify, slim, youthen, or idealize the face in any way. Keep every natural imperfection.",
-        "Keep the SAME outfit and clothing as the reference.",
+        "IDENTITY LOCK — 100% CONSISTENCY REQUIRED: The provided reference image shows a REAL, SPECIFIC person. Generate a NEW photo of this EXACT SAME individual.",
+        "PRESERVE WITH ZERO DEVIATION: same gender, same face shape and width, same eyes, same eyebrows, same nose, same lips, same jawline, same skin tone, same hair color and hairstyle, same body type and build. Every part of the face and body must match the reference exactly.",
+        "Do NOT beautify, slim, youthen, change gender, or idealize. Keep every natural imperfection.",
+        "Keep the SAME outfit and clothing as the reference unless the scene explicitly requires otherwise.",
         "ONLY change: the background/setting, the person's pose and action, and any props they hold.",
         "Scene: " + prompt + (product ? " Product they are holding or showing: " + product + "." : ""),
-        "Output style: RAW candid iPhone photo, natural available light, realistic, visible pores, natural skin texture, unedited UGC look.",
+        "Output style: ultra realistic RAW candid iPhone photo, natural available light, visible pores, natural skin texture, unedited UGC look.",
         aspectRatio === '9:16' ? "Vertical 9:16 portrait orientation, mobile-optimized framing." : "Square 1:1 framing."
       ].join(' ');
     } else {
