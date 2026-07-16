@@ -4588,6 +4588,10 @@ async function fuStatusPick(id, status){
   await fuSetStatus(id, status);
 }
 async function fuSetStatus(id, status){
+  // ── OPTIMISTIC UPDATE: agad baguhin sa UI bago pa mag-database ──
+  var item = forUploadState.items.find(function(x){ return x.id === id; });
+  var prevSnapshot = item ? { status:item.status, published_at:item.published_at, expires_at:item.expires_at } : null;
+
   var update = { status: status };
   if (status === 'Published'){
     var now = new Date();
@@ -4598,11 +4602,37 @@ async function fuSetStatus(id, status){
     update.published_at = null;
     update.expires_at = null;
   }
+
+  // Instant: i-apply agad sa local state + re-render (walang hintay)
+  if (item){
+    item.status = update.status;
+    item.published_at = update.published_at;
+    item.expires_at = update.expires_at;
+    // update rin ang counts sa header
+    var waiting = forUploadState.items.filter(function(c){ return c.status !== 'Published'; }).length;
+    var published = forUploadState.items.filter(function(c){ return c.status === 'Published'; }).length;
+    var wEl = document.getElementById('fu-waiting-count');
+    var pEl = document.getElementById('fu-published-count');
+    if (wEl) wEl.textContent = waiting;
+    if (pEl) pEl.textContent = published;
+    filterForUpload();
+  }
+
+  // Sa likod: i-sync sa Supabase
   var { error } = await sb.from('creatives_upload').update(update).eq('id', id);
-  if (error){ showNotif('Error: '+error.message, 'error'); return; }
+  if (error){
+    // Kung nag-fail, ibalik sa dati
+    if (item && prevSnapshot){
+      item.status = prevSnapshot.status;
+      item.published_at = prevSnapshot.published_at;
+      item.expires_at = prevSnapshot.expires_at;
+      filterForUpload();
+    }
+    showNotif('Error: '+error.message, 'error');
+    return;
+  }
   showNotif(status === 'Published' ? 'Published! Auto-removes in 48h ✓' : 'Set to Unpublished ✓', 'success');
   if (typeof logActivity === 'function') logActivity('CREATIVE_'+status.toUpperCase(), id);
-  loadForUpload();
 }
 // isara ang status dropdown pag nag-click sa labas
 document.addEventListener('click', function(e){
