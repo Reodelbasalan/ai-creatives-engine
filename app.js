@@ -4312,17 +4312,35 @@ function newICBatch() {
   generateICPrompts();
 }
 // ═══════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════
-// FOR UPLOAD — v3 (walang gender, prominent date, polished)
+// CREATIVES UPLOAD — v5 (staff dropdown from profiles, modal, auto-copy)
 // ═══════════════════════════════════════════════════════════
 
-var forUploadState = { items: [], filtered: [] };
+var forUploadState = { items: [], filtered: [], formOpen: false, allStaff: [] };
+
+function fuToggleForm(){
+  forUploadState.formOpen = !forUploadState.formOpen;
+  var wrap = document.getElementById('fu-form-wrap');
+  var btn = document.getElementById('fu-toggle-btn');
+  if (!wrap) return;
+  if (forUploadState.formOpen){
+    wrap.style.maxHeight = '640px'; wrap.style.opacity = '1'; wrap.style.marginBottom = '20px';
+    if (btn) btn.style.opacity = '0.55';
+  } else {
+    wrap.style.maxHeight = '0'; wrap.style.opacity = '0'; wrap.style.marginBottom = '0';
+    if (btn) btn.style.opacity = '1';
+  }
+}
 
 async function loadForUpload(){
   var nowIso = new Date().toISOString();
   try {
     await sb.from('creatives_upload').delete().lt('expires_at', nowIso).not('expires_at','is',null);
   } catch(e){ console.log('Cleanup skip:', e.message); }
+
+  try {
+    var { data:staff } = await sb.from('profiles').select('name,email').order('name',{ascending:true});
+    forUploadState.allStaff = (staff||[]).map(function(s){ return s.name || s.email; }).filter(Boolean);
+  } catch(e){ forUploadState.allStaff = []; }
 
   var { data } = await sb.from('creatives_upload')
     .select('*')
@@ -4332,9 +4350,10 @@ async function loadForUpload(){
   var ownerFilter = document.getElementById('fu-owner-filter');
   if (ownerFilter){
     var current = ownerFilter.value;
-    var owners = [...new Set(forUploadState.items.map(function(c){ return c.owner_name; }).filter(Boolean))];
+    var names = forUploadState.allStaff.slice();
+    forUploadState.items.forEach(function(c){ if (c.owner_name && names.indexOf(c.owner_name)<0) names.push(c.owner_name); });
     ownerFilter.innerHTML = '<option value="">All staff</option>' +
-      owners.map(function(name){ return '<option value="'+name+'">'+name+'</option>'; }).join('');
+      names.map(function(name){ return '<option value="'+escapeHtml(name)+'">'+escapeHtml(name)+'</option>'; }).join('');
     ownerFilter.value = current;
   }
 
@@ -4352,6 +4371,7 @@ function filterForUpload(){
   var q = (document.getElementById('fu-search')?.value || '').toLowerCase();
   var owner = document.getElementById('fu-owner-filter')?.value || '';
   var status = document.getElementById('fu-status-filter')?.value || '';
+  var pageF = document.getElementById('fu-page-filter')?.value || '';
   forUploadState.filtered = forUploadState.items.filter(function(c){
     var matchQ = !q ||
       (c.project_name||'').toLowerCase().includes(q) ||
@@ -4360,7 +4380,8 @@ function filterForUpload(){
       (c.ad_copy||'').toLowerCase().includes(q);
     var matchOwner = !owner || c.owner_name === owner;
     var matchStatus = !status || c.status === status;
-    return matchQ && matchOwner && matchStatus;
+    var matchPage = !pageF || c.content_type === pageF;
+    return matchQ && matchOwner && matchStatus && matchPage;
   });
   renderForUpload();
 }
@@ -4372,7 +4393,17 @@ function fuCountdown(expiresAt){
   var h = Math.floor(ms / (1000*60*60));
   var m = Math.floor((ms % (1000*60*60)) / (1000*60));
   var label = h > 0 ? ('Removes in ' + h + 'h') : ('Removes in ' + m + 'm');
-  return '<div style="font-size:9px;color:#f59e0b;margin-top:4px;font-weight:600">⏱ ' + label + '</div>';
+  return '<div style="font-size:9px;color:#f59e0b;margin-top:4px;font-weight:600;display:flex;align-items:center;gap:3px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' + label + '</div>';
+}
+
+function fuPageBadge(page){
+  if (!page) return '<span style="color:var(--text4)">—</span>';
+  var styles = {
+    'VIRAL UGC': { bg:'rgba(167,139,250,0.14)', c:'#a78bfa', bd:'rgba(167,139,250,0.35)' },
+    'HCSI':      { bg:'rgba(250,204,21,0.14)',  c:'#facc15', bd:'rgba(250,204,21,0.35)' }
+  };
+  var s = styles[page] || { bg:'var(--bg3)', c:'var(--text2)', bd:'rgba(255,255,255,0.1)' };
+  return '<span style="font-size:9px;padding:4px 12px;border-radius:20px;background:'+s.bg+';color:'+s.c+';border:0.5px solid '+s.bd+';font-weight:750;letter-spacing:0.03em">'+escapeHtml(page)+'</span>';
 }
 
 function fuStaffChip(name){
@@ -4381,10 +4412,41 @@ function fuStaffChip(name){
   var colors = ['#f472b6','#38bdf8','#a78bfa','#34d399','#fbbf24','#fb7185','#22d3ee','#c084fc'];
   var idx = 0; for (var i=0;i<name.length;i++){ idx += name.charCodeAt(i); }
   var col = colors[idx % colors.length];
-  return '<div style="display:flex;align-items:center;gap:8px">'
-    + '<div style="width:26px;height:26px;border-radius:50%;background:'+col+'22;border:0.5px solid '+col+'55;color:'+col+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">'+initial+'</div>'
+  return '<div style="display:flex;align-items:center;gap:9px">'
+    + '<div style="width:28px;height:28px;border-radius:50%;background:'+col+'22;border:0.5px solid '+col+'55;color:'+col+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:750;flex-shrink:0">'+initial+'</div>'
     + '<span style="font-size:12px;font-weight:600;color:var(--text2)">'+escapeHtml(name)+'</span>'
     + '</div>';
+}
+
+function fuViewAdCopy(id){
+  var c = forUploadState.items.find(function(x){ return x.id === id; });
+  if (!c || !c.ad_copy) return;
+  var el = document.getElementById('fu-adcopy-text');
+  var modal = document.getElementById('fu-adcopy-modal');
+  if (el) el.textContent = c.ad_copy;
+  if (modal) modal.style.display = 'flex';
+}
+function fuCloseAdCopy(){
+  var modal = document.getElementById('fu-adcopy-modal');
+  if (modal) modal.style.display = 'none';
+}
+function fuCopyAdCopy(btn){
+  var txt = document.getElementById('fu-adcopy-text')?.textContent || '';
+  navigator.clipboard.writeText(txt).then(function(){
+    if (btn){
+      var orig = btn.innerHTML;
+      btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+      setTimeout(function(){ btn.innerHTML = orig; }, 1500);
+    }
+    if (typeof showNotif==='function') showNotif('Ad copy copied! ✓','success');
+  });
+}
+
+function fuCopyHeadline(text){
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(function(){
+    if (typeof showNotif==='function') showNotif('Headline copied! ✓','success');
+  });
 }
 
 function renderForUpload(){
@@ -4392,7 +4454,9 @@ function renderForUpload(){
   if (!body) return;
   var items = forUploadState.filtered;
   if (!items.length){
-    body.innerHTML = '<div class="table-empty"><div class="table-empty-icon">📤</div>Wala pang creatives. Add one above!</div>';
+    body.innerHTML = '<div class="table-empty"><div class="table-empty-icon">'
+      + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--text4)" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
+      + '</div>Wala pang creatives. Click "Add creative" above!</div>';
     return;
   }
   body.innerHTML = items.map(function(c){
@@ -4401,23 +4465,26 @@ function renderForUpload(){
     var dateYear = d.toLocaleDateString('en-PH',{year:'numeric'});
     var dateTime = d.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'});
     var isPublished = c.status === 'Published';
-    var statusColor = isPublished ? 'var(--green)' : 'var(--red)';
-    var statusBg = isPublished ? 'var(--green-dim)' : 'var(--red-dim)';
+    var statusColor = isPublished ? '#22c55e' : '#ef4444';
+    var statusBg = isPublished ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)';
     var statusBorder = isPublished ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)';
-    var typeBadge = c.content_type ? '<span style="font-size:9px;padding:3px 10px;border-radius:20px;background:var(--green-dim);color:var(--green);border:0.5px solid rgba(34,197,94,0.3);font-weight:700">'+escapeHtml(c.content_type)+'</span>' : '<span style="color:var(--text4)">—</span>';
-    var adCopy = c.ad_copy ? '<span style="cursor:pointer;color:var(--yellow)" title="'+escapeHtml(c.ad_copy)+'">📋 View</span>' : '<span style="color:var(--text4)">—</span>';
-    var fileLink = c.file_link ? '<a href="'+c.file_link+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600">🔗 Open</a>' : '<span style="color:var(--text4)">—</span>';
-    var headline = c.headline ? escapeHtml(c.headline.substring(0,24)) + (c.headline.length>24?'…':'') : '<span style="color:var(--text4)">—</span>';
-    return '<div class="table-row fu-row" style="grid-template-columns:1.1fr 1.5fr 0.9fr 0.7fr 0.8fr 1.3fr 1fr 1.2fr;align-items:center">'
+    var adCopy = c.ad_copy
+      ? '<button class="fu-adcopy-btn" data-id="'+c.id+'" style="cursor:pointer;color:var(--yellow);background:none;border:none;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;padding:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View</button>'
+      : '<span style="color:var(--text4)">—</span>';
+    var fileLink = c.file_link ? '<a href="'+c.file_link+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg>Open</a>' : '<span style="color:var(--text4)">—</span>';
+    var headline = c.headline
+      ? '<button class="fu-headline-btn" data-headline="'+escapeHtml(c.headline)+'" title="Click to copy" style="cursor:pointer;background:none;border:none;color:var(--text2);font-size:11px;text-align:left;padding:0;display:inline-flex;align-items:center;gap:5px">'+escapeHtml(c.headline.substring(0,26))+(c.headline.length>26?'…':'')+'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text4)" stroke-width="2" style="flex-shrink:0"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
+      : '<span style="color:var(--text4)">—</span>';
+    return '<div class="table-row fu-row" style="grid-template-columns:1.2fr 1.5fr 0.9fr 0.7fr 0.8fr 1.4fr 1.1fr 1.2fr;align-items:center">'
       + '<div>'+fuStaffChip(c.owner_name)+'</div>'
-      + '<div><div class="row-name">'+escapeHtml(c.project_name||'—')+'</div></div>'
-      + '<div>'+typeBadge+'</div>'
-      + '<div style="font-size:11px">'+adCopy+'</div>'
-      + '<div style="font-size:11px">'+fileLink+'</div>'
-      + '<div style="font-size:11px;color:var(--text2)">'+headline+'</div>'
-      + '<div><div style="font-size:12px;font-weight:600;color:var(--text)">'+dateMain+'</div><div style="font-size:9px;color:var(--text4)">'+dateYear+' · '+dateTime+'</div></div>'
+      + '<div><div class="row-name" style="font-weight:600">'+escapeHtml(c.project_name||'—')+'</div></div>'
+      + '<div>'+fuPageBadge(c.content_type)+'</div>'
+      + '<div>'+adCopy+'</div>'
+      + '<div>'+fileLink+'</div>'
+      + '<div>'+headline+'</div>'
+      + '<div><div style="font-size:12px;font-weight:600;color:var(--text)">'+dateMain+'</div><div style="font-size:9px;color:var(--text4);margin-top:1px">'+dateYear+' · '+dateTime+'</div></div>'
       + '<div>'
-      +   '<select class="fu-status-select" data-id="'+c.id+'" style="font-size:10px;padding:6px 12px;border-radius:20px;font-weight:700;border:0.5px solid '+statusBorder+';cursor:pointer;background:'+statusBg+';color:'+statusColor+'">'
+      +   '<select class="fu-status-select" data-id="'+c.id+'" style="font-size:10px;padding:7px 13px;border-radius:20px;font-weight:700;border:0.5px solid '+statusBorder+';cursor:pointer;background:'+statusBg+';color:'+statusColor+'">'
       +     '<option value="Unpublished"'+(!isPublished?' selected':'')+'>Unpublished</option>'
       +     '<option value="Published"'+(isPublished?' selected':'')+'>Published</option>'
       +   '</select>'
@@ -4432,6 +4499,12 @@ function renderForUpload(){
   });
   body.querySelectorAll('.fu-del-btn').forEach(function(btn){
     btn.addEventListener('click', function(){ fuDelete(this.dataset.id); });
+  });
+  body.querySelectorAll('.fu-adcopy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){ fuViewAdCopy(this.dataset.id); });
+  });
+  body.querySelectorAll('.fu-headline-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){ fuCopyHeadline(this.dataset.headline); });
   });
 }
 
@@ -4470,21 +4543,22 @@ async function fuAddCreative(){
     owner_name: ownerName,
     project_name: projectName,
     gender: 'All',
-    content_type: document.getElementById('fu-content-type')?.value?.trim() || null,
+    content_type: document.getElementById('fu-page')?.value || 'VIRAL UGC',
     ad_copy: document.getElementById('fu-ad-copy')?.value?.trim() || null,
     file_link: document.getElementById('fu-file-link')?.value?.trim() || null,
     headline: document.getElementById('fu-headline')?.value?.trim() || null,
     status: 'Unpublished'
   });
 
-  if (btn){ btn.disabled = false; btn.innerHTML = '➕ Add creative'; }
+  if (btn){ btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add creative'; }
   if (error){ showNotif('Error: '+error.message, 'error'); return; }
   showNotif('Creative added! ✓', 'success');
   if (typeof logActivity === 'function') logActivity('CREATIVE_ADDED', projectName);
 
-  ['fu-project-name','fu-content-type','fu-ad-copy','fu-file-link','fu-headline'].forEach(function(id){
+  ['fu-project-name','fu-ad-copy','fu-file-link','fu-headline'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
+  fuToggleForm();
   loadForUpload();
 }
 
