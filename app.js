@@ -4488,6 +4488,22 @@ function fuCopyHeadline(text){
   });
 }
 
+// ═══════════════════════════════════════════════════════════
+// CREATIVES UPLOAD — v7 PATCH (capsule status dropdown per row)
+//
+// DALAWANG BAGAY LANG ANG PAPALITAN — hindi buong file:
+//
+// PALIT A: Ang `renderForUpload` function (buong function)
+// PALIT B: Idagdag ang bagong status-dropdown functions + CSS
+//
+// Hanapin sa app.js: function renderForUpload(){
+// Palitan ang BUONG renderForUpload ng version sa baba.
+// Tapos idagdag ang bagong functions PAGKATAPOS ng fuDelete.
+// ═══════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────
+// PALIT A — Buong renderForUpload (may capsule status)
+// ─────────────────────────────────────────
 function renderForUpload(){
   var body = document.getElementById('fu-table-body');
   if (!body) return;
@@ -4504,9 +4520,6 @@ function renderForUpload(){
     var dateYear = d.toLocaleDateString('en-PH',{year:'numeric'});
     var dateTime = d.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'});
     var isPublished = c.status === 'Published';
-    var statusColor = isPublished ? '#4ade80' : '#f87171';
-    var statusBg = isPublished ? 'rgba(34,197,94,0.14)' : 'rgba(239,68,68,0.14)';
-    var statusBorder = isPublished ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)';
     var adCopy = c.ad_copy
       ? '<button class="fu-adcopy-btn" data-id="'+c.id+'" style="cursor:pointer;color:var(--yellow);background:none;border:none;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;padding:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View</button>'
       : '<span style="color:#6a6a75">—</span>';
@@ -4514,7 +4527,27 @@ function renderForUpload(){
     var headline = c.headline
       ? '<button class="fu-headline-btn" data-headline="'+escapeHtml(c.headline)+'" title="Click to copy" style="cursor:pointer;background:none;border:none;color:#d4d4dc;font-size:11px;text-align:left;padding:0;display:inline-flex;align-items:center;gap:5px">'+escapeHtml(c.headline.substring(0,26))+(c.headline.length>26?'…':'')+'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8a8a95" stroke-width="2" style="flex-shrink:0"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
       : '<span style="color:#6a6a75">—</span>';
-    return '<div class="table-row fu-row" style="grid-template-columns:1.2fr 1.5fr 0.9fr 0.7fr 0.8fr 1.4fr 1.1fr 1.2fr;align-items:center">'
+
+    // ── CAPSULE STATUS DROPDOWN ──
+    var pillColor = isPublished ? '#0f2a1a' : '#2e1215';
+    var pillText  = isPublished ? '#4ade80' : '#f87171';
+    var pillBorder= isPublished ? 'rgba(34,197,94,0.45)' : 'rgba(239,68,68,0.45)';
+    var pillBg    = isPublished ? 'linear-gradient(180deg,rgba(34,197,94,0.22),rgba(34,197,94,0.12))' : 'linear-gradient(180deg,rgba(239,68,68,0.22),rgba(239,68,68,0.12))';
+    var statusCell =
+      '<div class="fu-status-dd" id="fu-sdd-'+c.id+'">'
+      + '<button class="fu-status-pill" onclick="fuStatusToggle(\''+c.id+'\')" style="background:'+pillBg+';color:'+pillText+';border:0.5px solid '+pillBorder+'">'
+      +   '<span class="fu-pill-dot" style="background:'+pillText+'"></span>'
+      +   '<span>'+c.status+'</span>'
+      +   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>'
+      + '</button>'
+      + '<div class="fu-status-menu">'
+      +   '<div class="fu-status-opt" onclick="fuStatusPick(\''+c.id+'\',\'Unpublished\')"><span class="fu-pill-dot" style="background:#f87171"></span>Unpublished</div>'
+      +   '<div class="fu-status-opt" onclick="fuStatusPick(\''+c.id+'\',\'Published\')"><span class="fu-pill-dot" style="background:#4ade80"></span>Published</div>'
+      + '</div>'
+      + (isPublished ? fuCountdown(c.expires_at) : '')
+      + '</div>';
+
+    return '<div class="table-row fu-row" style="grid-template-columns:1.2fr 1.5fr 0.9fr 0.7fr 0.8fr 1.4fr 1.1fr 1.3fr;align-items:center">'
       + '<div>'+fuStaffChip(c.owner_name)+'</div>'
       + '<div><div class="row-name" style="font-weight:600;color:#f4f4f7">'+escapeHtml(c.project_name||'—')+'</div></div>'
       + '<div>'+fuPageBadge(c.content_type)+'</div>'
@@ -4522,20 +4555,12 @@ function renderForUpload(){
       + '<div>'+fileLink+'</div>'
       + '<div>'+headline+'</div>'
       + '<div><div style="font-size:12px;font-weight:600;color:#e8e8ec">'+dateMain+'</div><div style="font-size:9px;color:#7a7a85;margin-top:1px">'+dateYear+' · '+dateTime+'</div></div>'
-      + '<div>'
-      +   '<select class="fu-status-select" data-id="'+c.id+'" style="font-size:10px;padding:7px 13px;border-radius:20px;font-weight:700;border:0.5px solid '+statusBorder+';cursor:pointer;background:'+statusBg+';color:'+statusColor+'">'
-      +     '<option value="Unpublished"'+(!isPublished?' selected':'')+'>Unpublished</option>'
-      +     '<option value="Published"'+(isPublished?' selected':'')+'>Published</option>'
-      +   '</select>'
-      +   (isPublished ? fuCountdown(c.expires_at) : '')
-      +   ' <button class="fu-del-btn" data-id="'+c.id+'" style="background:none;border:none;color:#6a6a75;cursor:pointer;font-size:12px;margin-left:4px">✕</button>'
+      + '<div style="display:flex;align-items:center;gap:8px">'+statusCell
+      +   '<button class="fu-del-btn" data-id="'+c.id+'" style="background:none;border:none;color:#6a6a75;cursor:pointer;font-size:12px">✕</button>'
       + '</div>'
       + '</div>';
   }).join('');
 
-  body.querySelectorAll('.fu-status-select').forEach(function(sel){
-    sel.addEventListener('change', function(){ fuSetStatus(this.dataset.id, this.value); });
-  });
   body.querySelectorAll('.fu-del-btn').forEach(function(btn){
     btn.addEventListener('click', function(){ fuDelete(this.dataset.id); });
   });
@@ -4547,59 +4572,27 @@ function renderForUpload(){
   });
 }
 
-async function fuSetStatus(id, status){
-  var update = { status: status };
-  if (status === 'Published'){
-    var now = new Date();
-    var expires = new Date(now.getTime() + 48*60*60*1000);
-    update.published_at = now.toISOString();
-    update.expires_at = expires.toISOString();
-  } else {
-    update.published_at = null;
-    update.expires_at = null;
+// ─────────────────────────────────────────
+// PALIT B — Idagdag ITO pagkatapos ng fuDelete function
+// ─────────────────────────────────────────
+function fuStatusToggle(id){
+  var dd = document.getElementById('fu-sdd-'+id);
+  if (!dd) return;
+  var wasOpen = dd.classList.contains('open');
+  document.querySelectorAll('.fu-status-dd.open').forEach(function(x){ x.classList.remove('open'); });
+  if (!wasOpen) dd.classList.add('open');
+}
+async function fuStatusPick(id, status){
+  var dd = document.getElementById('fu-sdd-'+id);
+  if (dd) dd.classList.remove('open');
+  await fuSetStatus(id, status);
+}
+// isara ang status dropdown pag nag-click sa labas
+document.addEventListener('click', function(e){
+  if (!e.target.closest('.fu-status-dd')) {
+    document.querySelectorAll('.fu-status-dd.open').forEach(function(x){ x.classList.remove('open'); });
   }
-  var { error } = await sb.from('creatives_upload').update(update).eq('id', id);
-  if (error){ showNotif('Error: '+error.message, 'error'); return; }
-  showNotif(status === 'Published' ? 'Published! Auto-removes in 48h ✓' : 'Set to Unpublished ✓', 'success');
-  if (typeof logActivity === 'function') logActivity('CREATIVE_'+status.toUpperCase(), id);
-  loadForUpload();
-}
-
-async function fuAddCreative(){
-  var projectName = document.getElementById('fu-project-name')?.value?.trim();
-  if (!projectName){ showNotif('Project name required', 'error'); return; }
-  var btn = document.getElementById('fu-add-btn');
-  if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Adding...'; }
-
-  var ownerName = currentUser?.email || 'Unknown';
-  try {
-    var { data:prof } = await sb.from('profiles').select('name').eq('id', currentUser.id).maybeSingle();
-    if (prof?.name) ownerName = prof.name;
-  } catch(e){}
-
-  var { error } = await sb.from('creatives_upload').insert({
-    owner_id: currentUser?.id,
-    owner_name: ownerName,
-    project_name: projectName,
-    gender: 'All',
-    content_type: document.getElementById('fu-page')?.value || 'VIRAL UGC',
-    ad_copy: document.getElementById('fu-ad-copy')?.value?.trim() || null,
-    file_link: document.getElementById('fu-file-link')?.value?.trim() || null,
-    headline: document.getElementById('fu-headline')?.value?.trim() || null,
-    status: 'Unpublished'
-  });
-
-  if (btn){ btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add creative'; }
-  if (error){ showNotif('Error: '+error.message, 'error'); return; }
-  showNotif('Creative added! ✓', 'success');
-  if (typeof logActivity === 'function') logActivity('CREATIVE_ADDED', projectName);
-
-  ['fu-project-name','fu-ad-copy','fu-file-link','fu-headline'].forEach(function(id){
-    var el = document.getElementById(id); if (el) el.value = '';
-  });
-  fuToggleForm();
-  loadForUpload();
-}
+});
 
 async function fuDelete(id){
   if (!confirm('Delete this creative?')) return;
