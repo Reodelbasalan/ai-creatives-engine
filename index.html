@@ -2373,7 +2373,36 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <div>
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Page</label>
         <div class="fu-dd" id="fu-dd-formpage" style="width:100%">
-          <div class="fu-dd-btn"
+          <div class="fu-dd-btn" onclick="fuDdToggle('fu-dd-formpage')" style="width:100%;justify-content:space-between">
+            <span style="display:flex;align-items:center;gap:8px"><span class="fu-dd-dot" style="background:#a78bfa" id="fu-formpage-dot"></span><span data-label>VIRAL UGC</span></span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="fu-dd-menu">
+            <div class="fu-dd-item active" onclick="fuFormPagePick('VIRAL UGC','#a78bfa',this)"><span class="fu-dd-dot" style="background:#a78bfa"></span>VIRAL UGC</div>
+            <div class="fu-dd-item" onclick="fuFormPagePick('HCSI','#facc15',this)"><span class="fu-dd-dot" style="background:#facc15"></span>HCSI</div>
+          </div>
+        </div>
+        <input type="hidden" id="fu-page" value="VIRAL UGC"/>
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Headline</label>
+        <input class="fu-input" id="fu-headline" placeholder="e.g. Your hook headline here"/>
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">File link <span style="color:#6a6a75;font-weight:400">(GDrive / video)</span></label>
+        <input class="fu-input" id="fu-file-link" placeholder="https://drive.google.com/..."/>
+      </div>
+      <div style="grid-column:1 / -1">
+        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Ad copy <span style="color:#6a6a75;font-weight:400">(optional)</span></label>
+        <textarea class="fu-input" id="fu-ad-copy" placeholder="Paste your ad copy here..." style="min-height:80px;resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+      </div>
+    </div>
+    <button class="yellow-btn" id="fu-add-btn" onclick="fuAddCreative()" style="margin-top:18px;display:inline-flex;align-items:center;gap:7px;font-weight:650">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add creative
+    </button>
+  </div>
+</div>
 
     <!-- FILTERS BAR (nasa baba na, sa creatives area) -->
     <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
