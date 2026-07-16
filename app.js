@@ -4587,12 +4587,65 @@ async function fuStatusPick(id, status){
   if (dd) dd.classList.remove('open');
   await fuSetStatus(id, status);
 }
+async function fuSetStatus(id, status){
+  var update = { status: status };
+  if (status === 'Published'){
+    var now = new Date();
+    var expires = new Date(now.getTime() + 48*60*60*1000); // +48 hours
+    update.published_at = now.toISOString();
+    update.expires_at = expires.toISOString();
+  } else {
+    update.published_at = null;
+    update.expires_at = null;
+  }
+  var { error } = await sb.from('creatives_upload').update(update).eq('id', id);
+  if (error){ showNotif('Error: '+error.message, 'error'); return; }
+  showNotif(status === 'Published' ? 'Published! Auto-removes in 48h ✓' : 'Set to Unpublished ✓', 'success');
+  if (typeof logActivity === 'function') logActivity('CREATIVE_'+status.toUpperCase(), id);
+  loadForUpload();
+}
 // isara ang status dropdown pag nag-click sa labas
 document.addEventListener('click', function(e){
   if (!e.target.closest('.fu-status-dd')) {
     document.querySelectorAll('.fu-status-dd.open').forEach(function(x){ x.classList.remove('open'); });
   }
 });
+
+async function fuAddCreative(){
+  var projectName = document.getElementById('fu-project-name')?.value?.trim();
+  if (!projectName){ showNotif('Project name required', 'error'); return; }
+  var btn = document.getElementById('fu-add-btn');
+  if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Adding...'; }
+
+  var ownerName = currentUser?.email || 'Unknown';
+  try {
+    var { data:prof } = await sb.from('profiles').select('name').eq('id', currentUser.id).maybeSingle();
+    if (prof?.name) ownerName = prof.name;
+  } catch(e){}
+
+  var { error } = await sb.from('creatives_upload').insert({
+    owner_id: currentUser?.id,
+    owner_name: ownerName,
+    project_name: projectName,
+    gender: 'All',
+    content_type: document.getElementById('fu-page')?.value || 'VIRAL UGC',
+    ad_copy: document.getElementById('fu-ad-copy')?.value?.trim() || null,
+    file_link: document.getElementById('fu-file-link')?.value?.trim() || null,
+    headline: document.getElementById('fu-headline')?.value?.trim() || null,
+    status: 'Unpublished'
+  });
+
+  if (btn){ btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add creative'; }
+  if (error){ showNotif('Error: '+error.message, 'error'); return; }
+  showNotif('Creative added! ✓', 'success');
+  if (typeof logActivity === 'function') logActivity('CREATIVE_ADDED', projectName);
+
+  ['fu-project-name','fu-ad-copy','fu-file-link','fu-headline'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  fuToggleForm();
+  loadForUpload();
+}
 
 async function fuDelete(id){
   if (!confirm('Delete this creative?')) return;
