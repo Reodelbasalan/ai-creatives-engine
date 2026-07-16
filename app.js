@@ -4312,7 +4312,9 @@ function newICBatch() {
   generateICPrompts();
 }
 // ═══════════════════════════════════════════════════════════
-// CREATIVES UPLOAD — v5 (staff dropdown from profiles, modal, auto-copy)
+// ═══════════════════════════════════════════════════════════
+// CREATIVES UPLOAD — v6 (custom dropdowns, filters sa baba, contrast)
+// PALITAN ang buong lumang CREATIVES UPLOAD JS section ng ito.
 // ═══════════════════════════════════════════════════════════
 
 var forUploadState = { items: [], filtered: [], formOpen: false, allStaff: [] };
@@ -4331,6 +4333,35 @@ function fuToggleForm(){
   }
 }
 
+// ── CUSTOM DROPDOWN ──
+function fuDdToggle(id){
+  var dd = document.getElementById(id);
+  if (!dd) return;
+  var wasOpen = dd.classList.contains('open');
+  // isara lahat muna
+  document.querySelectorAll('.fu-dd.open').forEach(function(x){ x.classList.remove('open'); });
+  if (!wasOpen) dd.classList.add('open');
+}
+function fuDdPick(ddId, hiddenId, val, itemEl, label){
+  var dd = document.getElementById(ddId);
+  var hidden = document.getElementById(hiddenId);
+  if (dd){
+    var lbl = dd.querySelector('[data-label]');
+    if (lbl) lbl.textContent = label;
+    dd.querySelectorAll('.fu-dd-item').forEach(function(x){ x.classList.remove('active'); });
+    if (itemEl) itemEl.classList.add('active');
+    dd.classList.remove('open');
+  }
+  if (hidden){ hidden.value = val; }
+  filterForUpload();
+}
+// isara ang dropdown pag nag-click sa labas
+document.addEventListener('click', function(e){
+  if (!e.target.closest('.fu-dd')) {
+    document.querySelectorAll('.fu-dd.open').forEach(function(x){ x.classList.remove('open'); });
+  }
+});
+
 async function loadForUpload(){
   var nowIso = new Date().toISOString();
   try {
@@ -4347,14 +4378,22 @@ async function loadForUpload(){
     .order('created_at', { ascending:false });
   forUploadState.items = data || [];
 
-  var ownerFilter = document.getElementById('fu-owner-filter');
-  if (ownerFilter){
-    var current = ownerFilter.value;
+  // Populate CUSTOM staff dropdown menu
+  var staffMenu = document.getElementById('fu-dd-staff-menu');
+  var hiddenOwner = document.getElementById('fu-owner-filter');
+  if (staffMenu){
     var names = forUploadState.allStaff.slice();
     forUploadState.items.forEach(function(c){ if (c.owner_name && names.indexOf(c.owner_name)<0) names.push(c.owner_name); });
-    ownerFilter.innerHTML = '<option value="">All staff</option>' +
-      names.map(function(name){ return '<option value="'+escapeHtml(name)+'">'+escapeHtml(name)+'</option>'; }).join('');
-    ownerFilter.value = current;
+    var html = '<div class="fu-dd-item active" data-val="" onclick="fuDdPick(\'fu-dd-staff\',\'fu-owner-filter\',\'\',this,\'All staff\')">All staff</div>';
+    names.forEach(function(name){
+      var safe = escapeHtml(name);
+      html += '<div class="fu-dd-item" data-val="'+safe+'" onclick="fuDdPick(\'fu-dd-staff\',\'fu-owner-filter\',\''+safe.replace(/'/g,"\\'")+'\',this,\''+safe.replace(/'/g,"\\'")+'\')">'+safe+'</div>';
+    });
+    staffMenu.innerHTML = html;
+    // sync hidden select options
+    if (hiddenOwner){
+      hiddenOwner.innerHTML = '<option value=""></option>' + names.map(function(n){ return '<option value="'+escapeHtml(n)+'"></option>'; }).join('');
+    }
   }
 
   var waiting = forUploadState.items.filter(function(c){ return c.status !== 'Published'; }).length;
@@ -4393,16 +4432,16 @@ function fuCountdown(expiresAt){
   var h = Math.floor(ms / (1000*60*60));
   var m = Math.floor((ms % (1000*60*60)) / (1000*60));
   var label = h > 0 ? ('Removes in ' + h + 'h') : ('Removes in ' + m + 'm');
-  return '<div style="font-size:9px;color:#f59e0b;margin-top:4px;font-weight:600;display:flex;align-items:center;gap:3px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' + label + '</div>';
+  return '<div style="font-size:9px;color:#f5a623;margin-top:4px;font-weight:600;display:flex;align-items:center;gap:3px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' + label + '</div>';
 }
 
 function fuPageBadge(page){
-  if (!page) return '<span style="color:var(--text4)">—</span>';
+  if (!page) return '<span style="color:#6a6a75">—</span>';
   var styles = {
-    'VIRAL UGC': { bg:'rgba(167,139,250,0.14)', c:'#a78bfa', bd:'rgba(167,139,250,0.35)' },
-    'HCSI':      { bg:'rgba(250,204,21,0.14)',  c:'#facc15', bd:'rgba(250,204,21,0.35)' }
+    'VIRAL UGC': { bg:'rgba(167,139,250,0.16)', c:'#b9a5fc', bd:'rgba(167,139,250,0.4)' },
+    'HCSI':      { bg:'rgba(250,204,21,0.16)',  c:'#fbd94f', bd:'rgba(250,204,21,0.4)' }
   };
-  var s = styles[page] || { bg:'var(--bg3)', c:'var(--text2)', bd:'rgba(255,255,255,0.1)' };
+  var s = styles[page] || { bg:'rgba(255,255,255,0.06)', c:'#c8c8d0', bd:'rgba(255,255,255,0.12)' };
   return '<span style="font-size:9px;padding:4px 12px;border-radius:20px;background:'+s.bg+';color:'+s.c+';border:0.5px solid '+s.bd+';font-weight:750;letter-spacing:0.03em">'+escapeHtml(page)+'</span>';
 }
 
@@ -4413,8 +4452,8 @@ function fuStaffChip(name){
   var idx = 0; for (var i=0;i<name.length;i++){ idx += name.charCodeAt(i); }
   var col = colors[idx % colors.length];
   return '<div style="display:flex;align-items:center;gap:9px">'
-    + '<div style="width:28px;height:28px;border-radius:50%;background:'+col+'22;border:0.5px solid '+col+'55;color:'+col+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:750;flex-shrink:0">'+initial+'</div>'
-    + '<span style="font-size:12px;font-weight:600;color:var(--text2)">'+escapeHtml(name)+'</span>'
+    + '<div style="width:28px;height:28px;border-radius:50%;background:'+col+'26;border:0.5px solid '+col+'66;color:'+col+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:750;flex-shrink:0">'+initial+'</div>'
+    + '<span style="font-size:12px;font-weight:600;color:#d4d4dc">'+escapeHtml(name)+'</span>'
     + '</div>';
 }
 
@@ -4455,7 +4494,7 @@ function renderForUpload(){
   var items = forUploadState.filtered;
   if (!items.length){
     body.innerHTML = '<div class="table-empty"><div class="table-empty-icon">'
-      + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--text4)" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
+      + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6a6a75" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
       + '</div>Wala pang creatives. Click "Add creative" above!</div>';
     return;
   }
@@ -4465,31 +4504,31 @@ function renderForUpload(){
     var dateYear = d.toLocaleDateString('en-PH',{year:'numeric'});
     var dateTime = d.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'});
     var isPublished = c.status === 'Published';
-    var statusColor = isPublished ? '#22c55e' : '#ef4444';
-    var statusBg = isPublished ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)';
-    var statusBorder = isPublished ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)';
+    var statusColor = isPublished ? '#4ade80' : '#f87171';
+    var statusBg = isPublished ? 'rgba(34,197,94,0.14)' : 'rgba(239,68,68,0.14)';
+    var statusBorder = isPublished ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)';
     var adCopy = c.ad_copy
       ? '<button class="fu-adcopy-btn" data-id="'+c.id+'" style="cursor:pointer;color:var(--yellow);background:none;border:none;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;padding:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View</button>'
-      : '<span style="color:var(--text4)">—</span>';
-    var fileLink = c.file_link ? '<a href="'+c.file_link+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg>Open</a>' : '<span style="color:var(--text4)">—</span>';
+      : '<span style="color:#6a6a75">—</span>';
+    var fileLink = c.file_link ? '<a href="'+c.file_link+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg>Open</a>' : '<span style="color:#6a6a75">—</span>';
     var headline = c.headline
-      ? '<button class="fu-headline-btn" data-headline="'+escapeHtml(c.headline)+'" title="Click to copy" style="cursor:pointer;background:none;border:none;color:var(--text2);font-size:11px;text-align:left;padding:0;display:inline-flex;align-items:center;gap:5px">'+escapeHtml(c.headline.substring(0,26))+(c.headline.length>26?'…':'')+'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text4)" stroke-width="2" style="flex-shrink:0"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
-      : '<span style="color:var(--text4)">—</span>';
+      ? '<button class="fu-headline-btn" data-headline="'+escapeHtml(c.headline)+'" title="Click to copy" style="cursor:pointer;background:none;border:none;color:#d4d4dc;font-size:11px;text-align:left;padding:0;display:inline-flex;align-items:center;gap:5px">'+escapeHtml(c.headline.substring(0,26))+(c.headline.length>26?'…':'')+'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8a8a95" stroke-width="2" style="flex-shrink:0"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
+      : '<span style="color:#6a6a75">—</span>';
     return '<div class="table-row fu-row" style="grid-template-columns:1.2fr 1.5fr 0.9fr 0.7fr 0.8fr 1.4fr 1.1fr 1.2fr;align-items:center">'
       + '<div>'+fuStaffChip(c.owner_name)+'</div>'
-      + '<div><div class="row-name" style="font-weight:600">'+escapeHtml(c.project_name||'—')+'</div></div>'
+      + '<div><div class="row-name" style="font-weight:600;color:#f4f4f7">'+escapeHtml(c.project_name||'—')+'</div></div>'
       + '<div>'+fuPageBadge(c.content_type)+'</div>'
       + '<div>'+adCopy+'</div>'
       + '<div>'+fileLink+'</div>'
       + '<div>'+headline+'</div>'
-      + '<div><div style="font-size:12px;font-weight:600;color:var(--text)">'+dateMain+'</div><div style="font-size:9px;color:var(--text4);margin-top:1px">'+dateYear+' · '+dateTime+'</div></div>'
+      + '<div><div style="font-size:12px;font-weight:600;color:#e8e8ec">'+dateMain+'</div><div style="font-size:9px;color:#7a7a85;margin-top:1px">'+dateYear+' · '+dateTime+'</div></div>'
       + '<div>'
       +   '<select class="fu-status-select" data-id="'+c.id+'" style="font-size:10px;padding:7px 13px;border-radius:20px;font-weight:700;border:0.5px solid '+statusBorder+';cursor:pointer;background:'+statusBg+';color:'+statusColor+'">'
       +     '<option value="Unpublished"'+(!isPublished?' selected':'')+'>Unpublished</option>'
       +     '<option value="Published"'+(isPublished?' selected':'')+'>Published</option>'
       +   '</select>'
       +   (isPublished ? fuCountdown(c.expires_at) : '')
-      +   ' <button class="fu-del-btn" data-id="'+c.id+'" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:12px;margin-left:4px">✕</button>'
+      +   ' <button class="fu-del-btn" data-id="'+c.id+'" style="background:none;border:none;color:#6a6a75;cursor:pointer;font-size:12px;margin-left:4px">✕</button>'
       + '</div>'
       + '</div>';
   }).join('');
