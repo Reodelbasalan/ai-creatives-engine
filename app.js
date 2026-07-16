@@ -4600,3 +4600,17 @@ async function fuDelete(id){
   showNotif('Deleted.', 'success');
   loadForUpload();
 }
+function fuFormPagePick(page, color, itemEl){
+  var dd = document.getElementById('fu-dd-formpage');
+  var hidden = document.getElementById('fu-page');
+  var dot = document.getElementById('fu-formpage-dot');
+  if (dd){
+    var lbl = dd.querySelector('[data-label]');
+    if (lbl) lbl.textContent = page;
+    dd.querySelectorAll('.fu-dd-item').forEach(function(x){ x.classList.remove('active'); });
+    if (itemEl) itemEl.classList.add('active');
+    dd.classList.remove('open');
+  }
+  if (hidden) hidden.value = page;
+  if (dot) dot.style.background = color;
+}
