@@ -45,8 +45,10 @@ export default async function handler(req, res) {
         "IDENTITY LOCK — 100% CONSISTENCY REQUIRED: The provided reference image shows a REAL, SPECIFIC person. Generate a NEW photo of this EXACT SAME individual.",
         "PRESERVE WITH ZERO DEVIATION: same gender, same face shape and width, same eyes, same eyebrows, same nose, same lips, same jawline, same skin tone, same hair color and hairstyle, same body type and build. Every part of the face and body must match the reference exactly.",
         "Do NOT beautify, slim, youthen, change gender, or idealize. Keep every natural imperfection.",
-        "Keep the SAME outfit and clothing as the reference unless the scene explicitly requires otherwise.",
-        "ONLY change: the background/setting, the person's pose and action, and any props they hold.",
+        "OUTFIT LOCK: Keep the EXACT SAME outfit and clothing as the reference in every scene — same garment, same color, same style. Never change the outfit.",
+        "PRODUCT LOCK: If a product is specified, it must look IDENTICAL in every scene — same packaging, same colors, same label, same size.",
+        "ENVIRONMENT CONSISTENCY: All scenes belong to the SAME location/brand world — consistent interior style, color palette, and atmosphere. Only the camera angle, specific spot, and the person's pose/action change per scene.",
+        "ONLY change: the camera angle, the person's pose and action, and the specific area of the location shown.",
         "Scene: " + prompt + (product ? " Product they are holding or showing: " + product + "." : ""),
         "Output style: ultra realistic RAW candid iPhone photo, natural available light, visible pores, natural skin texture, unedited UGC look.",
         aspectRatio === '9:16' ? "Vertical 9:16 portrait orientation, mobile-optimized framing." : "Square 1:1 framing."
