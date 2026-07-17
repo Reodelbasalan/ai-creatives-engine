@@ -10,8 +10,9 @@ export default async function handler(req, res) {
   try {
     const {
       pageName, offer, businessType, businessDetails, marketFocus,
-      audience, brandColors, website, promo, batchNumber, usedNames, images
+      audience, brandColors, website, promo, batchNumber, usedNames, images, count
     } = req.body;
+    const numStrategies = (count === 5 || count === 10 || count === 15) ? count : 15;
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set' });
@@ -20,7 +21,7 @@ export default async function handler(req, res) {
 
 I will provide a product, service, brand, target market, offer details, business details, benefits, and available assets.
 
-Your task is to generate the **Top 15 HIGH-CONVERTING STATIC IMAGE AD CREATIVE STRATEGIES** for Facebook and Instagram Ads.
+Your task is to generate the **Top ${numStrategies} HIGH-CONVERTING STATIC IMAGE AD CREATIVE STRATEGIES** for Facebook and Instagram Ads.
 
 The goal is to create **message-first, scroll-stopping, conversion-focused 1080x1080 static image ads** that are clear even without reading the caption.
 
@@ -131,7 +132,7 @@ No repetitive angles. No generic taglines. No weak hooks. No logo-dominant layou
 Every output must feel like a real winning Facebook/Instagram ad creative made for conversion. Performance over aesthetics. Message-first always. Tagline dominates. Benefits and offer details must be clear. Logo stays minimal. Image and message must be ads-policy safe.
 
 ## 📦 OUTPUT FORMAT — CRITICAL
-Return ONLY a valid JSON array of exactly 15 objects. No markdown, no code fences, no explanation. Each object must have exactly these keys:
+Return ONLY a valid JSON array of exactly ${numStrategies} objects. No markdown, no code fences, no explanation. Each object must have exactly these keys:
 {
   "name": "Creative Name (short concept name)",
   "audience": "Target audience for this creative",
@@ -192,10 +193,10 @@ CRITICAL ANTI-HALLUCINATION RULES:
 - If reference photos are attached: study them carefully. Describe the ACTUAL products, ACTUAL model/person appearance (skin tone, hair, age range, style), ACTUAL branding elements, and ACTUAL environment you see. Every image_prompt must describe visuals consistent with these photos, and must include the instruction "match the attached reference photos" so the editor's image tool uses them.
 - If something is unknown, leave it out rather than guessing.
 
-Generate the Top 15 creative strategies now as a JSON array.`;
+Generate the Top ${numStrategies} creative strategies now as a JSON array.`;
 
     if (batchNumber && batchNumber > 1 && usedNames && usedNames.length) {
-      userPrompt += `\n\nIMPORTANT — This is BATCH ${batchNumber}. The following creative concepts were ALREADY USED in previous batches. Generate 15 COMPLETELY NEW concepts with different angles, hooks, and visual ideas. DO NOT repeat or closely resemble any of these:\n- ${usedNames.join('\n- ')}`;
+      userPrompt += `\n\nIMPORTANT — This is BATCH ${batchNumber}. The following creative concepts were ALREADY USED in previous batches. Generate ${numStrategies} COMPLETELY NEW concepts with different angles, hooks, and visual ideas. DO NOT repeat or closely resemble any of these:\n- ${usedNames.join('\n- ')}`;
     }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
