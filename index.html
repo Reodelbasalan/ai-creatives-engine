@@ -2729,7 +2729,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           </button>
           <button id="icp-stop-btn" onclick="icpStopGenerate()" style="display:none;font-size:11.5px;font-weight:700;padding:9px 15px;background:rgba(239,68,68,0.1);color:#f87171;border:0.5px solid rgba(239,68,68,0.3);border-radius:11px;cursor:pointer;align-items:center;gap:6px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
-            Stop
+            Cancel Generation
           </button>
           <button class="ghost-btn" onclick="icpCopyAll()" style="font-size:11px">📄 Copy All</button>
         </div>
@@ -2742,7 +2742,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <div id="icp-progress" style="font-size:11px;font-weight:700;color:var(--text3);white-space:nowrap">0 / 15 done</div>
       </div>
 
-      <div id="icp-step2-grid" style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start">
+      <div id="icp-step2-grid" style="display:grid;grid-template-columns:1fr 520px;gap:18px;align-items:start">
         <!-- KALIWA: strategies -->
         <div id="icp-cards"></div>
 
@@ -2755,7 +2755,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </span>
             <span id="icp-gallery-count" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(34,197,94,0.14);color:#4ade80">0 done</span>
           </div>
-          <div id="icp-gallery" style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+          <div id="icp-gallery" style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
             <div id="icp-gallery-empty" style="grid-column:1 / -1;text-align:center;padding:30px 12px;color:var(--text3);font-size:11px">
               <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" style="margin-bottom:8px;opacity:0.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
               <div>Walang images pa. Pindutin "Auto-generate Images" para magsimula!</div>
@@ -3157,9 +3157,17 @@ async function icpGenerate(isNewBatch) {
     document.getElementById('icp-batch-badge').textContent = 'Batch ' + icpState.batchNumber;
     document.getElementById('icp-new-batch-btn').style.display = 'inline-block';
     status.textContent = '';
-    showNotif((icpState.count||15) + ' strategies ready! ✓', 'success');
+    showNotif((icpState.count||15) + ' strategies ready! ✓ Auto-generating images...', 'success');
     if (typeof logActivity === 'function') logActivity('IC_STRATEGIES_GENERATED', 'Batch ' + icpState.batchNumber + ' — ' + d.pageName);
     document.getElementById('icp-step2').scrollIntoView({ behavior: 'smooth' });
+
+    // AUTO-FLOW: agad mag-generate ng images pagkatapos ng prompts — hindi na
+    // kailangang pindutin ang button. May Stop/Cancel button na lalabas (icp-stop-btn)
+    // kaya pwede pa ring pigilin anytime. Restore muna ang Generate button bago mag-auto.
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Generate ' + (icpState.count||15) + ' Strategies';
+    icpAutoGenerate();
+    return;
   } catch (e) {
     status.textContent = '';
     showNotif('Error: ' + e.message, 'error');
