@@ -3939,9 +3939,17 @@ RULES:
 - Must be Meta Ads Policy and Community Standards compliant
 - No misleading claims, no guaranteed results, no before-and-after exaggeration
 - No direct personal callouts about sensitive topics
-- Use UGC-style ultra-realistic iPhone photo visuals
-- Natural skin, visible pores, candid real Philippine environment
 - Performance over aesthetics. Message-first always.
+
+PREMIUM QUALITY STANDARD (critical — the output must look like a real agency ad, NOT a cheap AI image):
+- Direct like a professional photographer: soft diffused natural or golden-hour light, shallow depth of field, clean intentional composition, editorial quality. NOT a flat, harsh, or random snapshot.
+- Realistic Filipino model with natural skin texture and a genuine, believable expression. Premium product staging with clean accurate packaging.
+- Reserve clean negative space for text so it never overlaps the face or product label.
+
+TEXT ACCURACY (most important — prevents garbled/misspelled text):
+- In every imagePrompt, spell out each on-image text element inside quotes and explicitly instruct that it be rendered with PERFECT, CORRECT SPELLING in clean modern sans-serif typography.
+- Keep total on-image text minimal and legible. Fewer words = cleaner render.
+- Always include a negative instruction against misspelled/garbled text, clutter, harsh lighting, and cheap stock staging.
 
 FOR EACH CREATIVE, respond with ONLY valid JSON. No markdown, no explanation.`;
 }
@@ -3990,7 +3998,7 @@ Return ONLY a valid JSON array of exactly 15 objects. Each object must have thes
   "bullets": ["Bullet 1", "Bullet 2", "Bullet 3", "Bullet 4"],
   "cta": "CTA text",
   "colorStyle": "Color direction",
-  "imagePrompt": "Complete detailed image generation prompt for Flux/DALL-E. Must be 1080x1080. Include: scene description, UGC iPhone photo style, natural lighting, realistic Filipino model details if needed, text overlay hierarchy with tagline as biggest text, benefits list as secondary, small logo corner, premium ad layout, Meta-compliant visual. NO misleading claims."
+  "imagePrompt": "A complete, premium-grade image generation prompt for a 1080x1080 square Facebook/Instagram static ad. STRUCTURE the prompt in this order: (1) PHOTOGRAPHY — describe a professional editorial-quality photo, NOT a cheap snapshot: specify soft diffused natural window light or warm golden-hour light, shallow depth of field as if shot on a 50mm lens, clean intentional composition with clear negative space reserved for text, realistic Filipino model with natural skin texture and genuine expression, premium product staging with accurate clean packaging and realistic reflections. (2) LAYOUT — describe exactly where text sits and where the model/product sits so text never overlaps faces or product labels; reserve a clean band (top or bottom third) for text. (3) TEXT TO RENDER — you MUST spell out each text element in quotes with an instruction to render it with PERFECT, CORRECT SPELLING and clean modern sans-serif typography, e.g. render the headline text exactly and correctly spelled: '<tagline>' as the largest element; render the sub-line exactly: '<subheadline>'; render these benefit lines exactly and correctly spelled: '<bullet1>', '<bullet2>', '<bullet3>'; render the button text exactly: '<cta>'. Keep total text minimal and legible. Small brand name in one corner only. (4) BRAND — apply the specified brand colors consistently across background, text, and accents for a cohesive premium look. (5) NEGATIVE — end with: 'Avoid: misspelled or garbled text, cluttered layout, harsh flat lighting, oversaturation, cheap stock-photo staging, plastic-looking product, watermark, distorted hands or faces.' The whole thing must look like a real professional agency ad, Meta Ads compliant, no misleading claims, no guaranteed results, no before-and-after."
 }
 
 Return ONLY the JSON array. No markdown, no explanation, no extra text.`;
@@ -4224,7 +4232,7 @@ async function generateSingleICImage(promptObj, idx) {
       prompt: finalPrompt,
       mode: 'scene',
       type: 'imagecreative',        // hindi 'scene' para di mag-require ng face-lock avatar
-      model: 'gpt-image-1-mini',    // TIPID: mini model
+      model: 'gpt-image-2',         // PREMIUM: latest flagship, medium quality (~$0.04/img)
       sceneIndex: idx,
       size: '1024x1024',
       clientName: document.getElementById('ic-brand').value.trim() || 'client'
