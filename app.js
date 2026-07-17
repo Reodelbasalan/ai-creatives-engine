@@ -4223,6 +4223,8 @@ async function generateSingleICImage(promptObj, idx) {
     body: JSON.stringify({
       prompt: finalPrompt,
       mode: 'scene',
+      type: 'imagecreative',        // hindi 'scene' para di mag-require ng face-lock avatar
+      model: 'gpt-image-1-mini',    // TIPID: mini model
       sceneIndex: idx,
       size: '1024x1024',
       clientName: document.getElementById('ic-brand').value.trim() || 'client'
@@ -4231,9 +4233,11 @@ async function generateSingleICImage(promptObj, idx) {
 
   var data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Generation failed');
-  if (!data.imageUrl) throw new Error('No image URL returned');
+  // FIX: ang backend ay nagbabalik ng `url`, hindi `imageUrl`
+  var imageUrl = data.url || data.imageUrl;
+  if (!imageUrl) throw new Error('No image URL returned');
 
-  return data.imageUrl;
+  return imageUrl;
 }
 
 // ─── PROGRESS ───
