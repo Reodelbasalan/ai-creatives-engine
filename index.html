@@ -2676,6 +2676,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="font-size:12px;font-weight:600;color:var(--text2)">Concepts:</span>
+          <div style="display:inline-flex;background:var(--bg3);border:0.5px solid var(--border2);border-radius:11px;padding:3px;gap:2px">
+            <button type="button" id="icp-count-5" onclick="icpSetCount(5)" style="font-size:12px;font-weight:700;padding:7px 15px;background:transparent;color:var(--text3);border:none;border-radius:8px;cursor:pointer;transition:all 0.15s">5</button>
+            <button type="button" id="icp-count-10" onclick="icpSetCount(10)" style="font-size:12px;font-weight:700;padding:7px 15px;background:transparent;color:var(--text3);border:none;border-radius:8px;cursor:pointer;transition:all 0.15s">10</button>
+            <button type="button" id="icp-count-15" onclick="icpSetCount(15)" style="font-size:12px;font-weight:700;padding:7px 15px;background:var(--yellow);color:#111;border:none;border-radius:8px;cursor:pointer;transition:all 0.15s">15</button>
+          </div>
+        </div>
         <button class="primary-btn" id="icp-gen-btn" onclick="icpGenerate()" style="font-size:13px">🧠 Generate 15 Strategies</button>
         <span id="icp-status" style="font-size:11px;color:var(--text3)"></span>
       </div>
@@ -2815,7 +2823,21 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 <script src="app.js"></script>
 <script>
 /* ═══ IMAGE CREATIVES PROMPT COPILOT ═══ */
-var icpState = { strategies: [], done: [], batchNumber: 1, usedNames: [], clientDetails: null };
+var icpState = { strategies: [], done: [], batchNumber: 1, usedNames: [], clientDetails: null, count: 15 };
+
+// ── COUNT SELECTOR (5 / 10 / 15) ──
+function icpSetCount(n){
+  icpState.count = n;
+  [5,10,15].forEach(function(v){
+    var pill = document.getElementById('icp-count-' + v);
+    if (pill){
+      if (v === n){ pill.style.background = 'var(--yellow)'; pill.style.color = '#111'; }
+      else { pill.style.background = 'transparent'; pill.style.color = 'var(--text3)'; }
+    }
+  });
+  var btn = document.getElementById('icp-gen-btn');
+  if (btn && !btn.disabled) btn.innerHTML = '🧠 Generate ' + n + ' Strategies';
+}
 
 function icpGetDetails() {
   return {
@@ -2872,14 +2894,14 @@ async function icpGenerate(isNewBatch) {
   var btn = document.getElementById('icp-gen-btn');
   var status = document.getElementById('icp-status');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Generating 15 strategies...';
+  btn.innerHTML = '<span class="spinner"></span> Generating ' + (icpState.count||15) + ' strategies...';
   status.textContent = 'AI is analyzing the business and building strategies... (30-60 secs)';
 
   try {
     var res = await fetch('/api/ic-strategies', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.assign({}, d, { batchNumber: icpState.batchNumber, usedNames: icpState.usedNames, images: icpPhotos }))
+      body: JSON.stringify(Object.assign({}, d, { batchNumber: icpState.batchNumber, usedNames: icpState.usedNames, images: icpPhotos, count: icpState.count || 15 }))
     });
     var data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -2894,7 +2916,7 @@ async function icpGenerate(isNewBatch) {
     document.getElementById('icp-batch-badge').textContent = 'Batch ' + icpState.batchNumber;
     document.getElementById('icp-new-batch-btn').style.display = 'inline-block';
     status.textContent = '';
-    showNotif('15 strategies ready! ✓', 'success');
+    showNotif((icpState.count||15) + ' strategies ready! ✓', 'success');
     if (typeof logActivity === 'function') logActivity('IC_STRATEGIES_GENERATED', 'Batch ' + icpState.batchNumber + ' — ' + d.pageName);
     document.getElementById('icp-step2').scrollIntoView({ behavior: 'smooth' });
   } catch (e) {
@@ -2902,7 +2924,7 @@ async function icpGenerate(isNewBatch) {
     showNotif('Error: ' + e.message, 'error');
   }
   btn.disabled = false;
-  btn.innerHTML = '🧠 Generate 15 Strategies';
+  btn.innerHTML = '🧠 Generate ' + (icpState.count||15) + ' Strategies';
 }
 
 function icpNewBatch() {
