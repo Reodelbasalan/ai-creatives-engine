@@ -2626,9 +2626,32 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 </div>
 
 <div id="icp-mode-ads">
+    <!-- COLLAPSED BAR (lumalabas pag na-minimize ang Step 1) -->
+    <div id="icp-step1-collapsed" onclick="icpToggleStep1(true)" style="display:none;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(250,204,21,0.06),rgba(167,139,250,0.04));border:0.5px solid rgba(250,204,21,0.18);border-radius:14px;padding:14px 18px;margin-bottom:16px;cursor:pointer;transition:border-color 0.2s">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:32px;height:32px;border-radius:9px;background:rgba(34,197,94,0.14);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        </div>
+        <div>
+          <div style="font-size:12.5px;font-weight:700;color:var(--text)">Step 1 — Client Details</div>
+          <div id="icp-collapsed-summary" style="font-size:11px;color:var(--text3);margin-top:1px">Client details saved</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 13px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);border-radius:20px">
+        <span style="font-size:10px;color:var(--text3)">Edit</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+
     <!-- STEP 1: CLIENT DETAILS -->
     <div class="form-card" id="icp-step1">
-      <div class="form-card-title"><span>🏢</span> Step 1 — Client Details</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="form-card-title" style="margin:0"><span>🏢</span> Step 1 — Client Details</div>
+        <button type="button" onclick="icpToggleStep1(false)" id="icp-step1-collapse-btn" style="display:none;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);color:var(--text3);cursor:pointer;padding:6px 12px;border-radius:20px;font-size:10px;align-items:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+          Minimize
+        </button>
+      </div>
       <div class="form-grid" style="gap:10px">
         <div class="form-field">
           <label class="form-label">Facebook Page Name</label>
@@ -2842,6 +2865,33 @@ function icpSetCount(n){
   if (btn && !btn.disabled) btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Generate ' + n + ' Strategies';
 }
 
+// ── COLLAPSE / EXPAND STEP 1 ──
+function icpToggleStep1(expand){
+  var form = document.getElementById('icp-step1');
+  var collapsed = document.getElementById('icp-step1-collapsed');
+  var collapseBtn = document.getElementById('icp-step1-collapse-btn');
+  if (!form || !collapsed) return;
+  if (expand){
+    form.style.display = 'block';
+    collapsed.style.display = 'none';
+    if (collapseBtn) collapseBtn.style.display = 'inline-flex';
+  } else {
+    form.style.display = 'none';
+    collapsed.style.display = 'flex';
+    // i-update ang summary base sa client details
+    var summary = document.getElementById('icp-collapsed-summary');
+    if (summary){
+      var pageName = (document.getElementById('icp-page')||{}).value || '';
+      var biztype = (document.getElementById('icp-biztype')||{}).value || '';
+      var parts = [];
+      if (pageName) parts.push(pageName);
+      if (biztype) parts.push(biztype);
+      parts.push((icpState.count||15) + ' concepts');
+      summary.textContent = parts.join(' · ');
+    }
+  }
+}
+
 function icpGetDetails() {
   return {
     pageName: document.getElementById('icp-page').value.trim(),
@@ -2915,6 +2965,9 @@ async function icpGenerate(isNewBatch) {
 
     icpRenderCards();
     document.getElementById('icp-step2').style.display = 'block';
+    var minBtn = document.getElementById('icp-step1-collapse-btn');
+    if (minBtn) minBtn.style.display = 'inline-flex'; // ipakita ang Minimize button
+    icpToggleStep1(false); // auto-collapse ang Step 1 para may space
     document.getElementById('icp-batch-badge').style.display = 'inline-block';
     document.getElementById('icp-batch-badge').textContent = 'Batch ' + icpState.batchNumber;
     document.getElementById('icp-new-batch-btn').style.display = 'inline-block';
