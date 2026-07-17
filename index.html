@@ -2684,7 +2684,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <button type="button" id="icp-count-15" onclick="icpSetCount(15)" style="font-size:12px;font-weight:700;padding:7px 15px;background:var(--yellow);color:#111;border:none;border-radius:8px;cursor:pointer;transition:all 0.15s">15</button>
           </div>
         </div>
-        <button class="primary-btn" id="icp-gen-btn" onclick="icpGenerate()" style="font-size:13px">🧠 Generate 15 Strategies</button>
+        <button class="yellow-btn" id="icp-gen-btn" onclick="icpGenerate()" style="font-size:13px;padding:11px 20px;box-shadow:0 4px 14px rgba(250,204,21,0.25)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Generate 15 Strategies
+        </button>
         <span id="icp-status" style="font-size:11px;color:var(--text3)"></span>
       </div>
     </div>
@@ -2836,7 +2839,7 @@ function icpSetCount(n){
     }
   });
   var btn = document.getElementById('icp-gen-btn');
-  if (btn && !btn.disabled) btn.innerHTML = '🧠 Generate ' + n + ' Strategies';
+  if (btn && !btn.disabled) btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Generate ' + n + ' Strategies';
 }
 
 function icpGetDetails() {
@@ -2924,7 +2927,7 @@ async function icpGenerate(isNewBatch) {
     showNotif('Error: ' + e.message, 'error');
   }
   btn.disabled = false;
-  btn.innerHTML = '🧠 Generate ' + (icpState.count||15) + ' Strategies';
+  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Generate ' + (icpState.count||15) + ' Strategies';
 }
 
 function icpNewBatch() {
