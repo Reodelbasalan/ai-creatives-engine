@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   try {
     const {
       prompt, size = '1024x1024', type = 'scene',
-      product, brandType, avatarDesc, tone, sceneNum, avatarUrl
+      product, brandType, avatarDesc, tone, sceneNum, avatarUrl, model
     } = req.body;
 
     if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
@@ -325,17 +325,22 @@ if (faceBuf) form.append('image[]', new Blob([faceBuf], { type: 'image/png' }), 
       }
     }
 
-    // Avatar (or non-scene) may fall back to text-to-image generation.
+    // Avatar / non-scene / imagecreative → text-to-image generation.
     if (!response) {
+      // Piliin ang model: kung may specified (e.g. gpt-image-1-mini para tipid),
+      // gamitin yun; kung wala, default sa gpt-image-1.
+      var genModel = (model === 'gpt-image-1-mini' || model === 'gpt-image-1') ? model : 'gpt-image-1';
+      // Quality: mini + imagecreative = medium (balanse ng tipid at ganda)
+      var genQuality = type === 'avatar' ? 'high' : 'medium';
       response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
         body: JSON.stringify({
-          model: 'gpt-image-1',
+          model: genModel,
           prompt: finalPrompt,
           n: 1,
           size: imageSize,
-          quality: type === 'avatar' ? 'high' : 'medium'
+          quality: genQuality
         })
       });
     }
