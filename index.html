@@ -2715,19 +2715,63 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       </div>
     </div>
 
-    <!-- STEP 2: STRATEGY CARDS -->
+    <!-- STEP 2: STRATEGY CARDS + IMAGE GALLERY -->
     <div id="icp-step2" style="display:none;margin-top:1.25rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <div class="form-card-title" style="margin:0"><span>📋</span> Step 2 — Copy each prompt to ChatGPT <span style="font-size:10px;color:var(--text3);font-weight:400">(attach din yung client photos sa ChatGPT!)</span>, then mark ✓ Done</div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div id="icp-progress" style="font-size:12px;font-weight:700;color:var(--yellow)">0 / 15 done</div>
-          <button class="ghost-btn" onclick="icpCopyAll()" style="font-size:11px">📄 Copy All Prompts</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:11px;flex-wrap:wrap">
+          <span style="font-size:15px;font-weight:750;color:var(--text);letter-spacing:-0.3px">Strategies &amp; Images</span>
+          <span id="icp-batch-badge-2" style="font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;background:rgba(167,139,250,0.14);color:#b9a5fc;border:0.5px solid rgba(167,139,250,0.35)">Batch 1</span>
+        </div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap">
+          <button class="yellow-btn" id="icp-autogen-btn" onclick="icpAutoGenerate()" style="font-size:11.5px;padding:9px 16px;box-shadow:0 4px 14px rgba(250,204,21,0.25)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Auto-generate Images
+          </button>
+          <button id="icp-stop-btn" onclick="icpStopGenerate()" style="display:none;font-size:11.5px;font-weight:700;padding:9px 15px;background:rgba(239,68,68,0.1);color:#f87171;border:0.5px solid rgba(239,68,68,0.3);border-radius:11px;cursor:pointer;align-items:center;gap:6px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+            Stop
+          </button>
+          <button class="ghost-btn" onclick="icpCopyAll()" style="font-size:11px">📄 Copy All</button>
         </div>
       </div>
-      <div id="icp-progress-bar-wrap" style="height:6px;background:var(--bg3);border-radius:10px;overflow:hidden;margin-bottom:14px">
-        <div id="icp-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--yellow),#22c55e);transition:width 0.3s"></div>
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div id="icp-progress-bar-wrap" style="flex:1;height:7px;background:var(--bg3);border-radius:10px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,0.3)">
+          <div id="icp-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--yellow),#22c55e);transition:width 0.3s;border-radius:10px"></div>
+        </div>
+        <div id="icp-progress" style="font-size:11px;font-weight:700;color:var(--text3);white-space:nowrap">0 / 15 done</div>
       </div>
-      <div id="icp-cards"></div>
+
+      <div id="icp-step2-grid" style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start">
+        <!-- KALIWA: strategies -->
+        <div id="icp-cards"></div>
+
+        <!-- KANAN: image gallery -->
+        <div id="icp-gallery-wrap" style="background:linear-gradient(180deg,#131316,#0f0f12);border:0.5px solid rgba(250,204,21,0.22);border-radius:16px;padding:15px;position:sticky;top:16px;box-shadow:0 8px 30px rgba(0,0,0,0.3)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px">
+            <span style="font-size:12.5px;font-weight:700;color:var(--text);display:inline-flex;align-items:center;gap:7px">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z"/></svg>
+              Generated Images
+            </span>
+            <span id="icp-gallery-count" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(34,197,94,0.14);color:#4ade80">0 done</span>
+          </div>
+          <div id="icp-gallery" style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+            <div id="icp-gallery-empty" style="grid-column:1 / -1;text-align:center;padding:30px 12px;color:var(--text3);font-size:11px">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" style="margin-bottom:8px;opacity:0.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              <div>Walang images pa. Pindutin "Auto-generate Images" para magsimula!</div>
+            </div>
+          </div>
+          <div id="icp-gallery-footer" style="display:none;margin-top:11px">
+            <div style="padding:8px;background:rgba(250,204,21,0.04);border:0.5px solid rgba(250,204,21,0.12);border-radius:10px;font-size:10px;color:#c8ad5a;text-align:center">
+              <span id="icp-batch-status">Auto-proceeds to next batch</span>
+            </div>
+            <button onclick="icpDownloadAll()" style="width:100%;margin-top:9px;padding:10px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;font-size:11px;font-weight:700;color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download all
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 </div>
 
@@ -2866,8 +2910,7 @@ function icpSetCount(n){
 }
 
 // ── COLLAPSE / EXPAND STEP 1 ──
-function icpToggleStep1(expand){
-  var form = document.getElementById('icp-step1');
+function icpToggleStep1(expand){  var form = document.getElementById('icp-step1');
   var collapsed = document.getElementById('icp-step1-collapsed');
   var collapseBtn = document.getElementById('icp-step1-collapse-btn');
   if (!form || !collapsed) return;
@@ -2890,6 +2933,148 @@ function icpToggleStep1(expand){
       summary.textContent = parts.join(' · ');
     }
   }
+}
+
+// ═══════════════════════════════════════════
+// BATCH IMAGE GENERATION (2 at a time, auto-proceed)
+// ═══════════════════════════════════════════
+var icpGenState = { running:false, stopRequested:false, images:[] };
+
+async function icpAutoGenerate(){
+  if (icpGenState.running) return;
+  icpGenState.running = true;
+  icpGenState.stopRequested = false;
+
+  // ipakita ang stop button, itago ang autogen
+  var autoBtn = document.getElementById('icp-autogen-btn');
+  var stopBtn = document.getElementById('icp-stop-btn');
+  if (autoBtn) autoBtn.style.display = 'none';
+  if (stopBtn) stopBtn.style.display = 'inline-flex';
+  var footer = document.getElementById('icp-gallery-footer');
+  var emptyEl = document.getElementById('icp-gallery-empty');
+  if (emptyEl) emptyEl.style.display = 'none';
+  if (footer) footer.style.display = 'block';
+
+  var strategies = icpState.strategies || [];
+  var BATCH_SIZE = 2;
+
+  for (var i = 0; i < strategies.length; i += BATCH_SIZE){
+    if (icpGenState.stopRequested) break;
+    var batch = [];
+    for (var j = i; j < Math.min(i + BATCH_SIZE, strategies.length); j++){
+      batch.push(icpGenerateOneImage(j));
+    }
+    // batch status
+    var batchStatus = document.getElementById('icp-batch-status');
+    if (batchStatus) batchStatus.textContent = 'Generating ' + (i+1) + '-' + Math.min(i+BATCH_SIZE, strategies.length) + ' of ' + strategies.length + '...';
+    await Promise.all(batch); // hintayin matapos ang 2 bago mag-next (auto-proceed)
+  }
+
+  // tapos
+  icpGenState.running = false;
+  if (autoBtn) autoBtn.style.display = 'inline-flex';
+  if (stopBtn) stopBtn.style.display = 'none';
+  var batchStatus2 = document.getElementById('icp-batch-status');
+  if (batchStatus2) batchStatus2.textContent = icpGenState.stopRequested ? 'Stopped. Pindutin ulit para magpatuloy.' : 'All done! ✓';
+}
+
+function icpStopGenerate(){
+  icpGenState.stopRequested = true;
+  var stopBtn = document.getElementById('icp-stop-btn');
+  if (stopBtn) stopBtn.innerHTML = '<span class="spinner"></span> Stopping...';
+}
+
+async function icpGenerateOneImage(idx){
+  var strat = icpState.strategies[idx];
+  if (!strat) return;
+  if (strat._imageUrl) return; // may image na, skip
+
+  // update card status → generating
+  icpSetCardStatus(idx, 'generating');
+  // dagdag ng loading placeholder sa gallery
+  icpAddGalleryLoading(idx);
+
+  try {
+    var imagePrompt = strat.image_prompt || strat.imagePrompt || strat.visual || strat.name;
+    var res = await fetch('/api/dalle-generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: imagePrompt,
+        type: 'imagecreative',
+        model: 'gpt-image-1-mini',
+        size: '1024x1024',
+        sceneIndex: idx,
+        clientName: (document.getElementById('icp-page')||{}).value || 'client'
+      })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Generation failed');
+    var imageUrl = data.url || data.imageUrl;
+    if (!imageUrl) throw new Error('No image URL');
+
+    strat._imageUrl = imageUrl;
+    icpGenState.images.push({ idx: idx, url: imageUrl, name: strat.name });
+    icpSetCardStatus(idx, 'done');
+    icpUpdateGalleryImage(idx, imageUrl);
+    icpUpdateProgress();
+  } catch(e){
+    icpSetCardStatus(idx, 'error');
+    icpRemoveGalleryLoading(idx);
+    showNotif('Image ' + (idx+1) + ' failed: ' + e.message, 'error');
+  }
+}
+
+// ── Gallery helpers ──
+function icpAddGalleryLoading(idx){
+  var gallery = document.getElementById('icp-gallery');
+  if (!gallery) return;
+  if (document.getElementById('icp-img-' + idx)) return;
+  var cell = document.createElement('div');
+  cell.id = 'icp-img-' + idx;
+  cell.style.cssText = 'aspect-ratio:1;background:rgba(250,204,21,0.05);border:0.5px dashed rgba(250,204,21,0.4);border-radius:11px;display:flex;align-items:center;justify-content:center';
+  cell.innerHTML = '<span class="spinner"></span>';
+  gallery.appendChild(cell);
+}
+function icpRemoveGalleryLoading(idx){
+  var cell = document.getElementById('icp-img-' + idx);
+  if (cell) cell.remove();
+}
+function icpUpdateGalleryImage(idx, url){
+  var cell = document.getElementById('icp-img-' + idx);
+  if (!cell){ icpAddGalleryLoading(idx); cell = document.getElementById('icp-img-' + idx); }
+  cell.style.cssText = 'aspect-ratio:1;background:#1a1a1f;border-radius:11px;position:relative;overflow:hidden;border:0.5px solid rgba(255,255,255,0.06);cursor:pointer';
+  cell.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover" onclick="window.open(\'' + url + '\',\'_blank\')"/>'
+    + '<a href="' + url + '" download="creative-' + (idx+1) + '.png" onclick="event.stopPropagation()" style="position:absolute;bottom:6px;right:6px;padding:4px 6px;background:rgba(0,0,0,0.65);border:0.5px solid rgba(255,255,255,0.12);border-radius:6px;color:var(--yellow);font-size:10px;text-decoration:none"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>';
+  // update count
+  var countEl = document.getElementById('icp-gallery-count');
+  if (countEl) countEl.textContent = icpGenState.images.length + ' done';
+}
+function icpUpdateProgress(){
+  var total = (icpState.strategies||[]).length;
+  var done = icpGenState.images.length;
+  var prog = document.getElementById('icp-progress');
+  var bar = document.getElementById('icp-progress-bar');
+  if (prog) prog.textContent = done + ' / ' + total + ' done';
+  if (bar) bar.style.width = (total ? (done/total*100) : 0) + '%';
+}
+function icpSetCardStatus(idx, status){
+  // i-update ang status badge ng strategy card (kung meron)
+  var badge = document.getElementById('icp-card-status-' + idx);
+  if (!badge) return;
+  if (status === 'generating'){ badge.textContent = 'Generating…'; badge.style.color = '#facc15'; }
+  else if (status === 'done'){ badge.textContent = '✓ Done'; badge.style.color = '#4ade80'; }
+  else if (status === 'error'){ badge.textContent = '✗ Failed'; badge.style.color = '#f87171'; }
+}
+function icpDownloadAll(){
+  icpGenState.images.forEach(function(img){
+    var a = document.createElement('a');
+    a.href = img.url;
+    a.download = 'creative-' + (img.idx+1) + '.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
 }
 
 function icpGetDetails() {
@@ -3003,6 +3188,7 @@ function icpRenderCards() {
       +   '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
       +     '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:var(--yellow-dim);color:var(--yellow)">#' + (i + 1) + '</span>'
       +     '<span style="font-size:13px;font-weight:700;color:var(--text)">' + (s.name || 'Creative ' + (i + 1)) + '</span>'
+      +     '<span id="icp-card-status-' + i + '" style="font-size:10px;font-weight:700;margin-left:auto;color:var(--text3)"></span>'
       +   '</div>'
       +   '<div style="font-size:15px;font-weight:800;color:var(--yellow);margin:6px 0 2px">"' + (s.tagline || '') + '"</div>'
       +   '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">' + (s.subhead || '') + '</div>'
