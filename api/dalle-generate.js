@@ -327,10 +327,13 @@ if (faceBuf) form.append('image[]', new Blob([faceBuf], { type: 'image/png' }), 
 
     // Avatar / non-scene / imagecreative → text-to-image generation.
     if (!response) {
-      // Piliin ang model: kung may specified (e.g. gpt-image-1-mini para tipid),
-      // gamitin yun; kung wala, default sa gpt-image-1.
-      var genModel = (model === 'gpt-image-1-mini' || model === 'gpt-image-1') ? model : 'gpt-image-1';
-      // Quality: mini + imagecreative = medium (balanse ng tipid at ganda)
+      // Piliin ang model: kung may specified na allowed model, gamitin yun;
+      // kung wala/unknown, default sa gpt-image-1. Idinagdag ang gpt-image-2
+      // (latest flagship) at gpt-image-1.5 sa whitelist.
+      var allowedModels = ['gpt-image-2', 'gpt-image-1.5', 'gpt-image-1-mini', 'gpt-image-1'];
+      var genModel = allowedModels.indexOf(model) !== -1 ? model : 'gpt-image-1';
+      // Quality: avatar = high (pinaka-malinis na mukha).
+      // imagecreative = medium (balanse ng ganda at tipid, ~$0.04/image sa gpt-image-2).
       var genQuality = type === 'avatar' ? 'high' : 'medium';
       response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
