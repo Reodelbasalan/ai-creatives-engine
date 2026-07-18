@@ -4447,7 +4447,7 @@ function filterForUpload(){
       (c.owner_name||'').toLowerCase().includes(q) ||
       (c.headline||'').toLowerCase().includes(q) ||
       (c.ad_copy||'').toLowerCase().includes(q) ||
-      (c.naming_convention||'').toLowerCase().includes(q);
+      (c.client_name||'').toLowerCase().includes(q);
     var matchOwner = !owner || c.owner_name === owner;
     var matchStatus = !status || c.status === status;
     var matchPage = !pageF || c.content_type === pageF;
@@ -4528,8 +4528,12 @@ function fuCountdown(expiresAt){
 function fuPageBadge(page){
   if (!page) return '<span style="color:#6a6a75">—</span>';
   var styles = {
-    'VIRAL UGC': { bg:'rgba(167,139,250,0.16)', c:'#b9a5fc', bd:'rgba(167,139,250,0.4)' },
-    'HCSI':      { bg:'rgba(250,204,21,0.16)',  c:'#fbd94f', bd:'rgba(250,204,21,0.4)' }
+    'VIRAL UGC':       { bg:'rgba(167,139,250,0.16)', c:'#b9a5fc', bd:'rgba(167,139,250,0.4)' },
+    'HCSI':            { bg:'rgba(250,204,21,0.16)',  c:'#fbd94f', bd:'rgba(250,204,21,0.4)' },
+    'AI UNIVERSITY':   { bg:'rgba(96,165,250,0.16)',  c:'#7db4fb', bd:'rgba(96,165,250,0.4)' },
+    'MERCH CREATIVES': { bg:'rgba(74,222,128,0.16)',  c:'#6ee7a0', bd:'rgba(74,222,128,0.4)' },
+    'BATIK MALONG':    { bg:'rgba(244,114,182,0.16)', c:'#f792c4', bd:'rgba(244,114,182,0.4)' },
+    'BATIK BAG':       { bg:'rgba(251,146,60,0.16)',  c:'#fcae72', bd:'rgba(251,146,60,0.4)' }
   };
   var s = styles[page] || { bg:'rgba(255,255,255,0.06)', c:'#c8c8d0', bd:'rgba(255,255,255,0.12)' };
   return '<span style="font-size:9px;padding:4px 12px;border-radius:20px;background:'+s.bg+';color:'+s.c+';border:0.5px solid '+s.bd+';font-weight:750;letter-spacing:0.03em">'+escapeHtml(page)+'</span>';
@@ -4652,8 +4656,8 @@ function renderForUpload(){
       + '</div>';
 
     var canvaLink = c.canva_link ? '<a href="'+c.canva_link+'" target="_blank" class="fu-canva-link"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>Open in Canva</a>' : '<span style="color:#6a6a75">—</span>';
-    var namingTag = c.naming_convention
-      ? '<div class="fu-naming-tag">'+escapeHtml(c.naming_convention)+'</div>'
+    var namingTag = c.client_name
+      ? '<div class="fu-naming-tag">'+escapeHtml(c.client_name)+'</div>'
       : '';
 
     // ── IMAGE TEAM: Staff · Project · Canva · Date · Status ──
@@ -4787,7 +4791,7 @@ async function fuAddCreative(){
     gender: 'All',
     content_type: document.getElementById('fu-page')?.value || 'VIRAL UGC',
     ad_copy: document.getElementById('fu-ad-copy')?.value?.trim() || null,
-    naming_convention: document.getElementById('fu-naming')?.value?.trim() || null,
+    client_name: document.getElementById('fu-client-name')?.value?.trim() || null,
     canva_link: document.getElementById('fu-canva-link')?.value?.trim() || null,
     team: forUploadState.team || 'video',
     file_link: document.getElementById('fu-file-link')?.value?.trim() || null,
@@ -4800,7 +4804,7 @@ async function fuAddCreative(){
   showNotif('Creative added! ✓', 'success');
   if (typeof logActivity === 'function') logActivity('CREATIVE_ADDED', projectName);
 
-  ['fu-project-name','fu-ad-copy','fu-file-link','fu-headline','fu-naming','fu-canva-link'].forEach(function(id){
+  ['fu-project-name','fu-ad-copy','fu-file-link','fu-headline','fu-client-name','fu-canva-link'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   fuToggleForm();
