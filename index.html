@@ -2351,6 +2351,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       background:rgba(167,139,250,0.12); border:0.5px solid rgba(167,139,250,0.25); color:#b9a5fc;
       margin-top:3px;
     }
+
   </style>
 
   <div style="max-width:1600px;margin:0 auto">
@@ -2426,6 +2427,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div class="fu-dd-menu">
             <div class="fu-dd-item active" onclick="fuFormPagePick('VIRAL UGC','#a78bfa',this)"><span class="fu-dd-dot" style="background:#a78bfa"></span>VIRAL UGC</div>
             <div class="fu-dd-item" onclick="fuFormPagePick('HCSI','#facc15',this)"><span class="fu-dd-dot" style="background:#facc15"></span>HCSI</div>
+            <div class="fu-dd-item" onclick="fuFormPagePick('AI UNIVERSITY','#60a5fa',this)"><span class="fu-dd-dot" style="background:#60a5fa"></span>AI UNIVERSITY</div>
+            <div class="fu-dd-item" onclick="fuFormPagePick('MERCH CREATIVES','#4ade80',this)"><span class="fu-dd-dot" style="background:#4ade80"></span>MERCH CREATIVES</div>
+            <div class="fu-dd-item" onclick="fuFormPagePick('BATIK MALONG','#f472b6',this)"><span class="fu-dd-dot" style="background:#f472b6"></span>BATIK MALONG</div>
+            <div class="fu-dd-item" onclick="fuFormPagePick('BATIK BAG','#fb923c',this)"><span class="fu-dd-dot" style="background:#fb923c"></span>BATIK BAG</div>
           </div>
         </div>
         <input type="hidden" id="fu-page" value="VIRAL UGC"/>
@@ -2439,16 +2444,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <input class="fu-input" id="fu-file-link" placeholder="https://drive.google.com/..."/>
       </div>
       <div class="fu-video-field">
-        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Naming convention <span style="color:#6a6a75;font-weight:400">(optional — pili o type)</span></label>
-        <input class="fu-input" id="fu-naming" list="fu-naming-options" placeholder="e.g. Viral creatives" autocomplete="off"/>
-        <datalist id="fu-naming-options">
-          <option value="Viral creatives"></option>
-          <option value="AI University creatives"></option>
-          <option value="HCSI creatives"></option>
-          <option value="Merch creatives"></option>
-          <option value="Batik creatives"></option>
-          <option value="Client name creatives"></option>
-        </datalist>
+        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Client name <span style="color:#6a6a75;font-weight:400">(optional)</span></label>
+        <input class="fu-input" id="fu-client-name" placeholder="e.g. Glow Skin PH" autocomplete="off"/>
       </div>
       <div class="fu-image-field" style="display:none">
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Canva link</label>
@@ -2483,6 +2480,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div class="fu-dd-item active" data-val="" onclick="fuDdPick('fu-dd-page','fu-page-filter','',this,'All pages')">All pages</div>
           <div class="fu-dd-item" data-val="VIRAL UGC" onclick="fuDdPick('fu-dd-page','fu-page-filter','VIRAL UGC',this,'VIRAL UGC')"><span class="fu-dd-dot" style="background:#a78bfa"></span>VIRAL UGC</div>
           <div class="fu-dd-item" data-val="HCSI" onclick="fuDdPick('fu-dd-page','fu-page-filter','HCSI',this,'HCSI')"><span class="fu-dd-dot" style="background:#facc15"></span>HCSI</div>
+          <div class="fu-dd-item" data-val="AI UNIVERSITY" onclick="fuDdPick('fu-dd-page','fu-page-filter','AI UNIVERSITY',this,'AI UNIVERSITY')"><span class="fu-dd-dot" style="background:#60a5fa"></span>AI UNIVERSITY</div>
+          <div class="fu-dd-item" data-val="MERCH CREATIVES" onclick="fuDdPick('fu-dd-page','fu-page-filter','MERCH CREATIVES',this,'MERCH CREATIVES')"><span class="fu-dd-dot" style="background:#4ade80"></span>MERCH CREATIVES</div>
+          <div class="fu-dd-item" data-val="BATIK MALONG" onclick="fuDdPick('fu-dd-page','fu-page-filter','BATIK MALONG',this,'BATIK MALONG')"><span class="fu-dd-dot" style="background:#f472b6"></span>BATIK MALONG</div>
+          <div class="fu-dd-item" data-val="BATIK BAG" onclick="fuDdPick('fu-dd-page','fu-page-filter','BATIK BAG',this,'BATIK BAG')"><span class="fu-dd-dot" style="background:#fb923c"></span>BATIK BAG</div>
         </div>
       </div>
       <div class="fu-dd" id="fu-dd-staff">
