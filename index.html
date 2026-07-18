@@ -50,6 +50,7 @@ input[type="month"]::-webkit-calendar-picker-indicator:hover{
   .content{padding:1rem}
   .projects-cols{grid-template-columns:2fr 1fr!important}
   #icp-step2-grid{grid-template-columns:1fr!important}
+  #icp-step1-split{grid-template-columns:1fr!important}
   #icp-gallery-wrap{position:relative!important;top:0!important}
 }
 @media(max-width:480px){
@@ -2646,7 +2647,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     </div>
 
     <!-- STEP 1: CLIENT DETAILS -->
-    <div class="form-card" id="icp-step1">
+    <div id="icp-step1-split" style="display:grid;grid-template-columns:1fr 1.15fr;gap:22px;align-items:stretch;width:100%">
+    <div class="form-card" id="icp-step1" style="margin:0">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="form-card-title" style="margin:0"><span>🏢</span> Step 1 — Client Details</div>
         <button type="button" onclick="icpToggleStep1(false)" id="icp-step1-collapse-btn" style="display:none;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.08);color:var(--text3);cursor:pointer;padding:6px 12px;border-radius:20px;font-size:10px;align-items:center;gap:6px">
@@ -2715,6 +2717,37 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </button>
         <span id="icp-status" style="font-size:11px;color:var(--text3)"></span>
       </div>
+    </div>
+
+    <!-- RIGHT PANEL: Live Brand Summary + Reserved Gallery (Step 1) -->
+    <div id="icp-step1-right" class="form-card" style="margin:0;background:linear-gradient(180deg,var(--bg2),#0f0f12);border:0.5px solid rgba(250,204,21,0.22);display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="form-card-title" style="margin:0"><span>✨</span> Brand Summary</div>
+        <span style="font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(250,204,21,0.14);color:var(--yellow)">LIVE</span>
+      </div>
+
+      <div id="icp-summary-chips" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
+        <span style="font-size:11px;color:var(--text3)">Punan ang details sa kaliwa — mag-a-update dito habang nagta-type ka.</span>
+      </div>
+
+      <div id="icp-summary-palette-wrap" style="display:none;margin-bottom:16px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px">Palette</div>
+        <div id="icp-summary-palette" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
+        <span style="font-size:12px;font-weight:700;color:var(--text2)">🖼 Generated Images</span>
+        <span style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--bg3);color:var(--text3)">0 done</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1">
+        <div style="aspect-ratio:1;background:repeating-linear-gradient(45deg,#16161a,#16161a 8px,#141418 8px,#141418 16px);border:1px dashed var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:24px;opacity:0.5">🖼</div>
+        <div style="aspect-ratio:1;background:repeating-linear-gradient(45deg,#16161a,#16161a 8px,#141418 8px,#141418 16px);border:1px dashed var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:24px;opacity:0.5">🖼</div>
+        <div style="aspect-ratio:1;background:repeating-linear-gradient(45deg,#16161a,#16161a 8px,#141418 8px,#141418 16px);border:1px dashed var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:24px;opacity:0.5">🖼</div>
+        <div style="aspect-ratio:1;background:repeating-linear-gradient(45deg,#16161a,#16161a 8px,#141418 8px,#141418 16px);border:1px dashed var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:24px;opacity:0.5">🖼</div>
+      </div>
+      <div style="margin-top:13px;padding:12px;background:rgba(250,204,21,0.06);border:0.5px dashed rgba(250,204,21,0.3);border-radius:11px;font-size:11px;color:#c9a94a;text-align:center;line-height:1.5">Punan ang details, tapos pindutin ang <b>Generate</b> — lalabas dito ang mga image creative.</div>
+    </div>
+
     </div>
 
     <!-- STEP 2: STRATEGY CARDS + IMAGE GALLERY -->
@@ -2911,18 +2944,78 @@ function icpSetCount(n){
   if (btn && !btn.disabled) btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Generate ' + n + ' Strategies';
 }
 
-// ── COLLAPSE / EXPAND STEP 1 ──
+// ── LIVE BRAND SUMMARY (Step 1 right panel) ──
+function icpEscape(s){ return (s||'').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function icpParseColors(str){
+  // Map common color words to hex swatches
+  var map = {rose:'#E8B4B8','rose gold':'#C9A57B',gold:'#D4AF37',white:'#FBF3E8',cream:'#FBF3E8',ivory:'#FFFFF0',peach:'#F5D5C0',pink:'#F7C6D9','soft pink':'#F7C6D9',black:'#1a1a1a',gray:'#9ca3af',grey:'#9ca3af',green:'#4ade80','forest green':'#166534',brown:'#8B5E3C',red:'#ef4444',yellow:'#FACC15',orange:'#fb923c',blue:'#60a5fa',navy:'#1e3a5f',purple:'#a78bfa',teal:'#14b8a6',beige:'#E8DCC4',nude:'#E3BC9A',lavender:'#C4B5E0',mint:'#A7F3D0'};
+  var found = [];
+  var low = (str||'').toLowerCase();
+  Object.keys(map).sort(function(a,b){return b.length-a.length;}).forEach(function(k){
+    if (low.indexOf(k) !== -1 && found.length < 6){
+      if (!found.some(function(f){return f.hex===map[k];})) found.push({name:k,hex:map[k]});
+    }
+  });
+  return found;
+}
+function icpUpdateSummary(){
+  var page = (document.getElementById('icp-page')||{}).value || '';
+  var biz  = (document.getElementById('icp-biztype')||{}).value || '';
+  var market = (document.getElementById('icp-market')||{}).value || '';
+  var audience = (document.getElementById('icp-audience')||{}).value || '';
+  var promo = (document.getElementById('icp-promo')||{}).value || '';
+  var colors = (document.getElementById('icp-colors')||{}).value || '';
+  var chipsWrap = document.getElementById('icp-summary-chips');
+  if (!chipsWrap) return;
+  var chips = [];
+  if (page)     chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(167,139,250,0.14);color:#b9a5fc;border:0.5px solid rgba(167,139,250,0.3)">🏷 '+icpEscape(page)+'</span>');
+  if (biz)      chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(34,197,94,0.12);color:#4ade80;border:0.5px solid rgba(34,197,94,0.3)">💼 '+icpEscape(biz)+'</span>');
+  if (market)   chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(250,204,21,0.12);color:#FACC15;border:0.5px solid rgba(250,204,21,0.3)">🎯 '+icpEscape(market)+'</span>');
+  if (audience) chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(59,130,246,0.12);color:#60a5fa;border:0.5px solid rgba(59,130,246,0.3)">👥 '+icpEscape(audience)+'</span>');
+  if (promo)    chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(236,72,153,0.12);color:#f472b6;border:0.5px solid rgba(236,72,153,0.3)">🎁 '+icpEscape(promo)+'</span>');
+  if (chips.length === 0){
+    chipsWrap.innerHTML = '<span style="font-size:11px;color:var(--text3)">Punan ang details sa kaliwa — mag-a-update dito habang nagta-type ka.</span>';
+  } else {
+    chipsWrap.innerHTML = chips.join('');
+  }
+  // palette
+  var palWrap = document.getElementById('icp-summary-palette-wrap');
+  var pal = document.getElementById('icp-summary-palette');
+  var swatches = icpParseColors(colors);
+  if (palWrap && pal){
+    if (swatches.length){
+      pal.innerHTML = swatches.map(function(s){ return '<div title="'+icpEscape(s.name)+'" style="width:34px;height:34px;border-radius:8px;background:'+s.hex+';border:0.5px solid var(--border2)"></div>'; }).join('');
+      palWrap.style.display = 'block';
+    } else { palWrap.style.display = 'none'; }
+  }
+}
+// Attach listeners once DOM ready
+(function(){
+  function bind(){
+    ['icp-page','icp-biztype','icp-market','icp-audience','icp-promo','icp-colors'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el && !el.dataset.sumBound){ el.addEventListener('input', icpUpdateSummary); el.dataset.sumBound='1'; }
+    });
+  }
+  if (document.readyState !== 'loading') bind(); else document.addEventListener('DOMContentLoaded', bind);
+})();
 function icpToggleStep1(expand){  var form = document.getElementById('icp-step1');
   var collapsed = document.getElementById('icp-step1-collapsed');
   var collapseBtn = document.getElementById('icp-step1-collapse-btn');
+  var split = document.getElementById('icp-step1-split');
+  var rightPanel = document.getElementById('icp-step1-right');
   if (!form || !collapsed) return;
   if (expand){
     form.style.display = 'block';
     collapsed.style.display = 'none';
     if (collapseBtn) collapseBtn.style.display = 'inline-flex';
+    if (split){ split.style.display = 'grid'; split.style.gridTemplateColumns = '1fr 1.15fr'; }
+    if (rightPanel) rightPanel.style.display = 'flex';
   } else {
     form.style.display = 'none';
     collapsed.style.display = 'flex';
+    if (split) split.style.display = 'none';
+    if (rightPanel) rightPanel.style.display = 'none';
     // i-update ang summary base sa client details
     var summary = document.getElementById('icp-collapsed-summary');
     if (summary){
