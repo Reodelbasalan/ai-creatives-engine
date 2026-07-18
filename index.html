@@ -2738,8 +2738,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <span style="font-size:12px;font-weight:700;color:var(--text2)">🖼 Generated Images</span>
         <span id="icp-preview-count" style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--bg3);color:var(--text3)">0 / 15</span>
       </div>
-      <div id="icp-preview-slots" style="display:grid;grid-template-columns:repeat(2,1fr);gap:11px"></div>
-      <div style="margin-top:13px;padding:12px;background:rgba(250,204,21,0.06);border:0.5px dashed rgba(250,204,21,0.3);border-radius:11px;font-size:11px;color:#c9a94a;text-align:center;line-height:1.5">Punan ang details, tapos pindutin ang <b>Generate</b> — lalabas dito ang mga image creative.</div>
+      <div id="icp-preview-slots" style="padding:34px 16px;text-align:center;border:1px dashed var(--border2);border-radius:12px;background:rgba(255,255,255,0.015)">
+        <div style="font-size:26px;opacity:0.35;margin-bottom:8px">🖼</div>
+        <div style="font-size:11.5px;color:var(--text3);line-height:1.6">Walang images pa — punan ang details sa kaliwa,<br>tapos pindutin ang <b style="color:var(--yellow)">Generate</b>.</div>
+      </div>
     </div>
 
     </div>
@@ -2941,14 +2943,8 @@ function icpSetCount(n){
 
 // ── DYNAMIC PREVIEW SLOTS (sumusunod sa 5/10/15 count) ──
 function icpRenderPreviewSlots(){
-  var wrap = document.getElementById('icp-preview-slots');
-  if (!wrap) return;
-  var n = (typeof icpState !== 'undefined' && icpState.count) ? icpState.count : 15;
-  var slot = '<div style="aspect-ratio:1;max-height:130px;background:repeating-linear-gradient(45deg,#16161a,#16161a 8px,#141418 8px,#141418 16px);border:1px dashed var(--border2);border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:20px;opacity:0.5">🖼</div>';
-  var html = '';
-  for (var i = 0; i < n; i++) html += slot;
-  wrap.innerHTML = html;
   var cnt = document.getElementById('icp-preview-count');
+  var n = (typeof icpState !== 'undefined' && icpState.count) ? icpState.count : 15;
   if (cnt) cnt.textContent = '0 / ' + n;
 }
 
