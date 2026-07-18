@@ -4469,11 +4469,18 @@ function fuSwitchTeam(team, isSync){
 
   // Ipakita lang ang fields na para sa napiling team
   document.querySelectorAll('.fu-video-field').forEach(function(el){
-    el.style.display = isImg ? 'none' : '';
+    if (isImg){ el.style.display = 'none'; }
+    else { el.style.display = el.classList.contains('fu-dd') ? 'inline-block' : ''; }
   });
   document.querySelectorAll('.fu-image-field').forEach(function(el){
     el.style.display = isImg ? '' : 'none';
   });
+
+  // I-reset ang page filter kapag lumipat sa image team
+  if (isImg){
+    var pf = document.getElementById('fu-page-filter');
+    if (pf) pf.value = '';
+  }
 
   var label = document.getElementById('fu-toggle-label');
   if (label) label.textContent = isImg ? 'Add Canva link' : 'Add creative';
