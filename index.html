@@ -2323,6 +2323,34 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     }
     .fu-input:focus { outline:none; border-color:rgba(250,204,21,0.45); background:var(--bg2,#17171b); }
     .fu-input::placeholder { color:#6a6a75; }
+    /* TEAM TABS */
+    .fu-team-tab {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 18px; border-radius:11px; font-size:12.5px; font-weight:650;
+      background:#141418; border:0.5px solid rgba(255,255,255,0.08); color:#8a8a95;
+      cursor:pointer; transition:background .18s ease, border-color .18s ease, color .18s ease;
+    }
+    .fu-team-tab:hover { border-color:rgba(255,255,255,0.18); color:#c8c8d0; }
+    .fu-team-tab.active { background:rgba(250,204,21,0.12); border-color:rgba(250,204,21,0.45); color:#facc15; }
+    .fu-team-tab.active.img { background:rgba(167,139,250,0.12); border-color:rgba(167,139,250,0.45); color:#b9a5fc; }
+    /* MODERN ROW HOVER */
+    .fu-row {
+      border:0.5px solid transparent; border-radius:11px;
+      transition:background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .fu-row:hover { background:rgba(255,255,255,0.035); border-color:rgba(250,204,21,0.22); transform:translateX(2px); }
+    .fu-row.img-row:hover { border-color:rgba(167,139,250,0.28); }
+    .fu-canva-link {
+      color:#a78bfa; font-size:11px; font-weight:600; text-decoration:none;
+      display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:7px;
+      transition:background .16s ease;
+    }
+    .fu-canva-link:hover { background:rgba(167,139,250,0.13); }
+    .fu-naming-tag {
+      display:inline-block; font-size:9px; padding:2px 9px; border-radius:20px;
+      background:rgba(167,139,250,0.12); border:0.5px solid rgba(167,139,250,0.25); color:#b9a5fc;
+      margin-top:3px;
+    }
   </style>
 
   <div style="max-width:1600px;margin:0 auto">
@@ -2352,10 +2380,22 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     </div>
 
     <!-- TOP: Add button lang -->
+    <!-- TEAM TABS -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="fu-team-tab active" id="fu-tab-video" onclick="fuSwitchTeam('video')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        Video team
+      </button>
+      <button class="fu-team-tab" id="fu-tab-image" onclick="fuSwitchTeam('image')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+        Image team
+      </button>
+    </div>
+
     <div style="margin-bottom:16px">
       <button class="yellow-btn" id="fu-toggle-btn" onclick="fuToggleForm()" style="display:inline-flex;align-items:center;gap:7px;font-weight:650">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add creative
+        <span id="fu-toggle-label">Add creative</span>
       </button>
     </div>
 
@@ -2376,7 +2416,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Project name</label>
         <input class="fu-input" id="fu-project-name" placeholder="e.g. Product Demo UGC"/>
       </div>
-      <div>
+      <div class="fu-video-field">
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Page</label>
         <div class="fu-dd" id="fu-dd-formpage" style="width:100%">
           <div class="fu-dd-btn" onclick="fuDdToggle('fu-dd-formpage')" style="width:100%;justify-content:space-between">
@@ -2390,15 +2430,31 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
         <input type="hidden" id="fu-page" value="VIRAL UGC"/>
       </div>
-      <div>
+      <div class="fu-video-field">
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Headline</label>
         <input class="fu-input" id="fu-headline" placeholder="e.g. Your hook headline here"/>
       </div>
-      <div>
+      <div class="fu-video-field">
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">File link <span style="color:#6a6a75;font-weight:400">(GDrive / video)</span></label>
         <input class="fu-input" id="fu-file-link" placeholder="https://drive.google.com/..."/>
       </div>
-      <div style="grid-column:1 / -1">
+      <div class="fu-video-field">
+        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Naming convention <span style="color:#6a6a75;font-weight:400">(optional — pili o type)</span></label>
+        <input class="fu-input" id="fu-naming" list="fu-naming-options" placeholder="e.g. Viral creatives" autocomplete="off"/>
+        <datalist id="fu-naming-options">
+          <option value="Viral creatives"></option>
+          <option value="AI University creatives"></option>
+          <option value="HCSI creatives"></option>
+          <option value="Merch creatives"></option>
+          <option value="Batik creatives"></option>
+          <option value="Client name creatives"></option>
+        </datalist>
+      </div>
+      <div class="fu-image-field" style="display:none">
+        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Canva link</label>
+        <input class="fu-input" id="fu-canva-link" placeholder="https://canva.com/design/..."/>
+      </div>
+      <div class="fu-video-field" style="grid-column:1 / -1">
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Ad copy <span style="color:#6a6a75;font-weight:400">(optional)</span></label>
         <textarea class="fu-input" id="fu-ad-copy" placeholder="Paste your ad copy here..." style="min-height:80px;resize:vertical;font-family:inherit;line-height:1.6"></textarea>
       </div>
@@ -2449,6 +2505,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div class="fu-dd-item" data-val="Published" onclick="fuDdPick('fu-dd-status','fu-status-filter','Published',this,'Published')"><span class="fu-dd-dot" style="background:#22c55e"></span>Published</div>
         </div>
       </div>
+      <button class="admin-only" id="fu-archive-btn" onclick="fuToggleArchive()" style="background:var(--bg2,#17171b);border:0.5px solid rgba(255,255,255,0.09);color:var(--text2,#c8c8d0);font-size:12.5px;font-weight:550;padding:9px 14px;border-radius:11px;cursor:pointer;transition:all .18s">📁 Archive (tracking)</button>
     </div>
 
     <!-- Hidden native selects (para gumana ang existing filter logic) -->
@@ -2458,7 +2515,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
     <!-- TABLE -->
     <div class="data-table" style="border:0.5px solid rgba(255,255,255,0.06);border-radius:14px;overflow:visible">
-      <div class="table-head" style="grid-template-columns:1.2fr 1.5fr 0.9fr 0.7fr 0.8fr 1.4fr 1.1fr 1.2fr;font-size:10px;letter-spacing:0.06em;color:#8a8a95">
+      <div class="table-head" id="fu-table-head" style="grid-template-columns:1.2fr 1.5fr 0.9fr 0.7fr 0.8fr 1.4fr 1.1fr 1.2fr;font-size:10px;letter-spacing:0.06em;color:#8a8a95">
         <span>Staff</span><span>Project name</span><span>Page</span>
         <span>Ad copy</span><span>File link</span><span>Headline</span><span>Date uploaded</span><span>Status</span>
       </div>
