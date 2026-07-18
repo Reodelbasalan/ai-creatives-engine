@@ -195,7 +195,12 @@ export default async function handler(req, res) {
       ].filter(Boolean).join(" ");
     }
 
-    const imageSize = '1024x1536'; // laging 9:16 — master at scenes dapat same ratio para tight ang face-lock
+    // Scene/avatar: laging 9:16 (1024x1536) — master at scenes dapat same ratio para tight ang face-lock.
+    // Image Creatives: gamitin ang hiniling na size (default 1024x1024 square para sa FB/IG static ads).
+    const allowedSizes = ['1024x1024', '1024x1536', '1536x1024'];
+    const imageSize = (type === 'imagecreative' && allowedSizes.indexOf(size) !== -1)
+      ? size
+      : '1024x1536';
 
     // ═══════════════════════════════════════
     // FACE LOCK (Level 2) — if an approved avatar image is provided,
