@@ -400,6 +400,8 @@ function showPage(page){
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
   const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
+  var tbCenter=document.getElementById('topbar-center');
+  if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
   if(page==='all-projects')loadAllProjects();
   if(page==='new-project')loadAssignDropdown();
   if(page==='editor-portal')loadEditorPortal();
