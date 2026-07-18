@@ -111,7 +111,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .logout-btn{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;margin-top:8px;transition:color 0.15s}
 .logout-btn:hover{color:var(--red)}
 .main-content{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:54px;border-bottom:0.5px solid var(--border);background:var(--bg);flex-shrink:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:54px;border-bottom:0.5px solid var(--border);background:var(--bg);flex-shrink:0;position:relative}
 .topbar-left{display:flex;align-items:center;gap:12px}
 .topbar-title{font-size:14px;font-weight:600;color:var(--text)}
 .pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite}
@@ -119,7 +119,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .yellow-btn{background:var(--yellow);color:#111;border:none;border-radius:var(--radius);padding:8px 16px;font-size:12.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;font-family:'Inter',sans-serif}
 .yellow-btn:hover{background:var(--yellow2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(250,204,21,0.25)}
 .yellow-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
-.content{flex:1;overflow-y:auto;padding:1.5rem}
+.content{flex:1;overflow-y:auto;padding:1.1rem 1.5rem 1.5rem}
 .page{display:none;animation:fadeIn 0.2s ease}
 .page.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -1184,6 +1184,9 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)">
           <span class="pulse-dot"></span> Live
         </div>
+      </div>
+      <div id="topbar-center" style="display:none;position:absolute;left:50%;transform:translateX(-50%);align-items:center;gap:7px;pointer-events:none">
+        <span style="font-size:14px;font-weight:700;color:var(--text);letter-spacing:-0.3px">⚡ Image Creatives — Prompt Copilot</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <div class="admin-only" style="position:relative;cursor:pointer" onclick="toggleNotifPanel()">
@@ -2491,12 +2494,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <div class="page" id="page-image-creatives">
   <div style="max-width:100%">
 
-    <!-- HEADER -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px">
-      <div>
-        <div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.4px">⚡ Image Creatives — Prompt Copilot</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:3px">AI generates ready-to-paste prompts — copy each one to ChatGPT to generate the images/designs</div>
-      </div>
+    <!-- HEADER (title moved to topbar center) -->
+    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:0.75rem;flex-wrap:wrap;gap:10px">
       <div style="display:flex;gap:8px;align-items:center">
         <div id="icp-batch-badge" style="display:none;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);border:0.5px solid rgba(250,204,21,0.3)">Batch 1</div>
         <button class="ghost-btn" onclick="icpNewBatch()" id="icp-new-batch-btn" style="display:none;font-size:12px;color:var(--purple);border-color:rgba(127,119,221,0.3)">🔄 New Batch (15 more)</button>
@@ -2504,7 +2503,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     </div>
 
 <!-- MODE TOGGLE -->
-<div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap">
+<div style="display:flex;gap:10px;margin-bottom:0.85rem;flex-wrap:wrap">
   <button class="ghost-btn" id="icp-mode-ads-btn" onclick="icpSwitchMode('ads')" style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;padding:9px 16px;background:rgba(250,204,21,0.12);color:#facc15;border:1px solid rgba(250,204,21,0.5);border-radius:10px">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
     Ad Creatives
@@ -2737,14 +2736,9 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
         <span style="font-size:12px;font-weight:700;color:var(--text2)">🖼 Generated Images</span>
-        <span style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--bg3);color:var(--text3)">0 done</span>
+        <span id="icp-preview-count" style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--bg3);color:var(--text3)">0 / 15</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div style="aspect-ratio:1;background:repeating-linear-gradient(45deg,#16161a,#16161a 8px,#141418 8px,#141418 16px);border:1px dashed var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:24px;opacity:0.5">🖼</div>
-        <div style="aspect-ratio:1;background:repeating-linear-gradient(45deg,#16161a,#16161a 8px,#141418 8px,#141418 16px);border:1px dashed var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:24px;opacity:0.5">🖼</div>
-        <div style="aspect-ratio:1;background:repeating-linear-gradient(45deg,#16161a,#16161a 8px,#141418 8px,#141418 16px);border:1px dashed var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:24px;opacity:0.5">🖼</div>
-        <div style="aspect-ratio:1;background:repeating-linear-gradient(45deg,#16161a,#16161a 8px,#141418 8px,#141418 16px);border:1px dashed var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:24px;opacity:0.5">🖼</div>
-      </div>
+      <div id="icp-preview-slots" style="display:grid;grid-template-columns:repeat(2,1fr);gap:11px"></div>
       <div style="margin-top:13px;padding:12px;background:rgba(250,204,21,0.06);border:0.5px dashed rgba(250,204,21,0.3);border-radius:11px;font-size:11px;color:#c9a94a;text-align:center;line-height:1.5">Punan ang details, tapos pindutin ang <b>Generate</b> — lalabas dito ang mga image creative.</div>
     </div>
 
@@ -2942,6 +2936,20 @@ function icpSetCount(n){
   });
   var btn = document.getElementById('icp-gen-btn');
   if (btn && !btn.disabled) btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Generate ' + n + ' Strategies';
+  if (typeof icpRenderPreviewSlots === 'function') icpRenderPreviewSlots();
+}
+
+// ── DYNAMIC PREVIEW SLOTS (sumusunod sa 5/10/15 count) ──
+function icpRenderPreviewSlots(){
+  var wrap = document.getElementById('icp-preview-slots');
+  if (!wrap) return;
+  var n = (typeof icpState !== 'undefined' && icpState.count) ? icpState.count : 15;
+  var slot = '<div style="aspect-ratio:1;max-height:130px;background:repeating-linear-gradient(45deg,#16161a,#16161a 8px,#141418 8px,#141418 16px);border:1px dashed var(--border2);border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:20px;opacity:0.5">🖼</div>';
+  var html = '';
+  for (var i = 0; i < n; i++) html += slot;
+  wrap.innerHTML = html;
+  var cnt = document.getElementById('icp-preview-count');
+  if (cnt) cnt.textContent = '0 / ' + n;
 }
 
 // ── LIVE BRAND SUMMARY (Step 1 right panel) ──
@@ -2996,6 +3004,7 @@ function icpUpdateSummary(){
       var el = document.getElementById(id);
       if (el && !el.dataset.sumBound){ el.addEventListener('input', icpUpdateSummary); el.dataset.sumBound='1'; }
     });
+    if (typeof icpRenderPreviewSlots === 'function') icpRenderPreviewSlots();
   }
   if (document.readyState !== 'loading') bind(); else document.addEventListener('DOMContentLoaded', bind);
 })();
