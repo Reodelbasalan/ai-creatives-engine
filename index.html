@@ -3143,13 +3143,73 @@ function icpRemoveGalleryLoading(idx){
 function icpUpdateGalleryImage(idx, url){
   var cell = document.getElementById('icp-img-' + idx);
   if (!cell){ icpAddGalleryLoading(idx); cell = document.getElementById('icp-img-' + idx); }
-  cell.style.cssText = 'aspect-ratio:1;background:#1a1a1f;border-radius:11px;position:relative;overflow:hidden;border:0.5px solid rgba(255,255,255,0.06);cursor:pointer';
-  cell.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover" onclick="window.open(\'' + url + '\',\'_blank\')"/>'
+  cell.style.cssText = 'aspect-ratio:1;background:#0e0e11;border-radius:11px;position:relative;overflow:hidden;border:0.5px solid rgba(255,255,255,0.06);cursor:pointer';
+  cell.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:contain;background:#0e0e11" onclick="icpOpenLightbox(' + idx + ')"/>'
     + '<a href="' + url + '" download="creative-' + (idx+1) + '.png" onclick="event.stopPropagation()" style="position:absolute;bottom:6px;right:6px;padding:4px 6px;background:rgba(0,0,0,0.65);border:0.5px solid rgba(255,255,255,0.12);border-radius:6px;color:var(--yellow);font-size:10px;text-decoration:none"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>';
   // update count
   var countEl = document.getElementById('icp-gallery-count');
   if (countEl) countEl.textContent = icpGenState.images.length + ' done';
 }
+// ── FULLSCREEN LIGHTBOX VIEWER ──
+var icpLightboxIdx = 0;
+function icpOpenLightbox(idx){
+  icpLightboxIdx = idx;
+  var lb = document.getElementById('icp-lightbox');
+  if (!lb){
+    lb = document.createElement('div');
+    lb.id = 'icp-lightbox';
+    lb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:99999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)';
+    lb.onclick = function(e){ if (e.target === lb) icpCloseLightbox(); };
+    lb.innerHTML =
+      '<button onclick="icpCloseLightbox()" style="position:absolute;top:18px;right:22px;background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.15);color:#fff;width:38px;height:38px;border-radius:50%;font-size:20px;cursor:pointer;line-height:1">×</button>' +
+      '<button onclick="icpLightboxNav(-1)" style="position:absolute;left:22px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.15);color:#fff;width:44px;height:44px;border-radius:50%;font-size:22px;cursor:pointer;line-height:1">‹</button>' +
+      '<button onclick="icpLightboxNav(1)" style="position:absolute;right:22px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.15);color:#fff;width:44px;height:44px;border-radius:50%;font-size:22px;cursor:pointer;line-height:1">›</button>' +
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:14px;max-height:92vh">' +
+        '<img id="icp-lightbox-img" style="max-width:88vw;max-height:78vh;object-fit:contain;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.6)"/>' +
+        '<div style="display:flex;align-items:center;gap:12px">' +
+          '<span id="icp-lightbox-label" style="font-size:12px;color:rgba(255,255,255,0.6)"></span>' +
+          '<a id="icp-lightbox-dl" download="creative.png" style="font-size:12px;font-weight:700;padding:9px 18px;border-radius:9px;background:#FACC15;color:#111;text-decoration:none;cursor:pointer">⬇ Download</a>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(lb);
+    document.addEventListener('keydown', function(e){
+      var open = document.getElementById('icp-lightbox');
+      if (!open || open.style.display === 'none') return;
+      if (e.key === 'Escape') icpCloseLightbox();
+      else if (e.key === 'ArrowLeft') icpLightboxNav(-1);
+      else if (e.key === 'ArrowRight') icpLightboxNav(1);
+    });
+  }
+  lb.style.display = 'flex';
+  icpRenderLightbox();
+}
+function icpRenderLightbox(){
+  var imgs = (typeof icpGenState !== 'undefined' && icpGenState.images) ? icpGenState.images : [];
+  var found = null;
+  for (var i = 0; i < imgs.length; i++){ if (imgs[i].idx === icpLightboxIdx){ found = imgs[i]; break; } }
+  if (!found && imgs.length) found = imgs[0];
+  if (!found) return;
+  var el = document.getElementById('icp-lightbox-img');
+  var dl = document.getElementById('icp-lightbox-dl');
+  var lbl = document.getElementById('icp-lightbox-label');
+  if (el) el.src = found.url;
+  if (dl){ dl.href = found.url; dl.download = 'creative-' + (found.idx + 1) + '.png'; }
+  if (lbl) lbl.textContent = 'Creative #' + (found.idx + 1) + ' of ' + imgs.length;
+}
+function icpLightboxNav(dir){
+  var imgs = (typeof icpGenState !== 'undefined' && icpGenState.images) ? icpGenState.images : [];
+  if (!imgs.length) return;
+  var pos = 0;
+  for (var i = 0; i < imgs.length; i++){ if (imgs[i].idx === icpLightboxIdx){ pos = i; break; } }
+  pos = (pos + dir + imgs.length) % imgs.length;
+  icpLightboxIdx = imgs[pos].idx;
+  icpRenderLightbox();
+}
+function icpCloseLightbox(){
+  var lb = document.getElementById('icp-lightbox');
+  if (lb) lb.style.display = 'none';
+}
+
 function icpUpdateProgress(){
   var total = (icpState.strategies||[]).length;
   var done = icpGenState.images.length;
@@ -3306,7 +3366,7 @@ function icpRenderCards() {
       +   '<div style="font-size:10px;color:var(--green);margin-top:3px">🛡️ ' + (s.safety || '') + '</div>'
       + '</div>'
       + '<div style="display:flex;flex-direction:column;gap:6px;min-width:130px">'
-      +   '<button class="primary-btn" onclick="icpCopyPrompt(' + i + ')" id="icp-copy-' + i + '" style="font-size:11px;padding:7px 12px">📋 Copy Prompt</button>'
+      +   '<button class="yellow-btn" onclick="icpCopyPrompt(' + i + ')" id="icp-copy-' + i + '" style="font-size:11px;padding:7px 12px;box-shadow:0 2px 8px rgba(250,204,21,0.2)">📋 Copy Prompt</button>'
       +   '<button class="ghost-btn" onclick="icpToggleDetails(' + i + ')" style="font-size:11px;padding:6px 12px">👁️ View Prompt</button>'
       +   '<button class="ghost-btn" onclick="icpMarkDone(' + i + ')" id="icp-done-' + i + '" style="font-size:11px;padding:6px 12px;color:var(--green);border-color:rgba(34,197,94,0.3)">✓ Mark Done</button>'
       + '</div>'
@@ -3513,7 +3573,7 @@ function dsgRenderCards() {
       +   '<div style="font-size:10px;color:var(--green);margin-top:3px">✅ ' + (s.safety || '') + '</div>'
       + '</div>'
       + '<div style="display:flex;flex-direction:column;gap:6px;min-width:130px">'
-      +   '<button class="primary-btn" onclick="dsgCopyPrompt(' + i + ')" id="dsg-copy-' + i + '" style="font-size:11px;padding:7px 12px">📋 Copy Prompt</button>'
+      +   '<button class="yellow-btn" onclick="dsgCopyPrompt(' + i + ')" id="dsg-copy-' + i + '" style="font-size:11px;padding:7px 12px;box-shadow:0 2px 8px rgba(250,204,21,0.2)">📋 Copy Prompt</button>'
       +   '<button class="ghost-btn" onclick="dsgToggleDetails(' + i + ')" style="font-size:11px;padding:6px 12px">👁️ View Prompt</button>'
       +   '<button class="ghost-btn" onclick="dsgMarkDone(' + i + ')" id="dsg-done-' + i + '" style="font-size:11px;padding:6px 12px;color:var(--green);border-color:rgba(34,197,94,0.3)">✓ Mark Done</button>'
       + '</div>'
