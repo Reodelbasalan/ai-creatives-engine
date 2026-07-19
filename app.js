@@ -4728,6 +4728,10 @@ document.addEventListener('click', function(e){
 async function fuAddCreative(){
   var projectName = document.getElementById('fu-project-name')?.value?.trim();
   if (!projectName){ showNotif('Project name required', 'error'); return; }
+  var customPage = document.getElementById('fu-page-custom');
+  if (customPage && customPage.style.display !== 'none' && !customPage.value.trim()){
+    showNotif('Type the custom page name', 'error'); return;
+  }
   var btn = document.getElementById('fu-add-btn');
   if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Adding...'; }
 
@@ -4760,6 +4764,8 @@ async function fuAddCreative(){
 
   fuResetTags();
   fuResetCategory();
+  var cp = document.getElementById('fu-page-custom');
+  if (cp){ cp.style.display = 'none'; cp.value = ''; }
   ['fu-project-name','fu-ad-copy','fu-file-link','fu-headline','fu-client-name'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
@@ -4820,6 +4826,8 @@ function fuFormPagePick(page, color, itemEl){
   var dd = document.getElementById('fu-dd-formpage');
   var hidden = document.getElementById('fu-page');
   var dot = document.getElementById('fu-formpage-dot');
+  var custom = document.getElementById('fu-page-custom');
+  if (custom){ custom.style.display = 'none'; custom.value = ''; }
   if (dd){
     var lbl = dd.querySelector('[data-label]');
     if (lbl) lbl.textContent = page;
@@ -4829,4 +4837,22 @@ function fuFormPagePick(page, color, itemEl){
   }
   if (hidden) hidden.value = page;
   if (dot) dot.style.background = color;
+}
+
+// Custom page — pwedeng mag-type ng ibang page, hindi nase-save sa listahan
+function fuFormPageCustom(itemEl){
+  var dd = document.getElementById('fu-dd-formpage');
+  var hidden = document.getElementById('fu-page');
+  var dot = document.getElementById('fu-formpage-dot');
+  var custom = document.getElementById('fu-page-custom');
+  if (dd){
+    var lbl = dd.querySelector('[data-label]');
+    if (lbl) lbl.textContent = 'Custom page';
+    dd.querySelectorAll('.fu-dd-item').forEach(function(x){ x.classList.remove('active'); });
+    if (itemEl) itemEl.classList.add('active');
+    dd.classList.remove('open');
+  }
+  if (dot) dot.style.background = 'rgba(255,255,255,0.25)';
+  if (hidden) hidden.value = '';
+  if (custom){ custom.style.display = 'block'; custom.focus(); }
 }
