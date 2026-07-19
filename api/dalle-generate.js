@@ -28,7 +28,11 @@ export default async function handler(req, res) {
       productClean = '';
     }
 
-    const openaiKey = process.env.OPENAI_API_KEY;
+    // BYOK: kung may sariling key ang user (naka-connect sa Settings), yun ang gagamitin
+    // at sila ang sisingilin ng OpenAI. Kung wala, ang key ng agency ang gagamitin.
+    const openaiKey = (req.body.userApiKey && req.body.userApiKey.trim())
+      ? req.body.userApiKey.trim()
+      : process.env.OPENAI_API_KEY;
     if (!openaiKey) return res.status(500).json({ error: 'OPENAI_API_KEY not set' });
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
