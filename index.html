@@ -2333,6 +2333,47 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     .fu-team-tab:hover { border-color:rgba(255,255,255,0.18); color:#c8c8d0; }
     .fu-team-tab.active { background:rgba(250,204,21,0.12); border-color:rgba(250,204,21,0.45); color:#facc15; }
     .fu-team-tab.active.img { background:rgba(167,139,250,0.12); border-color:rgba(167,139,250,0.45); color:#b9a5fc; }
+    /* MINIMAL BRIEF INPUT (ChatGPT-style) */
+    .icp-brief-box {
+      background:#131316; border:0.5px solid rgba(255,255,255,0.07);
+      border-radius:16px; padding:16px; transition:border-color .2s ease;
+    }
+    .icp-brief-box:focus-within { border-color:rgba(250,204,21,0.35); }
+    .icp-brief-ta {
+      width:100%; background:transparent; border:none; color:#f2f2f5;
+      font-size:13px; line-height:1.75; font-family:inherit; resize:vertical;
+      outline:none; min-height:170px; box-sizing:border-box; padding:0;
+    }
+    .icp-brief-ta::placeholder { color:#5a5a65; }
+    .icp-brief-tools {
+      display:flex; align-items:center; gap:8px; margin-top:12px;
+      padding-top:12px; border-top:0.5px solid rgba(255,255,255,0.06); flex-wrap:wrap;
+    }
+    .icp-tool {
+      display:inline-flex; align-items:center; gap:6px; padding:7px 12px;
+      border-radius:9px; font-size:11.5px; font-weight:600;
+      background:rgba(255,255,255,0.04); border:0.5px solid rgba(255,255,255,0.07);
+      color:#9a9aa5; cursor:pointer;
+      transition:background .16s ease, color .16s ease, border-color .16s ease;
+    }
+    .icp-tool:hover { background:rgba(250,204,21,0.08); border-color:rgba(250,204,21,0.3); color:#facc15; }
+    .icp-note-ta {
+      width:100%; background:#131316; border:0.5px solid rgba(255,255,255,0.07);
+      border-radius:12px; padding:12px 14px; color:#f2f2f5; font-size:12.5px;
+      font-family:inherit; outline:none; box-sizing:border-box; min-height:62px;
+      resize:vertical; transition:border-color .18s ease;
+    }
+    .icp-note-ta:focus { border-color:rgba(167,139,250,0.4); }
+    .icp-note-ta::placeholder { color:#5a5a65; }
+    .icp-thumb { position:relative; width:52px; height:52px; border-radius:10px; overflow:hidden; border:0.5px solid rgba(255,255,255,0.09); }
+    .icp-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .icp-thumb-x {
+      position:absolute; top:-5px; right:-5px; width:18px; height:18px; border-radius:50%;
+      background:#2a2a33; border:0.5px solid rgba(255,255,255,0.15); color:#c8c8d0;
+      font-size:10px; display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition:background .15s ease, color .15s ease;
+    }
+    .icp-thumb-x:hover { background:#ef4444; color:#fff; }
     /* MODERN ROW HOVER */
     .fu-row {
       border:0.5px solid transparent; border-radius:11px;
@@ -2713,52 +2754,35 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           Minimize
         </button>
       </div>
-      <div class="form-grid" style="gap:10px">
-        <div class="form-field">
-          <label class="form-label">Facebook Page Name</label>
-          <input class="form-input" id="icp-page" placeholder="e.g. Cosmetic Cocoon PH"/>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Type of Business</label>
-          <input class="form-input" id="icp-biztype" placeholder="e.g. Beauty & Aesthetics Clinic"/>
-        </div>
-        <div class="form-field full">
-          <label class="form-label">Offer / Services</label>
-          <textarea class="form-textarea" id="icp-offer" placeholder="List the offers and services to promote" style="min-height:60px"></textarea>
-        </div>
-        <div class="form-field full">
-          <label class="form-label">Business Details</label>
-          <textarea class="form-textarea" id="icp-details" placeholder="Location, branches, what makes this business different, inclusions, trust signals..." style="min-height:70px"></textarea>
-        </div>
-        <div class="form-field">
-          <label class="form-label">I WANT TO MARKET THE...</label>
-          <input class="form-input" id="icp-market" placeholder="e.g. Underarm whitening package promo"/>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Target Audience / Persona <span style="font-size:10px;color:var(--text3)">(optional — AI can decide)</span></label>
-          <input class="form-input" id="icp-audience" placeholder="e.g. Women 25-45, Metro Manila"/>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Brand Colors / Palette <span style="font-size:10px;color:var(--text3)">(optional)</span></label>
-          <input class="form-input" id="icp-colors" placeholder="e.g. Rose gold, white, soft pink"/>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Promo / Freebies / Price <span style="font-size:10px;color:var(--text3)">(optional)</span></label>
-          <input class="form-input" id="icp-promo" placeholder="e.g. Free consultation + 50% off first session"/>
-        </div>
-        <div class="form-field full">
-          <label class="form-label">Website <span style="font-size:10px;color:var(--text3)">(optional — AI will read it para alam nya yung totoong services at details)</span></label>
-          <input class="form-input" id="icp-website" placeholder="https://..."/>
-        </div>
-        <div class="form-field full">
-          <label class="form-label">Reference Photos <span style="font-size:10px;color:var(--text3)">(optional, max 4 — product shots, model/looks, branding, clinic photos — para hindi mag-hallucinate si AI)</span></label>
+      <!-- MINIMAL BRIEF INPUT (ChatGPT-style) -->
+      <div class="icp-brief-box">
+        <textarea class="icp-brief-ta" id="icp-brief" placeholder="I-paste dito ang lahat ng detalye ng client...&#10;&#10;Halimbawa:&#10;Lumina Skin PH — skincare brand sa Manila. Niacinamide Brightening Serum, P499 Buy 1 Take 1 promo. Dermatologist-tested, non-sticky, safe sa sensitive skin. Target: working women 25-40 sa Metro Manila, budget-conscious. Colors: soft peach, cream, rose gold. FREE shipping nationwide, trusted na ng 5,000+ customers."></textarea>
+
+        <div class="icp-brief-tools">
           <input type="file" id="icp-photos" accept="image/*" multiple onchange="icpHandlePhotos(event)" style="display:none"/>
-          <div onclick="document.getElementById('icp-photos').click()" style="border:1px dashed var(--border2);border-radius:var(--radius);padding:16px;text-align:center;cursor:pointer;font-size:12px;color:var(--text3)" id="icp-photo-drop">
-            📸 Click to upload client photos (product / model / branding)
-          </div>
-          <div id="icp-photo-previews" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"></div>
+          <button type="button" class="icp-tool" onclick="document.getElementById('icp-photos').click()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Add images
+          </button>
+          <button type="button" class="icp-tool" onclick="icpToggleWebsite()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+            Website
+          </button>
+          <span style="margin-left:auto;font-size:10.5px;color:#5a5a65">Optional — mas detalyado, mas maganda ang output</span>
         </div>
+
+        <div id="icp-website-wrap" style="display:none;margin-top:11px">
+          <input class="form-input" id="icp-website" placeholder="https://..." style="font-size:12.5px"/>
+        </div>
+
+        <div id="icp-photo-previews" style="display:flex;gap:9px;margin-top:12px;flex-wrap:wrap"></div>
       </div>
+
+      <div style="margin-top:14px">
+        <label class="form-label" style="margin-bottom:7px;display:block">Notes para kay AI <span style="font-size:10px;color:var(--text3)">(optional)</span></label>
+        <textarea class="icp-note-ta" id="icp-notes" placeholder="e.g. Huwag banggitin ang whitening. Focus sa hydration. Gamitin ang Taglish."></textarea>
+      </div>
+
       <div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:9px">
           <span style="font-size:12px;font-weight:600;color:var(--text2)">Concepts:</span>
@@ -3021,29 +3045,44 @@ function icpParseColors(str){
   return found;
 }
 function icpUpdateSummary(){
-  var page = (document.getElementById('icp-page')||{}).value || '';
-  var biz  = (document.getElementById('icp-biztype')||{}).value || '';
-  var market = (document.getElementById('icp-market')||{}).value || '';
-  var audience = (document.getElementById('icp-audience')||{}).value || '';
-  var promo = (document.getElementById('icp-promo')||{}).value || '';
-  var colors = (document.getElementById('icp-colors')||{}).value || '';
+  var brief = (document.getElementById('icp-brief')||{}).value || '';
+  var notes = (document.getElementById('icp-notes')||{}).value || '';
   var chipsWrap = document.getElementById('icp-summary-chips');
   if (!chipsWrap) return;
-  var chips = [];
-  if (page)     chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(167,139,250,0.14);color:#b9a5fc;border:0.5px solid rgba(167,139,250,0.3)">🏷 '+icpEscape(page)+'</span>');
-  if (biz)      chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(34,197,94,0.12);color:#4ade80;border:0.5px solid rgba(34,197,94,0.3)">💼 '+icpEscape(biz)+'</span>');
-  if (market)   chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(250,204,21,0.12);color:#FACC15;border:0.5px solid rgba(250,204,21,0.3)">🎯 '+icpEscape(market)+'</span>');
-  if (audience) chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(59,130,246,0.12);color:#60a5fa;border:0.5px solid rgba(59,130,246,0.3)">👥 '+icpEscape(audience)+'</span>');
-  if (promo)    chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(236,72,153,0.12);color:#f472b6;border:0.5px solid rgba(236,72,153,0.3)">🎁 '+icpEscape(promo)+'</span>');
-  if (chips.length === 0){
-    chipsWrap.innerHTML = '<span style="font-size:11px;color:var(--text3)">Punan ang details sa kaliwa — mag-a-update dito habang nagta-type ka.</span>';
-  } else {
-    chipsWrap.innerHTML = chips.join('');
+
+  if (!brief.trim()){
+    chipsWrap.innerHTML = '<span style="font-size:11px;color:var(--text3)">I-paste ang client brief sa kaliwa — mag-a-update dito habang nagta-type ka.</span>';
+    var pw0 = document.getElementById('icp-summary-palette-wrap');
+    if (pw0) pw0.style.display = 'none';
+    return;
   }
-  // palette
+
+  var chips = [];
+  var words = brief.trim().split(/\s+/).length;
+  chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(167,139,250,0.14);color:#b9a5fc;border:0.5px solid rgba(167,139,250,0.3)">' + words + ' words</span>');
+
+  // Unang linya o unang pangungusap = malamang pangalan ng brand
+  var firstLine = brief.trim().split(/[\n.]/)[0].trim();
+  if (firstLine && firstLine.length <= 70){
+    chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(250,204,21,0.12);color:#FACC15;border:0.5px solid rgba(250,204,21,0.3)">' + icpEscape(firstLine) + '</span>');
+  }
+
+  if (icpPhotos && icpPhotos.length){
+    chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(59,130,246,0.12);color:#60a5fa;border:0.5px solid rgba(59,130,246,0.3)">' + icpPhotos.length + ' reference image' + (icpPhotos.length>1?'s':'') + '</span>');
+  }
+  if (notes.trim()){
+    chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(236,72,153,0.12);color:#f472b6;border:0.5px solid rgba(236,72,153,0.3)">May notes kay AI</span>');
+  }
+  var web = (document.getElementById('icp-website')||{}).value || '';
+  if (web.trim()){
+    chips.push('<span style="font-size:11px;padding:5px 11px;border-radius:20px;background:rgba(34,197,94,0.12);color:#4ade80;border:0.5px solid rgba(34,197,94,0.3)">Website</span>');
+  }
+  chipsWrap.innerHTML = chips.join('');
+
+  // Palette — hahanapin ang mga kulay sa loob ng brief
   var palWrap = document.getElementById('icp-summary-palette-wrap');
   var pal = document.getElementById('icp-summary-palette');
-  var swatches = icpParseColors(colors);
+  var swatches = icpParseColors(brief);
   if (palWrap && pal){
     if (swatches.length){
       pal.innerHTML = swatches.map(function(s){ return '<div title="'+icpEscape(s.name)+'" style="width:34px;height:34px;border-radius:8px;background:'+s.hex+';border:0.5px solid var(--border2)"></div>'; }).join('');
@@ -3054,7 +3093,7 @@ function icpUpdateSummary(){
 // Attach listeners once DOM ready
 (function(){
   function bind(){
-    ['icp-page','icp-biztype','icp-market','icp-audience','icp-promo','icp-colors'].forEach(function(id){
+    ['icp-brief','icp-notes','icp-website'].forEach(function(id){
       var el = document.getElementById(id);
       if (el && !el.dataset.sumBound){ el.addEventListener('input', icpUpdateSummary); el.dataset.sumBound='1'; }
     });
@@ -3079,14 +3118,13 @@ function icpToggleStep1(expand){  var form = document.getElementById('icp-step1'
     collapsed.style.display = 'flex';
     if (split) split.style.display = 'none';
     if (rightPanel) rightPanel.style.display = 'none';
-    // i-update ang summary base sa client details
+    // i-update ang summary base sa brief
     var summary = document.getElementById('icp-collapsed-summary');
     if (summary){
-      var pageName = (document.getElementById('icp-page')||{}).value || '';
-      var biztype = (document.getElementById('icp-biztype')||{}).value || '';
+      var brief = (document.getElementById('icp-brief')||{}).value || '';
+      var firstLine = brief.trim().split(/[\n.]/)[0].trim();
       var parts = [];
-      if (pageName) parts.push(pageName);
-      if (biztype) parts.push(biztype);
+      if (firstLine) parts.push(firstLine.length > 60 ? firstLine.slice(0,60) + '...' : firstLine);
       parts.push((icpState.count||15) + ' concepts');
       summary.textContent = parts.join(' · ');
     }
@@ -3163,7 +3201,7 @@ async function icpGenerateOneImage(idx){
         model: 'gpt-image-1-mini',
         size: '1024x1024',
         sceneIndex: idx,
-        clientName: (document.getElementById('icp-page')||{}).value || 'client'
+        clientName: (((document.getElementById('icp-brief')||{}).value||'').trim().split(/[\n.]/)[0] || 'client').slice(0,40)
       })
     });
     var data = await res.json();
@@ -3296,20 +3334,46 @@ function icpDownloadAll(){
 }
 
 function icpGetDetails() {
+  var brief = (document.getElementById('icp-brief')||{}).value || '';
+  var notes = (document.getElementById('icp-notes')||{}).value || '';
+  var website = (document.getElementById('icp-website')||{}).value || '';
   return {
-    pageName: document.getElementById('icp-page').value.trim(),
-    businessType: document.getElementById('icp-biztype').value.trim(),
-    offer: document.getElementById('icp-offer').value.trim(),
-    businessDetails: document.getElementById('icp-details').value.trim(),
-    marketFocus: document.getElementById('icp-market').value.trim(),
-    audience: document.getElementById('icp-audience').value.trim(),
-    brandColors: document.getElementById('icp-colors').value.trim(),
-    promo: document.getElementById('icp-promo').value.trim(),
-    website: document.getElementById('icp-website').value.trim()
+    brief: brief.trim(),
+    notes: notes.trim(),
+    website: website.trim(),
+    // Para sa backward compatibility ng backend — ang buong brief ang ipapasa
+    pageName: '',
+    businessType: '',
+    offer: brief.trim(),
+    businessDetails: brief.trim(),
+    marketFocus: '',
+    audience: '',
+    brandColors: '',
+    promo: ''
   };
 }
 
+// Ipakita/itago ang website field
+function icpToggleWebsite(){
+  var w = document.getElementById('icp-website-wrap');
+  if (!w) return;
+  var showing = w.style.display !== 'none';
+  w.style.display = showing ? 'none' : 'block';
+  if (!showing) document.getElementById('icp-website')?.focus();
+}
+
 var icpPhotos = [];
+
+// Tanggalin ang isang reference photo
+function icpRemovePhoto(x){
+  var wrap = x.parentElement;
+  var previews = document.getElementById('icp-photo-previews');
+  if (!wrap || !previews) return;
+  var idx = Array.prototype.indexOf.call(previews.children, wrap);
+  if (idx > -1) icpPhotos.splice(idx, 1);
+  wrap.remove();
+  if (typeof icpUpdateSummary === 'function') icpUpdateSummary();
+}
 
 function icpHandlePhotos(e) {
   var files = Array.from(e.target.files).slice(0, 4);
@@ -3329,11 +3393,11 @@ function icpHandlePhotos(e) {
         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
         var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
         icpPhotos.push({ media_type: 'image/jpeg', data: dataUrl.split(',')[1] });
-        var thumb = document.createElement('img');
-        thumb.src = dataUrl;
-        thumb.style.cssText = 'width:64px;height:64px;object-fit:cover;border-radius:8px;border:0.5px solid var(--border2)';
-        previews.appendChild(thumb);
-        document.getElementById('icp-photo-drop').innerHTML = '📸 ' + icpPhotos.length + ' photo(s) attached — click to change';
+        var wrap = document.createElement('div');
+        wrap.className = 'icp-thumb';
+        wrap.innerHTML = '<img src="' + dataUrl + '"/><span class="icp-thumb-x" onclick="icpRemovePhoto(this)">&times;</span>';
+        previews.appendChild(wrap);
+        if (typeof icpUpdateSummary === 'function') icpUpdateSummary();
       };
       img.src = ev.target.result;
     };
@@ -3343,7 +3407,7 @@ function icpHandlePhotos(e) {
 
 async function icpGenerate(isNewBatch) {
   var d = isNewBatch ? icpState.clientDetails : icpGetDetails();
-  if (!d || !d.pageName || !d.offer) { showNotif('Fill in Page Name and Offer/Services first!', 'error'); return; }
+  if (!d || !d.brief || d.brief.length < 20) { showNotif('I-paste muna ang client details sa brief box!', 'error'); return; }
   if (!isNewBatch) { icpState.batchNumber = 1; icpState.usedNames = []; }
   icpState.clientDetails = d;
 
@@ -3357,7 +3421,7 @@ async function icpGenerate(isNewBatch) {
     var res = await fetch('/api/ic-strategies', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.assign({}, d, { batchNumber: icpState.batchNumber, usedNames: icpState.usedNames, images: icpPhotos, count: icpState.count || 15 }))
+      body: JSON.stringify(Object.assign({}, d, { brief: d.brief, notes: d.notes, batchNumber: icpState.batchNumber, usedNames: icpState.usedNames, images: icpPhotos, count: icpState.count || 15 }))
     });
     var data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -3376,7 +3440,7 @@ async function icpGenerate(isNewBatch) {
     document.getElementById('icp-new-batch-btn').style.display = 'inline-block';
     status.textContent = '';
     showNotif((icpState.count||15) + ' strategies ready! ✓ Auto-generating images...', 'success');
-    if (typeof logActivity === 'function') logActivity('IC_STRATEGIES_GENERATED', 'Batch ' + icpState.batchNumber + ' — ' + d.pageName);
+    if (typeof logActivity === 'function') logActivity('IC_STRATEGIES_GENERATED', 'Batch ' + icpState.batchNumber + ' — ' + (d.brief||'').slice(0,50));
     document.getElementById('icp-step2').scrollIntoView({ behavior: 'smooth' });
 
     // AUTO-FLOW: agad mag-generate ng images pagkatapos ng prompts — hindi na
