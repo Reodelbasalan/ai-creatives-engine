@@ -2475,9 +2475,11 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div class="fu-dd-item" onclick="fuFormPagePick('MERCH CREATIVES','#4ade80',this)"><span class="fu-dd-dot" style="background:#4ade80"></span>MERCH CREATIVES</div>
             <div class="fu-dd-item" onclick="fuFormPagePick('BATIK MALONG','#f472b6',this)"><span class="fu-dd-dot" style="background:#f472b6"></span>BATIK MALONG</div>
             <div class="fu-dd-item" onclick="fuFormPagePick('BATIK BAG','#fb923c',this)"><span class="fu-dd-dot" style="background:#fb923c"></span>BATIK BAG</div>
+            <div class="fu-dd-item" onclick="fuFormPageCustom(this)" style="border-top:0.5px solid rgba(255,255,255,0.07);margin-top:4px;padding-top:9px"><span class="fu-dd-dot" style="background:rgba(255,255,255,0.25)"></span>Custom page…</div>
           </div>
         </div>
         <input type="hidden" id="fu-page" value="VIRAL UGC"/>
+        <input class="fu-input" id="fu-page-custom" placeholder="Type the page name" style="display:none;margin-top:8px" oninput="document.getElementById('fu-page').value=this.value.trim()"/>
       </div>
       <div>
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Headline</label>
