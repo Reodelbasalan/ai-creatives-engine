@@ -4677,12 +4677,12 @@ function fuToggleArchive(){
       btn.style.background = 'rgba(250,204,21,0.16)';
       btn.style.color = 'var(--yellow)';
       btn.style.borderColor = 'rgba(250,204,21,0.45)';
-      btn.innerHTML = '📁 Viewing Archive — back to Active';
+      btn.innerHTML = "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' style='vertical-align:-2px;margin-right:6px'><rect x='2' y='4' width='20' height='5' rx='1'/><path d='M4 9v9a2 2 0 002 2h12a2 2 0 002-2V9'/><line x1='10' y1='13' x2='14' y2='13'/></svg>Viewing Archive — back to Active";
     } else {
       btn.style.background = 'var(--bg2,#17171b)';
       btn.style.color = 'var(--text2,#c8c8d0)';
       btn.style.borderColor = 'rgba(255,255,255,0.09)';
-      btn.innerHTML = '📁 Archive (tracking)';
+      btn.innerHTML = "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' style='vertical-align:-2px;margin-right:6px'><rect x='2' y='4' width='20' height='5' rx='1'/><path d='M4 9v9a2 2 0 002 2h12a2 2 0 002-2V9'/><line x1='10' y1='13' x2='14' y2='13'/></svg>Archive (tracking)";
     }
   }
   filterForUpload();
