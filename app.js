@@ -4759,6 +4759,7 @@ async function fuAddCreative(){
   if (typeof logActivity === 'function') logActivity('CREATIVE_ADDED', projectName);
 
   fuResetTags();
+  fuResetCategory();
   ['fu-project-name','fu-ad-copy','fu-file-link','fu-headline','fu-client-name'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
@@ -4783,9 +4784,25 @@ function fuFormCatPick(cat, color, itemEl){
     if (itemEl) itemEl.classList.add('active');
     dd.classList.remove('open');
   }
-  if (lbl) lbl.textContent = cat;
+  if (lbl) lbl.textContent = cat || 'None';
   if (hidden) hidden.value = cat;
   if (dot) dot.style.background = color;
+}
+
+// I-reset ang category dropdown pabalik sa None
+function fuResetCategory(){
+  var dd = document.getElementById('fu-dd-formcat');
+  if (dd){
+    dd.querySelectorAll('.fu-dd-item').forEach(function(x, i){
+      x.classList.toggle('active', i === 0);
+    });
+  }
+  var lbl = document.getElementById('fu-formcat-label');
+  var dot = document.getElementById('fu-formcat-dot');
+  var hidden = document.getElementById('fu-category');
+  if (lbl) lbl.textContent = 'None';
+  if (dot) dot.style.background = 'rgba(255,255,255,0.18)';
+  if (hidden) hidden.value = '';
 }
 
 function fuCatBadge(cat){
