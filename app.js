@@ -4331,7 +4331,7 @@ function newICBatch() {
 // PALITAN ang buong lumang CREATIVES UPLOAD JS section ng ito.
 // ═══════════════════════════════════════════════════════════
 
-var forUploadState = { items: [], filtered: [], formOpen: false, allStaff: [], showArchive: false, team: 'video' };
+var forUploadState = { items: [], filtered: [], formOpen: false, allStaff: [], showArchive: false };
 
 function fuToggleForm(){
   forUploadState.formOpen = !forUploadState.formOpen;
@@ -4424,8 +4424,7 @@ async function loadForUpload(){
   if (wEl) wEl.textContent = waiting;
   if (pEl) pEl.textContent = published;
 
-  // I-sync ang team tab UI sa kasalukuyang state
-  fuSwitchTeam(forUploadState.team || 'video', true);
+  filterForUpload();
 }
 
 function filterForUpload(){
@@ -4433,12 +4432,9 @@ function filterForUpload(){
   var owner = document.getElementById('fu-owner-filter')?.value || '';
   var status = document.getElementById('fu-status-filter')?.value || '';
   var pageF = document.getElementById('fu-page-filter')?.value || '';
+  var catF = document.getElementById('fu-cat-filter')?.value || '';
   var archiveView = forUploadState.showArchive === true;
-  var team = forUploadState.team || 'video';
   forUploadState.filtered = forUploadState.items.filter(function(c){
-    // Team filter — lumang rows na walang team = video
-    var rowTeam = c.team || 'video';
-    if (rowTeam !== team) return false;
     // Archive view = archived lang; Main view = hindi archived
     var isArchived = c.archived === true;
     if (archiveView !== isArchived) return false;
@@ -4451,7 +4447,8 @@ function filterForUpload(){
     var matchOwner = !owner || c.owner_name === owner;
     var matchStatus = !status || c.status === status;
     var matchPage = !pageF || c.content_type === pageF;
-    return matchQ && matchOwner && matchStatus && matchPage;
+    var matchCat = !catF || c.category === catF;
+    return matchQ && matchOwner && matchStatus && matchPage && matchCat;
   });
   renderForUpload();
 }
@@ -4469,44 +4466,6 @@ function fuResetTags(){
     var el = document.getElementById(id);
     if (el) el.classList.remove('on');
   });
-}
-
-// ── TEAM SWITCH (Video / Image) ──
-function fuSwitchTeam(team, isSync){
-  var changed = forUploadState.team !== team;
-  forUploadState.team = team;
-  var isImg = team === 'image';
-
-  var tv = document.getElementById('fu-tab-video');
-  var ti = document.getElementById('fu-tab-image');
-  if (tv) tv.className = 'fu-team-tab' + (isImg ? '' : ' active');
-  if (ti) ti.className = 'fu-team-tab' + (isImg ? ' active img' : '');
-
-  // Ipakita lang ang fields na para sa napiling team
-  document.querySelectorAll('.fu-video-field').forEach(function(el){
-    if (isImg){ el.style.display = 'none'; }
-    else { el.style.display = el.classList.contains('fu-dd') ? 'inline-block' : ''; }
-  });
-  document.querySelectorAll('.fu-image-field').forEach(function(el){
-    el.style.display = isImg ? '' : 'none';
-  });
-
-  // I-reset ang page filter kapag lumipat sa image team
-  if (isImg){
-    var pf = document.getElementById('fu-page-filter');
-    if (pf) pf.value = '';
-  }
-
-  var label = document.getElementById('fu-toggle-label');
-  if (label) label.textContent = isImg ? 'Add Canva link' : 'Add creative';
-
-  var search = document.getElementById('fu-search');
-  if (search) search.placeholder = isImg ? 'Search Canva uploads...' : 'Search creatives...';
-
-  // Isara ang form kung bukas, para malinis ang lipat
-  if (changed && !isSync && forUploadState.formOpen) fuToggleForm();
-
-  filterForUpload();
 }
 
 // ── ARCHIVE TOGGLE (admin only) ──
@@ -4616,25 +4575,17 @@ function fuCopyHeadline(text){
 function renderForUpload(){
   var body = document.getElementById('fu-table-body');
   if (!body) return;
-  var isImg = (forUploadState.team || 'video') === 'image';
-
-  // I-update ang table header base sa team
   var head = document.getElementById('fu-table-head');
   if (head){
-    if (isImg){
-      head.style.gridTemplateColumns = '1.1fr 1.7fr 1fr 1.3fr 1fr 1.1fr';
-      head.innerHTML = '<span>Staff</span><span>Project name</span><span>Tags</span><span>Canva link</span><span>Date uploaded</span><span>Status</span>';
-    } else {
-      head.style.gridTemplateColumns = '1.1fr 1.4fr 0.85fr 0.95fr 0.6fr 0.7fr 1.2fr 1fr 1.1fr';
-      head.innerHTML = '<span>Staff</span><span>Project name</span><span>Page</span><span>Tags</span><span>Ad copy</span><span>File link</span><span>Headline</span><span>Date uploaded</span><span>Status</span>';
-    }
+    head.style.gridTemplateColumns = '1fr 1.3fr 0.8fr 1.2fr 0.85fr 0.55fr 0.6fr 1fr 0.9fr 1fr';
+    head.innerHTML = '<span>Staff</span><span>Project name</span><span>Page</span><span>Category</span><span>Tags</span><span>Ad copy</span><span>File link</span><span>Headline</span><span>Date uploaded</span><span>Status</span>';
   }
 
   var items = forUploadState.filtered;
   if (!items.length){
     body.innerHTML = '<div class="table-empty"><div class="table-empty-icon">'
       + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6a6a75" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
-      + '</div>' + (isImg ? 'Wala pang Canva uploads. Click "Add Canva link" above!' : 'Wala pang creatives. Click "Add creative" above!') + '</div>';
+      + '</div>Wala pang creatives. Click "Add creative" above!</div>';
     return;
   }
   body.innerHTML = items.map(function(c){
@@ -4670,7 +4621,6 @@ function renderForUpload(){
       + (isPublished ? fuCountdown(c.expires_at) : '')
       + '</div>';
 
-    var canvaLink = c.canva_link ? '<a href="'+c.canva_link+'" target="_blank" class="fu-canva-link"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>Open in Canva</a>' : '<span style="color:#6a6a75">—</span>';
     var namingTag = c.client_name
       ? '<div class="fu-naming-tag">'+escapeHtml(c.client_name)+'</div>'
       : '';
@@ -4679,25 +4629,11 @@ function renderForUpload(){
     if (c.is_direct_client) tagsCell += '<span class="fu-row-tag" style="background:rgba(96,165,250,0.14);color:#7db4fb;border:0.5px solid rgba(96,165,250,0.3)">Direct client</span>';
     if (!tagsCell) tagsCell = '<span style="color:#5a5a65;font-size:11px">—</span>';
 
-    // ── IMAGE TEAM: Staff · Project · Canva · Date · Status ──
-    if ((c.team || 'video') === 'image'){
-      return '<div class="table-row fu-row img-row" style="grid-template-columns:1.1fr 1.7fr 1fr 1.3fr 1fr 1.1fr;align-items:center">'
-        + '<div>'+fuStaffChip(c.owner_name)+'</div>'
-        + '<div><div class="row-name" style="font-weight:600;color:#f4f4f7">'+escapeHtml(c.project_name||'—')+'</div>'+namingTag+'</div>'
-        + '<div style="display:flex;flex-wrap:wrap;gap:3px">'+tagsCell+'</div>'
-        + '<div>'+canvaLink+'</div>'
-        + '<div><div style="font-size:12px;font-weight:600;color:#e8e8ec">'+dateMain+'</div><div style="font-size:9px;color:#7a7a85;margin-top:1px">'+dateYear+' · '+dateTime+'</div></div>'
-        + '<div style="display:flex;align-items:center;gap:8px">'+statusCell
-        +   '<button class="fu-del-btn" data-id="'+c.id+'" style="background:none;border:none;color:#6a6a75;cursor:pointer;font-size:12px">✕</button>'
-        + '</div>'
-        + '</div>';
-    }
-
-    // ── VIDEO TEAM ──
-    return '<div class="table-row fu-row" style="grid-template-columns:1.1fr 1.4fr 0.85fr 0.95fr 0.6fr 0.7fr 1.2fr 1fr 1.1fr;align-items:center">'
+    return '<div class="table-row fu-row" style="grid-template-columns:1fr 1.3fr 0.8fr 1.2fr 0.85fr 0.55fr 0.6fr 1fr 0.9fr 1fr;align-items:center">'
       + '<div>'+fuStaffChip(c.owner_name)+'</div>'
       + '<div><div class="row-name" style="font-weight:600;color:#f4f4f7">'+escapeHtml(c.project_name||'—')+'</div>'+namingTag+'</div>'
       + '<div>'+fuPageBadge(c.content_type)+'</div>'
+      + '<div>'+fuCatBadge(c.category)+'</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:3px">'+tagsCell+'</div>'
       + '<div>'+adCopy+'</div>'
       + '<div>'+fileLink+'</div>'
@@ -4790,12 +4726,8 @@ document.addEventListener('click', function(e){
 });
 
 async function fuAddCreative(){
-  var isImg = (forUploadState.team || 'video') === 'image';
   var projectName = document.getElementById('fu-project-name')?.value?.trim();
   if (!projectName){ showNotif('Project name required', 'error'); return; }
-  if (isImg && !document.getElementById('fu-canva-link')?.value?.trim()){
-    showNotif('Canva link required', 'error'); return;
-  }
   var btn = document.getElementById('fu-add-btn');
   if (btn){ btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Adding...'; }
 
@@ -4813,8 +4745,7 @@ async function fuAddCreative(){
     content_type: document.getElementById('fu-page')?.value || 'VIRAL UGC',
     ad_copy: document.getElementById('fu-ad-copy')?.value?.trim() || null,
     client_name: document.getElementById('fu-client-name')?.value?.trim() || null,
-    canva_link: document.getElementById('fu-canva-link')?.value?.trim() || null,
-    team: forUploadState.team || 'video',
+    category: document.getElementById('fu-category')?.value || null,
     is_freebies: fuTags.freebies,
     is_direct_client: fuTags.direct,
     file_link: document.getElementById('fu-file-link')?.value?.trim() || null,
@@ -4828,7 +4759,7 @@ async function fuAddCreative(){
   if (typeof logActivity === 'function') logActivity('CREATIVE_ADDED', projectName);
 
   fuResetTags();
-  ['fu-project-name','fu-ad-copy','fu-file-link','fu-headline','fu-client-name','fu-canva-link'].forEach(function(id){
+  ['fu-project-name','fu-ad-copy','fu-file-link','fu-headline','fu-client-name'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   fuToggleForm();
@@ -4841,6 +4772,33 @@ async function fuDelete(id){
   showNotif('Deleted.', 'success');
   loadForUpload();
 }
+// ── CATEGORY (Viral clients freebies / Viral direct freebies / Direct clients) ──
+function fuFormCatPick(cat, color, itemEl){
+  var dd = document.getElementById('fu-dd-formcat');
+  var hidden = document.getElementById('fu-category');
+  var dot = document.getElementById('fu-formcat-dot');
+  var lbl = document.getElementById('fu-formcat-label');
+  if (dd){
+    dd.querySelectorAll('.fu-dd-item').forEach(function(x){ x.classList.remove('active'); });
+    if (itemEl) itemEl.classList.add('active');
+    dd.classList.remove('open');
+  }
+  if (lbl) lbl.textContent = cat;
+  if (hidden) hidden.value = cat;
+  if (dot) dot.style.background = color;
+}
+
+function fuCatBadge(cat){
+  if (!cat) return '<span style="color:#5a5a65;font-size:11px">—</span>';
+  var styles = {
+    'Viral clients freebies images': { bg:'rgba(167,139,250,0.16)', c:'#b9a5fc', bd:'rgba(167,139,250,0.4)', short:'Viral clients freebies' },
+    'Viral direct freebies images':  { bg:'rgba(74,222,128,0.16)',  c:'#6ee7a0', bd:'rgba(74,222,128,0.4)',  short:'Viral direct freebies' },
+    'Direct clients images':         { bg:'rgba(96,165,250,0.16)',  c:'#7db4fb', bd:'rgba(96,165,250,0.4)',  short:'Direct clients' }
+  };
+  var s = styles[cat] || { bg:'rgba(255,255,255,0.06)', c:'#9a9aa5', bd:'rgba(255,255,255,0.1)', short:cat };
+  return '<span title="'+escapeHtml(cat)+'" style="display:inline-block;font-size:9.5px;font-weight:600;padding:4px 10px;border-radius:20px;background:'+s.bg+';color:'+s.c+';border:0.5px solid '+s.bd+';white-space:nowrap">'+escapeHtml(s.short)+'</span>';
+}
+
 function fuFormPagePick(page, color, itemEl){
   var dd = document.getElementById('fu-dd-formpage');
   var hidden = document.getElementById('fu-page');
