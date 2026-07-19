@@ -2342,7 +2342,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     .icp-brief-ta {
       width:100%; background:transparent; border:none; color:#f2f2f5;
       font-size:13px; line-height:1.75; font-family:inherit; resize:vertical;
-      outline:none; min-height:170px; box-sizing:border-box; padding:0;
+      outline:none; min-height:200px; box-sizing:border-box; padding:0;
     }
     .icp-brief-ta::placeholder { color:#5a5a65; }
     .icp-brief-tools {
@@ -2374,6 +2374,21 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       cursor:pointer; transition:background .15s ease, color .15s ease;
     }
     .icp-thumb-x:hover { background:#ef4444; color:#fff; }
+    /* TAG PILLS (Freebies / Direct client) */
+    .fu-tag-pill {
+      display:inline-flex; align-items:center; gap:7px;
+      padding:9px 16px; border-radius:999px; font-size:12px; font-weight:600;
+      background:#0e0e11; border:0.5px solid rgba(255,255,255,0.09); color:#8a8a95;
+      cursor:pointer; user-select:none;
+      transition:background .18s ease, border-color .18s ease, color .18s ease, transform .15s ease;
+    }
+    .fu-tag-pill:hover { border-color:rgba(255,255,255,0.2); color:#c8c8d0; transform:translateY(-1px); }
+    .fu-tag-dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.18); transition:all .18s ease; }
+    .fu-tag-pill.green.on { background:rgba(74,222,128,0.12); border-color:rgba(74,222,128,0.45); color:#6ee7a0; }
+    .fu-tag-pill.green.on .fu-tag-dot { background:#4ade80; box-shadow:0 0 8px rgba(74,222,128,0.6); }
+    .fu-tag-pill.blue.on { background:rgba(96,165,250,0.12); border-color:rgba(96,165,250,0.45); color:#7db4fb; }
+    .fu-tag-pill.blue.on .fu-tag-dot { background:#60a5fa; box-shadow:0 0 8px rgba(96,165,250,0.6); }
+    .fu-row-tag { display:inline-flex; align-items:center; font-size:9.5px; padding:3px 9px; border-radius:20px; margin-right:5px; }
     /* MODERN ROW HOVER */
     .fu-row {
       border:0.5px solid transparent; border-radius:11px;
@@ -2484,9 +2499,20 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">File link <span style="color:#6a6a75;font-weight:400">(GDrive / video)</span></label>
         <input class="fu-input" id="fu-file-link" placeholder="https://drive.google.com/..."/>
       </div>
-      <div class="fu-video-field">
+      <div>
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Client name <span style="color:#6a6a75;font-weight:400">(optional)</span></label>
         <input class="fu-input" id="fu-client-name" placeholder="e.g. Glow Skin PH" autocomplete="off"/>
+      </div>
+      <div style="grid-column:1 / -1">
+        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:8px;letter-spacing:0.02em">Tags <span style="color:#6a6a75;font-weight:400">(optional)</span></label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button type="button" class="fu-tag-pill green" id="fu-tag-freebies" onclick="fuToggleTag('freebies')">
+            <span class="fu-tag-dot"></span>Freebies
+          </button>
+          <button type="button" class="fu-tag-pill blue" id="fu-tag-direct" onclick="fuToggleTag('direct')">
+            <span class="fu-tag-dot"></span>Direct client
+          </button>
+        </div>
       </div>
       <div class="fu-image-field" style="display:none">
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Canva link</label>
@@ -2756,7 +2782,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       </div>
       <!-- MINIMAL BRIEF INPUT (ChatGPT-style) -->
       <div class="icp-brief-box">
-        <textarea class="icp-brief-ta" id="icp-brief" placeholder="I-paste dito ang lahat ng detalye ng client...&#10;&#10;Halimbawa:&#10;Lumina Skin PH — skincare brand sa Manila. Niacinamide Brightening Serum, P499 Buy 1 Take 1 promo. Dermatologist-tested, non-sticky, safe sa sensitive skin. Target: working women 25-40 sa Metro Manila, budget-conscious. Colors: soft peach, cream, rose gold. FREE shipping nationwide, trusted na ng 5,000+ customers."></textarea>
+        <textarea class="icp-brief-ta" id="icp-brief" placeholder="I-paste dito ang lahat ng detalye ng client..."></textarea>
 
         <div class="icp-brief-tools">
           <input type="file" id="icp-photos" accept="image/*" multiple onchange="icpHandlePhotos(event)" style="display:none"/>
