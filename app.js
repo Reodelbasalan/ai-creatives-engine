@@ -4622,11 +4622,11 @@ function renderForUpload(){
   var head = document.getElementById('fu-table-head');
   if (head){
     if (isImg){
-      head.style.gridTemplateColumns = '1.2fr 2fr 1.4fr 1.1fr 1.2fr';
-      head.innerHTML = '<span>Staff</span><span>Project name</span><span>Canva link</span><span>Date uploaded</span><span>Status</span>';
+      head.style.gridTemplateColumns = '1.1fr 1.7fr 1fr 1.3fr 1fr 1.1fr';
+      head.innerHTML = '<span>Staff</span><span>Project name</span><span>Tags</span><span>Canva link</span><span>Date uploaded</span><span>Status</span>';
     } else {
-      head.style.gridTemplateColumns = '1.2fr 1.5fr 0.9fr 0.7fr 0.8fr 1.4fr 1.1fr 1.2fr';
-      head.innerHTML = '<span>Staff</span><span>Project name</span><span>Page</span><span>Ad copy</span><span>File link</span><span>Headline</span><span>Date uploaded</span><span>Status</span>';
+      head.style.gridTemplateColumns = '1.1fr 1.4fr 0.85fr 0.95fr 0.6fr 0.7fr 1.2fr 1fr 1.1fr';
+      head.innerHTML = '<span>Staff</span><span>Project name</span><span>Page</span><span>Tags</span><span>Ad copy</span><span>File link</span><span>Headline</span><span>Date uploaded</span><span>Status</span>';
     }
   }
 
@@ -4674,16 +4674,17 @@ function renderForUpload(){
     var namingTag = c.client_name
       ? '<div class="fu-naming-tag">'+escapeHtml(c.client_name)+'</div>'
       : '';
-    var rowTags = '';
-    if (c.is_freebies) rowTags += '<span class="fu-row-tag" style="background:rgba(74,222,128,0.14);color:#6ee7a0;border:0.5px solid rgba(74,222,128,0.3)">Freebies</span>';
-    if (c.is_direct_client) rowTags += '<span class="fu-row-tag" style="background:rgba(96,165,250,0.14);color:#7db4fb;border:0.5px solid rgba(96,165,250,0.3)">Direct client</span>';
-    if (rowTags) namingTag += '<div style="margin-top:4px">' + rowTags + '</div>';
+    var tagsCell = '';
+    if (c.is_freebies) tagsCell += '<span class="fu-row-tag" style="background:rgba(74,222,128,0.14);color:#6ee7a0;border:0.5px solid rgba(74,222,128,0.3)">Freebies</span>';
+    if (c.is_direct_client) tagsCell += '<span class="fu-row-tag" style="background:rgba(96,165,250,0.14);color:#7db4fb;border:0.5px solid rgba(96,165,250,0.3)">Direct client</span>';
+    if (!tagsCell) tagsCell = '<span style="color:#5a5a65;font-size:11px">—</span>';
 
     // ── IMAGE TEAM: Staff · Project · Canva · Date · Status ──
     if ((c.team || 'video') === 'image'){
-      return '<div class="table-row fu-row img-row" style="grid-template-columns:1.2fr 2fr 1.4fr 1.1fr 1.2fr;align-items:center">'
+      return '<div class="table-row fu-row img-row" style="grid-template-columns:1.1fr 1.7fr 1fr 1.3fr 1fr 1.1fr;align-items:center">'
         + '<div>'+fuStaffChip(c.owner_name)+'</div>'
         + '<div><div class="row-name" style="font-weight:600;color:#f4f4f7">'+escapeHtml(c.project_name||'—')+'</div>'+namingTag+'</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:3px">'+tagsCell+'</div>'
         + '<div>'+canvaLink+'</div>'
         + '<div><div style="font-size:12px;font-weight:600;color:#e8e8ec">'+dateMain+'</div><div style="font-size:9px;color:#7a7a85;margin-top:1px">'+dateYear+' · '+dateTime+'</div></div>'
         + '<div style="display:flex;align-items:center;gap:8px">'+statusCell
@@ -4693,10 +4694,11 @@ function renderForUpload(){
     }
 
     // ── VIDEO TEAM ──
-    return '<div class="table-row fu-row" style="grid-template-columns:1.2fr 1.5fr 0.9fr 0.7fr 0.8fr 1.4fr 1.1fr 1.3fr;align-items:center">'
+    return '<div class="table-row fu-row" style="grid-template-columns:1.1fr 1.4fr 0.85fr 0.95fr 0.6fr 0.7fr 1.2fr 1fr 1.1fr;align-items:center">'
       + '<div>'+fuStaffChip(c.owner_name)+'</div>'
       + '<div><div class="row-name" style="font-weight:600;color:#f4f4f7">'+escapeHtml(c.project_name||'—')+'</div>'+namingTag+'</div>'
       + '<div>'+fuPageBadge(c.content_type)+'</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:3px">'+tagsCell+'</div>'
       + '<div>'+adCopy+'</div>'
       + '<div>'+fileLink+'</div>'
       + '<div>'+headline+'</div>'
