@@ -4456,6 +4456,21 @@ function filterForUpload(){
   renderForUpload();
 }
 
+// ── TAGS (Freebies / Direct client) ──
+var fuTags = { freebies: false, direct: false };
+function fuToggleTag(which){
+  fuTags[which] = !fuTags[which];
+  var el = document.getElementById(which === 'freebies' ? 'fu-tag-freebies' : 'fu-tag-direct');
+  if (el) el.classList.toggle('on', fuTags[which]);
+}
+function fuResetTags(){
+  fuTags = { freebies: false, direct: false };
+  ['fu-tag-freebies','fu-tag-direct'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('on');
+  });
+}
+
 // ── TEAM SWITCH (Video / Image) ──
 function fuSwitchTeam(team, isSync){
   var changed = forUploadState.team !== team;
@@ -4659,12 +4674,16 @@ function renderForUpload(){
     var namingTag = c.client_name
       ? '<div class="fu-naming-tag">'+escapeHtml(c.client_name)+'</div>'
       : '';
+    var rowTags = '';
+    if (c.is_freebies) rowTags += '<span class="fu-row-tag" style="background:rgba(74,222,128,0.14);color:#6ee7a0;border:0.5px solid rgba(74,222,128,0.3)">Freebies</span>';
+    if (c.is_direct_client) rowTags += '<span class="fu-row-tag" style="background:rgba(96,165,250,0.14);color:#7db4fb;border:0.5px solid rgba(96,165,250,0.3)">Direct client</span>';
+    if (rowTags) namingTag += '<div style="margin-top:4px">' + rowTags + '</div>';
 
     // ── IMAGE TEAM: Staff · Project · Canva · Date · Status ──
     if ((c.team || 'video') === 'image'){
       return '<div class="table-row fu-row img-row" style="grid-template-columns:1.2fr 2fr 1.4fr 1.1fr 1.2fr;align-items:center">'
         + '<div>'+fuStaffChip(c.owner_name)+'</div>'
-        + '<div><div class="row-name" style="font-weight:600;color:#f4f4f7">'+escapeHtml(c.project_name||'—')+'</div></div>'
+        + '<div><div class="row-name" style="font-weight:600;color:#f4f4f7">'+escapeHtml(c.project_name||'—')+'</div>'+namingTag+'</div>'
         + '<div>'+canvaLink+'</div>'
         + '<div><div style="font-size:12px;font-weight:600;color:#e8e8ec">'+dateMain+'</div><div style="font-size:9px;color:#7a7a85;margin-top:1px">'+dateYear+' · '+dateTime+'</div></div>'
         + '<div style="display:flex;align-items:center;gap:8px">'+statusCell
@@ -4794,6 +4813,8 @@ async function fuAddCreative(){
     client_name: document.getElementById('fu-client-name')?.value?.trim() || null,
     canva_link: document.getElementById('fu-canva-link')?.value?.trim() || null,
     team: forUploadState.team || 'video',
+    is_freebies: fuTags.freebies,
+    is_direct_client: fuTags.direct,
     file_link: document.getElementById('fu-file-link')?.value?.trim() || null,
     headline: document.getElementById('fu-headline')?.value?.trim() || null,
     status: 'Unpublished'
@@ -4804,6 +4825,7 @@ async function fuAddCreative(){
   showNotif('Creative added! ✓', 'success');
   if (typeof logActivity === 'function') logActivity('CREATIVE_ADDED', projectName);
 
+  fuResetTags();
   ['fu-project-name','fu-ad-copy','fu-file-link','fu-headline','fu-client-name','fu-canva-link'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
