@@ -1160,7 +1160,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         Team chat
         <span class="nav-badge" id="chat-badge" style="display:none">0</span>
       </div>
-      <div class="nav-item admin-only" onclick="showPage('settings')" id="nav-settings">
+      <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         Settings
       </div>
@@ -1732,7 +1732,19 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <!-- SETTINGS PAGE -->
       <div class="page" id="page-settings">
         <div style="max-width:760px">
-          
+
+          <!-- API CONNECTORS (BYOK) -->
+          <div class="form-card" style="margin-bottom:16px">
+            <div class="form-card-title" style="margin-bottom:6px">
+              <span>🔌</span> Connectors
+              <span style="font-size:9px;padding:2px 8px;border-radius:20px;background:rgba(74,222,128,0.14);color:#6ee7a0;font-weight:600;margin-left:auto">Optional</span>
+            </div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:1rem;line-height:1.6">
+              Ikonekta ang sariling AI account. Kapag naka-connect, ang account mo ang gagamitin sa generation — ikaw ang sisingilin ng provider, hindi ang agency. Kung walang naka-connect, ang key ng agency ang gagamitin.
+            </div>
+            <div id="conn-list"></div>
+          </div>
+
           <!-- HIGGSFIELD -->
           <div class="form-card" style="margin-bottom:16px">
             <div class="form-card-title" style="margin-bottom:1rem">
@@ -2374,6 +2386,40 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       cursor:pointer; transition:background .15s ease, color .15s ease;
     }
     .icp-thumb-x:hover { background:#ef4444; color:#fff; }
+    /* API CONNECTORS */
+    .conn-card {
+      background:var(--bg2,#131316); border:0.5px solid rgba(255,255,255,0.07);
+      border-radius:14px; padding:15px; margin-bottom:11px;
+      transition:border-color .2s ease, background .2s ease;
+    }
+    .conn-card:hover { border-color:rgba(255,255,255,0.14); }
+    .conn-card.connected { border-color:rgba(74,222,128,0.35); background:linear-gradient(180deg,rgba(74,222,128,0.04),var(--bg2,#131316)); }
+    .conn-card.unavailable { opacity:0.55; }
+    .conn-top { display:flex; align-items:center; gap:12px; }
+    .conn-ico { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+    .conn-name { font-size:13.5px; font-weight:650; color:var(--text,#f4f4f7); }
+    .conn-sub { font-size:11px; color:var(--text3,#7a7a85); margin-top:2px; }
+    .conn-badge { font-size:9.5px; font-weight:700; padding:4px 10px; border-radius:20px; margin-left:auto; white-space:nowrap; }
+    .conn-body { margin-top:13px; padding-top:13px; border-top:0.5px solid rgba(255,255,255,0.06); }
+    .conn-in {
+      width:100%; background:#0e0e11; border:0.5px solid rgba(255,255,255,0.09);
+      color:var(--text,#f2f2f5); font-size:12px; padding:10px 13px; border-radius:10px;
+      box-sizing:border-box; font-family:ui-monospace,monospace; transition:border-color .18s ease;
+    }
+    .conn-in:hover { border-color:rgba(255,255,255,0.16); }
+    .conn-in:focus { outline:none; border-color:rgba(250,204,21,0.45); }
+    .conn-in::placeholder { color:#5a5a65; }
+    .conn-btn {
+      font-size:11.5px; font-weight:650; padding:8px 15px; border-radius:9px;
+      cursor:pointer; border:none; transition:filter .16s ease, transform .12s ease, background .18s ease;
+    }
+    .conn-btn:hover { filter:brightness(1.12); }
+    .conn-btn:active { transform:scale(0.97); }
+    .conn-btn.ghost { background:var(--bg3,#1e1e24); color:var(--text2,#c8c8d0); border:0.5px solid rgba(255,255,255,0.09); }
+    .conn-btn.ghost:hover { background:rgba(250,204,21,0.07); border-color:rgba(250,204,21,0.35); color:var(--yellow,#facc15); }
+    .conn-note { font-size:10.5px; color:var(--text3,#6a6a75); margin-top:8px; line-height:1.6; }
+    .conn-link { color:var(--yellow,#facc15); text-decoration:none; }
+    .conn-link:hover { text-decoration:underline; }
     /* TAG PILLS (Freebies / Direct client) */
     .fu-tag-pill {
       display:inline-flex; align-items:center; gap:7px;
@@ -3234,15 +3280,18 @@ async function icpGenerateOneImage(idx){
 
   try {
     var imagePrompt = strat.image_prompt || strat.imagePrompt || strat.visual || strat.name;
+    // Kung may naka-connect na sariling OpenAI key, yun ang gagamitin (BYOK)
+    var userKey = (typeof getUserApiKey === 'function') ? await getUserApiKey('openai') : null;
     var res = await fetch('/api/dalle-generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt: imagePrompt,
         type: 'imagecreative',
-        model: 'gpt-image-1-mini',
+        model: 'gpt-image-2',
         size: '1024x1024',
         sceneIndex: idx,
+        userApiKey: userKey || undefined,
         clientName: (((document.getElementById('icp-brief')||{}).value||'').trim().split(/[\n.]/)[0] || 'client').slice(0,40)
       })
     });
