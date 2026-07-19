@@ -415,7 +415,7 @@ function showPage(page){
   if(page==='attendance'){var today=new Date().toISOString().slice(0,10);var df=document.getElementById('attendance-date');if(df&&!df.value)df.value=today;loadAttendance();}
   if(page==='worklog')loadWorkLog();
   if(page==='client-dashboard')loadClientDashboard();
-  if(page==='settings'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadSettings();}
+  if(page==='settings'){ loadConnectors(); if(currentUserRole==='admin'){loadSettings();} }
   if(page==='automation'){loadAutomationProjects();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
@@ -4451,6 +4451,205 @@ function filterForUpload(){
     return matchQ && matchOwner && matchStatus && matchPage && matchCat;
   });
   renderForUpload();
+}
+
+// ═══════════════════════════════════════════
+// API CONNECTORS (BYOK) — Settings page
+// ═══════════════════════════════════════════
+var CONNECTORS = [
+  {
+    id: 'openai', name: 'OpenAI', sub: 'GPT Image 2 — static ad creatives',
+    icon: '◉', iconBg: 'rgba(74,222,128,0.1)', iconColor: '#6ee7a0',
+    placeholder: 'sk-...', keyUrl: 'https://platform.openai.com/api-keys',
+    keyUrlLabel: 'platform.openai.com', available: true
+  },
+  {
+    id: 'grok', name: 'Grok — xAI', sub: 'Image at text generation',
+    icon: '𝕏', iconBg: 'rgba(255,255,255,0.06)', iconColor: '#e8e8ec',
+    placeholder: 'xai-...', keyUrl: 'https://console.x.ai',
+    keyUrlLabel: 'console.x.ai', available: true
+  },
+  {
+    id: 'gemini', name: 'Google Gemini / Veo', sub: 'Image at video generation',
+    icon: '◆', iconBg: 'rgba(96,165,250,0.12)', iconColor: '#7db4fb',
+    placeholder: 'AIza...', keyUrl: 'https://aistudio.google.com/apikey',
+    keyUrlLabel: 'aistudio.google.com', available: true
+  },
+  {
+    id: 'flow', name: 'Google Flow', sub: 'Walang public API — hindi maikokonekta',
+    icon: '▶', iconBg: 'rgba(255,255,255,0.04)', iconColor: '#6a6a75',
+    available: false,
+    note: 'Ang Flow ay consumer app lang — walang API na pwedeng tawagin mula dito. Para magamit ang Flow account mo, kailangan ng browser extension (AdFlow), hindi sa loob ng AI Creatives.'
+  }
+];
+
+var connectorState = {};
+
+async function loadConnectors(){
+  var wrap = document.getElementById('conn-list');
+  if (!wrap) return;
+  try {
+    var r = await sb.from('api_connectors').select('provider,status,last_tested_at,api_key');
+    connectorState = {};
+    (r.data || []).forEach(function(row){
+      connectorState[row.provider] = {
+        status: row.status,
+        lastTested: row.last_tested_at,
+        masked: maskKey(row.api_key)
+      };
+    });
+  } catch(e){ connectorState = {}; }
+  renderConnectors();
+}
+
+function maskKey(k){
+  if (!k) return '';
+  if (k.length <= 10) return k.slice(0,3) + '••••';
+  return k.slice(0,4) + '••••••••••••••••' + k.slice(-4);
+}
+
+function renderConnectors(){
+  var wrap = document.getElementById('conn-list');
+  if (!wrap) return;
+  wrap.innerHTML = CONNECTORS.map(function(c){
+    if (!c.available){
+      return '<div class="conn-card unavailable">'
+        + '<div class="conn-top">'
+        +   '<div class="conn-ico" style="background:'+c.iconBg+';color:'+c.iconColor+'">'+c.icon+'</div>'
+        +   '<div style="flex:1"><div class="conn-name" style="color:#8a8a95">'+c.name+'</div><div class="conn-sub">'+c.sub+'</div></div>'
+        +   '<span class="conn-badge" style="background:rgba(255,255,255,0.04);color:#6a6a75;border:0.5px solid rgba(255,255,255,0.08)">Unavailable</span>'
+        + '</div>'
+        + '<div class="conn-body"><div class="conn-note" style="margin-top:0">'+c.note+'</div></div>'
+        + '</div>';
+    }
+
+    var st = connectorState[c.id];
+    var isConn = st && st.masked;
+    var badge = isConn
+      ? '<span class="conn-badge" style="background:rgba(74,222,128,0.16);color:#6ee7a0;border:0.5px solid rgba(74,222,128,0.35)">● Connected</span>'
+      : '<span class="conn-badge" style="background:rgba(255,255,255,0.05);color:#8a8a95;border:0.5px solid rgba(255,255,255,0.1)">Not connected</span>';
+
+    var body;
+    if (isConn){
+      var tested = '';
+      if (st.status === 'working') tested = 'Huling na-test: <b style="color:#6ee7a0">gumagana</b>';
+      else if (st.status === 'failed') tested = 'Huling na-test: <b style="color:#f87171">hindi gumana</b>';
+      else tested = 'Hindi pa na-test';
+      if (st.lastTested) tested += ' · ' + new Date(st.lastTested).toLocaleString('en-PH', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+
+      body = '<div class="conn-body">'
+        + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+        +   '<span style="font-family:ui-monospace,monospace;font-size:12px;color:#9a9aa5;flex:1;min-width:180px">'+st.masked+'</span>'
+        +   '<button class="conn-btn ghost" onclick="testConnector(\''+c.id+'\')" id="conn-test-'+c.id+'">Test</button>'
+        +   '<button class="conn-btn" onclick="disconnectConnector(\''+c.id+'\')" style="background:rgba(239,68,68,0.12);color:#f87171;border:0.5px solid rgba(239,68,68,0.3)">Disconnect</button>'
+        + '</div>'
+        + '<div class="conn-note">'+tested+'</div>'
+        + '</div>';
+    } else {
+      body = '<div class="conn-body">'
+        + '<input class="conn-in" id="conn-key-'+c.id+'" placeholder="'+c.placeholder+'" autocomplete="off"/>'
+        + '<div style="display:flex;gap:9px;margin-top:10px">'
+        +   '<button class="conn-btn" onclick="saveConnector(\''+c.id+'\')" style="background:var(--yellow,#facc15);color:#111" id="conn-save-'+c.id+'">Connect</button>'
+        + '</div>'
+        + '<div class="conn-note">Kunin ang key sa <a class="conn-link" href="'+c.keyUrl+'" target="_blank" rel="noopener">'+c.keyUrlLabel+'</a> — kailangan ng billing account.</div>'
+        + '</div>';
+    }
+
+    return '<div class="conn-card'+(isConn?' connected':'')+'">'
+      + '<div class="conn-top">'
+      +   '<div class="conn-ico" style="background:'+c.iconBg+';color:'+c.iconColor+'">'+c.icon+'</div>'
+      +   '<div style="flex:1"><div class="conn-name">'+c.name+'</div><div class="conn-sub">'+c.sub+'</div></div>'
+      +   badge
+      + '</div>'
+      + body
+      + '</div>';
+  }).join('');
+}
+
+async function saveConnector(provider){
+  var input = document.getElementById('conn-key-' + provider);
+  var key = input ? input.value.trim() : '';
+  if (!key){ showNotif('Ilagay muna ang API key', 'error'); return; }
+
+  var btn = document.getElementById('conn-save-' + provider);
+  if (btn){ btn.disabled = true; btn.textContent = 'Connecting...'; }
+
+  try {
+    var u = await sb.auth.getUser();
+    var uid = u?.data?.user?.id;
+    if (!uid) throw new Error('Not signed in');
+
+    var r = await sb.from('api_connectors').upsert({
+      user_id: uid,
+      provider: provider,
+      api_key: key,
+      status: 'untested',
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id,provider' });
+
+    if (r.error) throw new Error(r.error.message);
+
+    showNotif('Connected ✓ — i-test mo para masiguro', 'success');
+    await loadConnectors();
+    testConnector(provider);
+  } catch(e){
+    showNotif('Hindi na-save: ' + e.message, 'error');
+    if (btn){ btn.disabled = false; btn.textContent = 'Connect'; }
+  }
+}
+
+async function testConnector(provider){
+  var btn = document.getElementById('conn-test-' + provider);
+  if (btn){ btn.disabled = true; btn.textContent = 'Testing...'; }
+  try {
+    var key = await getUserApiKey(provider);
+    if (!key) throw new Error('Walang naka-save na key');
+
+    var res = await fetch('/api/test-connector', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: provider, apiKey: key })
+    });
+    var d = await res.json();
+    var ok = d.ok === true;
+
+    var u = await sb.auth.getUser();
+    var uid = u?.data?.user?.id;
+    if (uid){
+      await sb.from('api_connectors')
+        .update({ status: ok ? 'working' : 'failed', last_tested_at: new Date().toISOString() })
+        .eq('user_id', uid).eq('provider', provider);
+    }
+    showNotif(ok ? 'Gumagana ang key ✓' : ('Hindi gumana: ' + (d.error || 'invalid key')), ok ? 'success' : 'error');
+    await loadConnectors();
+  } catch(e){
+    showNotif('Test failed: ' + e.message, 'error');
+    if (btn){ btn.disabled = false; btn.textContent = 'Test'; }
+  }
+}
+
+async function disconnectConnector(provider){
+  if (!confirm('Tanggalin ang key na ito?')) return;
+  try {
+    var u = await sb.auth.getUser();
+    var uid = u?.data?.user?.id;
+    if (!uid) throw new Error('Not signed in');
+    var r = await sb.from('api_connectors').delete().eq('user_id', uid).eq('provider', provider);
+    if (r.error) throw new Error(r.error.message);
+    showNotif('Disconnected', 'success');
+    await loadConnectors();
+  } catch(e){
+    showNotif('Hindi natanggal: ' + e.message, 'error');
+  }
+}
+
+// Kunin ang user key para sa isang provider (ginagamit sa generation)
+async function getUserApiKey(provider){
+  try {
+    var r = await sb.from('api_connectors').select('api_key,status').eq('provider', provider).maybeSingle();
+    if (r.data && r.data.api_key) return r.data.api_key;
+  } catch(e){}
+  return null;
 }
 
 // ── TAGS (Freebies / Direct client) ──
