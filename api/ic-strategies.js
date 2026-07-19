@@ -9,6 +9,7 @@ export default async function handler(req, res) {
 
   try {
     const {
+      brief, notes,
       pageName, offer, businessType, businessDetails, marketFocus,
       audience, brandColors, website, promo, batchNumber, usedNames, images, count
     } = req.body;
@@ -102,6 +103,12 @@ Mandatory Capture Style: real iPhone photo look, not studio-looking, not CGI, no
 Human Realism Requirements: natural skin texture, visible pores, slight imperfections, no beauty filter, no plastic skin, no over-retouching, no artificial glow, natural facial expression, subtle and believable emotion.
 Camera Characteristics: 35mm or 50mm real lens feel, slight background blur, real shadows, mild grain if needed, natural light falloff, slight handheld feel, imperfect crop when appropriate.
 
+## ✍️ TEXT RENDERING ACCURACY — CRITICAL
+The image model will render the overlay text. To prevent misspelled or garbled text:
+• In every image_prompt, write each text element inside quotes and explicitly instruct that it be rendered with PERFECT, CORRECT SPELLING.
+• Keep total on-image text minimal and legible — fewer words render more cleanly.
+• Always end the image_prompt with a negative instruction against misspelled or garbled text, cluttered layout, and unreadable small type.
+
 ## ❌ STRICT NEGATIVE PROMPTS
 Avoid: AI look, CGI / 3D render feel, over-smooth skin, beauty filter look, perfect symmetry, unreal lighting glow, overly sharp HDR, plastic skin texture, unreal shadows, overly posed model-like shots, generic stock photo feel, cluttered text, tiny unreadable text, logo-heavy branding, misleading claims, before-and-after exaggeration, sensitive personal callouts, offensive or discriminatory messaging, shocking, disturbing, or unsafe imagery, fake testimonials or fake proof, deceptive pricing or hidden conditions.
 
@@ -146,9 +153,12 @@ Return ONLY a valid JSON array of exactly ${numStrategies} objects. No markdown,
   "emotional": "Emotional trigger used",
   "logical": "Logical trigger used",
   "colors": "Color style direction",
+  "fonts": "Headline font style and supporting text font style",
   "layout": "Layout note — placement of tagline, benefits, visual, CTA, logo",
-  "image_prompt": "COMPLETE ready-to-paste image generation prompt including: 1080x1080 size, main visual scene, ultra-realistic iPhone photo style, natural lighting, realistic human details if model used, exact text overlay hierarchy with the tagline as biggest text, benefits list as secondary text, small logo placement, premium ad layout, clean readable typography, Meta-compliant design. This is the field the editor will copy-paste into ChatGPT — make it fully self-contained.",
-  "safety": "One-line ads policy safety check: why this is compliant, what risky angle was avoided"
+  "image_prompt": "COMPLETE ready-to-paste image generation prompt including: 1080x1080 size, main visual scene, ultra-realistic iPhone photo style, natural lighting, realistic human details if model used, exact text overlay hierarchy with the tagline as biggest text quoted with an instruction to render it with perfect correct spelling, benefits list as secondary text also quoted, small logo placement, premium ad layout, clean readable typography, Meta-compliant design, and a closing negative instruction against misspelled or garbled text, cluttered layout, and unreadable small type. This is the field the editor will copy-paste into ChatGPT — make it fully self-contained.",
+  "safety": "One-line ads policy safety check: why this is compliant",
+  "risky_avoided": "What risky claims, words, visuals, or targeting angles were avoided",
+  "safer_wording": "How the message was phrased safely while still being persuasive"
 }`;
 
     // Fetch website content so the AI knows the REAL services/details
@@ -170,7 +180,25 @@ Return ONLY a valid JSON array of exactly ${numStrategies} objects. No markdown,
       } catch (e) { websiteContent = ''; }
     }
 
-    let userPrompt = `Here are the client details:
+    // ── CLIENT DETAILS ──
+    // Bagong minimal na form: isang malaking "brief" ang ipinapasa.
+    // Kung may brief, yun ang gagamitin. Kung wala (lumang format), babalik sa hiwalay na fields.
+    const hasBrief = brief && brief.trim().length > 0;
+
+    let userPrompt;
+    if (hasBrief) {
+      userPrompt = `Here is the FULL CLIENT BRIEF, pasted by the editor. Read it carefully and extract everything you need — brand name, business type, offer, price/promo, target audience, brand colors, location, trust signals, and any other detail present:
+
+═══════════════════════════════════════
+${brief.trim()}
+═══════════════════════════════════════
+
+Image Purpose / Use: FB Ad Creative
+Image Size: 1080 x 1080 px
+
+Go through the brief as an expert in this business. Identify the right PERSONA, MASS DESIRE, and BEST PROBLEM yourself based on what is written. If the brief does not state the target audience or brand colors, decide the most appropriate one for this business and market.`;
+    } else {
+      userPrompt = `Here are the client details:
 
 Facebook Page Name(s): ${pageName || 'N/A'}
 Offer/Services: ${offer || 'N/A'}
@@ -184,9 +212,19 @@ Website: ${website || 'N/A'}
 Promo / Freebies / Price: ${promo || 'N/A'}
 Image Size: 1080 x 1080 px
 
-Please go through all the details so you fully understand the business. Analyze everything as an expert in this business. Make sure you identify the right PERSONA, MASS DESIRE, and BEST PROBLEM.
+Please go through all the details so you fully understand the business. Analyze everything as an expert in this business. Make sure you identify the right PERSONA, MASS DESIRE, and BEST PROBLEM.`;
+    }
 
-${websiteContent ? '\n\nWEBSITE CONTENT (scraped from the client website — this is the REAL business info, use it as ground truth):\n' + websiteContent : ''}
+    if (websiteContent) {
+      userPrompt += `\n\nWEBSITE CONTENT (scraped from the client website — this is the REAL business info, use it as ground truth):\n${websiteContent}`;
+    }
+
+    // ── EDITOR NOTES — mataas ang priority, kailangang sundin ──
+    if (notes && notes.trim()) {
+      userPrompt += `\n\n═══ EDITOR INSTRUCTIONS (HIGHEST PRIORITY — follow these strictly across ALL ${numStrategies} creatives) ═══\n${notes.trim()}\n═══════════════════════════════════════`;
+    }
+
+    userPrompt += `
 
 CRITICAL ANTI-HALLUCINATION RULES:
 - Base ALL claims, services, prices, promos, and inclusions ONLY on the details, website content, and reference photos provided above. Do NOT invent services, prices, locations, or claims that were not given.
