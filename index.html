@@ -2437,18 +2437,6 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     </div>
 
     <!-- TOP: Add button lang -->
-    <!-- TEAM TABS -->
-    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-      <button class="fu-team-tab active" id="fu-tab-video" onclick="fuSwitchTeam('video')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-        Video team
-      </button>
-      <button class="fu-team-tab" id="fu-tab-image" onclick="fuSwitchTeam('image')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
-        Image team
-      </button>
-    </div>
-
     <div style="margin-bottom:16px">
       <button class="yellow-btn" id="fu-toggle-btn" onclick="fuToggleForm()" style="display:inline-flex;align-items:center;gap:7px;font-weight:650">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2473,7 +2461,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Project name</label>
         <input class="fu-input" id="fu-project-name" placeholder="e.g. Product Demo UGC"/>
       </div>
-      <div class="fu-video-field">
+      <div>
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Page</label>
         <div class="fu-dd" id="fu-dd-formpage" style="width:100%">
           <div class="fu-dd-btn" onclick="fuDdToggle('fu-dd-formpage')" style="width:100%;justify-content:space-between">
@@ -2491,11 +2479,11 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
         <input type="hidden" id="fu-page" value="VIRAL UGC"/>
       </div>
-      <div class="fu-video-field">
+      <div>
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Headline</label>
         <input class="fu-input" id="fu-headline" placeholder="e.g. Your hook headline here"/>
       </div>
-      <div class="fu-video-field">
+      <div>
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">File link <span style="color:#6a6a75;font-weight:400">(GDrive / video)</span></label>
         <input class="fu-input" id="fu-file-link" placeholder="https://drive.google.com/..."/>
       </div>
@@ -2514,11 +2502,23 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           </button>
         </div>
       </div>
-      <div class="fu-image-field" style="display:none">
-        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Canva link</label>
-        <input class="fu-input" id="fu-canva-link" placeholder="https://canva.com/design/..."/>
+      <div>
+        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Category</label>
+        <div class="fu-dd" id="fu-dd-formcat" style="width:100%">
+          <button type="button" class="fu-dd-trigger" onclick="fuDdToggle('fu-dd-formcat')" style="width:100%">
+            <span class="fu-dd-dot" id="fu-formcat-dot" style="background:#a78bfa"></span>
+            <span id="fu-formcat-label">Viral clients freebies images</span>
+            <svg class="fu-dd-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="fu-dd-menu">
+            <div class="fu-dd-item active" onclick="fuFormCatPick('Viral clients freebies images','#a78bfa',this)"><span class="fu-dd-dot" style="background:#a78bfa"></span>Viral clients freebies images</div>
+            <div class="fu-dd-item" onclick="fuFormCatPick('Viral direct freebies images','#4ade80',this)"><span class="fu-dd-dot" style="background:#4ade80"></span>Viral direct freebies images</div>
+            <div class="fu-dd-item" onclick="fuFormCatPick('Direct clients images','#60a5fa',this)"><span class="fu-dd-dot" style="background:#60a5fa"></span>Direct clients images</div>
+          </div>
+        </div>
+        <input type="hidden" id="fu-category" value="Viral clients freebies images"/>
       </div>
-      <div class="fu-video-field" style="grid-column:1 / -1">
+      <div style="grid-column:1 / -1">
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Ad copy <span style="color:#6a6a75;font-weight:400">(optional)</span></label>
         <textarea class="fu-input" id="fu-ad-copy" placeholder="Paste your ad copy here..." style="min-height:80px;resize:vertical;font-family:inherit;line-height:1.6"></textarea>
       </div>
@@ -2538,7 +2538,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       </div>
       <div style="flex:1"></div>
       <!-- Custom dropdowns -->
-      <div class="fu-dd fu-video-field" id="fu-dd-page">
+      <div class="fu-dd" id="fu-dd-page">
         <div class="fu-dd-btn" onclick="fuDdToggle('fu-dd-page')">
           <span data-label>All pages</span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
@@ -2573,6 +2573,19 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div class="fu-dd-item" data-val="Published" onclick="fuDdPick('fu-dd-status','fu-status-filter','Published',this,'Published')"><span class="fu-dd-dot" style="background:#22c55e"></span>Published</div>
         </div>
       </div>
+      <div class="fu-dd" id="fu-dd-cat">
+        <button type="button" class="fu-dd-trigger" onclick="fuDdToggle('fu-dd-cat')">
+          <span data-label>All categories</span>
+          <svg class="fu-dd-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="fu-dd-menu">
+          <div class="fu-dd-item active" data-val="" onclick="fuDdPick('fu-dd-cat','fu-cat-filter','',this,'All categories')">All categories</div>
+          <div class="fu-dd-item" data-val="Viral clients freebies images" onclick="fuDdPick('fu-dd-cat','fu-cat-filter','Viral clients freebies images',this,'Viral clients freebies')"><span class="fu-dd-dot" style="background:#a78bfa"></span>Viral clients freebies</div>
+          <div class="fu-dd-item" data-val="Viral direct freebies images" onclick="fuDdPick('fu-dd-cat','fu-cat-filter','Viral direct freebies images',this,'Viral direct freebies')"><span class="fu-dd-dot" style="background:#4ade80"></span>Viral direct freebies</div>
+          <div class="fu-dd-item" data-val="Direct clients images" onclick="fuDdPick('fu-dd-cat','fu-cat-filter','Direct clients images',this,'Direct clients')"><span class="fu-dd-dot" style="background:#60a5fa"></span>Direct clients</div>
+        </div>
+      </div>
+      <input type="hidden" id="fu-cat-filter" value=""/>
       <button class="admin-only" id="fu-archive-btn" onclick="fuToggleArchive()" style="background:var(--bg2,#17171b);border:0.5px solid rgba(255,255,255,0.09);color:var(--text2,#c8c8d0);font-size:12.5px;font-weight:550;padding:9px 14px;border-radius:11px;cursor:pointer;transition:all .18s">📁 Archive (tracking)</button>
     </div>
 
@@ -2583,8 +2596,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
     <!-- TABLE -->
     <div class="data-table" style="border:0.5px solid rgba(255,255,255,0.06);border-radius:14px;overflow:visible">
-      <div class="table-head" id="fu-table-head" style="grid-template-columns:1.1fr 1.4fr 0.85fr 0.95fr 0.6fr 0.7fr 1.2fr 1fr 1.1fr;font-size:10px;letter-spacing:0.06em;color:#8a8a95">
-        <span>Staff</span><span>Project name</span><span>Page</span><span>Tags</span>
+      <div class="table-head" id="fu-table-head" style="grid-template-columns:1fr 1.3fr 0.8fr 1.2fr 0.85fr 0.55fr 0.6fr 1fr 0.9fr 1fr;font-size:10px;letter-spacing:0.06em;color:#8a8a95">
+        <span>Staff</span><span>Project name</span><span>Page</span><span>Category</span><span>Tags</span>
         <span>Ad copy</span><span>File link</span><span>Headline</span><span>Date uploaded</span><span>Status</span>
       </div>
       <div id="fu-table-body"></div>
@@ -3510,8 +3523,10 @@ function icpRenderCards() {
       +   '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">' + (s.subhead || '') + '</div>'
       +   bullets
       +   '<div style="font-size:10px;color:var(--text3);margin-top:8px">🎯 ' + (s.audience || '') + ' &nbsp;•&nbsp; 💔 ' + (s.pain || '') + ' &nbsp;•&nbsp; ✨ ' + (s.desire || '') + '</div>'
-      +   '<div style="font-size:10px;color:var(--text3);margin-top:3px">🎨 ' + (s.colors || '') + ' &nbsp;•&nbsp; 📢 CTA: ' + (s.cta || '') + '</div>'
+      +   '<div style="font-size:10px;color:var(--text3);margin-top:3px">🎨 ' + (s.colors || '') + (s.fonts ? ' &nbsp;•&nbsp; 🔤 ' + s.fonts : '') + ' &nbsp;•&nbsp; 📢 CTA: ' + (s.cta || '') + '</div>'
       +   '<div style="font-size:10px;color:var(--green);margin-top:3px">🛡️ ' + (s.safety || '') + '</div>'
+      +   (s.risky_avoided ? '<div style="font-size:10px;color:#f0a868;margin-top:3px">⚠️ Avoided: ' + s.risky_avoided + '</div>' : '')
+      +   (s.safer_wording ? '<div style="font-size:10px;color:#7db4fb;margin-top:3px">💬 Safer: ' + s.safer_wording + '</div>' : '')
       + '</div>'
       + '<div style="display:flex;flex-direction:column;gap:6px;min-width:130px">'
       +   '<button class="yellow-btn" onclick="icpCopyPrompt(' + i + ')" id="icp-copy-' + i + '" style="font-size:11px;padding:7px 12px;box-shadow:0 2px 8px rgba(250,204,21,0.2)">📋 Copy Prompt</button>'
