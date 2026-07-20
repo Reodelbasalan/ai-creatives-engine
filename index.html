@@ -2459,6 +2459,55 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     .fu-input:focus { outline:none; border-color:rgba(250,204,21,0.45); background:var(--bg2,#17171b); }
     .fu-input::placeholder { color:#6a6a75; }
     /* TEAM TABS */
+    /* ─── CATEGORY TABS (5 sections) ─── */
+    .fu-cat-tabs {
+      display:flex; gap:8px; flex-wrap:wrap; row-gap:8px; margin-bottom:18px;
+    }
+    .fu-cat-tab {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 15px; font-size:11.5px; font-weight:600; letter-spacing:0.01em;
+      color:#9a9aa5; background:var(--bg2,#17171b);
+      border:0.5px solid rgba(255,255,255,0.07); border-radius:11px;
+      cursor:pointer; white-space:nowrap;
+      transition:transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease, box-shadow .22s ease;
+    }
+    .fu-cat-tab svg { flex-shrink:0; opacity:0.85; transition:opacity .18s ease; }
+    .fu-cat-tab:hover {
+      transform:translateY(-2px); color:#d4d4dc;
+      border-color:rgba(250,204,21,0.32); background:rgba(250,204,21,0.05);
+      box-shadow:0 4px 14px rgba(250,204,21,0.10);
+    }
+    .fu-cat-tab:hover svg { opacity:1; }
+    .fu-cat-tab:active { transform:translateY(0) scale(0.985); }
+    .fu-cat-tab.active {
+      background:var(--yellow,#facc15); border-color:var(--yellow,#facc15);
+      color:#3a2a02; font-weight:700;
+      box-shadow:0 4px 16px rgba(250,204,21,0.28);
+    }
+    .fu-cat-tab.active:hover {
+      transform:translateY(-2px); background:#fbd535;
+      box-shadow:0 6px 20px rgba(250,204,21,0.36);
+    }
+    .fu-cat-count {
+      display:inline-block; min-width:18px; text-align:center;
+      background:rgba(255,255,255,0.06); color:#8a8a95;
+      border-radius:20px; padding:2px 7px; font-size:10px; font-weight:650;
+      transition:background .18s ease, color .18s ease;
+    }
+    .fu-cat-tab:hover .fu-cat-count { background:rgba(250,204,21,0.14); color:#facc15; }
+    .fu-cat-tab.active .fu-cat-count { background:rgba(58,42,2,0.22); color:#3a2a02; }
+    .fu-cat-tab.active:hover .fu-cat-count { background:rgba(58,42,2,0.28); color:#3a2a02; }
+    .fu-cat-lock {
+      display:inline-flex; align-items:center; gap:7px;
+      padding:9px 13px; border-radius:10px; font-size:11.5px; font-weight:600;
+      background:rgba(250,204,21,0.08); border:0.5px solid rgba(250,204,21,0.28);
+      color:#facc15;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .fu-cat-tab, .fu-cat-tab:hover, .fu-cat-tab.active:hover { transform:none; transition:none; }
+      .fu-cat-count { transition:none; }
+    }
+
     .fu-team-tab {
       display:inline-flex; align-items:center; gap:8px;
       padding:10px 18px; border-radius:11px; font-size:12.5px; font-weight:650;
@@ -2674,21 +2723,12 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
       </div>
       <div>
-        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Category</label>
-        <div class="fu-dd" id="fu-dd-formcat" style="width:100%">
-          <button type="button" class="fu-dd-btn" onclick="fuDdToggle('fu-dd-formcat')" style="width:100%">
-            <span class="fu-dd-dot" id="fu-formcat-dot" style="background:rgba(255,255,255,0.18)"></span>
-            <span id="fu-formcat-label" style="flex:1;text-align:left">None</span>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="fu-dd-menu">
-            <div class="fu-dd-item active" onclick="fuFormCatPick('','rgba(255,255,255,0.18)',this)"><span class="fu-dd-dot" style="background:rgba(255,255,255,0.18)"></span>None</div>
-            <div class="fu-dd-item" onclick="fuFormCatPick('Viral clients freebies images','#a78bfa',this)"><span class="fu-dd-dot" style="background:#a78bfa"></span>Viral clients freebies images</div>
-            <div class="fu-dd-item" onclick="fuFormCatPick('Viral direct freebies images','#4ade80',this)"><span class="fu-dd-dot" style="background:#4ade80"></span>Viral direct freebies images</div>
-            <div class="fu-dd-item" onclick="fuFormCatPick('Direct clients images','#60a5fa',this)"><span class="fu-dd-dot" style="background:#60a5fa"></span>Direct clients images</div>
-          </div>
+        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Section <span style="color:#6a6a75;font-weight:400">(auto — base sa tab)</span></label>
+        <div class="fu-cat-lock" id="fu-formcat-lock" style="width:100%;box-sizing:border-box">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <span id="fu-formcat-label" style="flex:1">Video editor team</span>
         </div>
-        <input type="hidden" id="fu-category" value=""/>
+        <input type="hidden" id="fu-category" value="Video editor team"/>
       </div>
       <div style="grid-column:1 / -1">
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Ad copy <span style="color:#6a6a75;font-weight:400">(optional)</span></label>
@@ -2701,6 +2741,30 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     </button>
   </div>
 </div>
+
+    <!-- CATEGORY TABS (5 sections) -->
+    <div class="fu-cat-tabs" id="fu-cat-tabs">
+      <button type="button" class="fu-cat-tab active" data-cat="Video editor team" onclick="fuCatTab('Video editor team')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        Video editor team<span class="fu-cat-count" id="fu-cnt-0">0</span>
+      </button>
+      <button type="button" class="fu-cat-tab" data-cat="Viral clients freebies images" onclick="fuCatTab('Viral clients freebies images')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+        Viral clients freebies images<span class="fu-cat-count" id="fu-cnt-1">0</span>
+      </button>
+      <button type="button" class="fu-cat-tab" data-cat="Viral direct video" onclick="fuCatTab('Viral direct video')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Viral direct video<span class="fu-cat-count" id="fu-cnt-2">0</span>
+      </button>
+      <button type="button" class="fu-cat-tab" data-cat="Dell direct clients images" onclick="fuCatTab('Dell direct clients images')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Dell direct clients images<span class="fu-cat-count" id="fu-cnt-3">0</span>
+      </button>
+      <button type="button" class="fu-cat-tab" data-cat="Dell direct client video" onclick="fuCatTab('Dell direct client video')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+        Dell direct client video<span class="fu-cat-count" id="fu-cnt-4">0</span>
+      </button>
+    </div>
 
     <!-- FILTERS BAR (nasa baba na, sa creatives area) -->
     <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
@@ -2745,19 +2809,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div class="fu-dd-item" data-val="Published" onclick="fuDdPick('fu-dd-status','fu-status-filter','Published',this,'Published')"><span class="fu-dd-dot" style="background:#22c55e"></span>Published</div>
         </div>
       </div>
-      <div class="fu-dd" id="fu-dd-cat">
-        <button type="button" class="fu-dd-btn" onclick="fuDdToggle('fu-dd-cat')">
-          <span data-label>All categories</span>
-          <svg class="fu-dd-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div class="fu-dd-menu">
-          <div class="fu-dd-item active" data-val="" onclick="fuDdPick('fu-dd-cat','fu-cat-filter','',this,'All categories')">All categories</div>
-          <div class="fu-dd-item" data-val="Viral clients freebies images" onclick="fuDdPick('fu-dd-cat','fu-cat-filter','Viral clients freebies images',this,'Viral clients freebies')"><span class="fu-dd-dot" style="background:#a78bfa"></span>Viral clients freebies</div>
-          <div class="fu-dd-item" data-val="Viral direct freebies images" onclick="fuDdPick('fu-dd-cat','fu-cat-filter','Viral direct freebies images',this,'Viral direct freebies')"><span class="fu-dd-dot" style="background:#4ade80"></span>Viral direct freebies</div>
-          <div class="fu-dd-item" data-val="Direct clients images" onclick="fuDdPick('fu-dd-cat','fu-cat-filter','Direct clients images',this,'Direct clients')"><span class="fu-dd-dot" style="background:#60a5fa"></span>Direct clients</div>
-        </div>
-      </div>
-      <input type="hidden" id="fu-cat-filter" value=""/>
+      <input type="hidden" id="fu-cat-filter" value="Video editor team"/>
       <button class="admin-only" id="fu-archive-btn" onclick="fuToggleArchive()" style="background:var(--bg2,#17171b);border:0.5px solid rgba(255,255,255,0.09);color:var(--text2,#c8c8d0);font-size:12.5px;font-weight:550;padding:9px 14px;border-radius:11px;cursor:pointer;transition:all .18s"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align:-2px;margin-right:6px"><rect x="2" y="4" width="20" height="5" rx="1"/><path d="M4 9v9a2 2 0 002 2h12a2 2 0 002-2V9"/><line x1="10" y1="13" x2="14" y2="13"/></svg>Archive (tracking)</button>
     </div>
 
@@ -2768,8 +2820,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
     <!-- TABLE -->
     <div class="data-table" style="border:0.5px solid rgba(255,255,255,0.06);border-radius:14px;overflow:visible">
-      <div class="table-head" id="fu-table-head" style="grid-template-columns:1fr 1.3fr 0.8fr 1.2fr 0.85fr 0.55fr 0.6fr 1fr 0.9fr 1fr;font-size:10px;letter-spacing:0.06em;color:#8a8a95">
-        <span>Staff</span><span>Project name</span><span>Page</span><span>Category</span><span>Tags</span>
+      <div class="table-head" id="fu-table-head" style="grid-template-columns:1fr 1.5fr 0.9fr 0.9fr 0.6fr 0.65fr 1.1fr 1fr 1.1fr;font-size:10px;letter-spacing:0.06em;color:#8a8a95">
+        <span>Staff</span><span>Project name</span><span>Page</span><span>Tags</span>
         <span>Ad copy</span><span>File link</span><span>Headline</span><span>Date uploaded</span><span>Status</span>
       </div>
       <div id="fu-table-body"></div>
