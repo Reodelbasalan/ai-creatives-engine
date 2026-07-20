@@ -4341,6 +4341,7 @@ function fuToggleForm(){
   if (forUploadState.formOpen){
     wrap.style.maxHeight = '640px'; wrap.style.opacity = '1'; wrap.style.marginBottom = '20px';
     if (btn) btn.style.opacity = '0.55';
+    if (typeof fuSyncFormCategory === 'function') fuSyncFormCategory();
   } else {
     wrap.style.maxHeight = '0'; wrap.style.opacity = '0'; wrap.style.marginBottom = '0';
     if (btn) btn.style.opacity = '1';
@@ -4432,8 +4433,11 @@ function filterForUpload(){
   var owner = document.getElementById('fu-owner-filter')?.value || '';
   var status = document.getElementById('fu-status-filter')?.value || '';
   var pageF = document.getElementById('fu-page-filter')?.value || '';
-  var catF = document.getElementById('fu-cat-filter')?.value || '';
+  var catF = (typeof fuActiveCat !== 'undefined' && fuActiveCat)
+    ? fuActiveCat
+    : (document.getElementById('fu-cat-filter')?.value || '');
   var archiveView = forUploadState.showArchive === true;
+  if (typeof fuUpdateCatCounts === 'function') fuUpdateCatCounts();
   forUploadState.filtered = forUploadState.items.filter(function(c){
     // Archive view = archived lang; Main view = hindi archived
     var isArchived = c.archived === true;
@@ -4776,15 +4780,15 @@ function renderForUpload(){
   if (!body) return;
   var head = document.getElementById('fu-table-head');
   if (head){
-    head.style.gridTemplateColumns = '1fr 1.3fr 0.8fr 1.2fr 0.85fr 0.55fr 0.6fr 1fr 0.9fr 1fr';
-    head.innerHTML = '<span>Staff</span><span>Project name</span><span>Page</span><span>Category</span><span>Tags</span><span>Ad copy</span><span>File link</span><span>Headline</span><span>Date uploaded</span><span>Status</span>';
+    head.style.gridTemplateColumns = '1fr 1.5fr 0.9fr 0.9fr 0.6fr 0.65fr 1.1fr 1fr 1.1fr';
+    head.innerHTML = '<span>Staff</span><span>Project name</span><span>Page</span><span>Tags</span><span>Ad copy</span><span>File link</span><span>Headline</span><span>Date uploaded</span><span>Status</span>';
   }
 
   var items = forUploadState.filtered;
   if (!items.length){
     body.innerHTML = '<div class="table-empty"><div class="table-empty-icon">'
       + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6a6a75" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
-      + '</div>Wala pang creatives. Click "Add creative" above!</div>';
+      + '</div>Wala pang creatives sa <b style="color:#facc15">'+escapeHtml(fuActiveCat)+'</b>. Click "Add creative" above!</div>';
     return;
   }
   body.innerHTML = items.map(function(c){
@@ -4828,11 +4832,10 @@ function renderForUpload(){
     if (c.is_direct_client) tagsCell += '<span class="fu-row-tag" style="background:rgba(96,165,250,0.14);color:#7db4fb;border:0.5px solid rgba(96,165,250,0.3)">Direct client</span>';
     if (!tagsCell) tagsCell = '<span style="color:#5a5a65;font-size:11px">—</span>';
 
-    return '<div class="table-row fu-row" style="grid-template-columns:1fr 1.3fr 0.8fr 1.2fr 0.85fr 0.55fr 0.6fr 1fr 0.9fr 1fr;align-items:center">'
+    return '<div class="table-row fu-row" style="grid-template-columns:1fr 1.5fr 0.9fr 0.9fr 0.6fr 0.65fr 1.1fr 1fr 1.1fr;align-items:center">'
       + '<div>'+fuStaffChip(c.owner_name)+'</div>'
       + '<div><div class="row-name" style="font-weight:600;color:#f4f4f7">'+escapeHtml(c.project_name||'—')+'</div>'+namingTag+'</div>'
       + '<div>'+fuPageBadge(c.content_type)+'</div>'
-      + '<div>'+fuCatBadge(c.category)+'</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:3px">'+tagsCell+'</div>'
       + '<div>'+adCopy+'</div>'
       + '<div>'+fileLink+'</div>'
@@ -4948,7 +4951,7 @@ async function fuAddCreative(){
     content_type: document.getElementById('fu-page')?.value || 'VIRAL UGC',
     ad_copy: document.getElementById('fu-ad-copy')?.value?.trim() || null,
     client_name: document.getElementById('fu-client-name')?.value?.trim() || null,
-    category: document.getElementById('fu-category')?.value || null,
+    category: (typeof fuActiveCat !== 'undefined' && fuActiveCat) ? fuActiveCat : (document.getElementById('fu-category')?.value || null),
     is_freebies: fuTags.freebies,
     is_direct_client: fuTags.direct,
     file_link: document.getElementById('fu-file-link')?.value?.trim() || null,
@@ -4978,44 +4981,68 @@ async function fuDelete(id){
   showNotif('Deleted.', 'success');
   loadForUpload();
 }
-// ── CATEGORY (Viral clients freebies / Viral direct freebies / Direct clients) ──
-function fuFormCatPick(cat, color, itemEl){
-  var dd = document.getElementById('fu-dd-formcat');
-  var hidden = document.getElementById('fu-category');
-  var dot = document.getElementById('fu-formcat-dot');
-  var lbl = document.getElementById('fu-formcat-label');
-  if (dd){
-    dd.querySelectorAll('.fu-dd-item').forEach(function(x){ x.classList.remove('active'); });
-    if (itemEl) itemEl.classList.add('active');
-    dd.classList.remove('open');
-  }
-  if (lbl) lbl.textContent = cat || 'None';
-  if (hidden) hidden.value = cat;
-  if (dot) dot.style.background = color;
-}
+// ══════════════════════════════════════════════
+// CATEGORY TABS — 5 sections, per-tab upload
+// ══════════════════════════════════════════════
+var FU_CATS = [
+  'Video editor team',
+  'Viral clients freebies images',
+  'Viral direct video',
+  'Dell direct clients images',
+  'Dell direct client video'
+];
+var fuActiveCat = FU_CATS[0];
 
-// I-reset ang category dropdown pabalik sa None
-function fuResetCategory(){
-  var dd = document.getElementById('fu-dd-formcat');
-  if (dd){
-    dd.querySelectorAll('.fu-dd-item').forEach(function(x, i){
-      x.classList.toggle('active', i === 0);
+// Pindutin ang tab — pumapalit ng view AT ng auto-category ng upload form
+function fuCatTab(cat){
+  if (FU_CATS.indexOf(cat) === -1) return;
+  fuActiveCat = cat;
+
+  var tabs = document.getElementById('fu-cat-tabs');
+  if (tabs){
+    tabs.querySelectorAll('.fu-cat-tab').forEach(function(t){
+      t.classList.toggle('active', t.getAttribute('data-cat') === cat);
     });
   }
-  var lbl = document.getElementById('fu-formcat-label');
-  var dot = document.getElementById('fu-formcat-dot');
+
+  var f = document.getElementById('fu-cat-filter');
+  if (f) f.value = cat;
+
+  fuSyncFormCategory();
+  filterForUpload();
+}
+
+// I-sync ang locked "Section" field ng form sa active tab
+function fuSyncFormCategory(){
   var hidden = document.getElementById('fu-category');
-  if (lbl) lbl.textContent = 'None';
-  if (dot) dot.style.background = 'rgba(255,255,255,0.18)';
-  if (hidden) hidden.value = '';
+  var lbl = document.getElementById('fu-formcat-label');
+  if (hidden) hidden.value = fuActiveCat;
+  if (lbl) lbl.textContent = fuActiveCat;
+}
+
+// Backward-compat — tinawag pa rin pagkatapos mag-add
+function fuResetCategory(){ fuSyncFormCategory(); }
+
+// Bilang ng items kada tab (hindi kasama ang archived)
+function fuUpdateCatCounts(){
+  var items = (forUploadState && forUploadState.items) || [];
+  FU_CATS.forEach(function(cat, i){
+    var n = items.filter(function(c){
+      return c.archived !== true && c.category === cat;
+    }).length;
+    var el = document.getElementById('fu-cnt-'+i);
+    if (el) el.textContent = n;
+  });
 }
 
 function fuCatBadge(cat){
   if (!cat) return '<span style="color:#5a5a65;font-size:11px">—</span>';
   var styles = {
+    'Video editor team':             { bg:'rgba(250,204,21,0.16)',  c:'#facc15', bd:'rgba(250,204,21,0.4)',  short:'Video editor team' },
     'Viral clients freebies images': { bg:'rgba(167,139,250,0.16)', c:'#b9a5fc', bd:'rgba(167,139,250,0.4)', short:'Viral clients freebies' },
-    'Viral direct freebies images':  { bg:'rgba(74,222,128,0.16)',  c:'#6ee7a0', bd:'rgba(74,222,128,0.4)',  short:'Viral direct freebies' },
-    'Direct clients images':         { bg:'rgba(96,165,250,0.16)',  c:'#7db4fb', bd:'rgba(96,165,250,0.4)',  short:'Direct clients' }
+    'Viral direct video':            { bg:'rgba(74,222,128,0.16)',  c:'#6ee7a0', bd:'rgba(74,222,128,0.4)',  short:'Viral direct video' },
+    'Dell direct clients images':    { bg:'rgba(96,165,250,0.16)',  c:'#7db4fb', bd:'rgba(96,165,250,0.4)',  short:'Dell direct images' },
+    'Dell direct client video':      { bg:'rgba(244,114,182,0.16)', c:'#f9a8d4', bd:'rgba(244,114,182,0.4)', short:'Dell direct video' }
   };
   var s = styles[cat] || { bg:'rgba(255,255,255,0.06)', c:'#9a9aa5', bd:'rgba(255,255,255,0.1)', short:cat };
   return '<span title="'+escapeHtml(cat)+'" style="display:inline-block;font-size:9.5px;font-weight:600;padding:4px 10px;border-radius:20px;background:'+s.bg+';color:'+s.c+';border:0.5px solid '+s.bd+';white-space:nowrap">'+escapeHtml(s.short)+'</span>';
