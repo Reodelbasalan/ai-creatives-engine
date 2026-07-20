@@ -1053,6 +1053,129 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 #nav-settings:hover{color:#94a3b8;background:rgba(148,163,184,0.07)}
 #nav-settings.active{color:#94a3b8;background:rgba(148,163,184,0.1);border:0.5px solid rgba(148,163,184,0.35);font-weight:600}
 #nav-settings.active::before{background:#94a3b8;box-shadow:0 0 8px #94a3b8}
+
+/* ═══════════════════════════════════════════════════
+   PREMIUM BUTTON SYSTEM — app-wide hover at motion
+   Isang style per role. CSS lang, walang HTML change.
+   ═══════════════════════════════════════════════════ */
+
+/* PRIMARY — lift na may bounce at glow */
+.yellow-btn {
+  transition: transform .2s cubic-bezier(.34,1.4,.64,1),
+              box-shadow .2s ease,
+              background .18s ease !important;
+}
+.yellow-btn:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 7px 20px rgba(250,204,21,0.32) !important;
+}
+.yellow-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.985) !important;
+  transition-duration: .1s !important;
+}
+.yellow-btn svg { transition: transform .2s cubic-bezier(.34,1.4,.64,1); }
+.yellow-btn:hover:not(:disabled) svg { transform: scale(1.08); }
+
+/* SECONDARY — fill sweep mula kaliwa */
+.primary-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: color .22s ease, border-color .22s ease, background .22s ease !important;
+}
+.primary-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--yellow, #facc15);
+  transform: translateX(-101%);
+  transition: transform .3s cubic-bezier(.5,0,.2,1);
+  z-index: -1;
+}
+.primary-btn:hover:not(:disabled) { color: #111 !important; border-color: var(--yellow, #facc15) !important; }
+.primary-btn:hover:not(:disabled)::before { transform: translateX(0); }
+
+/* TERTIARY — ghost na may yellow tint at icon slide */
+.ghost-btn {
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .15s ease !important;
+}
+.ghost-btn:hover:not(:disabled) {
+  background: rgba(250,204,21,0.06) !important;
+  border-color: rgba(250,204,21,0.32) !important;
+  color: var(--yellow, #facc15) !important;
+}
+.ghost-btn:active:not(:disabled) { transform: scale(0.975); }
+.ghost-btn svg { transition: transform .22s cubic-bezier(.34,1.4,.64,1); }
+.ghost-btn:hover:not(:disabled) svg { transform: translateX(2px); }
+
+/* DESTRUCTIVE — pula, may soft press */
+.danger-btn, .btn-danger, .remove-btn, .fu-del-btn {
+  transition: background .18s ease, border-color .18s ease, color .18s ease, transform .12s ease !important;
+}
+.danger-btn:hover, .btn-danger:hover, .remove-btn:hover, .fu-del-btn:hover {
+  background: rgba(239,68,68,0.14) !important;
+  color: #f87171 !important;
+  border-color: rgba(239,68,68,0.4) !important;
+}
+.danger-btn:active, .btn-danger:active, .remove-btn:active, .fu-del-btn:active {
+  transform: scale(0.94);
+}
+
+/* NAV ITEMS — smooth slide at glow */
+.nav-item {
+  transition: background .18s ease, color .18s ease, transform .18s ease !important;
+}
+.nav-item:hover:not(.active) { transform: translateX(2px); }
+.nav-item svg { transition: transform .2s cubic-bezier(.34,1.3,.64,1); }
+.nav-item:hover svg { transform: scale(1.1); }
+
+/* TABLE ROWS — lift at border glow */
+.table-row {
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+  border: 0.5px solid transparent;
+}
+.table-row:hover {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(250,204,21,0.18);
+  transform: translateX(2px);
+}
+
+/* CARDS — subtle lift */
+.form-card, .stat-card {
+  transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  border-color: rgba(255,255,255,0.14);
+}
+
+/* INPUTS — malinaw na focus */
+.form-input, .form-textarea, .form-select, input[type="text"], input[type="email"], input[type="password"], textarea, select {
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+.form-input:hover, .form-textarea:hover, .form-select:hover { border-color: rgba(255,255,255,0.18); }
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: rgba(250,204,21,0.45) !important;
+  box-shadow: 0 0 0 3px rgba(250,204,21,0.08);
+}
+
+/* MODALS — smooth entry */
+.modal, .modal-box, .modal-content {
+  animation: modalIn .26s cubic-bezier(.34,1.3,.64,1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Igalang ang reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
 </style>
 </head>
 <body>
