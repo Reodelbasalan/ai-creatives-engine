@@ -487,7 +487,7 @@ async function saveClientDetails(){
   var product='',emphasize='',script='';
   if(isPaste){
     var brief=document.getElementById('f-brief').value.trim();
-    if(!brief){showNotif('Paste client brief first','error');if(btn){btn.disabled=false;btn.innerHTML='💾 Save details only';}return;}
+    if(!brief){showNotif('Paste client brief first','error');if(btn){btn.disabled=false;btn.innerHTML=FB_SAVE_LABEL;}return;}
     function extractField(text,keys){
       var ls=text.split('\n');
       for(var i=0;i<ls.length;i++){
@@ -514,12 +514,12 @@ async function saveClientDetails(){
     emphasize=document.getElementById('f-script')?.value||extractField(brief,['emphasize','script','highlight','focus']);
   } else {
     clientName=document.getElementById('f-client')?.value?.trim();
-    if(!clientName){showNotif('Client name required','error');if(btn){btn.disabled=false;btn.innerHTML='💾 Save details only';}return;}
+    if(!clientName){showNotif('Client name required','error');if(btn){btn.disabled=false;btn.innerHTML=FB_SAVE_LABEL;}return;}
     product=document.getElementById('f-product')?.value?.trim()||'';
     emphasize=document.getElementById('f-emphasize')?.value||'';
     script=document.getElementById('f-script')?.value||'';
   }
-  var{error}=await sb.from('projects').insert({
+  var{data,error}=await sb.from('projects').insert({
     client_name:clientName,
     business_type:isPaste?(extractedBizType||''):document.getElementById('f-biztype')?.value||'',
     product:product||'',
@@ -545,11 +545,12 @@ async function saveClientDetails(){
     moodboard_link:document.getElementById('f-moodboard')?.value?.trim()||null,
     sample_video_link:document.getElementById('f-sample-video')?.value?.trim()||null,
     client_extra:document.getElementById('f-client-extra')?.value?.trim()||null
-  });
-  if(btn){btn.disabled=false;btn.innerHTML='💾 Save details only';}
+  }).select();
+  if(btn){btn.disabled=false;btn.innerHTML=FB_SAVE_LABEL;}
   if(error){showNotif('Error: '+error.message,'error');return;}
-  showNotif('Client details saved! ✓ Generate blueprint when ready.','success');
+  showNotif('Client details saved! Generate blueprint when ready.','success');
   logActivity('CLIENT_SAVED',clientName);
+  if (typeof fbCreateForUploadRow === 'function') { await fbCreateForUploadRow(data && data[0] && data[0].id, clientName); fbResetForm(); }
   // Clear form
   ['f-client','f-biztype','f-product','f-pain','f-usp','f-audience','f-goal','f-emphasize','f-brief','f-script','f-fb','f-website','f-color1','f-color2','f-gdrive','f-moodboard','f-sample-video','f-client-extra'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   selectedToneVal='';
@@ -593,6 +594,157 @@ async function loadDashboard(){
 }
 
 
+// ══════════════════════════════════════════════
+// FREEBIES ASSIGNMENT — New project → For Upload
+// ══════════════════════════════════════════════
+var fbEditors = [];
+
+function fbInitials(name){
+  var p = String(name||'').trim().split(/\s+/).filter(Boolean);
+  if (!p.length) return '?';
+  return (p.length === 1 ? p[0].slice(0,2) : p[0][0] + p[1][0]).toUpperCase();
+}
+
+function fbStep(delta){
+  var el = document.getElementById('f-freebies-count');
+  if (!el) return;
+  var v = Math.max(0, Math.min(99, (parseInt(el.value,10) || 0) + delta));
+  el.value = v;
+  el.classList.remove('fb-bump'); void el.offsetWidth; el.classList.add('fb-bump');
+  fbSyncSummary();
+}
+
+function fbDdToggle(id){
+  var dd = document.getElementById(id);
+  if (!dd) return;
+  var wasOpen = dd.classList.contains('open');
+  document.querySelectorAll('.fb-dd.open').forEach(function(d){ d.classList.remove('open'); });
+  if (!wasOpen) dd.classList.add('open');
+}
+
+document.addEventListener('click', function(e){
+  if (!e.target.closest || !e.target.closest('.fb-dd')) {
+    document.querySelectorAll('.fb-dd.open').forEach(function(d){ d.classList.remove('open'); });
+  }
+});
+
+function fbPickDest(dest, color, el){
+  var dd = document.getElementById('fb-dd-dest');
+  if (dd){
+    dd.querySelectorAll('.fb-dd-item').forEach(function(x){ x.classList.remove('active'); });
+    if (el) el.classList.add('active');
+    dd.classList.remove('open');
+  }
+  var lbl = document.getElementById('fb-dest-label');
+  var dot = document.getElementById('fb-dest-dot');
+  var h = document.getElementById('f-freebies-dest');
+  if (lbl) lbl.textContent = dest;
+  if (dot) dot.style.background = color;
+  if (h) h.value = dest;
+  fbSyncSummary();
+}
+
+function fbPickEditor(id, name, el){
+  var dd = document.getElementById('fb-dd-editor');
+  if (dd){
+    dd.querySelectorAll('.fb-dd-item').forEach(function(x){ x.classList.remove('active'); });
+    if (el) el.classList.add('active');
+    dd.classList.remove('open');
+  }
+  var lbl = document.getElementById('fb-editor-label');
+  var av = document.getElementById('fb-editor-av');
+  var h = document.getElementById('f-freebies-editor');
+  if (lbl) lbl.textContent = name || 'Walang assign';
+  if (h) h.value = id || '';
+  if (av){
+    av.innerHTML = id
+      ? escapeHtml(fbInitials(name))
+      : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+  }
+  fbSyncSummary();
+}
+
+async function fbLoadEditors(){
+  var menu = document.getElementById('fb-editor-menu');
+  if (!menu) return;
+  var res = await sb.from('profiles').select('id,name,email').eq('role','editor').order('name');
+  fbEditors = res.data || [];
+  var html = '<div class="fb-dd-item active" onclick="fbPickEditor(\'\',\'\',this)">'
+    + '<span class="fb-av"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Walang assign</div>';
+  html += fbEditors.map(function(e){
+    var nm = e.name || e.email || 'Editor';
+    return '<div class="fb-dd-item" onclick="fbPickEditor(\''+e.id+'\',\''+escapeHtml(nm).replace(/'/g,"\\'")+'\',this)">'
+      + '<span class="fb-av">'+escapeHtml(fbInitials(nm))+'</span>'+escapeHtml(nm)+'</div>';
+  }).join('');
+  if (!fbEditors.length) html += '<div class="fb-dd-empty">Walang editor na naka-register</div>';
+  menu.innerHTML = html;
+}
+
+function fbSyncSummary(){
+  var n = parseInt(document.getElementById('f-freebies-count')?.value, 10) || 0;
+  var dest = document.getElementById('f-freebies-dest')?.value || '';
+  var editorId = document.getElementById('f-freebies-editor')?.value || '';
+  var box = document.getElementById('fb-summary');
+  var txt = document.getElementById('fb-summary-text');
+  if (!box || !txt) return;
+
+  if (n <= 0){
+    box.classList.remove('fb-on');
+    txt.textContent = 'Set ka ng bilang para makagawa ng freebies row sa For Upload.';
+    return;
+  }
+  var ed = fbEditors.find(function(e){ return e.id === editorId; });
+  var who = ed ? (ed.name || ed.email) : null;
+  box.classList.add('fb-on');
+  txt.innerHTML = 'Gagawa ng <b style="color:#facc15">1 row</b> na may <b style="color:#facc15">'
+    + n + ' freebies</b> sa <b style="color:#b9a5fc">' + escapeHtml(dest) + '</b>'
+    + (who ? ', naka-assign kay <b style="color:#f2f0ea">' + escapeHtml(who) + '</b>' : ', walang assigned editor');
+}
+
+// Gumawa/mag-update ng freebies row sa For Upload (tinatawag ng save + generate)
+async function fbCreateForUploadRow(projectId, clientName){
+  var n = parseInt(document.getElementById('f-freebies-count')?.value, 10) || 0;
+  if (n <= 0) return;
+  var dest = document.getElementById('f-freebies-dest')?.value || 'Viral clients freebies images';
+  var editorId = document.getElementById('f-freebies-editor')?.value || null;
+  var label = (clientName || 'Freebies') + ' — ' + n + ' freebies';
+
+  try {
+    var existing = null;
+    if (projectId){
+      var q = await sb.from('creatives_upload').select('id').eq('project_id', projectId).eq('is_freebies', true).limit(1);
+      existing = (q.data || [])[0] || null;
+    }
+    if (existing){
+      await sb.from('creatives_upload').update({
+        project_name: label, category: dest, freebies_count: n, staff_id: editorId
+      }).eq('id', existing.id);
+      showNotif('Freebies row updated sa ' + dest, 'success');
+    } else {
+      await sb.from('creatives_upload').insert({
+        project_name: label, category: dest, freebies_count: n,
+        is_freebies: true, project_id: projectId || null,
+        staff_id: editorId, status: 'Unpublished', tags: 'Freebies'
+      });
+      showNotif(n + ' freebies naipasa sa ' + dest, 'success');
+    }
+  } catch(err){
+    console.error('freebies row error', err);
+    showNotif('Hindi nagawa ang freebies row: ' + (err.message || err), 'error');
+  }
+}
+
+function fbResetForm(){
+  var c = document.getElementById('f-freebies-count'); if (c) c.value = 0;
+  var h = document.getElementById('f-freebies-editor'); if (h) h.value = '';
+  var lbl = document.getElementById('fb-editor-label'); if (lbl) lbl.textContent = 'Walang assign';
+  var av = document.getElementById('fb-editor-av');
+  if (av) av.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+  var menu = document.getElementById('fb-editor-menu');
+  if (menu) menu.querySelectorAll('.fb-dd-item').forEach(function(x,i){ x.classList.toggle('active', i===0); });
+  fbSyncSummary();
+}
+
 async function loadAssignDropdown(){
   var sel=document.getElementById('f-assign-to');
   if(!sel)return;
@@ -600,6 +752,7 @@ async function loadAssignDropdown(){
   sel.innerHTML='<option value="">Unassigned (assign later)</option>'+(data||[]).map(function(e){
     return '<option value="'+e.id+'">'+(e.name||e.email)+'</option>';
   }).join('');
+  if (typeof fbLoadEditors === 'function') { await fbLoadEditors(); fbSyncSummary(); }
 }
 // ALL PROJECTS
 async function loadAllProjects(){
@@ -856,7 +1009,7 @@ async function saveProject(){
     product=document.getElementById('f-product').value.trim();
     emphasize=document.getElementById('f-emphasize').value||'';
   }
-  const{error}=await sb.from('projects').insert({
+  const{data,error}=await sb.from('projects').insert({
     client_name:clientName,
     business_type:isPaste?'':document.getElementById('f-biztype').value,
     product,
@@ -881,10 +1034,11 @@ async function saveProject(){
     moodboard_link:document.getElementById('f-moodboard')?.value?.trim()||null,
     sample_video_link:document.getElementById('f-sample-video')?.value?.trim()||null,
     client_extra:document.getElementById('f-client-extra')?.value?.trim()||null
-  });
-  btn.disabled=false;btn.innerHTML='💾 Save &amp; send to editor';
+  }).select();
+  btn.disabled=false;btn.innerHTML=FB_SEND_LABEL;
   if(error){showNotif('Save error: '+error.message,'error');return;}
-  showNotif('Project saved! Ready for editor ✓','success');
+  showNotif('Project saved! Ready for editor','success');
+  if (typeof fbCreateForUploadRow === 'function') { await fbCreateForUploadRow(data && data[0] && data[0].id, clientName); fbResetForm(); }
   document.getElementById('blueprint-output').style.display='none';
   document.getElementById('gen-status').textContent='';
   document.getElementById('f-brief').value='';
@@ -4834,7 +4988,7 @@ function renderForUpload(){
 
     return '<div class="table-row fu-row" style="grid-template-columns:1fr 1.5fr 0.9fr 0.9fr 0.6fr 0.65fr 1.1fr 1fr 1.1fr;align-items:center">'
       + '<div>'+fuStaffChip(c.owner_name)+'</div>'
-      + '<div><div class="row-name" style="font-weight:600;color:#f4f4f7">'+escapeHtml(c.project_name||'—')+'</div>'+namingTag+'</div>'
+      + '<div><div class="row-name" style="font-weight:600;color:#f4f4f7">'+escapeHtml(c.project_name||'—')+'</div>'+namingTag+fuFreebiesTag(c)+'</div>'
       + '<div>'+fuPageBadge(c.content_type)+'</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:3px">'+tagsCell+'</div>'
       + '<div>'+adCopy+'</div>'
@@ -4984,6 +5138,22 @@ async function fuDelete(id){
 // ══════════════════════════════════════════════
 // CATEGORY TABS — 5 sections, per-tab upload
 // ══════════════════════════════════════════════
+// Icon labels (walang emoji)
+var FB_SAVE_LABEL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save details only';
+var FB_SEND_LABEL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Save &amp; send to editor';
+
+// Badge kapag freebies row (galing New project)
+function fuFreebiesTag(c){
+  var n = parseInt(c && c.freebies_count, 10) || 0;
+  if (!n) return '';
+  return '<div style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;font-size:9.5px;font-weight:650;'
+    + 'padding:3px 9px;border-radius:20px;background:rgba(250,204,21,0.12);color:#facc15;border:0.5px solid rgba(250,204,21,0.28)">'
+    + '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+    + '<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/>'
+    + '<path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>'
+    + n + ' freebies</div>';
+}
+
 var FU_CATS = [
   'Video editor team',
   'Viral clients freebies images',
