@@ -724,6 +724,7 @@ async function fbCreateForUploadRow(projectId, clientName){
     owner_id: ownerId,
     owner_name: ownerName,
     project_name: label,
+    client_name: clientName || null,
     gender: 'All',
     content_type: 'VIRAL UGC',
     category: dest,
@@ -4954,8 +4955,8 @@ function renderForUpload(){
   if (!body) return;
   var head = document.getElementById('fu-table-head');
   if (head){
-    head.style.gridTemplateColumns = '1fr 1.5fr 0.9fr 0.9fr 0.6fr 0.65fr 1.1fr 1fr 1.1fr';
-    head.innerHTML = '<span>Staff</span><span>Project name</span><span>Page</span><span>Tags</span><span>Ad copy</span><span>File link</span><span>Headline</span><span>Date uploaded</span><span>Status</span>';
+    head.style.gridTemplateColumns = '1fr 1.5fr 1fr 0.9fr 0.9fr 0.6fr 0.65fr 1.1fr 1fr 1.1fr';
+    head.innerHTML = '<span>Staff</span><span>Project name</span><span>New client</span><span>Page</span><span>Tags</span><span>Ad copy</span><span>File link</span><span>Headline</span><span>Date uploaded</span><span>Status</span>';
   }
 
   var items = forUploadState.filtered;
@@ -4998,17 +4999,21 @@ function renderForUpload(){
       + (isPublished ? fuCountdown(c.expires_at) : '')
       + '</div>';
 
-    var namingTag = c.client_name
-      ? '<div class="fu-naming-tag">'+escapeHtml(c.client_name)+'</div>'
-      : '';
+    var namingTag = '';
+    var newClientCell = c.client_name
+      ? '<div class="fu-newclient">'
+        + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+        + '<span>'+escapeHtml(c.client_name)+'</span></div>'
+      : '<span style="color:#5a5a65;font-size:11px">—</span>';
     var tagsCell = '';
     if (c.is_freebies) tagsCell += '<span class="fu-row-tag" style="background:rgba(74,222,128,0.14);color:#6ee7a0;border:0.5px solid rgba(74,222,128,0.3)">Freebies</span>';
     if (c.is_direct_client) tagsCell += '<span class="fu-row-tag" style="background:rgba(96,165,250,0.14);color:#7db4fb;border:0.5px solid rgba(96,165,250,0.3)">Direct client</span>';
     if (!tagsCell) tagsCell = '<span style="color:#5a5a65;font-size:11px">—</span>';
 
-    return '<div class="table-row fu-row" style="grid-template-columns:1fr 1.5fr 0.9fr 0.9fr 0.6fr 0.65fr 1.1fr 1fr 1.1fr;align-items:center">'
+    return '<div class="table-row fu-row" style="grid-template-columns:1fr 1.5fr 1fr 0.9fr 0.9fr 0.6fr 0.65fr 1.1fr 1fr 1.1fr;align-items:center">'
       + '<div>'+fuStaffChip(c.owner_name)+'</div>'
       + '<div><div class="row-name" style="font-weight:600;color:#f4f4f7">'+escapeHtml(c.project_name||'—')+'</div>'+namingTag+fuFreebiesTag(c)+'</div>'
+      + '<div>'+newClientCell+'</div>'
       + '<div>'+fuPageBadge(c.content_type)+'</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:3px">'+tagsCell+'</div>'
       + '<div>'+adCopy+'</div>'
