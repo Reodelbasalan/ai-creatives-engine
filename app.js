@@ -709,28 +709,48 @@ async function fbCreateForUploadRow(projectId, clientName){
   var editorId = document.getElementById('f-freebies-editor')?.value || null;
   var label = (clientName || 'Freebies') + ' — ' + n + ' freebies';
 
+  // Kunin ang pangalan ng napiling editor (owner_name ang gamit ng table)
+  var ed = fbEditors.find(function(e){ return e.id === editorId; });
+  var ownerId = editorId || currentUser?.id || null;
+  var ownerName = ed ? (ed.name || ed.email) : (currentUser?.email || 'Unknown');
+  if (!ed && currentUser?.id){
+    try {
+      var pr = await sb.from('profiles').select('name').eq('id', currentUser.id).maybeSingle();
+      if (pr?.data?.name) ownerName = pr.data.name;
+    } catch(e){}
+  }
+
+  var payload = {
+    owner_id: ownerId,
+    owner_name: ownerName,
+    project_name: label,
+    gender: 'All',
+    content_type: 'VIRAL UGC',
+    category: dest,
+    freebies_count: n,
+    is_freebies: true,
+    is_direct_client: false,
+    project_id: projectId || null,
+    status: 'Unpublished'
+  };
+
   try {
     var existing = null;
     if (projectId){
       var q = await sb.from('creatives_upload').select('id').eq('project_id', projectId).eq('is_freebies', true).limit(1);
       existing = (q.data || [])[0] || null;
     }
+    var res;
     if (existing){
-      await sb.from('creatives_upload').update({
-        project_name: label, category: dest, freebies_count: n, staff_id: editorId
-      }).eq('id', existing.id);
-      showNotif('Freebies row updated sa ' + dest, 'success');
+      res = await sb.from('creatives_upload').update(payload).eq('id', existing.id);
     } else {
-      await sb.from('creatives_upload').insert({
-        project_name: label, category: dest, freebies_count: n,
-        is_freebies: true, project_id: projectId || null,
-        staff_id: editorId, status: 'Unpublished', tags: 'Freebies'
-      });
-      showNotif(n + ' freebies naipasa sa ' + dest, 'success');
+      res = await sb.from('creatives_upload').insert(payload);
     }
+    if (res && res.error) throw res.error;
+    showNotif(n + ' freebies naipasa sa ' + dest, 'success');
   } catch(err){
     console.error('freebies row error', err);
-    showNotif('Hindi nagawa ang freebies row: ' + (err.message || err), 'error');
+    showNotif('Hindi nagawa ang freebies row: ' + (err.message || err.hint || err), 'error');
   }
 }
 
