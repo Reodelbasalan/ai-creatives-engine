@@ -1492,6 +1492,69 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           </div>
         </div>
 
+        <!-- FREEBIES ASSIGNMENT -->
+        <div class="form-card fb-card" id="fb-card">
+          <div class="form-card-title" style="display:flex;align-items:center;gap:8px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+            <span>Freebies assignment</span>
+            <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(optional — papasok sa For Upload)</span>
+          </div>
+
+          <div class="fb-grid">
+            <div class="form-field">
+              <label class="form-label">Ilang freebies</label>
+              <div class="fb-stepper" id="fb-stepper">
+                <button type="button" class="fb-step-btn" onclick="fbStep(-1)" aria-label="Bawasan">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <input type="number" id="f-freebies-count" class="fb-step-input" value="0" min="0" max="99" oninput="fbSyncSummary()"/>
+                <button type="button" class="fb-step-btn fb-step-plus" onclick="fbStep(1)" aria-label="Dagdagan">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">Dadalhin sa</label>
+              <div class="fb-dd" id="fb-dd-dest">
+                <button type="button" class="fb-dd-btn" onclick="fbDdToggle('fb-dd-dest')">
+                  <span class="fb-dot" id="fb-dest-dot" style="background:#a78bfa"></span>
+                  <span id="fb-dest-label" style="flex:1;text-align:left">Viral clients freebies images</span>
+                  <svg class="fb-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="fb-dd-menu">
+                  <div class="fb-dd-item" onclick="fbPickDest('Video editor team','#facc15',this)"><span class="fb-dot" style="background:#facc15"></span>Video editor team</div>
+                  <div class="fb-dd-item active" onclick="fbPickDest('Viral clients freebies images','#a78bfa',this)"><span class="fb-dot" style="background:#a78bfa"></span>Viral clients freebies images</div>
+                  <div class="fb-dd-item" onclick="fbPickDest('Viral direct video','#4ade80',this)"><span class="fb-dot" style="background:#4ade80"></span>Viral direct video</div>
+                  <div class="fb-dd-item" onclick="fbPickDest('Dell direct clients images','#60a5fa',this)"><span class="fb-dot" style="background:#60a5fa"></span>Dell direct clients images</div>
+                  <div class="fb-dd-item" onclick="fbPickDest('Dell direct client video','#f472b6',this)"><span class="fb-dot" style="background:#f472b6"></span>Dell direct client video</div>
+                </div>
+              </div>
+              <input type="hidden" id="f-freebies-dest" value="Viral clients freebies images"/>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">Assign sa editor</label>
+              <div class="fb-dd" id="fb-dd-editor">
+                <button type="button" class="fb-dd-btn" onclick="fbDdToggle('fb-dd-editor')">
+                  <span class="fb-av" id="fb-editor-av" aria-hidden="true">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </span>
+                  <span id="fb-editor-label" style="flex:1;text-align:left">Walang assign</span>
+                  <svg class="fb-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="fb-dd-menu" id="fb-editor-menu"></div>
+              </div>
+              <input type="hidden" id="f-freebies-editor" value=""/>
+            </div>
+          </div>
+
+          <div class="fb-summary" id="fb-summary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <span id="fb-summary-text">Set ka ng bilang para makagawa ng freebies row sa For Upload.</span>
+          </div>
+        </div>
+
         <!-- SCRIPT (shared, optional) -->
         <div class="form-card">
           <div class="form-card-title"><span>🎙️</span> Script <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
@@ -1533,8 +1596,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <option value="">Unassigned (assign later)</option>
               </select>
             </div>
-          <button class="ghost-btn" id="save-details-btn" onclick="saveClientDetails()" style="color:var(--green);border-color:rgba(34,197,94,0.3)">💾 Save details only</button>
-          <button class="yellow-btn" id="generate-btn" onclick="generateBlueprint()">⚡ Generate blueprint</button>
+          <button class="ghost-btn" id="save-details-btn" onclick="saveClientDetails()" style="color:var(--green);border-color:rgba(34,197,94,0.3);display:inline-flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save details only</button>
+          <button class="yellow-btn" id="generate-btn" onclick="generateBlueprint()" style="display:inline-flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Generate blueprint</button>
             <span id="gen-status" style="font-size:12px;color:var(--text3)"></span>
           </div>
           <div id="blueprint-output" style="display:none;margin-top:1rem">
@@ -2459,6 +2522,96 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     .fu-input:focus { outline:none; border-color:rgba(250,204,21,0.45); background:var(--bg2,#17171b); }
     .fu-input::placeholder { color:#6a6a75; }
     /* TEAM TABS */
+    /* ─── FREEBIES ASSIGNMENT CARD ─── */
+    .fb-card {
+      border:0.5px solid rgba(250,204,21,0.18) !important;
+      background:linear-gradient(180deg,rgba(250,204,21,0.03),transparent) !important;
+      transition:border-color .22s ease, box-shadow .22s ease;
+    }
+    .fb-card:hover { border-color:rgba(250,204,21,0.3) !important; box-shadow:0 4px 22px rgba(250,204,21,0.06); }
+    .fb-grid { display:grid; grid-template-columns:0.72fr 1.35fr 1.15fr; gap:12px; }
+    @media (max-width:820px){ .fb-grid { grid-template-columns:1fr; } }
+
+    .fb-stepper {
+      display:flex; align-items:center; overflow:hidden;
+      background:var(--bg1,#0e0e11); border:0.5px solid var(--border2,rgba(255,255,255,0.09));
+      border-radius:9px; transition:border-color .18s ease, box-shadow .18s ease;
+    }
+    .fb-stepper:focus-within { border-color:rgba(250,204,21,0.5); box-shadow:0 0 0 3px rgba(250,204,21,0.08); }
+    .fb-step-btn {
+      display:flex; align-items:center; justify-content:center;
+      width:38px; padding:9px 0; background:transparent; border:none;
+      color:#9a9aa5; cursor:pointer;
+      transition:background .16s ease, color .16s ease, transform .16s ease;
+    }
+    .fb-step-btn:hover { background:rgba(255,255,255,0.05); color:#f2f0ea; }
+    .fb-step-btn:active { transform:scale(0.9); }
+    .fb-step-plus:hover { background:rgba(250,204,21,0.12); color:#facc15; }
+    .fb-step-input {
+      flex:1; min-width:0; text-align:center; background:transparent; border:none; outline:none;
+      color:#f2f0ea; font-size:13.5px; font-weight:700; font-family:inherit;
+      padding:9px 0; -moz-appearance:textfield;
+    }
+    .fb-step-input::-webkit-outer-spin-button,
+    .fb-step-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+    .fb-step-input.fb-bump { animation:fbBump .22s ease; }
+    @keyframes fbBump { 0%{transform:scale(1)} 45%{transform:scale(1.22); color:#facc15} 100%{transform:scale(1)} }
+
+    .fb-dd { position:relative; }
+    .fb-dd-btn {
+      display:flex; align-items:center; gap:9px; width:100%;
+      background:var(--bg1,#0e0e11); border:0.5px solid var(--border2,rgba(255,255,255,0.09));
+      border-radius:9px; padding:9px 12px; color:#f2f0ea; font-size:12px; font-family:inherit;
+      cursor:pointer; text-align:left;
+      transition:border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+    .fb-dd-btn:hover { border-color:rgba(250,204,21,0.35); background:rgba(250,204,21,0.03); }
+    .fb-dd.open .fb-dd-btn { border-color:rgba(250,204,21,0.5); box-shadow:0 0 0 3px rgba(250,204,21,0.08); }
+    .fb-caret { color:#6a6a75; flex-shrink:0; transition:transform .22s ease, color .18s ease; }
+    .fb-dd.open .fb-caret { transform:rotate(180deg); color:#facc15; }
+    .fb-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .fb-av {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:20px; height:20px; border-radius:50%; flex-shrink:0;
+      background:rgba(167,139,250,0.16); color:#b9a5fc;
+      font-size:9px; font-weight:700; letter-spacing:0.02em;
+    }
+    .fb-dd-menu {
+      position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:60;
+      background:#16161a; border:0.5px solid rgba(255,255,255,0.1); border-radius:10px;
+      padding:5px; max-height:238px; overflow-y:auto;
+      box-shadow:0 12px 34px rgba(0,0,0,0.55);
+      opacity:0; visibility:hidden; transform:translateY(-6px);
+      transition:opacity .18s ease, transform .18s ease, visibility .18s;
+    }
+    .fb-dd.open .fb-dd-menu { opacity:1; visibility:visible; transform:translateY(0); }
+    .fb-dd-item {
+      display:flex; align-items:center; gap:9px;
+      padding:9px 11px; border-radius:7px; font-size:11.5px; color:#c9c6be; cursor:pointer;
+      transition:background .14s ease, color .14s ease;
+    }
+    .fb-dd-item:hover { background:rgba(255,255,255,0.055); color:#f2f0ea; }
+    .fb-dd-item.active { background:rgba(250,204,21,0.1); color:#facc15; font-weight:650; }
+    .fb-dd-empty { padding:11px; font-size:11px; color:#5a5a65; text-align:center; }
+
+    .fb-summary {
+      display:flex; align-items:center; gap:9px; margin-top:14px;
+      padding:11px 14px; border-radius:9px; font-size:11.5px; line-height:1.55;
+      background:rgba(255,255,255,0.025); border:0.5px solid rgba(255,255,255,0.07); color:#7a7a85;
+      transition:background .22s ease, border-color .22s ease, color .22s ease;
+    }
+    .fb-summary svg { flex-shrink:0; opacity:0.55; transition:opacity .22s ease; }
+    .fb-summary.fb-on {
+      background:rgba(250,204,21,0.055); border-color:rgba(250,204,21,0.2); color:#c9c6be;
+    }
+    .fb-summary.fb-on svg { opacity:1; color:#facc15; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fb-card, .fb-step-btn, .fb-dd-btn, .fb-caret, .fb-dd-menu, .fb-dd-item, .fb-summary { transition:none; }
+      .fb-step-input.fb-bump { animation:none; }
+      .fb-dd.open .fb-caret { transform:none; }
+    }
+
     /* ─── MAIN SOURCE (Google Drive) BUTTON ─── */
     .fu-drive-btn {
       display:inline-flex; align-items:center; gap:8px;
