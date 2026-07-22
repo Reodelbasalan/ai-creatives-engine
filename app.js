@@ -309,12 +309,13 @@ function clearDraft(){
 
 
 async function loadUserRole(user){
-  var email=user?.email||'';
+  var email=(user?.email||'').toLowerCase();
+  var ADMIN_EMAILS=['admin@aicreatives.com','hazel@aicreatives.com','mheca@aicreatives.com'];
   // Check DB for actual role
   var{data}=await sb.from('profiles').select('role,name').eq('id',user.id).maybeSingle();
   if(data?.role==='client'){
     currentUserRole='client';
-  } else if(data?.role==='admin'||email==='admin@aicreatives.com'){
+  } else if(data?.role==='admin'||ADMIN_EMAILS.indexOf(email)!==-1){
     currentUserRole='admin';
   } else {
     currentUserRole='editor';
@@ -328,7 +329,7 @@ async function loadUserRole(user){
   document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
   applyRoleUI();
   sb.from('profiles').select('role').eq('id',user.id).maybeSingle().then(({data})=>{
-    if(data?.role&&currentUserRole!=='admin'){
+    if(data?.role&&currentUserRole!=='admin'&&ADMIN_EMAILS.indexOf(email)===-1){
       currentUserRole=data.role;
       document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
       applyRoleUI();
