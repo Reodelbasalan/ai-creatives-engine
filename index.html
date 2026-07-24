@@ -1962,8 +1962,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <span>Paano i-install ang AdFlow extension</span>
             </div>
 
+            <a class="ext-dl-btn" href="https://drive.google.com/drive/folders/1u5qUqxSVYVHBDLEJIubM4eS1ycxihiP5" target="_blank" rel="noopener noreferrer">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l-6 10.5L5 19h14l3-5.5L16 3H8z"/><path d="M8 3l6 10.5"/><path d="M2 13.5h14"/><path d="M5 19l6-10.5"/></svg>
+              <span>Download AdFlow</span>
+              <svg class="ext-dl-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </a>
+
             <ol class="ext-steps">
-              <li><b>I-download</b> ang AdFlow .zip file mula sa Main source folder sa Drive.</li>
+              <li><b>I-download</b> ang AdFlow .zip gamit ang button sa taas.</li>
               <li><b>I-extract</b> (unzip) ito sa folder na hindi mo buburahin — halimbawa <code>Documents/AdFlow</code>. Kapag binura mo ang folder, mawawala rin ang extension.</li>
               <li>Buksan ang Chrome, i-type sa address bar: <code>chrome://extensions</code></li>
               <li>Sa kanang taas, i-<b>ON</b> ang <b>Developer mode</b>.</li>
@@ -2626,6 +2632,23 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
     .ext-note { margin-top:14px; color:#5a5a65; font-size:11px; }
 
+    .ext-dl-btn {
+      display:inline-flex; align-items:center; gap:9px; margin:4px 0 16px;
+      padding:10px 17px; border-radius:10px;
+      font-size:12.5px; font-weight:650; text-decoration:none; cursor:pointer;
+      background:rgba(96,165,250,0.09); border:0.5px solid rgba(96,165,250,0.34); color:#7db4fb;
+      transition:transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .22s ease;
+    }
+    .ext-dl-btn svg { flex-shrink:0; }
+    .ext-dl-btn .ext-dl-arrow { opacity:0.6; transition:opacity .18s ease, transform .18s ease; }
+    .ext-dl-btn:hover {
+      transform:translateY(-2px); background:rgba(96,165,250,0.16);
+      border-color:rgba(96,165,250,0.56); color:#a3cbfd;
+      box-shadow:0 5px 18px rgba(96,165,250,0.2);
+    }
+    .ext-dl-btn:hover .ext-dl-arrow { opacity:1; transform:translate(2px,-2px); }
+    .ext-dl-btn:active { transform:translateY(0) scale(0.98); }
+
     .ext-steps { margin:6px 0 0; padding-left:20px; color:#c9c6be; font-size:12.5px; line-height:1.85; }
     .ext-steps li { margin-bottom:5px; }
     .ext-steps li::marker { color:#facc15; font-weight:700; }
@@ -2644,7 +2667,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     .ext-tip b { color:#f2f0ea; font-weight:650; }
 
     @media (prefers-reduced-motion: reduce) {
-      .ext-btn, .ext-btn:hover, .ext-btn .ext-arrow { transform:none; transition:none; }
+      .ext-btn, .ext-btn:hover, .ext-btn .ext-arrow,
+      .ext-dl-btn, .ext-dl-btn:hover, .ext-dl-btn .ext-dl-arrow { transform:none; transition:none; }
     }
 
     /* ─── NEW CLIENT COLUMN ─── */
