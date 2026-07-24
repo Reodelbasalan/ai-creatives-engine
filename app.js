@@ -353,7 +353,7 @@ function applyRoleUI(){
     // Hide admin-only elements first
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
     // Show editor-allowed nav items — force show even if admin-only class
-    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance','nav-for-upload'];
+    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance','nav-for-upload','nav-extensions'];
     editorNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el){el.style.display='flex';el.style.setProperty('display','flex','important');}
@@ -364,7 +364,7 @@ function applyRoleUI(){
     // Client — most restricted
     document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
-    var clientNavs=['nav-profile'];
+    var clientNavs=['nav-profile','nav-extensions'];
     clientNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el)el.style.display='flex';
@@ -399,7 +399,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
