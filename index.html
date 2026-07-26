@@ -1987,7 +1987,28 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <textarea class="form-input" id="sp-content" rows="4" placeholder="Isulat ang caption dito..." style="resize:vertical;margin-bottom:14px"></textarea>
 
                 <label class="form-label">Media (image o video)</label>
-                <input type="text" class="form-input" id="sp-media" placeholder="I-paste ang link ng image/video (Drive, URL)" style="margin-bottom:14px"/>
+                <div class="sp-upload" id="sp-upload" onclick="document.getElementById('sp-file').click()">
+                  <input type="file" id="sp-file" accept="image/*,video/*" style="display:none" onchange="spHandleFile(this)"/>
+                  <div id="sp-upload-empty" class="sp-upload-empty">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span>I-click para mag-upload ng image o video</span>
+                    <small>JPG, PNG, MP4 — mula sa computer mo</small>
+                  </div>
+                  <div id="sp-upload-preview" class="sp-upload-preview" style="display:none">
+                    <img id="sp-preview-img" style="display:none"/>
+                    <video id="sp-preview-vid" style="display:none" muted></video>
+                    <div class="sp-preview-info">
+                      <span id="sp-preview-name">—</span>
+                      <button type="button" class="sp-preview-remove" onclick="spRemoveFile(event)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div id="sp-upload-progress" class="sp-upload-progress" style="display:none">
+                    <div class="sp-spin"></div><span>Nag-a-upload...</span>
+                  </div>
+                </div>
+                <input type="hidden" id="sp-media"/>
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px">
                   <div>
@@ -2806,6 +2827,29 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
     @media (prefers-reduced-motion: reduce){
       .sp-tab, .sp-chip, .sp-type, .sp-cal-nav, .sp-item, .sp-item-del { transition:none; }
+    }
+
+    .sp-upload { border:1px dashed rgba(255,255,255,0.15); border-radius:9px; padding:0; margin-bottom:14px;
+      cursor:pointer; overflow:hidden; transition:border-color .18s ease, background .18s ease; }
+    .sp-upload:hover { border-color:rgba(250,204,21,0.4); background:rgba(250,204,21,0.03); }
+    .sp-upload-empty { display:flex; flex-direction:column; align-items:center; gap:6px; padding:22px 16px; text-align:center; color:#6a6a75; }
+    .sp-upload-empty svg { color:#8a8781; }
+    .sp-upload-empty span { font-size:12px; color:#a6a39c; font-weight:600; }
+    .sp-upload-empty small { font-size:10px; color:#5a5a65; }
+    .sp-upload-preview { position:relative; }
+    .sp-upload-preview img, .sp-upload-preview video { width:100%; max-height:240px; object-fit:cover; display:block; }
+    .sp-preview-info { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 12px;
+      background:#0e0e11; border-top:0.5px solid rgba(255,255,255,0.07); }
+    .sp-preview-info span { font-size:11px; color:#c9c6be; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .sp-preview-remove { background:none; border:none; color:#8a8781; cursor:pointer; padding:2px; flex-shrink:0; transition:color .16s ease; }
+    .sp-preview-remove:hover { color:#f09595; }
+    .sp-upload-progress { display:flex; align-items:center; justify-content:center; gap:10px; padding:22px; color:#a6a39c; font-size:12px; }
+    .sp-spin { width:16px; height:16px; border:2px solid rgba(250,204,21,0.25); border-top-color:#facc15; border-radius:50%; animation:spSpin .7s linear infinite; }
+    @keyframes spSpin { to { transform:rotate(360deg); } }
+
+    @media (prefers-reduced-motion: reduce){
+      .sp-upload { transition:none; }
+      .sp-spin { animation:none; }
     }
 
     /* ─── EXTENSIONS PAGE ─── */
