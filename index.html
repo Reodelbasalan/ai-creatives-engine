@@ -1291,6 +1291,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h3a1 1 0 001-1V5a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 001 1h1a2 2 0 110 4h-1a1 1 0 00-1 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H4a1 1 0 01-1-1V8a1 1 0 011-1z"/></svg>
         Extensions
       </div>
+      <div class="nav-item" onclick="showPage('social')" id="nav-social">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Social Posting
+      </div>
     </nav>
     <div class="sidebar-footer">
       <div class="user-card">
@@ -1916,6 +1920,136 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div class="form-card-title"><span>📊</span> My stats</div>
             <div id="profile-stats"><div style="color:var(--text3);font-size:12px">Loading stats...</div></div>
           </div>
+        </div>
+      </div>
+
+      <!-- SOCIAL POSTING PAGE -->
+      <div class="page" id="page-social">
+        <div style="max-width:1000px">
+
+          <div class="sp-hero">
+            <div class="sp-hero-icon">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </div>
+            <div style="flex:1">
+              <div class="sp-hero-title">Social Posting</div>
+              <div class="sp-hero-sub">Mag-schedule ng auto-post sa FB Page at Instagram</div>
+            </div>
+            <div class="sp-tabs">
+              <button type="button" class="sp-tab active" id="sp-tab-compose" onclick="spSwitchView('compose')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+                Compose
+              </button>
+              <button type="button" class="sp-tab" id="sp-tab-planner" onclick="spSwitchView('planner')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Planner
+              </button>
+            </div>
+          </div>
+
+          <div class="sp-demo-banner">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Setup mode — pwede ka nang mag-schedule at makita sa planner. Ang aktwal na pag-post ay gagana kapag na-connect na ang Facebook/Instagram sa Settings.</span>
+          </div>
+
+          <!-- COMPOSE VIEW -->
+          <div id="sp-view-compose">
+            <div class="sp-grid">
+
+              <div class="form-card">
+                <div class="form-card-title" style="margin-bottom:14px">Compose</div>
+
+                <label class="form-label">Platform</label>
+                <div class="sp-chip-row" style="margin-bottom:15px">
+                  <button type="button" class="sp-chip sp-fb active" id="sp-plat-fb" onclick="spToggleChip('fb')">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.68 4.53-4.68 1.31 0 2.68.23 2.68.23v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>
+                    Facebook<svg class="sp-chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                  <button type="button" class="sp-chip sp-ig" id="sp-plat-ig" onclick="spToggleChip('ig')">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                    Instagram<svg class="sp-chk" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                </div>
+
+                <label class="form-label">Post type</label>
+                <div class="sp-type-row" style="margin-bottom:15px">
+                  <button type="button" class="sp-type active" id="sp-type-feed" onclick="spSetType('feed')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+                    Feed post
+                  </button>
+                  <button type="button" class="sp-type" id="sp-type-story" onclick="spSetType('story')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke-dasharray="4 3"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    Story
+                  </button>
+                </div>
+
+                <label class="form-label">Content</label>
+                <textarea class="form-input" id="sp-content" rows="4" placeholder="Isulat ang caption dito..." style="resize:vertical;margin-bottom:14px"></textarea>
+
+                <label class="form-label">Media (image o video)</label>
+                <input type="text" class="form-input" id="sp-media" placeholder="I-paste ang link ng image/video (Drive, URL)" style="margin-bottom:14px"/>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px">
+                  <div>
+                    <label class="form-label">Page / Account</label>
+                    <select class="form-input" id="sp-page">
+                      <option value="">— Piliin —</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">Petsa at oras</label>
+                    <input type="datetime-local" class="form-input" id="sp-datetime"/>
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:9px">
+                  <button class="yellow-btn" onclick="spSchedule()" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:650">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Schedule post
+                  </button>
+                  <button class="ghost-btn" onclick="spPostNow()" style="font-weight:600">Post now</button>
+                </div>
+
+                <div class="sp-ig-note" id="sp-ig-note" style="display:none">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  <span>Ang Instagram ay kailangan ng image o video — hindi pwedeng text lang.</span>
+                </div>
+              </div>
+
+              <div class="form-card">
+                <div class="form-card-title" style="margin-bottom:14px">Scheduled / posted</div>
+                <div id="sp-list" class="sp-list">
+                  <div class="sp-empty">Wala pang naka-schedule na post.</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- PLANNER VIEW -->
+          <div id="sp-view-planner" style="display:none">
+            <div class="form-card">
+              <div class="sp-cal-head">
+                <button type="button" class="sp-cal-nav" onclick="spCalMove(-1)" aria-label="Nakaraang buwan">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <span class="sp-cal-title" id="sp-cal-title">—</span>
+                <button type="button" class="sp-cal-nav" onclick="spCalMove(1)" aria-label="Susunod na buwan">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+              <div class="sp-cal-dow">
+                <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+              </div>
+              <div class="sp-cal-grid" id="sp-cal-grid"></div>
+              <div class="sp-legend">
+                <span><span class="sp-dot" style="background:#60a5fa"></span>Facebook</span>
+                <span><span class="sp-dot" style="background:#e44084"></span>Instagram</span>
+                <span><span class="sp-dot" style="background:#facc15"></span>Story</span>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -2594,6 +2728,86 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     .fu-input:focus { outline:none; border-color:rgba(250,204,21,0.45); background:var(--bg2,#17171b); }
     .fu-input::placeholder { color:#6a6a75; }
     /* TEAM TABS */
+    /* ─── SOCIAL POSTING PAGE ─── */
+    .sp-hero { display:flex; align-items:center; gap:14px; margin-bottom:14px;
+      background:var(--bg2,#141310); border:0.5px solid var(--border,#2a2823); border-radius:14px; padding:16px 20px; flex-wrap:wrap; }
+    .sp-hero-icon { width:40px; height:40px; border-radius:11px; flex-shrink:0; background:var(--yellow,#facc15); color:#3a2a02; display:flex; align-items:center; justify-content:center; }
+    .sp-hero-title { color:#f2f0ea; font-size:16px; font-weight:600; }
+    .sp-hero-sub { color:#8a8781; font-size:12px; margin-top:2px; }
+    .sp-tabs { display:inline-flex; background:#0e0e11; border:0.5px solid rgba(255,255,255,0.08); border-radius:10px; padding:3px; }
+    .sp-tab { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; border:none; background:transparent;
+      color:#8a8781; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer; transition:background .18s ease, color .18s ease; }
+    .sp-tab:hover { color:#c9c6be; }
+    .sp-tab.active { background:var(--yellow,#facc15); color:#3a2a02; font-weight:700; }
+
+    .sp-demo-banner { display:flex; align-items:flex-start; gap:9px; margin-bottom:16px; padding:11px 14px; border-radius:9px;
+      background:rgba(250,204,21,0.05); border:0.5px solid rgba(250,204,21,0.2); color:#a6a39c; font-size:11.5px; line-height:1.6; }
+    .sp-demo-banner svg { flex-shrink:0; margin-top:1px; color:#facc15; }
+
+    .sp-grid { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; }
+    @media (max-width:860px){ .sp-grid { grid-template-columns:1fr; } }
+
+    .sp-chip-row, .sp-type-row { display:flex; gap:8px; }
+    .sp-chip { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:9px; font-size:11.5px; font-weight:650;
+      font-family:inherit; cursor:pointer; background:#0e0e11; border:0.5px solid rgba(255,255,255,0.09); color:#8a8781;
+      transition:background .18s ease, border-color .18s ease, color .18s ease; }
+    .sp-chip .sp-chk { opacity:0; width:0; transition:opacity .16s ease; }
+    .sp-chip.active .sp-chk { opacity:1; width:13px; }
+    .sp-fb.active { background:rgba(96,165,250,0.13); border-color:rgba(96,165,250,0.42); color:#7db4fb; }
+    .sp-ig.active { background:rgba(228,64,132,0.13); border-color:rgba(228,64,132,0.42); color:#f0a0c0; }
+    .sp-chip:hover { border-color:rgba(255,255,255,0.18); }
+
+    .sp-type { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:9px 0; border-radius:9px;
+      font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer; background:#0e0e11; border:0.5px solid rgba(255,255,255,0.09); color:#8a8781;
+      transition:background .18s ease, border-color .18s ease, color .18s ease; }
+    .sp-type.active { background:rgba(250,204,21,0.1); border-color:rgba(250,204,21,0.35); color:#facc15; font-weight:700; }
+    .sp-type:hover { border-color:rgba(255,255,255,0.18); }
+
+    .sp-ig-note { display:flex; align-items:flex-start; gap:8px; margin-top:13px; padding:9px 12px; border-radius:8px;
+      background:rgba(228,64,132,0.05); border:0.5px solid rgba(228,64,132,0.18); color:#a6a39c; font-size:10.5px; line-height:1.5; }
+    .sp-ig-note svg { flex-shrink:0; margin-top:1px; color:#f0a0c0; }
+
+    .sp-list { display:flex; flex-direction:column; gap:9px; max-height:520px; overflow-y:auto; }
+    .sp-empty { color:#5a5a65; font-size:11.5px; text-align:center; padding:24px 0; }
+    .sp-item { background:#0e0e11; border:0.5px solid rgba(255,255,255,0.07); border-radius:10px; padding:11px 13px;
+      transition:border-color .16s ease; }
+    .sp-item:hover { border-color:rgba(255,255,255,0.14); }
+    .sp-item-top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
+    .sp-item-title { color:#f2f0ea; font-size:11.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .sp-item-meta { color:#8a8781; font-size:10px; display:flex; align-items:center; gap:5px; }
+    .sp-badge { font-size:9px; font-weight:650; padding:2px 8px; border-radius:20px; white-space:nowrap; flex-shrink:0; }
+    .sp-b-sched { background:rgba(250,204,21,0.14); color:#facc15; }
+    .sp-b-posted { background:rgba(94,234,212,0.14); color:#5eead4; }
+    .sp-b-failed { background:rgba(244,114,182,0.14); color:#f9a8d4; }
+    .sp-item-del { background:none; border:none; color:#6a6a75; cursor:pointer; padding:2px; transition:color .16s ease; }
+    .sp-item-del:hover { color:#f09595; }
+
+    .sp-cal-head { display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:14px; }
+    .sp-cal-title { color:#f2f0ea; font-size:14px; font-weight:600; min-width:130px; text-align:center; }
+    .sp-cal-nav { display:inline-flex; background:#0e0e11; border:0.5px solid rgba(255,255,255,0.09); border-radius:8px; padding:6px;
+      color:#c9c6be; cursor:pointer; transition:border-color .16s ease, color .16s ease; }
+    .sp-cal-nav:hover { border-color:rgba(250,204,21,0.4); color:#facc15; }
+    .sp-cal-dow { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:6px; }
+    .sp-cal-dow span { text-align:center; color:#5a5a65; font-size:9.5px; font-weight:600; letter-spacing:0.05em; padding:4px 0; }
+    .sp-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+    .sp-cell { background:#141310; border:0.5px solid rgba(255,255,255,0.06); border-radius:8px; min-height:76px; padding:7px; overflow:hidden; }
+    .sp-cell.sp-other { background:#0c0c0e; }
+    .sp-cell.sp-today { background:rgba(250,204,21,0.06); border-color:rgba(250,204,21,0.4); }
+    .sp-cell-num { color:#c9c6be; font-size:11px; }
+    .sp-cell.sp-other .sp-cell-num { color:#4a4a55; }
+    .sp-cell.sp-today .sp-cell-num { color:#facc15; font-weight:700; }
+    .sp-ev { margin-top:5px; font-size:8.5px; font-weight:600; padding:2px 5px; border-radius:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sp-ev-fb { background:rgba(96,165,250,0.16); color:#7db4fb; }
+    .sp-ev-ig { background:rgba(228,64,132,0.16); color:#f0a0c0; }
+    .sp-ev-story { background:rgba(250,204,21,0.16); color:#facc15; }
+    .sp-legend { display:flex; gap:16px; margin-top:16px; flex-wrap:wrap; }
+    .sp-legend span { display:inline-flex; align-items:center; gap:6px; color:#8a8781; font-size:10.5px; }
+    .sp-dot { width:9px; height:9px; border-radius:3px; }
+
+    @media (prefers-reduced-motion: reduce){
+      .sp-tab, .sp-chip, .sp-type, .sp-cal-nav, .sp-item, .sp-item-del { transition:none; }
+    }
+
     /* ─── EXTENSIONS PAGE ─── */
     .ext-hero {
       display:flex; align-items:center; gap:14px; margin-bottom:20px;
