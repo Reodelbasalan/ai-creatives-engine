@@ -5428,10 +5428,67 @@ async function spDeletePost(id){
   }catch(e){ showNotif('Hindi nabura','error'); }
 }
 
+// ── MEDIA UPLOAD (direct file → Supabase Storage) ──
+async function spHandleFile(input){
+  var file=input.files&&input.files[0];
+  if(!file) return;
+  var empty=document.getElementById('sp-upload-empty');
+  var prev=document.getElementById('sp-upload-preview');
+  var prog=document.getElementById('sp-upload-progress');
+  var img=document.getElementById('sp-preview-img');
+  var vid=document.getElementById('sp-preview-vid');
+  var nm=document.getElementById('sp-preview-name');
+  var isVideo=(file.type||'').startsWith('video');
+
+  // local preview agad
+  var localUrl=URL.createObjectURL(file);
+  if(empty) empty.style.display='none';
+  if(prog) prog.style.display='flex';
+  if(prev) prev.style.display='none';
+
+  try{
+    var ext=(file.name.split('.').pop()||(isVideo?'mp4':'png')).toLowerCase();
+    var path='social/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+    var upl=await sb.storage.from(STORAGE_BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:true});
+    if(upl.error) throw upl.error;
+    var urlData=sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+    var publicUrl=urlData?.data?.publicUrl||null;
+    document.getElementById('sp-media').value=publicUrl||'';
+
+    if(prog) prog.style.display='none';
+    if(prev) prev.style.display='block';
+    if(nm) nm.textContent=file.name;
+    if(isVideo){
+      if(vid){ vid.src=localUrl; vid.style.display='block'; vid.setAttribute('controls','controls'); }
+      if(img) img.style.display='none';
+    } else {
+      if(img){ img.src=localUrl; img.style.display='block'; }
+      if(vid) vid.style.display='none';
+    }
+  }catch(err){
+    if(prog) prog.style.display='none';
+    if(empty) empty.style.display='flex';
+    showNotif('Upload failed: '+(err.message||err),'error');
+  }
+}
+
+function spRemoveFile(ev){
+  if(ev) ev.stopPropagation();
+  document.getElementById('sp-media').value='';
+  document.getElementById('sp-file').value='';
+  var empty=document.getElementById('sp-upload-empty');
+  var prev=document.getElementById('sp-upload-preview');
+  var prog=document.getElementById('sp-upload-progress');
+  if(empty) empty.style.display='flex';
+  if(prev) prev.style.display='none';
+  if(prog) prog.style.display='none';
+}
+
 function spResetForm(){
   var c=document.getElementById('sp-content'); if(c) c.value='';
   var m=document.getElementById('sp-media'); if(m) m.value='';
   var d=document.getElementById('sp-datetime'); if(d) d.value='';
+  spRemoveFile();
 }
 
 function spCalMove(delta){
