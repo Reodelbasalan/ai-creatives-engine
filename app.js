@@ -353,7 +353,7 @@ function applyRoleUI(){
     // Hide admin-only elements first
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
     // Show editor-allowed nav items — force show even if admin-only class
-    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance','nav-for-upload','nav-extensions'];
+    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance','nav-for-upload','nav-extensions','nav-social'];
     editorNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el){el.style.display='flex';el.style.setProperty('display','flex','important');}
@@ -399,7 +399,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
@@ -418,6 +418,7 @@ function showPage(page){
   if(page==='client-dashboard')loadClientDashboard();
   if(page==='settings'){ loadConnectors(); if(currentUserRole==='admin'){loadSettings();} }
   if(page==='automation'){loadAutomationProjects();}
+  if(page==='social'){loadSocial();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
@@ -5277,4 +5278,206 @@ function fuFormPageCustom(itemEl){
   if (dot) dot.style.background = 'rgba(255,255,255,0.25)';
   if (hidden) hidden.value = '';
   if (custom){ custom.style.display = 'block'; custom.focus(); }
+}
+
+// ══════════════════════════════════════════════
+// SOCIAL POSTING — compose, schedule, planner
+// (UI + Supabase muna; aktwal na pag-post kapag konektado na ang Meta API)
+// ══════════════════════════════════════════════
+var spPlatforms = { fb:true, ig:false };
+var spType = 'feed';
+var spCalDate = new Date();
+var spPosts = [];
+
+function spSwitchView(view){
+  var c=document.getElementById('sp-view-compose');
+  var pl=document.getElementById('sp-view-planner');
+  var tc=document.getElementById('sp-tab-compose');
+  var tp=document.getElementById('sp-tab-planner');
+  if(view==='planner'){
+    c.style.display='none'; pl.style.display='';
+    tc.classList.remove('active'); tp.classList.add('active');
+    spRenderCalendar();
+  } else {
+    c.style.display=''; pl.style.display='none';
+    tp.classList.remove('active'); tc.classList.add('active');
+  }
+}
+
+function spToggleChip(plat){
+  spPlatforms[plat]=!spPlatforms[plat];
+  var el=document.getElementById('sp-plat-'+plat);
+  if(el) el.classList.toggle('active', spPlatforms[plat]);
+  // IG note
+  var note=document.getElementById('sp-ig-note');
+  if(note) note.style.display = spPlatforms.ig ? 'flex' : 'none';
+}
+
+function spSetType(t){
+  spType=t;
+  document.getElementById('sp-type-feed').classList.toggle('active', t==='feed');
+  document.getElementById('sp-type-story').classList.toggle('active', t==='story');
+}
+
+async function loadSocial(){
+  // populate page dropdown from clients/pages
+  var sel=document.getElementById('sp-page');
+  if(sel && sel.options.length<=1){
+    try{
+      var r=await sb.from('clients').select('id,name').order('name');
+      (r.data||[]).forEach(function(c){
+        var o=document.createElement('option'); o.value=c.id; o.textContent=c.name; sel.appendChild(o);
+      });
+    }catch(e){}
+  }
+  await spLoadPosts();
+}
+
+async function spLoadPosts(){
+  try{
+    var r=await sb.from('scheduled_posts').select('*').order('scheduled_at',{ascending:true});
+    spPosts=r.data||[];
+  }catch(e){ spPosts=[]; }
+  spRenderList();
+}
+
+function spPlatLabel(p){
+  var arr=[];
+  if(p.platforms && p.platforms.indexOf('fb')!==-1) arr.push('FB');
+  if(p.platforms && p.platforms.indexOf('ig')!==-1) arr.push('IG');
+  return arr.join('+')||'—';
+}
+
+function spRenderList(){
+  var box=document.getElementById('sp-list');
+  if(!box) return;
+  if(!spPosts.length){ box.innerHTML='<div class="sp-empty">Wala pang naka-schedule na post.</div>'; return; }
+  box.innerHTML=spPosts.map(function(p){
+    var st=p.status||'scheduled';
+    var badge = st==='posted'?'sp-b-posted':(st==='failed'?'sp-b-failed':'sp-b-sched');
+    var when = p.scheduled_at ? new Date(p.scheduled_at).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
+    var typeTag = p.post_type==='story' ? ' · Story' : '';
+    return '<div class="sp-item">'
+      + '<div class="sp-item-top">'
+      +   '<span class="sp-item-title">'+escapeHtml((p.content||'(walang caption)').slice(0,42))+'</span>'
+      +   '<span class="sp-badge '+badge+'">'+st.toUpperCase()+'</span>'
+      + '</div>'
+      + '<div class="sp-item-top">'
+      +   '<span class="sp-item-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'
+      +   escapeHtml(spPlatLabel(p))+typeTag+' · '+when+'</span>'
+      +   '<button class="sp-item-del" onclick="spDeletePost(\''+p.id+'\')" title="Burahin"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function spCollectPost(){
+  var plats=[];
+  if(spPlatforms.fb) plats.push('fb');
+  if(spPlatforms.ig) plats.push('ig');
+  var content=(document.getElementById('sp-content')?.value||'').trim();
+  var media=(document.getElementById('sp-media')?.value||'').trim();
+  var pageSel=document.getElementById('sp-page');
+  var pageId=pageSel?.value||null;
+  var pageName=pageSel?(pageSel.options[pageSel.selectedIndex]?.text||''):'';
+  var dt=document.getElementById('sp-datetime')?.value||'';
+
+  if(!plats.length){ showNotif('Pumili ng platform (FB o IG)','error'); return null; }
+  if(!content && !media){ showNotif('Maglagay ng content o media','error'); return null; }
+  if(spPlatforms.ig && !media){ showNotif('Ang Instagram ay kailangan ng media','error'); return null; }
+  return {
+    platforms:plats, post_type:spType, content:content, media_url:media||null,
+    page_id:pageId, page_name:pageName||null,
+    scheduled_at: dt? new Date(dt).toISOString() : null
+  };
+}
+
+async function spSchedule(){
+  var post=spCollectPost();
+  if(!post) return;
+  if(!post.scheduled_at){ showNotif('Pumili ng petsa at oras','error'); return; }
+  post.status='scheduled';
+  try{
+    var r=await sb.from('scheduled_posts').insert(post).select();
+    if(r.error) throw r.error;
+    showNotif('Na-schedule ang post!','success');
+    spResetForm();
+    await spLoadPosts();
+  }catch(err){ showNotif('Error: '+(err.message||err),'error'); }
+}
+
+async function spPostNow(){
+  var post=spCollectPost();
+  if(!post) return;
+  post.scheduled_at=new Date().toISOString();
+  post.status='scheduled'; // magiging 'posted' kapag konektado na ang API
+  try{
+    var r=await sb.from('scheduled_posts').insert(post).select();
+    if(r.error) throw r.error;
+    showNotif('Naka-queue — magpo-post kapag konektado na ang Facebook/Instagram','success');
+    spResetForm();
+    await spLoadPosts();
+  }catch(err){ showNotif('Error: '+(err.message||err),'error'); }
+}
+
+async function spDeletePost(id){
+  try{
+    await sb.from('scheduled_posts').delete().eq('id',id);
+    await spLoadPosts();
+    if(document.getElementById('sp-view-planner').style.display!=='none') spRenderCalendar();
+  }catch(e){ showNotif('Hindi nabura','error'); }
+}
+
+function spResetForm(){
+  var c=document.getElementById('sp-content'); if(c) c.value='';
+  var m=document.getElementById('sp-media'); if(m) m.value='';
+  var d=document.getElementById('sp-datetime'); if(d) d.value='';
+}
+
+function spCalMove(delta){
+  spCalDate.setMonth(spCalDate.getMonth()+delta);
+  spRenderCalendar();
+}
+
+function spRenderCalendar(){
+  var grid=document.getElementById('sp-cal-grid');
+  var title=document.getElementById('sp-cal-title');
+  if(!grid) return;
+  var y=spCalDate.getFullYear(), m=spCalDate.getMonth();
+  title.textContent=spCalDate.toLocaleString('en-PH',{month:'long',year:'numeric'});
+  var first=new Date(y,m,1), startDow=first.getDay();
+  var daysInMonth=new Date(y,m+1,0).getDate();
+  var prevDays=new Date(y,m,0).getDate();
+  var today=new Date(); var todayStr=today.toDateString();
+
+  // group posts by date
+  var byDay={};
+  spPosts.forEach(function(p){
+    if(!p.scheduled_at) return;
+    var d=new Date(p.scheduled_at);
+    if(d.getFullYear()===y && d.getMonth()===m){
+      var k=d.getDate();
+      (byDay[k]=byDay[k]||[]).push(p);
+    }
+  });
+
+  var cells='';
+  for(var i=0;i<startDow;i++){
+    cells+='<div class="sp-cell sp-other"><span class="sp-cell-num">'+(prevDays-startDow+1+i)+'</span></div>';
+  }
+  for(var d=1;d<=daysInMonth;d++){
+    var isToday=(new Date(y,m,d).toDateString()===todayStr);
+    var evs=(byDay[d]||[]).map(function(p){
+      var cls = p.post_type==='story' ? 'sp-ev-story' : (p.platforms&&p.platforms.indexOf('ig')!==-1&&p.platforms.indexOf('fb')===-1?'sp-ev-ig':'sp-ev-fb');
+      var t=new Date(p.scheduled_at).toLocaleString('en-PH',{hour:'numeric',minute:'2-digit'});
+      return '<div class="sp-ev '+cls+'">'+t+' · '+escapeHtml(spPlatLabel(p))+'</div>';
+    }).join('');
+    cells+='<div class="sp-cell'+(isToday?' sp-today':'')+'"><span class="sp-cell-num">'+d+'</span>'+evs+'</div>';
+  }
+  var totalCells=startDow+daysInMonth;
+  var trail=(7-(totalCells%7))%7;
+  for(var t=1;t<=trail;t++){
+    cells+='<div class="sp-cell sp-other"><span class="sp-cell-num">'+t+'</span></div>';
+  }
+  grid.innerHTML=cells;
 }
