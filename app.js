@@ -520,7 +520,6 @@ async function saveClientDetails(){
     }
     clientName=extractField(brief,['client name','business name','brand name','company name'])||'Client '+new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric'});
     var extractedBizType=extractField(brief,['business type','type of business','industry','niche']);
-    var extractedNiche=extractField(brief,['niche','category','industry']);
     var extractedFB=extractField(brief,['fb page','facebook page','fb link','facebook link']);
     var extractedWebsite=extractField(brief,['website','web link','site url']);
     var extractedAudience=extractField(brief,['target audience','audience','target market']);
@@ -541,7 +540,6 @@ async function saveClientDetails(){
   var{data,error}=await sb.from('projects').insert({
     client_name:clientName,
     business_type:isPaste?(extractedBizType||''):document.getElementById('f-biztype')?.value||'',
-    niche:isPaste?(extractedNiche||null):document.getElementById('f-niche')?.value?.trim()||null,
     product:product||'',
     fb_page:isPaste?(extractedFB||null):document.getElementById('f-fb')?.value?.trim()||null,
     website:isPaste?(extractedWebsite||null):document.getElementById('f-website')?.value?.trim()||null,
@@ -1180,7 +1178,6 @@ async function saveProject(){
     if(!pFB&&urlMatch)pFB=urlMatch[0];
     var pWebsite=extractF(brief,['website','web link','site url','www.']);
     var pBizType=extractF(brief,['business type','type of business','industry','niche']);
-    var pNiche=extractF(brief,['niche','category','industry']);
     var pAudience=extractF(brief,['target audience','audience','target market']);
     var pPain=extractF(brief,['pain point','problem','challenge']);
     var pUSP=extractF(brief,['usp','unique selling','advantage']);
@@ -1208,7 +1205,6 @@ async function saveProject(){
     usp:isPaste?(pUSP||''):document.getElementById('f-usp').value.trim()||'',
     goal:isPaste?(pGoal||''):document.getElementById('f-goal').value||'',
     business_type:isPaste?(pBizType||''):document.getElementById('f-biztype').value||'',
-    niche:isPaste?(pNiche||null):document.getElementById('f-niche')?.value?.trim()||null,
     voice_actor:isPaste?(pModel||null):document.getElementById('f-voice').value||null,
     avatar_desc:isPaste?(pModel||null):document.getElementById('f-avatar').value||null,
     video_size:document.getElementById('f-size').value,
@@ -1262,7 +1258,7 @@ async function openModal(id){
     ? [p.color_primary,p.color_secondary].filter(Boolean).join(' / ')
     : '—';
   document.getElementById('modal-detail-grid').innerHTML=[
-    ['Client',p.client_name],['Business type',p.business_type],['Niche',p.niche],
+    ['Client',p.client_name],['Business type',p.business_type],
     ['FB Page',p.fb_page?`<a href="${p.fb_page}" target="_blank" style="color:var(--yellow);font-size:11px">🔗 Open FB Page</a>`:'—'],
     ['Website',p.website?`<a href="${p.website}" target="_blank" style="color:var(--yellow);font-size:11px">🔗 Open Website</a>`:'—'],
     ['Goal',p.goal],['Language',p.language],
@@ -1412,7 +1408,7 @@ async function duplicateProject(id){
   const p=allProjects.find(x=>x.id===id);if(!p)return;
   const newName=p.client_name+' (Copy)';
   const{error}=await sb.from('projects').insert({
-    client_name:newName,business_type:p.business_type,niche:p.niche,product:p.product,
+    client_name:newName,business_type:p.business_type,product:p.product,
     color_primary:p.color_primary,color_secondary:p.color_secondary,
     audience:p.audience,pain_point:p.pain_point,usp:p.usp,goal:p.goal,
     video_size:p.video_size,duration:p.duration,language:p.language,voice_actor:p.voice_actor,
