@@ -1622,7 +1622,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
 
             <div class="form-field">
-              <label class="form-label">Assign to editor</label>
+              <label class="form-label">Image creator <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(gagawa ng freebies)</span></label>
               <div class="fb-dd" id="fb-dd-editor">
                 <button type="button" class="fb-dd-btn" onclick="fbDdToggle('fb-dd-editor')">
                   <span class="fb-av" id="fb-editor-av" aria-hidden="true">
@@ -1679,7 +1679,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <span id="draft-saved-indicator" style="font-size:10px;color:var(--green);opacity:0;transition:opacity 0.3s">✓ Draft saved</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-              <label style="font-size:11px;color:var(--text2);font-weight:500;white-space:nowrap">👤 Auto-assign to:</label>
+              <label style="font-size:11px;color:var(--text2);font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/></svg>Video editor:</label>
               <select class="form-select" id="f-assign-to" style="max-width:220px;font-size:12px">
                 <option value="">Unassigned (assign later)</option>
               </select>
@@ -1712,9 +1712,15 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <option value="normal">🟡 Normal</option>
             <option value="low">⚪ Low</option>
           </select>
-          <input type="date" class="form-input" id="proj-date-from" style="max-width:140px;font-size:11px" onchange="filterProjects()"/>
+          <div class="proj-date-presets" id="proj-date-presets">
+            <button type="button" class="proj-preset-pill" onclick="projDatePreset('today')">Today</button>
+            <button type="button" class="proj-preset-pill" onclick="projDatePreset('week')">This week</button>
+            <button type="button" class="proj-preset-pill active" onclick="projDatePreset('month')">This month</button>
+            <button type="button" class="proj-preset-pill" onclick="projDatePreset('all')">All time</button>
+          </div>
+          <input type="date" class="form-input" id="proj-date-from" style="max-width:140px;font-size:11px" onchange="projPresetClear();filterProjects()"/>
           <span style="font-size:11px;color:var(--text3)">→</span>
-          <input type="date" class="form-input" id="proj-date-to" style="max-width:140px;font-size:11px" onchange="filterProjects()"/>
+          <input type="date" class="form-input" id="proj-date-to" style="max-width:140px;font-size:11px" onchange="projPresetClear();filterProjects()"/>
           <button class="ghost-btn" onclick="clearProjectFilters()" style="font-size:11px">Clear</button>
           <button class="ghost-btn" onclick="exportCSV()" style="font-size:11px;margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
         </div>
@@ -3073,6 +3079,48 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     @media (prefers-reduced-motion: reduce){
       .sp-upload { transition:none; }
       .sp-spin { animation:none; }
+    }
+
+    /* ─── PROJECT DATE FILTER PRESETS ─── */
+    .proj-date-presets { display:inline-flex; gap:5px; }
+    .proj-preset-pill {
+      padding:6px 12px; border-radius:20px; font-size:10.5px; font-weight:600; font-family:inherit;
+      background:rgba(255,255,255,0.03); border:0.5px solid rgba(255,255,255,0.09); color:#8a8781;
+      cursor:pointer; transition:background .16s ease, border-color .16s ease, color .16s ease;
+    }
+    .proj-preset-pill:hover { border-color:rgba(250,204,21,0.35); color:#c9c6be; }
+    .proj-preset-pill.active { background:rgba(250,204,21,0.12); border-color:rgba(250,204,21,0.4); color:var(--yellow); font-weight:700; }
+    @media (prefers-reduced-motion: reduce){ .proj-preset-pill { transition:none; } }
+
+    /* ─── NEW PROJECT — ONE FLOWING FORM, NO SEGMENTED CARDS ─── */
+    #page-new-project .form-card {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      padding: 0 0 22px 0 !important;
+      margin-bottom: 0 !important;
+    }
+    #page-new-project .form-card:not(:last-of-type) {
+      border-bottom: 0.5px solid rgba(255,255,255,0.07) !important;
+      margin-bottom: 22px !important;
+    }
+    #page-new-project .form-card-title {
+      font-size: 10px; font-weight: 700; color: var(--yellow);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 14px; opacity: 0.85;
+    }
+    #page-new-project .fb-card {
+      background: transparent !important;
+      border: none !important;
+      border-bottom: 0.5px solid rgba(255,255,255,0.07) !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      padding: 0 0 22px 0 !important;
+      margin-bottom: 22px !important;
+    }
+    #page-new-project > div > * {
+      max-width: 720px;
     }
 
     /* ─── SKELETON LOADERS ─── */
