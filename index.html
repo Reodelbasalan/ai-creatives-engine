@@ -1291,6 +1291,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h3a1 1 0 001-1V5a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 001 1h1a2 2 0 110 4h-1a1 1 0 00-1 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H4a1 1 0 01-1-1V8a1 1 0 011-1z"/></svg>
         Extensions
       </div>
+      <div class="nav-item" onclick="showPage('brand')" id="nav-brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+        Own Brand Creatives
+      </div>
       <div class="nav-item" onclick="showPage('social')" id="nav-social">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Social Posting
@@ -1920,6 +1924,77 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div class="form-card-title"><span>📊</span> My stats</div>
             <div id="profile-stats"><div style="color:var(--text3);font-size:12px">Loading stats...</div></div>
           </div>
+        </div>
+      </div>
+
+      <!-- OWN BRAND CREATIVES PAGE -->
+      <div class="page" id="page-brand">
+        <div style="max-width:1100px">
+
+          <div class="ob-hero">
+            <div class="ob-hero-icon">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+            </div>
+            <div>
+              <div class="ob-hero-title">Own Brand Creatives</div>
+              <div class="ob-hero-sub">Sariling AI Creatives content — hiwalay sa client work, hindi na-a-archive</div>
+            </div>
+          </div>
+
+          <button class="yellow-btn" id="ob-toggle-btn" onclick="obToggleForm()" style="display:inline-flex;align-items:center;gap:7px;font-weight:650;margin-bottom:16px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span id="ob-toggle-label">Add creative</span>
+          </button>
+
+          <div class="form-card" id="ob-form" style="max-height:0;overflow:hidden;opacity:0;transition:max-height .32s ease,opacity .28s ease,margin-bottom .28s ease">
+            <div class="form-card-title" style="margin-bottom:14px">New brand creative</div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px">
+              <div>
+                <label class="form-label">Page name</label>
+                <input type="text" class="form-input" id="ob-page" placeholder="Halimbawa: Viral UGC Promoter"/>
+              </div>
+              <div>
+                <label class="form-label">Link</label>
+                <input type="text" class="form-input" id="ob-link" placeholder="Link ng creative file"/>
+              </div>
+            </div>
+
+            <label class="form-label">Ad copy</label>
+            <textarea class="form-input" id="ob-adcopy" rows="3" placeholder="Caption o ad copy para sa post..." style="resize:vertical;margin-bottom:14px"></textarea>
+
+            <label class="form-label">Creative file (opsyonal)</label>
+            <div class="ob-upload" id="ob-upload" onclick="document.getElementById('ob-file').click()">
+              <input type="file" id="ob-file" accept="image/*,video/*" style="display:none" onchange="obHandleFile(this)"/>
+              <div id="ob-upload-empty" class="ob-upload-empty">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>I-click para mag-upload</span>
+              </div>
+              <div id="ob-upload-preview" class="ob-upload-preview" style="display:none">
+                <img id="ob-preview-img" style="display:none"/>
+                <video id="ob-preview-vid" style="display:none" muted></video>
+                <div class="ob-preview-info">
+                  <span id="ob-preview-name">—</span>
+                  <button type="button" class="ob-preview-remove" onclick="obRemoveFile(event)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div id="ob-upload-progress" class="ob-upload-progress" style="display:none">
+                <div class="ob-spin"></div><span>Nag-a-upload...</span>
+              </div>
+            </div>
+
+            <button class="yellow-btn" onclick="obAddCreative()" style="width:100%;margin-top:16px;font-weight:700">Add creative</button>
+          </div>
+
+          <div class="form-card" style="padding:0;overflow:hidden">
+            <div class="table-head" id="ob-table-head" style="grid-template-columns:1.1fr 1.6fr 0.8fr 0.9fr 0.9fr;font-size:10px;letter-spacing:0.06em;color:#8a8a95;padding:12px 16px">
+              <span>Page name</span><span>Ad copy</span><span>Link</span><span>Date</span><span>Status</span>
+            </div>
+            <div id="ob-rows"></div>
+          </div>
+
         </div>
       </div>
 
@@ -2749,6 +2824,43 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     .fu-input:focus { outline:none; border-color:rgba(250,204,21,0.45); background:var(--bg2,#17171b); }
     .fu-input::placeholder { color:#6a6a75; }
     /* TEAM TABS */
+    /* ─── OWN BRAND CREATIVES PAGE ─── */
+    .ob-hero { display:flex; align-items:center; gap:14px; margin-bottom:16px;
+      background:var(--bg2,#141310); border:0.5px solid var(--border,#2a2823); border-radius:14px; padding:16px 20px; }
+    .ob-hero-icon { width:40px; height:40px; border-radius:11px; flex-shrink:0; background:var(--yellow,#facc15); color:#3a2a02; display:flex; align-items:center; justify-content:center; }
+    .ob-hero-title { color:#f2f0ea; font-size:16px; font-weight:600; }
+    .ob-hero-sub { color:#8a8781; font-size:12px; margin-top:2px; }
+
+    .ob-upload { border:1px dashed rgba(255,255,255,0.15); border-radius:9px; cursor:pointer; overflow:hidden;
+      transition:border-color .18s ease, background .18s ease; }
+    .ob-upload:hover { border-color:rgba(250,204,21,0.4); background:rgba(250,204,21,0.03); }
+    .ob-upload-empty { display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 16px; text-align:center; color:#6a6a75; }
+    .ob-upload-empty svg { color:#8a8781; }
+    .ob-upload-empty span { font-size:11.5px; color:#a6a39c; font-weight:600; }
+    .ob-upload-preview { position:relative; }
+    .ob-upload-preview img, .ob-upload-preview video { width:100%; max-height:180px; object-fit:cover; display:block; }
+    .ob-preview-info { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 12px;
+      background:#0e0e11; border-top:0.5px solid rgba(255,255,255,0.07); }
+    .ob-preview-info span { font-size:11px; color:#c9c6be; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .ob-preview-remove { background:none; border:none; color:#8a8781; cursor:pointer; padding:2px; flex-shrink:0; transition:color .16s ease; }
+    .ob-preview-remove:hover { color:#f09595; }
+    .ob-upload-progress { display:flex; align-items:center; justify-content:center; gap:10px; padding:18px; color:#a6a39c; font-size:11.5px; }
+    .ob-spin { width:15px; height:15px; border:2px solid rgba(250,204,21,0.25); border-top-color:#facc15; border-radius:50%; animation:obSpin .7s linear infinite; }
+    @keyframes obSpin { to { transform:rotate(360deg); } }
+
+    .ob-row { display:grid; grid-template-columns:1.1fr 1.6fr 0.8fr 0.9fr 0.9fr; gap:12px; align-items:center;
+      padding:13px 16px; border-top:0.5px solid rgba(255,255,255,0.05); font-size:11.5px; transition:background .14s ease; }
+    .ob-row:hover { background:rgba(255,255,255,0.02); }
+    .ob-name { color:#f2f0ea; font-weight:600; }
+    .ob-copy { color:#a6a39c; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .ob-empty { padding:34px 16px; text-align:center; color:#5a5a65; font-size:12px; }
+
+    @media (prefers-reduced-motion: reduce){
+      .ob-upload { transition:none; }
+      .ob-spin { animation:none; }
+      .ob-row { transition:none; }
+    }
+
     /* ─── SOCIAL POSTING PAGE ─── */
     .sp-hero { display:flex; align-items:center; gap:14px; margin-bottom:14px;
       background:var(--bg2,#141310); border:0.5px solid var(--border,#2a2823); border-radius:14px; padding:16px 20px; flex-wrap:wrap; }
