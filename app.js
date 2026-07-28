@@ -613,6 +613,32 @@ async function loadDashboard(){
 
 
 // ══════════════════════════════════════════════
+// SKELETON LOADERS + EMPTY STATE ILLUSTRATIONS
+// ══════════════════════════════════════════════
+function skelRows(containerId, count){
+  var box=document.getElementById(containerId);
+  if(!box) return;
+  var widths=['18%','30%','14%','12%','10%','16%'];
+  var row='<div class="skel-row">'+widths.map(function(w){return '<div class="skel-bar" style="width:'+w+'"></div>';}).join('')+'</div>';
+  box.innerHTML=row.repeat(count||4);
+}
+function skelCards(containerId, count){
+  var box=document.getElementById(containerId);
+  if(!box) return;
+  var card='<div class="skel-card"><div class="skel-bar" style="width:55%;height:12px"></div><div class="skel-bar" style="width:35%;height:9px"></div></div>';
+  box.innerHTML=card.repeat(count||3);
+}
+function emptyState(iconSvg, title, sub){
+  return '<div class="empty-state"><div class="empty-state-icon">'+iconSvg+'</div>'
+    + '<div class="empty-state-title">'+escapeHtml(title)+'</div>'
+    + (sub?'<div class="empty-state-sub">'+escapeHtml(sub)+'</div>':'')
+    + '</div>';
+}
+var ICO_INBOX='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>';
+var ICO_MEGAPHONE='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>';
+var ICO_SEND='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+
+// ══════════════════════════════════════════════
 // FREEBIES ASSIGNMENT — New project → For Upload
 // ══════════════════════════════════════════════
 var fbEditors = [];
@@ -2808,7 +2834,14 @@ function renderBlueprintScenes(blueprintText, containerId){
 
 function showNotif(msg,type){
   const n=document.getElementById('notif');
-  n.textContent=msg;n.className='notif show '+(type||'');
+  var clean=String(msg||'').replace(/^[\u2600-\u27BF\u2190-\u21FF\u2B00-\u2BFF\uD800-\uDFFF\s]+/,'').trim();
+  var icons={
+    success:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg>',
+    error:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    '':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+  };
+  n.innerHTML=(icons[type]||icons[''])+'<span>'+escapeHtml(clean)+'</span>';
+  n.className='notif show '+(type||'');
   setTimeout(()=>{n.className='notif';},3000);
 }
 
@@ -4571,6 +4604,7 @@ document.addEventListener('click', function(e){
 });
 
 async function loadForUpload(){
+  skelRows('fu-table-body', 5);
   var nowIso = new Date().toISOString();
   // ARCHIVE (hindi na delete): kapag lampas na sa 48h ang published creative,
   // itatago na lang sa main list pero mananatili sa database para sa tracking.
@@ -5350,6 +5384,7 @@ async function loadSocial(){
 }
 
 async function spLoadPosts(){
+  skelCards('sp-list', 3);
   try{
     var r=await sb.from('scheduled_posts').select('*').order('scheduled_at',{ascending:true});
     spPosts=r.data||[];
@@ -5367,7 +5402,7 @@ function spPlatLabel(p){
 function spRenderList(){
   var box=document.getElementById('sp-list');
   if(!box) return;
-  if(!spPosts.length){ box.innerHTML='<div class="sp-empty">No posts scheduled yet.</div>'; return; }
+  if(!spPosts.length){ box.innerHTML=emptyState(ICO_SEND,'No posts scheduled yet','Compose one on the left and pick a date to see it here.'); return; }
   box.innerHTML=spPosts.map(function(p){
     var st=p.status||'scheduled';
     var badge = st==='posted'?'sp-b-posted':(st==='failed'?'sp-b-failed':'sp-b-sched');
@@ -5602,6 +5637,7 @@ function obTagBadge(tag){
 }
 
 async function loadBrandCreatives(){
+  skelRows('ob-rows', 4);
   try{
     var r=await sb.from('brand_creatives').select('*').order('created_at',{ascending:false});
     if(r.error) throw r.error;
@@ -5613,7 +5649,7 @@ async function loadBrandCreatives(){
 function obRenderRows(){
   var box=document.getElementById('ob-rows');
   if(!box) return;
-  if(!obItems.length){ box.innerHTML='<div class="ob-empty">No own brand creatives yet. Click "Add creative" above.</div>'; return; }
+  if(!obItems.length){ box.innerHTML=emptyState(ICO_MEGAPHONE,'No own brand creatives yet','Click "Add creative" above to log the first one.'); return; }
   box.innerHTML=obItems.map(function(c){
     var link=c.link_url?('<a href="'+c.link_url+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px">Open<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></a>'):'<span style="color:#5a5a65">—</span>';
     var date=c.created_at?new Date(c.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'—';
