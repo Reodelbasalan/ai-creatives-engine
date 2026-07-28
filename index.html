@@ -1013,6 +1013,21 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 #nav-attendance:hover{color:#a3e635;background:rgba(163,230,53,0.07)}
 #nav-attendance.active{color:#a3e635;background:rgba(163,230,53,0.1);border:0.5px solid rgba(163,230,53,0.35);font-weight:600}
 #nav-attendance.active::before{background:#a3e635;box-shadow:0 0 8px #a3e635}
+#nav-extensions svg{color:#c084fc}
+#nav-extensions{color:rgba(192,132,252,0.78)}
+#nav-extensions:hover{color:#c084fc;background:rgba(192,132,252,0.07)}
+#nav-extensions.active{color:#c084fc;background:rgba(192,132,252,0.1);border:0.5px solid rgba(192,132,252,0.35);font-weight:600}
+#nav-extensions.active::before{background:#c084fc;box-shadow:0 0 8px #c084fc}
+#nav-brand svg{color:#fb923c}
+#nav-brand{color:rgba(251,146,60,0.78)}
+#nav-brand:hover{color:#fb923c;background:rgba(251,146,60,0.07)}
+#nav-brand.active{color:#fb923c;background:rgba(251,146,60,0.1);border:0.5px solid rgba(251,146,60,0.35);font-weight:600}
+#nav-brand.active::before{background:#fb923c;box-shadow:0 0 8px #fb923c}
+#nav-social svg{color:#22d3ee}
+#nav-social{color:rgba(34,211,238,0.78)}
+#nav-social:hover{color:#22d3ee;background:rgba(34,211,238,0.07)}
+#nav-social.active{color:#22d3ee;background:rgba(34,211,238,0.1);border:0.5px solid rgba(34,211,238,0.35);font-weight:600}
+#nav-social.active::before{background:#22d3ee;box-shadow:0 0 8px #22d3ee}
 #nav-activity svg{color:#fbbf24}
 #nav-activity{color:rgba(251,191,36,0.78)}
 #nav-activity:hover{color:#fbbf24;background:rgba(251,191,36,0.07)}
@@ -1960,6 +1975,23 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               </div>
             </div>
 
+            <label class="form-label">Tag</label>
+            <div class="ob-dd" id="ob-dd-tag" style="margin-bottom:14px">
+              <button type="button" class="ob-dd-btn" onclick="obDdToggle('ob-dd-tag')">
+                <span class="ob-dot" id="ob-tag-dot" style="background:#facc15"></span>
+                <span id="ob-tag-label" style="flex:1;text-align:left">Brand promo</span>
+                <svg class="ob-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="ob-dd-menu">
+                <div class="ob-dd-item active" onclick="obPickTag('Brand promo','#facc15',this)"><span class="ob-dot" style="background:#facc15"></span>Brand promo</div>
+                <div class="ob-dd-item" onclick="obPickTag('Announcement','#60a5fa',this)"><span class="ob-dot" style="background:#60a5fa"></span>Announcement</div>
+                <div class="ob-dd-item" onclick="obPickTag('Recruitment','#a78bfa',this)"><span class="ob-dot" style="background:#a78bfa"></span>Recruitment</div>
+                <div class="ob-dd-item" onclick="obPickTag('Testimonial','#4ade80',this)"><span class="ob-dot" style="background:#4ade80"></span>Testimonial</div>
+                <div class="ob-dd-item" onclick="obPickTag('Behind the scenes','#f472b6',this)"><span class="ob-dot" style="background:#f472b6"></span>Behind the scenes</div>
+              </div>
+            </div>
+            <input type="hidden" id="ob-tag" value="Brand promo"/>
+
             <label class="form-label">Ad copy</label>
             <textarea class="form-input" id="ob-adcopy" rows="3" placeholder="Caption o ad copy para sa post..." style="resize:vertical;margin-bottom:14px"></textarea>
 
@@ -1989,8 +2021,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           </div>
 
           <div class="form-card" style="padding:0;overflow:hidden">
-            <div class="table-head" id="ob-table-head" style="grid-template-columns:1.1fr 1.6fr 0.8fr 0.9fr 0.9fr;font-size:10px;letter-spacing:0.06em;color:#8a8a95;padding:12px 16px">
-              <span>Page name</span><span>Ad copy</span><span>Link</span><span>Date</span><span>Status</span>
+            <div class="table-head" id="ob-table-head" style="grid-template-columns:1fr 1.4fr 0.8fr 0.7fr 0.8fr 0.8fr 32px;font-size:10px;letter-spacing:0.06em;color:#8a8a95;padding:12px 16px">
+              <span>Page name</span><span>Ad copy</span><span>Tag</span><span>Link</span><span>Date</span><span>Status</span><span></span>
             </div>
             <div id="ob-rows"></div>
           </div>
@@ -2848,11 +2880,36 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     .ob-spin { width:15px; height:15px; border:2px solid rgba(250,204,21,0.25); border-top-color:#facc15; border-radius:50%; animation:obSpin .7s linear infinite; }
     @keyframes obSpin { to { transform:rotate(360deg); } }
 
-    .ob-row { display:grid; grid-template-columns:1.1fr 1.6fr 0.8fr 0.9fr 0.9fr; gap:12px; align-items:center;
+    .ob-dd { position:relative; }
+    .ob-dd-btn { display:flex; align-items:center; gap:9px; width:100%; background:var(--bg1,#0e0e11);
+      border:0.5px solid var(--border2,rgba(255,255,255,0.09)); border-radius:9px; padding:9px 12px; color:#f2f0ea;
+      font-size:12px; font-family:inherit; cursor:pointer; text-align:left;
+      transition:border-color .18s ease, background .18s ease; }
+    .ob-dd-btn:hover { border-color:rgba(250,204,21,0.35); background:rgba(250,204,21,0.03); }
+    .ob-dd.open .ob-dd-btn { border-color:rgba(250,204,21,0.5); box-shadow:0 0 0 3px rgba(250,204,21,0.08); }
+    .ob-caret { color:#6a6a75; flex-shrink:0; transition:transform .22s ease, color .18s ease; }
+    .ob-dd.open .ob-caret { transform:rotate(180deg); color:#facc15; }
+    .ob-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .ob-dd-menu { position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:60;
+      background:#16161a; border:0.5px solid rgba(255,255,255,0.1); border-radius:10px; padding:5px;
+      max-height:220px; overflow-y:auto; box-shadow:0 12px 34px rgba(0,0,0,0.55);
+      opacity:0; visibility:hidden; transform:translateY(-6px);
+      transition:opacity .18s ease, transform .18s ease, visibility .18s; }
+    .ob-dd.open .ob-dd-menu { opacity:1; visibility:visible; transform:translateY(0); }
+    .ob-dd-item { display:flex; align-items:center; gap:9px; padding:9px 11px; border-radius:7px;
+      font-size:11.5px; color:#c9c6be; cursor:pointer; transition:background .14s ease, color .14s ease; }
+    .ob-dd-item:hover { background:rgba(255,255,255,0.055); color:#f2f0ea; }
+    .ob-dd-item.active { background:rgba(250,204,21,0.1); color:#facc15; font-weight:650; }
+
+    .ob-row { display:grid; grid-template-columns:1fr 1.4fr 0.8fr 0.7fr 0.8fr 0.8fr 32px; gap:12px; align-items:center;
       padding:13px 16px; border-top:0.5px solid rgba(255,255,255,0.05); font-size:11.5px; transition:background .14s ease; }
     .ob-row:hover { background:rgba(255,255,255,0.02); }
     .ob-name { color:#f2f0ea; font-weight:600; }
     .ob-copy { color:#a6a39c; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ob-del-btn { background:none; border:none; color:#6a6a75; cursor:pointer; padding:2px;
+      display:flex; align-items:center; justify-content:center; transition:color .16s ease; }
+    .ob-del-btn:hover { color:#f09595; }
+
     .ob-empty { padding:34px 16px; text-align:center; color:#5a5a65; font-size:12px; }
 
     @media (prefers-reduced-motion: reduce){
