@@ -1733,7 +1733,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <button class="ghost-btn" onclick="clearSelection()" style="font-size:11px;margin-left:auto">✕ Clear</button>
         </div>
         <div class="data-table">
-          <div class="table-head" style="grid-template-columns:32px 2fr 1fr 1.2fr 0.8fr 80px"><span></span><span>Client / project</span><span>Type</span><span>Status</span><span>Date</span><span>Deadline</span></div>
+          <div class="table-head" style="grid-template-columns:32px 2fr 1fr 1.2fr 0.8fr 80px 32px"><span></span><span>Client / project</span><span>Type</span><span>Status</span><span>Date</span><span>Deadline</span><span></span></div>
           <div id="all-projects-body"></div>
         </div>
       </div>
@@ -2081,8 +2081,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           </div>
 
           <div class="form-card" style="padding:0;overflow:hidden">
-            <div class="table-head" id="ob-table-head" style="grid-template-columns:1fr 1.4fr 0.8fr 0.7fr 0.8fr 0.8fr 32px;font-size:10px;letter-spacing:0.06em;color:#8a8a95;padding:12px 16px">
-              <span>Page name</span><span>Ad copy</span><span>Tag</span><span>Link</span><span>Date</span><span>Status</span><span></span>
+            <div class="table-head" id="ob-table-head" style="grid-template-columns:1fr 1.4fr 0.8fr 0.7fr 0.8fr 0.8fr 100px 32px;font-size:10px;letter-spacing:0.06em;color:#8a8a95;padding:12px 16px">
+              <span>Page name</span><span>Ad copy</span><span>Tag</span><span>Link</span><span>Date</span><span>Status</span><span></span><span></span>
             </div>
             <div id="ob-rows"></div>
           </div>
@@ -2961,7 +2961,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     .ob-dd-item:hover { background:rgba(255,255,255,0.055); color:#f2f0ea; }
     .ob-dd-item.active { background:rgba(250,204,21,0.1); color:#facc15; font-weight:650; }
 
-    .ob-row { display:grid; grid-template-columns:1fr 1.4fr 0.8fr 0.7fr 0.8fr 0.8fr 32px; gap:12px; align-items:center;
+    .ob-row { display:grid; grid-template-columns:1fr 1.4fr 0.8fr 0.7fr 0.8fr 0.8fr 100px 32px; gap:12px; align-items:center;
       padding:13px 16px; border-top:0.5px solid rgba(255,255,255,0.05); font-size:11.5px; transition:background .14s ease; }
     .ob-row:hover { background:rgba(255,255,255,0.02); }
     .ob-name { color:#f2f0ea; font-weight:600; }
@@ -3080,6 +3080,26 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       .sp-upload { transition:none; }
       .sp-spin { animation:none; }
     }
+
+    .ob-approve-btn {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:5px 11px; border-radius:20px; font-size:10.5px; font-weight:650;
+      background:rgba(94,234,212,0.1); border:0.5px solid rgba(94,234,212,0.35); color:#5eead4;
+      cursor:pointer; white-space:nowrap;
+      transition:background .16s ease, border-color .16s ease, transform .16s ease;
+    }
+    .ob-approve-btn:hover { background:rgba(94,234,212,0.18); border-color:rgba(94,234,212,0.55); transform:translateY(-1px); }
+    .ob-approve-btn:active { transform:translateY(0) scale(0.97); }
+    @media (prefers-reduced-motion: reduce){ .ob-approve-btn { transition:none; } }
+
+    /* ─── ALL PROJECTS — PER-ROW DELETE ─── */
+    .proj-row-del {
+      display:flex; align-items:center; justify-content:center;
+      color:#6a6a75; cursor:pointer; padding:4px; border-radius:6px;
+      transition:color .16s ease, background .16s ease;
+    }
+    .proj-row-del:hover { color:#f09595; background:rgba(239,68,68,0.08); }
+    @media (prefers-reduced-motion: reduce){ .proj-row-del { transition:none; } }
 
     /* ─── PROJECT DATE FILTER PRESETS ─── */
     .proj-date-presets { display:inline-flex; gap:5px; }
