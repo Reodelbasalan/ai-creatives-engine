@@ -822,7 +822,47 @@ async function loadAssignDropdown(){
 // ALL PROJECTS
 async function loadAllProjects(){
   const{data}=await sb.from('projects').select('*').order('created_at',{ascending:false});
-  allProjects=data||[];renderProjectsTable(allProjects);
+  allProjects=data||[];
+  var df=document.getElementById('proj-date-from');
+  var dt=document.getElementById('proj-date-to');
+  if(df && dt && !df.value && !dt.value){
+    projDatePreset('month');
+  } else {
+    renderProjectsTable(allProjects);
+  }
+}
+
+function projFmtDate(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function projDatePreset(kind){
+  var df=document.getElementById('proj-date-from');
+  var dt=document.getElementById('proj-date-to');
+  if(!df||!dt) return;
+  var now=new Date();
+  if(kind==='today'){
+    df.value=projFmtDate(now); dt.value=projFmtDate(now);
+  } else if(kind==='week'){
+    var start=new Date(now); start.setDate(now.getDate()-now.getDay());
+    var end=new Date(start); end.setDate(start.getDate()+6);
+    df.value=projFmtDate(start); dt.value=projFmtDate(end);
+  } else if(kind==='month'){
+    var start2=new Date(now.getFullYear(),now.getMonth(),1);
+    var end2=new Date(now.getFullYear(),now.getMonth()+1,0);
+    df.value=projFmtDate(start2); dt.value=projFmtDate(end2);
+  } else {
+    df.value=''; dt.value='';
+  }
+  document.querySelectorAll('.proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
+  var idx={today:0,week:1,month:2,all:3}[kind];
+  var pills=document.querySelectorAll('.proj-preset-pill');
+  if(pills[idx]) pills[idx].classList.add('active');
+  filterProjects();
+}
+
+function projPresetClear(){
+  document.querySelectorAll('.proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
 }
 
 function filterProjects(){
@@ -853,6 +893,9 @@ function clearProjectFilters(){
   });
   document.getElementById('filter-status').value='';
   document.getElementById('filter-priority').value='';
+  document.querySelectorAll('.proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
+  var pills=document.querySelectorAll('.proj-preset-pill');
+  if(pills[3]) pills[3].classList.add('active');
   filterProjects();
 }
 
