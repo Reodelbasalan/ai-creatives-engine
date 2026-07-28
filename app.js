@@ -1018,7 +1018,10 @@ async function loadEditorFreebiesTasks(){
       +   '<div class="editor-card-meta">'+escapeHtml(c.category||'')+' · '+(c.freebies_count||0)+' freebies</div></div>'
       +   '<div>'+badge+'</div>'
       + '</div>'
-      + '<button class="ghost-btn" onclick="showPage(\'for-upload\')" style="margin-top:8px">Open in For Upload</button>'
+      + '<div class="editor-card-actions">'
+      +   (c.project_id ? '<button class="ghost-btn" onclick="openModal(\''+c.project_id+'\')">View client details</button>' : '')
+      +   '<button class="ghost-btn" onclick="showPage(\'for-upload\')">Open in For Upload</button>'
+      + '</div>'
       + '</div>';
   }).join('');
 }
@@ -1238,7 +1241,13 @@ async function saveProject(){
 
 // MODAL
 async function openModal(id){
-  const p=allProjects.find(x=>x.id===id);if(!p)return;
+  var p=allProjects.find(x=>x.id===id);
+  if(!p){
+    var r=await sb.from('projects').select('*').eq('id',id).maybeSingle();
+    p=r.data;
+    if(p) allProjects.push(p);
+  }
+  if(!p)return;
   currentProjectId=id;
   document.getElementById('modal-client-name').textContent=p.client_name;
   document.getElementById('modal-date').textContent=fmtDate(p.created_at)+' · '+p.business_type;
