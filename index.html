@@ -1184,6 +1184,68 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* ═══════════════════════════════════════════════════
+   PREMIUM VISUAL UPGRADE — app-wide, CSS only
+   Gradient buttons, glass cards, deeper elevation.
+   ═══════════════════════════════════════════════════ */
+
+/* Ambient page depth — subtle radial glow, no gradients on any card */
+body {
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(250,204,21,0.05), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(96,165,250,0.035), transparent 55%),
+    var(--bg);
+}
+
+/* PRIMARY BUTTON — gradient fill + soft glow at rest */
+.yellow-btn {
+  background: linear-gradient(135deg, var(--yellow2), var(--yellow)) !important;
+  box-shadow: 0 3px 12px rgba(250,204,21,0.18) !important;
+}
+.yellow-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fef08a, var(--yellow2)) !important;
+  box-shadow: 0 9px 26px rgba(250,204,21,0.38) !important;
+}
+
+/* CARDS — glass surface: soft gradient tint + blur + deeper shadow */
+.form-card, .stat-card {
+  background: linear-gradient(165deg, rgba(255,255,255,0.03), rgba(255,255,255,0.005)), var(--bg2) !important;
+  border: 0.5px solid rgba(255,255,255,0.08) !important;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.03) !important;
+}
+.form-card:hover, .stat-card:hover {
+  border-color: rgba(255,255,255,0.14) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04) !important;
+}
+
+/* TABLE ROWS — subtle glass hover */
+.table-row:hover {
+  background: linear-gradient(90deg, rgba(250,204,21,0.03), rgba(255,255,255,0.02)) !important;
+  box-shadow: inset 0 0 0 1px rgba(250,204,21,0.1);
+}
+
+/* STATUS PILLS (fu-status-pill, ob-status-pill, sp-badge, etc.) — soft glow ring */
+.fu-status-pill, .ob-status-pill, .sp-badge, .fu-cat-tab.active, .ob-dd-item.active, .fb-dd-item.active {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+/* NAV — active item gets a soft inner glow instead of flat fill */
+.nav-item.active {
+  box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.06), 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* INPUTS — glass field with soft focus glow */
+.form-input, .form-textarea, .form-select, input[type="text"], input[type="email"], input[type="password"], textarea, select {
+  background: rgba(255,255,255,0.02) !important;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus, input:focus, textarea:focus, select:focus {
+  box-shadow: 0 0 0 3px rgba(250,204,21,0.1) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yellow-btn, .form-card, .stat-card, .table-row { transition: none !important; }
+}
+
 /* Igalang ang reduced-motion preference */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
