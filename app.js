@@ -901,7 +901,7 @@ function clearProjectFilters(){
 
 function renderProjectsTable(projects){
   document.getElementById('all-projects-body').innerHTML=projects.length?projects.map(p=>`
-    <div class="table-row" style="grid-template-columns:32px 2fr 1fr 1.2fr 0.8fr" onclick="openModal('${p.id}')">
+    <div class="table-row" style="grid-template-columns:32px 2fr 1fr 1.2fr 0.8fr 80px 32px" onclick="openModal('${p.id}')">
       <div onclick="toggleSelect('${p.id}',event)" style="display:flex;align-items:center;justify-content:center">
         <input type="checkbox" id="cb-${p.id}" class="proj-checkbox" style="cursor:pointer;width:14px;height:14px;accent-color:var(--yellow)" ${selectedProjects.has(p.id)?'checked':''}/>
       </div>
@@ -909,7 +909,24 @@ function renderProjectsTable(projects){
       <div class="row-meta">${p.business_type||'—'}</div>
       <div>${statusBadge(p.status)}</div>
       <div class="row-date">${fmtDate(p.created_at)}</div>
+      <div class="row-date">${p.deadline?getDeadlineStatus(p.deadline):'<span style="color:#5a5a65">—</span>'}</div>
+      <div onclick="deleteProjectRow('${p.id}',event)" class="proj-row-del" title="Delete">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      </div>
     </div>`).join(''):'<div class="table-empty"><div class="table-empty-icon">🔍</div>No projects found.</div>';
+}
+
+async function deleteProjectRow(id,event){
+  if(event) event.stopPropagation();
+  if(!confirm('Delete this project permanently?'))return;
+  try{
+    var r=await sb.from('projects').delete().eq('id',id);
+    if(r.error) throw r.error;
+    showNotif('Project deleted','success');
+    if(selectedProjects.has(id)){ selectedProjects.delete(id); updateBulkBar(); }
+    await loadAllProjects();
+    loadDashboard();
+  }catch(err){ showNotif('Delete failed: '+(err.message||err),'error'); }
 }
 
 // EDITOR PORTAL
@@ -5691,12 +5708,24 @@ function obRenderRows(){
   var box=document.getElementById('ob-rows');
   if(!box) return;
   if(!obItems.length){ box.innerHTML=emptyState(ICO_MEGAPHONE,'No own brand creatives yet','Click "Add creative" above to log the first one.'); return; }
+  var isAdmin=currentUserRole==='admin';
   box.innerHTML=obItems.map(function(c){
     var link=c.link_url?('<a href="'+c.link_url+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px">Open<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></a>'):'<span style="color:#5a5a65">—</span>';
     var date=c.created_at?new Date(c.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'—';
-    var st=c.status||'Draft';
-    var stColors={Draft:{bg:'rgba(138,135,129,0.15)',c:'#a6a39c'},Scheduled:{bg:'rgba(250,204,21,0.14)',c:'#facc15'},Published:{bg:'rgba(94,234,212,0.14)',c:'#5eead4'}};
-    var sc=stColors[st]||stColors.Draft;
+    var st=c.status||'Pending approval';
+    var stColors={
+      'Pending approval':{bg:'rgba(251,146,60,0.15)',c:'#fb923c'},
+      'Draft':{bg:'rgba(138,135,129,0.15)',c:'#a6a39c'},
+      'Approved':{bg:'rgba(96,165,250,0.15)',c:'#7db4fb'},
+      'Scheduled':{bg:'rgba(250,204,21,0.14)',c:'#facc15'},
+      'Published':{bg:'rgba(94,234,212,0.14)',c:'#5eead4'}
+    };
+    var sc=stColors[st]||stColors['Pending approval'];
+    var approveBtn = (isAdmin && st==='Pending approval')
+      ? '<button class="ob-approve-btn" onclick="obApprove(\''+c.id+'\')" title="Approve">'
+        + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg>'
+        + 'Approve</button>'
+      : '';
     return '<div class="ob-row">'
       + '<div class="ob-name">'+escapeHtml(c.page_name||'—')+'</div>'
       + '<div class="ob-copy" title="'+escapeHtml(c.ad_copy||'')+'">'+escapeHtml(c.ad_copy||'—')+'</div>'
@@ -5708,17 +5737,27 @@ function obRenderRows(){
       +     st
       +     '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>'
       +   '</button>'
-      +   '<div class="ob-status-menu" style="display:none;position:absolute;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:50;min-width:120px">'
-      +     '<div onclick="obStatusPick(\''+c.id+'\',\'Draft\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Draft</div>'
+      +   '<div class="ob-status-menu" style="display:none;position:absolute;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:50;min-width:140px">'
+      +     '<div onclick="obStatusPick(\''+c.id+'\',\'Pending approval\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Pending approval</div>'
+      +     '<div onclick="obStatusPick(\''+c.id+'\',\'Approved\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Approved</div>'
       +     '<div onclick="obStatusPick(\''+c.id+'\',\'Scheduled\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Scheduled</div>'
       +     '<div onclick="obStatusPick(\''+c.id+'\',\'Published\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Published</div>'
       +   '</div>'
       + '</div>'
+      + approveBtn
       + '<button class="ob-del-btn" onclick="obDeleteCreative(\''+c.id+'\')" title="Burahin">'
       +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>'
       + '</button>'
       + '</div>';
   }).join('');
+}
+
+async function obApprove(id){
+  try{
+    await sb.from('brand_creatives').update({status:'Approved'}).eq('id',id);
+    showNotif('Creative approved','success');
+    await loadBrandCreatives();
+  }catch(e){ showNotif('Approve failed','error'); }
 }
 
 async function obDeleteCreative(id){
@@ -5803,7 +5842,7 @@ async function obAddCreative(){
   if(!page){ showNotif('Enter a page name','error'); return; }
   try{
     var tag=(document.getElementById('ob-tag')?.value||'').trim()||null;
-    var r=await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, tag:tag, status:'Draft'});
+    var r=await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, tag:tag, status:'Pending approval'});
     if(r.error) throw r.error;
     showNotif('Brand creative added!','success');
     document.getElementById('ob-page').value='';
