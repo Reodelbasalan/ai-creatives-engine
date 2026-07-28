@@ -5589,8 +5589,9 @@ function obTagBadge(tag){
 async function loadBrandCreatives(){
   try{
     var r=await sb.from('brand_creatives').select('*').order('created_at',{ascending:false});
+    if(r.error) throw r.error;
     obItems=r.data||[];
-  }catch(e){ obItems=[]; }
+  }catch(e){ obItems=[]; console.error('loadBrandCreatives error:',e); }
   obRenderRows();
 }
 
@@ -5710,7 +5711,8 @@ async function obAddCreative(){
   if(!page){ showNotif('Enter a page name','error'); return; }
   try{
     var tag=(document.getElementById('ob-tag')?.value||'').trim()||null;
-    await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, tag:tag, status:'Draft'});
+    var r=await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, tag:tag, status:'Draft'});
+    if(r.error) throw r.error;
     showNotif('Brand creative added!','success');
     document.getElementById('ob-page').value='';
     document.getElementById('ob-adcopy').value='';
@@ -5719,5 +5721,5 @@ async function obAddCreative(){
     obRemoveFile();
     obToggleForm();
     await loadBrandCreatives();
-  }catch(err){ showNotif('Error: '+(err.message||err),'error'); }
+  }catch(err){ showNotif('Error: '+(err.message||err),'error'); console.error('obAddCreative error:',err); }
 }
