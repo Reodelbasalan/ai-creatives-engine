@@ -1524,12 +1524,12 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div class="form-card-title" style="display:flex;align-items:center;gap:8px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
             <span>Freebies assignment</span>
-            <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(optional — papasok sa For Upload)</span>
+            <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(optional — goes into For Upload)</span>
           </div>
 
           <div class="fb-grid">
             <div class="form-field">
-              <label class="form-label">Ilang freebies</label>
+              <label class="form-label">Freebies count</label>
               <div class="fb-stepper" id="fb-stepper">
                 <button type="button" class="fb-step-btn" onclick="fbStep(-1)" aria-label="Bawasan">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1542,7 +1542,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
 
             <div class="form-field">
-              <label class="form-label">Dadalhin sa</label>
+              <label class="form-label">Goes to</label>
               <div class="fb-dd" id="fb-dd-dest">
                 <button type="button" class="fb-dd-btn" onclick="fbDdToggle('fb-dd-dest')">
                   <span class="fb-dot" id="fb-dest-dot" style="background:#a78bfa"></span>
@@ -1561,13 +1561,13 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
 
             <div class="form-field">
-              <label class="form-label">Assign sa editor</label>
+              <label class="form-label">Assign to editor</label>
               <div class="fb-dd" id="fb-dd-editor">
                 <button type="button" class="fb-dd-btn" onclick="fbDdToggle('fb-dd-editor')">
                   <span class="fb-av" id="fb-editor-av" aria-hidden="true">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                   </span>
-                  <span id="fb-editor-label" style="flex:1;text-align:left">Walang assign</span>
+                  <span id="fb-editor-label" style="flex:1;text-align:left">Unassigned</span>
                   <svg class="fb-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
                 <div class="fb-dd-menu" id="fb-editor-menu"></div>
@@ -1952,7 +1952,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
             <div>
               <div class="ob-hero-title">Own Brand Creatives</div>
-              <div class="ob-hero-sub">Sariling AI Creatives content — hiwalay sa client work, hindi na-a-archive</div>
+              <div class="ob-hero-sub">Original content for the AI Creatives brand — separate from client work, never auto-archived</div>
             </div>
           </div>
 
@@ -1967,40 +1967,33 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px">
               <div>
                 <label class="form-label">Page name</label>
-                <input type="text" class="form-input" id="ob-page" placeholder="Halimbawa: Viral UGC Promoter"/>
+                <input type="text" class="form-input" id="ob-page" placeholder="e.g. Viral UGC Promoter"/>
               </div>
               <div>
                 <label class="form-label">Link</label>
-                <input type="text" class="form-input" id="ob-link" placeholder="Link ng creative file"/>
+                <input type="text" class="form-input" id="ob-link" placeholder="Link to the creative file"/>
               </div>
             </div>
 
             <label class="form-label">Tag</label>
-            <div class="ob-dd" id="ob-dd-tag" style="margin-bottom:14px">
-              <button type="button" class="ob-dd-btn" onclick="obDdToggle('ob-dd-tag')">
-                <span class="ob-dot" id="ob-tag-dot" style="background:#facc15"></span>
-                <span id="ob-tag-label" style="flex:1;text-align:left">Brand promo</span>
-                <svg class="ob-caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <div class="ob-dd-menu">
-                <div class="ob-dd-item active" onclick="obPickTag('Brand promo','#facc15',this)"><span class="ob-dot" style="background:#facc15"></span>Brand promo</div>
-                <div class="ob-dd-item" onclick="obPickTag('Announcement','#60a5fa',this)"><span class="ob-dot" style="background:#60a5fa"></span>Announcement</div>
-                <div class="ob-dd-item" onclick="obPickTag('Recruitment','#a78bfa',this)"><span class="ob-dot" style="background:#a78bfa"></span>Recruitment</div>
-                <div class="ob-dd-item" onclick="obPickTag('Testimonial','#4ade80',this)"><span class="ob-dot" style="background:#4ade80"></span>Testimonial</div>
-                <div class="ob-dd-item" onclick="obPickTag('Behind the scenes','#f472b6',this)"><span class="ob-dot" style="background:#f472b6"></span>Behind the scenes</div>
-              </div>
-            </div>
-            <input type="hidden" id="ob-tag" value="Brand promo"/>
+            <input type="text" class="form-input" id="ob-tag" list="ob-tag-suggestions" placeholder="e.g. Brand promo" style="margin-bottom:14px"/>
+            <datalist id="ob-tag-suggestions">
+              <option value="Brand promo">
+              <option value="Announcement">
+              <option value="Recruitment">
+              <option value="Testimonial">
+              <option value="Behind the scenes">
+            </datalist>
 
             <label class="form-label">Ad copy</label>
-            <textarea class="form-input" id="ob-adcopy" rows="3" placeholder="Caption o ad copy para sa post..." style="resize:vertical;margin-bottom:14px"></textarea>
+            <textarea class="form-input" id="ob-adcopy" rows="3" placeholder="Caption or ad copy for the post..." style="resize:vertical;margin-bottom:14px"></textarea>
 
-            <label class="form-label">Creative file (opsyonal)</label>
+            <label class="form-label">Creative file (optional)</label>
             <div class="ob-upload" id="ob-upload" onclick="document.getElementById('ob-file').click()">
               <input type="file" id="ob-file" accept="image/*,video/*" style="display:none" onchange="obHandleFile(this)"/>
               <div id="ob-upload-empty" class="ob-upload-empty">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                <span>I-click para mag-upload</span>
+                <span>Click to upload</span>
               </div>
               <div id="ob-upload-preview" class="ob-upload-preview" style="display:none">
                 <img id="ob-preview-img" style="display:none"/>
@@ -2013,7 +2006,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 </div>
               </div>
               <div id="ob-upload-progress" class="ob-upload-progress" style="display:none">
-                <div class="ob-spin"></div><span>Nag-a-upload...</span>
+                <div class="ob-spin"></div><span>Uploading...</span>
               </div>
             </div>
 
@@ -2040,7 +2033,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
             <div style="flex:1">
               <div class="sp-hero-title">Social Posting</div>
-              <div class="sp-hero-sub">Mag-schedule ng auto-post sa FB Page at Instagram</div>
+              <div class="sp-hero-sub">Schedule auto-posts to your Facebook Page and Instagram</div>
             </div>
             <div class="sp-tabs">
               <button type="button" class="sp-tab active" id="sp-tab-compose" onclick="spSwitchView('compose')">
@@ -2056,7 +2049,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
           <div class="sp-demo-banner">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            <span>Setup mode — pwede ka nang mag-schedule at makita sa planner. Ang aktwal na pag-post ay gagana kapag na-connect na ang Facebook/Instagram sa Settings.</span>
+            <span>Setup mode — you can schedule posts and view them in the planner. Actual posting goes live once Facebook/Instagram is connected in Settings.</span>
           </div>
 
           <!-- COMPOSE VIEW -->
@@ -2091,15 +2084,15 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 </div>
 
                 <label class="form-label">Content</label>
-                <textarea class="form-input" id="sp-content" rows="4" placeholder="Isulat ang caption dito..." style="resize:vertical;margin-bottom:14px"></textarea>
+                <textarea class="form-input" id="sp-content" rows="4" placeholder="Write your caption here..." style="resize:vertical;margin-bottom:14px"></textarea>
 
                 <label class="form-label">Media (image o video)</label>
                 <div class="sp-upload" id="sp-upload" onclick="document.getElementById('sp-file').click()">
                   <input type="file" id="sp-file" accept="image/*,video/*" style="display:none" onchange="spHandleFile(this)"/>
                   <div id="sp-upload-empty" class="sp-upload-empty">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <span>I-click para mag-upload ng image o video</span>
-                    <small>JPG, PNG, MP4 — mula sa computer mo</small>
+                    <span>Click to upload an image or video</span>
+                    <small>JPG, PNG, MP4 — from your computer</small>
                   </div>
                   <div id="sp-upload-preview" class="sp-upload-preview" style="display:none">
                     <img id="sp-preview-img" style="display:none"/>
@@ -2112,7 +2105,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                     </div>
                   </div>
                   <div id="sp-upload-progress" class="sp-upload-progress" style="display:none">
-                    <div class="sp-spin"></div><span>Nag-a-upload...</span>
+                    <div class="sp-spin"></div><span>Uploading...</span>
                   </div>
                 </div>
                 <input type="hidden" id="sp-media"/>
@@ -2125,7 +2118,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                     </select>
                   </div>
                   <div>
-                    <label class="form-label">Petsa at oras</label>
+                    <label class="form-label">Date and time</label>
                     <input type="datetime-local" class="form-input" id="sp-datetime"/>
                   </div>
                 </div>
@@ -2140,14 +2133,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
                 <div class="sp-ig-note" id="sp-ig-note" style="display:none">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                  <span>Ang Instagram ay kailangan ng image o video — hindi pwedeng text lang.</span>
+                  <span>Instagram requires an image or video — text-only posts aren't supported.</span>
                 </div>
               </div>
 
               <div class="form-card">
                 <div class="form-card-title" style="margin-bottom:14px">Scheduled / posted</div>
                 <div id="sp-list" class="sp-list">
-                  <div class="sp-empty">Wala pang naka-schedule na post.</div>
+                  <div class="sp-empty">No posts scheduled yet.</div>
                 </div>
               </div>
 
@@ -2191,7 +2184,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
             <div>
               <div class="ext-hero-title">Extensions</div>
-              <div class="ext-hero-sub">Mga tool na madalas gamitin ng team</div>
+              <div class="ext-hero-sub">Tools your team uses often</div>
             </div>
           </div>
 
@@ -2215,13 +2208,13 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </a>
           </div>
 
-          <div class="ext-note">Bubukas sa bagong tab</div>
+          <div class="ext-note">Opens in a new tab</div>
 
           <!-- INSTALL GUIDE -->
           <div class="form-card" style="margin-top:24px">
             <div class="form-card-title" style="display:flex;align-items:center;gap:8px">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>Paano i-install ang AdFlow extension</span>
+              <span>How to install the AdFlow extension</span>
             </div>
 
             <a class="ext-dl-btn" href="https://drive.google.com/drive/folders/1u5qUqxSVYVHBDLEJIubM4eS1ycxihiP5" target="_blank" rel="noopener noreferrer">
@@ -2231,18 +2224,18 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </a>
 
             <ol class="ext-steps">
-              <li><b>I-download</b> ang AdFlow .zip gamit ang button sa taas.</li>
-              <li><b>I-extract</b> (unzip) ito sa folder na hindi mo buburahin — halimbawa <code>Documents/AdFlow</code>. Kapag binura mo ang folder, mawawala rin ang extension.</li>
-              <li>Buksan ang Chrome, i-type sa address bar: <code>chrome://extensions</code></li>
-              <li>Sa kanang taas, i-<b>ON</b> ang <b>Developer mode</b>.</li>
-              <li>Pindutin ang <b>Load unpacked</b> sa kaliwang taas.</li>
-              <li>Piliin ang folder na na-extract mo — yung may <code>manifest.json</code> sa loob.</li>
-              <li>Lalabas na ang AdFlow sa listahan. I-pin mo sa toolbar (puzzle icon → pin) para madaling makita.</li>
+              <li><b>Download</b> the AdFlow .zip using the button above.</li>
+              <li><b>Extract</b> (unzip) it into a folder you won't delete — for example <code>Documents/AdFlow</code>. If you delete the folder, the extension stops working too.</li>
+              <li>Open Chrome and go to <code>chrome://extensions</code></li>
+              <li>In the top right, turn <b>ON</b> <b>Developer mode</b>.</li>
+              <li>Click <b>Load unpacked</b> in the top left.</li>
+              <li>Select the extracted folder — the one containing <code>manifest.json</code>.</li>
+              <li>AdFlow will appear in the list. Pin it to your toolbar (puzzle icon → pin) for easy access.</li>
             </ol>
 
             <div class="ext-tip">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              <span>Kapag may bagong update, palitan lang ang laman ng folder, tapos pindutin ang <b>Reload</b> sa <code>chrome://extensions</code>. Hindi na kailangang mag-Load unpacked ulit.</span>
+              <span>When there's a new update, just replace the folder contents, then click <b>Reload</b> on <code>chrome://extensions</code>. No need to run Load unpacked again.</span>
             </div>
           </div>
 
