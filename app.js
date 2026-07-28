@@ -5561,6 +5561,39 @@ function obToggleForm(){
   }
 }
 
+function obDdToggle(id){
+  var dd=document.getElementById(id);
+  if(!dd) return;
+  var wasOpen=dd.classList.contains('open');
+  document.querySelectorAll('.ob-dd.open').forEach(function(d){ d.classList.remove('open'); });
+  if(!wasOpen) dd.classList.add('open');
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest || !e.target.closest('.ob-dd')){
+    document.querySelectorAll('.ob-dd.open').forEach(function(d){ d.classList.remove('open'); });
+  }
+});
+function obPickTag(tag, color, el){
+  var dd=document.getElementById('ob-dd-tag');
+  if(dd){
+    dd.querySelectorAll('.ob-dd-item').forEach(function(x){ x.classList.remove('active'); });
+    if(el) el.classList.add('active');
+    dd.classList.remove('open');
+  }
+  var lbl=document.getElementById('ob-tag-label');
+  var dot=document.getElementById('ob-tag-dot');
+  var h=document.getElementById('ob-tag');
+  if(lbl) lbl.textContent=tag;
+  if(dot) dot.style.background=color;
+  if(h) h.value=tag;
+}
+function obTagBadge(tag){
+  if(!tag) return '<span style="color:#5a5a65">—</span>';
+  var m={'Brand promo':'#facc15','Announcement':'#60a5fa','Recruitment':'#a78bfa','Testimonial':'#4ade80','Behind the scenes':'#f472b6'};
+  var c=m[tag]||'#8a8781';
+  return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:'+c+'"><span style="width:6px;height:6px;border-radius:50%;background:'+c+';display:inline-block"></span>'+escapeHtml(tag)+'</span>';
+}
+
 async function loadBrandCreatives(){
   try{
     var r=await sb.from('brand_creatives').select('*').order('created_at',{ascending:false});
@@ -5582,6 +5615,7 @@ function obRenderRows(){
     return '<div class="ob-row">'
       + '<div class="ob-name">'+escapeHtml(c.page_name||'—')+'</div>'
       + '<div class="ob-copy" title="'+escapeHtml(c.ad_copy||'')+'">'+escapeHtml(c.ad_copy||'—')+'</div>'
+      + '<div>'+obTagBadge(c.tag)+'</div>'
       + '<div>'+link+'</div>'
       + '<div style="color:#8a8781">'+date+'</div>'
       + '<div class="ob-status-dd" id="ob-sdd-'+c.id+'">'
@@ -5595,8 +5629,19 @@ function obRenderRows(){
       +     '<div onclick="obStatusPick(\''+c.id+'\',\'Published\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Published</div>'
       +   '</div>'
       + '</div>'
+      + '<button class="ob-del-btn" onclick="obDeleteCreative(\''+c.id+'\')" title="Burahin">'
+      +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>'
+      + '</button>'
       + '</div>';
   }).join('');
+}
+
+async function obDeleteCreative(id){
+  try{
+    await sb.from('brand_creatives').delete().eq('id',id);
+    await loadBrandCreatives();
+    showNotif('Nabura ang creative','success');
+  }catch(e){ showNotif('Hindi nabura','error'); }
 }
 
 function obStatusToggle(id){
@@ -5672,11 +5717,13 @@ async function obAddCreative(){
   var link=(document.getElementById('ob-link')?.value||'').trim();
   if(!page){ showNotif('Maglagay ng Page name','error'); return; }
   try{
-    await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, status:'Draft'});
+    var tag=document.getElementById('ob-tag')?.value||'Brand promo';
+    await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, tag:tag, status:'Draft'});
     showNotif('Naidagdag ang brand creative!','success');
     document.getElementById('ob-page').value='';
     document.getElementById('ob-adcopy').value='';
     document.getElementById('ob-link').value='';
+    obPickTag('Brand promo','#facc15',document.querySelector('#ob-dd-tag .ob-dd-item'));
     obRemoveFile();
     obToggleForm();
     await loadBrandCreatives();
