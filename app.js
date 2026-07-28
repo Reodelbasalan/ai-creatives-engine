@@ -520,6 +520,7 @@ async function saveClientDetails(){
     }
     clientName=extractField(brief,['client name','business name','brand name','company name'])||'Client '+new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric'});
     var extractedBizType=extractField(brief,['business type','type of business','industry','niche']);
+    var extractedNiche=extractField(brief,['niche','category','industry']);
     var extractedFB=extractField(brief,['fb page','facebook page','fb link','facebook link']);
     var extractedWebsite=extractField(brief,['website','web link','site url']);
     var extractedAudience=extractField(brief,['target audience','audience','target market']);
@@ -540,6 +541,7 @@ async function saveClientDetails(){
   var{data,error}=await sb.from('projects').insert({
     client_name:clientName,
     business_type:isPaste?(extractedBizType||''):document.getElementById('f-biztype')?.value||'',
+    niche:isPaste?(extractedNiche||null):document.getElementById('f-niche')?.value?.trim()||null,
     product:product||'',
     fb_page:isPaste?(extractedFB||null):document.getElementById('f-fb')?.value?.trim()||null,
     website:isPaste?(extractedWebsite||null):document.getElementById('f-website')?.value?.trim()||null,
@@ -550,6 +552,7 @@ async function saveClientDetails(){
     usp:isPaste?(extractedUSP||''):document.getElementById('f-usp')?.value?.trim()||'',
     goal:isPaste?(extractedGoal||''):document.getElementById('f-goal')?.value||'',
     video_size:document.getElementById('f-size')?.value||'9:16 Vertical',
+    duration:document.getElementById('f-duration')?.value||'',
     language:document.getElementById('f-lang')?.value||'Taglish',
     voice_actor:isPaste?(extractedModel||null):document.getElementById('f-voice')?.value||null,
     avatar_desc:isPaste?(extractedModel||null):document.getElementById('f-avatar')?.value||null,
@@ -569,6 +572,8 @@ async function saveClientDetails(){
   showNotif('Client details saved! Generate blueprint when ready.','success');
   logActivity('CLIENT_SAVED',clientName);
   if (typeof fbCreateForUploadRow === 'function') { await fbCreateForUploadRow(data && data[0] && data[0].id, clientName); fbResetForm(); }
+  var videoEditorId=document.getElementById('f-assign-to')?.value||'';
+  if(videoEditorId){ await notifyEditorAssigned(videoEditorId, clientName); }
   // Clear form
   ['f-client','f-biztype','f-product','f-pain','f-usp','f-audience','f-goal','f-emphasize','f-brief','f-script','f-fb','f-website','f-color1','f-color2','f-gdrive','f-moodboard','f-sample-video','f-client-extra'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   selectedToneVal='';
@@ -793,6 +798,14 @@ async function fbCreateForUploadRow(projectId, clientName){
     }
     if (res && res.error) throw res.error;
     showNotif(n + ' freebies naipasa sa ' + dest, 'success');
+    if (ownerId){
+      await sb.from('notifications').insert({
+        user_id: ownerId,
+        message: 'You\'ve been assigned '+n+' freebies for "'+(clientName||'a client')+'" — check For Upload ('+dest+')!',
+        type: 'assignment',
+        is_read: false
+      }).then(function(){},function(){});
+    }
   } catch(err){
     console.error('freebies row error', err);
     showNotif('Hindi nagawa ang freebies row: ' + (err.message || err.hint || err), 'error');
@@ -920,8 +933,13 @@ async function deleteProjectRow(id,event){
   if(event) event.stopPropagation();
   if(!confirm('Delete this project permanently?'))return;
   try{
-    var r=await sb.from('projects').delete().eq('id',id);
+    var r=await sb.from('projects').delete().eq('id',id).select();
     if(r.error) throw r.error;
+    if(!r.data || r.data.length===0){
+      showNotif('Delete blocked — check database permissions (RLS) on the projects table','error');
+      console.error('deleteProjectRow: 0 rows affected, likely RLS blocking delete for id:',id);
+      return;
+    }
     showNotif('Project deleted','success');
     if(selectedProjects.has(id)){ selectedProjects.delete(id); updateBulkBar(); }
     await loadAllProjects();
@@ -963,6 +981,38 @@ async function loadEditorPortal(){
         ${p.status==='In Production'?`<button class="yellow-btn" style="background:var(--green-dim);color:var(--green);border:0.5px solid rgba(34,197,94,0.3)" onclick="quickApprove('${p.id}',event)">✅ Mark done</button>`:''}
       </div>
     </div>`).join(''):'<div class="table-empty"><div class="table-empty-icon">✅</div><div>No assigned projects yet</div><div style="font-size:11px;margin-top:4px;color:var(--text3)">Admin will assign projects to you</div></div>';
+  loadEditorFreebiesTasks();
+}
+
+async function loadEditorFreebiesTasks(){
+  var box=document.getElementById('editor-freebies-body');
+  if(!box) return;
+  var query;
+  if(currentUserRole==='editor'||currentUserRole==='brand_intern'){
+    query=sb.from('creatives_upload').select('*').eq('owner_id',currentUser.id).eq('is_freebies',true).order('created_at',{ascending:false});
+  } else {
+    query=sb.from('creatives_upload').select('*').eq('is_freebies',true).order('created_at',{ascending:false});
+  }
+  var{data}=await query;
+  var items=data||[];
+  if(!items.length){
+    box.innerHTML='<div class="table-empty"><div class="table-empty-icon">'+ICO_MEGAPHONE+'</div><div>No freebies tasks yet</div><div style="font-size:11px;margin-top:4px;color:var(--text3)">Assigned freebies from new projects will show up here</div></div>';
+    return;
+  }
+  box.innerHTML=items.map(function(c){
+    var st=c.status||'Unpublished';
+    var badge=st==='Published'
+      ? '<span style="background:rgba(94,234,212,0.14);color:#5eead4;font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px">Published</span>'
+      : '<span style="background:rgba(250,204,21,0.14);color:#facc15;font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px">Unpublished</span>';
+    return '<div class="editor-card">'
+      + '<div class="editor-card-top">'
+      +   '<div><div class="editor-card-name">'+escapeHtml(c.project_name||'—')+'</div>'
+      +   '<div class="editor-card-meta">'+escapeHtml(c.category||'')+' · '+(c.freebies_count||0)+' freebies</div></div>'
+      +   '<div>'+badge+'</div>'
+      + '</div>'
+      + '<button class="ghost-btn" onclick="showPage(\'for-upload\')" style="margin-top:8px">Open in For Upload</button>'
+      + '</div>';
+  }).join('');
 }
 
 async function markInProduction(id){
@@ -1120,6 +1170,7 @@ async function saveProject(){
     if(!pFB&&urlMatch)pFB=urlMatch[0];
     var pWebsite=extractF(brief,['website','web link','site url','www.']);
     var pBizType=extractF(brief,['business type','type of business','industry','niche']);
+    var pNiche=extractF(brief,['niche','category','industry']);
     var pAudience=extractF(brief,['target audience','audience','target market']);
     var pPain=extractF(brief,['pain point','problem','challenge']);
     var pUSP=extractF(brief,['usp','unique selling','advantage']);
@@ -1147,9 +1198,11 @@ async function saveProject(){
     usp:isPaste?(pUSP||''):document.getElementById('f-usp').value.trim()||'',
     goal:isPaste?(pGoal||''):document.getElementById('f-goal').value||'',
     business_type:isPaste?(pBizType||''):document.getElementById('f-biztype').value||'',
+    niche:isPaste?(pNiche||null):document.getElementById('f-niche')?.value?.trim()||null,
     voice_actor:isPaste?(pModel||null):document.getElementById('f-voice').value||null,
     avatar_desc:isPaste?(pModel||null):document.getElementById('f-avatar').value||null,
     video_size:document.getElementById('f-size').value,
+    duration:document.getElementById('f-duration')?.value||'',
     language:document.getElementById('f-lang').value,
     emphasize,tone:isPaste?(pTone||selectedToneVal):selectedToneVal,
     status:'New Input',blueprint:blueprint||null,
@@ -1164,6 +1217,8 @@ async function saveProject(){
   if(error){showNotif('Save error: '+error.message,'error');return;}
   showNotif('Project saved! Ready for editor','success');
   if (typeof fbCreateForUploadRow === 'function') { await fbCreateForUploadRow(data && data[0] && data[0].id, clientName); fbResetForm(); }
+  var videoEditorId=document.getElementById('f-assign-to')?.value||'';
+  if(videoEditorId){ await notifyEditorAssigned(videoEditorId, clientName); }
   document.getElementById('blueprint-output').style.display='none';
   document.getElementById('gen-status').textContent='';
   document.getElementById('f-brief').value='';
@@ -1193,15 +1248,21 @@ async function openModal(id){
   var gdriveHtml=p.gdrive_link?'<a href="'+p.gdrive_link+'" target="_blank" style="color:var(--yellow);font-size:11px">📁 Open GDrive</a>':'—';
   var moodHtml=p.moodboard_link?'<a href="'+p.moodboard_link+'" target="_blank" style="color:var(--yellow);font-size:11px">🖼️ Open Moodboard</a>':'—';
   var sampleHtml=p.sample_video_link?'<a href="'+p.sample_video_link+'" target="_blank" style="color:var(--yellow);font-size:11px">🎬 Open Sample</a>':'—';
+  var colorsHtml=(p.color_primary||p.color_secondary)
+    ? [p.color_primary,p.color_secondary].filter(Boolean).join(' / ')
+    : '—';
   document.getElementById('modal-detail-grid').innerHTML=[
-    ['Client',p.client_name],['Business type',p.business_type],
+    ['Client',p.client_name],['Business type',p.business_type],['Niche',p.niche],
     ['FB Page',p.fb_page?`<a href="${p.fb_page}" target="_blank" style="color:var(--yellow);font-size:11px">🔗 Open FB Page</a>`:'—'],
     ['Website',p.website?`<a href="${p.website}" target="_blank" style="color:var(--yellow);font-size:11px">🔗 Open Website</a>`:'—'],
     ['Goal',p.goal],['Language',p.language],
-    ['Video size',p.video_size],['Tone',p.tone],
+    ['Video size',p.video_size],['Duration',p.duration],
+    ['Tone',p.tone],['Brand colors',colorsHtml],
     ['Audience',p.audience],['Assigned to',assignedName],
     ['Pain point',p.pain_point],['USP',p.usp]
   ].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-val">${v||'—'}</div></div>`).join('')
+  +`<div class="detail-item" style="grid-column:1/-1"><div class="detail-label">Product / Service</div><div class="detail-val">${p.product||'—'}</div></div>`
+  +`<div class="detail-item" style="grid-column:1/-1"><div class="detail-label">Script / Emphasis</div><div class="detail-val">${p.emphasize||'—'}</div></div>`
   +`<div class="detail-item"><div class="detail-label">GDrive Materials</div><div class="detail-val">${gdriveHtml}</div></div>`
   +`<div class="detail-item"><div class="detail-label">Moodboard</div><div class="detail-val">${moodHtml}</div></div>`
   +`<div class="detail-item"><div class="detail-label">Sample Video</div><div class="detail-val">${sampleHtml}</div></div>`
@@ -1341,10 +1402,10 @@ async function duplicateProject(id){
   const p=allProjects.find(x=>x.id===id);if(!p)return;
   const newName=p.client_name+' (Copy)';
   const{error}=await sb.from('projects').insert({
-    client_name:newName,business_type:p.business_type,product:p.product,
+    client_name:newName,business_type:p.business_type,niche:p.niche,product:p.product,
     color_primary:p.color_primary,color_secondary:p.color_secondary,
     audience:p.audience,pain_point:p.pain_point,usp:p.usp,goal:p.goal,
-    video_size:p.video_size,language:p.language,voice_actor:p.voice_actor,
+    video_size:p.video_size,duration:p.duration,language:p.language,voice_actor:p.voice_actor,
     avatar_desc:p.avatar_desc,emphasize:p.emphasize,tone:p.tone,
     status:'New Input',blueprint:p.blueprint,assigned_to:null,
     created_by:currentUser?.id
@@ -1572,10 +1633,16 @@ async function bulkAssign(){
 async function bulkDelete(){
   if(!selectedProjects.size)return;
   if(!confirm(`Delete ${selectedProjects.size} projects permanently?`))return;
-  await Promise.all([...selectedProjects].map(id=>
-    sb.from('projects').delete().eq('id',id)
+  var results=await Promise.all([...selectedProjects].map(id=>
+    sb.from('projects').delete().eq('id',id).select()
   ));
-  showNotif(`${selectedProjects.size} projects deleted.`,'success');
+  var deletedCount=results.filter(r=>r.data&&r.data.length>0).length;
+  var blockedCount=results.length-deletedCount;
+  if(blockedCount>0){
+    showNotif(deletedCount+' deleted, '+blockedCount+' blocked (check RLS permissions)','error');
+  } else {
+    showNotif(`${deletedCount} projects deleted.`,'success');
+  }
   selectedProjects.clear();updateBulkBar();loadDashboard();loadAllProjects();
 }
 
