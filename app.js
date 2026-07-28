@@ -4966,7 +4966,7 @@ function renderForUpload(){
   if (!items.length){
     body.innerHTML = '<div class="table-empty"><div class="table-empty-icon">'
       + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6a6a75" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
-      + '</div>Wala pang creatives sa <b style="color:#facc15">'+escapeHtml(fuActiveCat)+'</b>. Click "Add creative" above!</div>';
+      + '</div>No creatives yet in <b style="color:#facc15">'+escapeHtml(fuActiveCat)+'</b>. Click "Add creative" above!</div>';
     return;
   }
   body.innerHTML = items.map(function(c){
@@ -5352,7 +5352,7 @@ function spPlatLabel(p){
 function spRenderList(){
   var box=document.getElementById('sp-list');
   if(!box) return;
-  if(!spPosts.length){ box.innerHTML='<div class="sp-empty">Wala pang naka-schedule na post.</div>'; return; }
+  if(!spPosts.length){ box.innerHTML='<div class="sp-empty">No posts scheduled yet.</div>'; return; }
   box.innerHTML=spPosts.map(function(p){
     var st=p.status||'scheduled';
     var badge = st==='posted'?'sp-b-posted':(st==='failed'?'sp-b-failed':'sp-b-sched');
@@ -5383,9 +5383,9 @@ function spCollectPost(){
   var pageName=pageSel?(pageSel.options[pageSel.selectedIndex]?.text||''):'';
   var dt=document.getElementById('sp-datetime')?.value||'';
 
-  if(!plats.length){ showNotif('Pumili ng platform (FB o IG)','error'); return null; }
-  if(!content && !media){ showNotif('Maglagay ng content o media','error'); return null; }
-  if(spPlatforms.ig && !media){ showNotif('Ang Instagram ay kailangan ng media','error'); return null; }
+  if(!plats.length){ showNotif('Select a platform (Facebook or Instagram)','error'); return null; }
+  if(!content && !media){ showNotif('Add content or media','error'); return null; }
+  if(spPlatforms.ig && !media){ showNotif('Instagram requires media','error'); return null; }
   return {
     platforms:plats, post_type:spType, content:content, media_url:media||null,
     page_id:pageId, page_name:pageName||null,
@@ -5396,12 +5396,12 @@ function spCollectPost(){
 async function spSchedule(){
   var post=spCollectPost();
   if(!post) return;
-  if(!post.scheduled_at){ showNotif('Pumili ng petsa at oras','error'); return; }
+  if(!post.scheduled_at){ showNotif('Select a date and time','error'); return; }
   post.status='scheduled';
   try{
     var r=await sb.from('scheduled_posts').insert(post).select();
     if(r.error) throw r.error;
-    showNotif('Na-schedule ang post!','success');
+    showNotif('Post scheduled!','success');
     spResetForm();
     await spLoadPosts();
   }catch(err){ showNotif('Error: '+(err.message||err),'error'); }
@@ -5415,7 +5415,7 @@ async function spPostNow(){
   try{
     var r=await sb.from('scheduled_posts').insert(post).select();
     if(r.error) throw r.error;
-    showNotif('Naka-queue — magpo-post kapag konektado na ang Facebook/Instagram','success');
+    showNotif('Queued — this will post once Facebook/Instagram is connected','success');
     spResetForm();
     await spLoadPosts();
   }catch(err){ showNotif('Error: '+(err.message||err),'error'); }
@@ -5426,7 +5426,7 @@ async function spDeletePost(id){
     await sb.from('scheduled_posts').delete().eq('id',id);
     await spLoadPosts();
     if(document.getElementById('sp-view-planner').style.display!=='none') spRenderCalendar();
-  }catch(e){ showNotif('Hindi nabura','error'); }
+  }catch(e){ showNotif('Delete failed','error'); }
 }
 
 // ── MEDIA UPLOAD (direct file → Supabase Storage) ──
@@ -5573,24 +5573,16 @@ document.addEventListener('click', function(e){
     document.querySelectorAll('.ob-dd.open').forEach(function(d){ d.classList.remove('open'); });
   }
 });
-function obPickTag(tag, color, el){
-  var dd=document.getElementById('ob-dd-tag');
-  if(dd){
-    dd.querySelectorAll('.ob-dd-item').forEach(function(x){ x.classList.remove('active'); });
-    if(el) el.classList.add('active');
-    dd.classList.remove('open');
-  }
-  var lbl=document.getElementById('ob-tag-label');
-  var dot=document.getElementById('ob-tag-dot');
-  var h=document.getElementById('ob-tag');
-  if(lbl) lbl.textContent=tag;
-  if(dot) dot.style.background=color;
-  if(h) h.value=tag;
+function obTagColor(tag){
+  var presets={'Brand promo':'#facc15','Announcement':'#60a5fa','Recruitment':'#a78bfa','Testimonial':'#4ade80','Behind the scenes':'#f472b6'};
+  if(presets[tag]) return presets[tag];
+  var palette=['#facc15','#60a5fa','#a78bfa','#4ade80','#f472b6','#fb923c','#22d3ee','#c084fc'];
+  var h=0; for(var i=0;i<tag.length;i++){ h=(h*31+tag.charCodeAt(i))>>>0; }
+  return palette[h%palette.length];
 }
 function obTagBadge(tag){
   if(!tag) return '<span style="color:#5a5a65">—</span>';
-  var m={'Brand promo':'#facc15','Announcement':'#60a5fa','Recruitment':'#a78bfa','Testimonial':'#4ade80','Behind the scenes':'#f472b6'};
-  var c=m[tag]||'#8a8781';
+  var c=obTagColor(tag);
   return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:'+c+'"><span style="width:6px;height:6px;border-radius:50%;background:'+c+';display:inline-block"></span>'+escapeHtml(tag)+'</span>';
 }
 
@@ -5605,7 +5597,7 @@ async function loadBrandCreatives(){
 function obRenderRows(){
   var box=document.getElementById('ob-rows');
   if(!box) return;
-  if(!obItems.length){ box.innerHTML='<div class="ob-empty">Wala pang own brand creatives. Click "Add creative" sa taas.</div>'; return; }
+  if(!obItems.length){ box.innerHTML='<div class="ob-empty">No own brand creatives yet. Click "Add creative" above.</div>'; return; }
   box.innerHTML=obItems.map(function(c){
     var link=c.link_url?('<a href="'+c.link_url+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px">Open<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></a>'):'<span style="color:#5a5a65">—</span>';
     var date=c.created_at?new Date(c.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'—';
@@ -5640,8 +5632,8 @@ async function obDeleteCreative(id){
   try{
     await sb.from('brand_creatives').delete().eq('id',id);
     await loadBrandCreatives();
-    showNotif('Nabura ang creative','success');
-  }catch(e){ showNotif('Hindi nabura','error'); }
+    showNotif('Creative deleted','success');
+  }catch(e){ showNotif('Delete failed','error'); }
 }
 
 function obStatusToggle(id){
@@ -5715,15 +5707,15 @@ async function obAddCreative(){
   var page=(document.getElementById('ob-page')?.value||'').trim();
   var adcopy=(document.getElementById('ob-adcopy')?.value||'').trim();
   var link=(document.getElementById('ob-link')?.value||'').trim();
-  if(!page){ showNotif('Maglagay ng Page name','error'); return; }
+  if(!page){ showNotif('Enter a page name','error'); return; }
   try{
-    var tag=document.getElementById('ob-tag')?.value||'Brand promo';
+    var tag=(document.getElementById('ob-tag')?.value||'').trim()||null;
     await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, tag:tag, status:'Draft'});
-    showNotif('Naidagdag ang brand creative!','success');
+    showNotif('Brand creative added!','success');
     document.getElementById('ob-page').value='';
     document.getElementById('ob-adcopy').value='';
     document.getElementById('ob-link').value='';
-    obPickTag('Brand promo','#facc15',document.querySelector('#ob-dd-tag .ob-dd-item'));
+    document.getElementById('ob-tag').value='';
     obRemoveFile();
     obToggleForm();
     await loadBrandCreatives();
