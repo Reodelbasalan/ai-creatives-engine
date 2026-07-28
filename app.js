@@ -353,7 +353,7 @@ function applyRoleUI(){
     // Hide admin-only elements first
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
     // Show editor-allowed nav items — force show even if admin-only class
-    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance','nav-for-upload','nav-extensions','nav-social'];
+    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance','nav-for-upload','nav-extensions','nav-social','nav-brand'];
     editorNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el){el.style.display='flex';el.style.setProperty('display','flex','important');}
@@ -399,7 +399,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
@@ -419,6 +419,7 @@ function showPage(page){
   if(page==='settings'){ loadConnectors(); if(currentUserRole==='admin'){loadSettings();} }
   if(page==='automation'){loadAutomationProjects();}
   if(page==='social'){loadSocial();}
+  if(page==='brand'){loadBrandCreatives();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
@@ -5537,4 +5538,147 @@ function spRenderCalendar(){
     cells+='<div class="sp-cell sp-other"><span class="sp-cell-num">'+t+'</span></div>';
   }
   grid.innerHTML=cells;
+}
+
+// ══════════════════════════════════════════════
+// OWN BRAND CREATIVES — AI Creatives' own content, permanent (no auto-archive)
+// ══════════════════════════════════════════════
+var obItems = [];
+
+function obToggleForm(){
+  var wrap=document.getElementById('ob-form');
+  var btn=document.getElementById('ob-toggle-btn');
+  var lbl=document.getElementById('ob-toggle-label');
+  var isOpen=wrap.style.maxHeight && wrap.style.maxHeight!=='0px';
+  if(isOpen){
+    wrap.style.maxHeight='0'; wrap.style.opacity='0'; wrap.style.marginBottom='0';
+    if(btn) btn.style.opacity='1';
+    if(lbl) lbl.textContent='Add creative';
+  } else {
+    wrap.style.maxHeight='560px'; wrap.style.opacity='1'; wrap.style.marginBottom='20px';
+    if(btn) btn.style.opacity='0.55';
+    if(lbl) lbl.textContent='Close form';
+  }
+}
+
+async function loadBrandCreatives(){
+  try{
+    var r=await sb.from('brand_creatives').select('*').order('created_at',{ascending:false});
+    obItems=r.data||[];
+  }catch(e){ obItems=[]; }
+  obRenderRows();
+}
+
+function obRenderRows(){
+  var box=document.getElementById('ob-rows');
+  if(!box) return;
+  if(!obItems.length){ box.innerHTML='<div class="ob-empty">Wala pang own brand creatives. Click "Add creative" sa taas.</div>'; return; }
+  box.innerHTML=obItems.map(function(c){
+    var link=c.link_url?('<a href="'+c.link_url+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px">Open<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></a>'):'<span style="color:#5a5a65">—</span>';
+    var date=c.created_at?new Date(c.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'—';
+    var st=c.status||'Draft';
+    var stColors={Draft:{bg:'rgba(138,135,129,0.15)',c:'#a6a39c'},Scheduled:{bg:'rgba(250,204,21,0.14)',c:'#facc15'},Published:{bg:'rgba(94,234,212,0.14)',c:'#5eead4'}};
+    var sc=stColors[st]||stColors.Draft;
+    return '<div class="ob-row">'
+      + '<div class="ob-name">'+escapeHtml(c.page_name||'—')+'</div>'
+      + '<div class="ob-copy" title="'+escapeHtml(c.ad_copy||'')+'">'+escapeHtml(c.ad_copy||'—')+'</div>'
+      + '<div>'+link+'</div>'
+      + '<div style="color:#8a8781">'+date+'</div>'
+      + '<div class="ob-status-dd" id="ob-sdd-'+c.id+'">'
+      +   '<button class="ob-status-pill" onclick="obStatusToggle(\''+c.id+'\')" style="background:'+sc.bg+';color:'+sc.c+';border:0.5px solid '+sc.c+'44;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10.5px;font-weight:650;cursor:pointer">'
+      +     st
+      +     '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>'
+      +   '</button>'
+      +   '<div class="ob-status-menu" style="display:none;position:absolute;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:50;min-width:120px">'
+      +     '<div onclick="obStatusPick(\''+c.id+'\',\'Draft\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Draft</div>'
+      +     '<div onclick="obStatusPick(\''+c.id+'\',\'Scheduled\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Scheduled</div>'
+      +     '<div onclick="obStatusPick(\''+c.id+'\',\'Published\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Published</div>'
+      +   '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function obStatusToggle(id){
+  var menu=document.querySelector('#ob-sdd-'+id+' .ob-status-menu');
+  document.querySelectorAll('.ob-status-menu').forEach(function(m){ if(m!==menu) m.style.display='none'; });
+  if(menu) menu.style.display = (menu.style.display==='none'||!menu.style.display) ? 'block' : 'none';
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest || !e.target.closest('.ob-status-dd')){
+    document.querySelectorAll('.ob-status-menu').forEach(function(m){ m.style.display='none'; });
+  }
+});
+
+async function obStatusPick(id, status){
+  try{
+    await sb.from('brand_creatives').update({status:status}).eq('id',id);
+    await loadBrandCreatives();
+  }catch(e){ showNotif('Hindi na-update ang status','error'); }
+}
+
+async function obHandleFile(input){
+  var file=input.files&&input.files[0];
+  if(!file) return;
+  var empty=document.getElementById('ob-upload-empty');
+  var prev=document.getElementById('ob-upload-preview');
+  var prog=document.getElementById('ob-upload-progress');
+  var img=document.getElementById('ob-preview-img');
+  var vid=document.getElementById('ob-preview-vid');
+  var nm=document.getElementById('ob-preview-name');
+  var isVideo=(file.type||'').startsWith('video');
+  var localUrl=URL.createObjectURL(file);
+
+  if(empty) empty.style.display='none';
+  if(prog) prog.style.display='flex';
+  if(prev) prev.style.display='none';
+
+  try{
+    var ext=(file.name.split('.').pop()||(isVideo?'mp4':'png')).toLowerCase();
+    var path='brand/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+    var upl=await sb.storage.from(STORAGE_BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:true});
+    if(upl.error) throw upl.error;
+    var urlData=sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+    var publicUrl=urlData?.data?.publicUrl||null;
+    var linkInput=document.getElementById('ob-link');
+    if(linkInput && !linkInput.value) linkInput.value=publicUrl||'';
+
+    if(prog) prog.style.display='none';
+    if(prev) prev.style.display='block';
+    if(nm) nm.textContent=file.name;
+    if(isVideo){ if(vid){ vid.src=localUrl; vid.style.display='block'; vid.setAttribute('controls','controls'); } if(img) img.style.display='none'; }
+    else { if(img){ img.src=localUrl; img.style.display='block'; } if(vid) vid.style.display='none'; }
+  }catch(err){
+    if(prog) prog.style.display='none';
+    if(empty) empty.style.display='flex';
+    showNotif('Upload failed: '+(err.message||err),'error');
+  }
+}
+
+function obRemoveFile(ev){
+  if(ev) ev.stopPropagation();
+  document.getElementById('ob-file').value='';
+  var empty=document.getElementById('ob-upload-empty');
+  var prev=document.getElementById('ob-upload-preview');
+  var prog=document.getElementById('ob-upload-progress');
+  if(empty) empty.style.display='flex';
+  if(prev) prev.style.display='none';
+  if(prog) prog.style.display='none';
+}
+
+async function obAddCreative(){
+  var page=(document.getElementById('ob-page')?.value||'').trim();
+  var adcopy=(document.getElementById('ob-adcopy')?.value||'').trim();
+  var link=(document.getElementById('ob-link')?.value||'').trim();
+  if(!page){ showNotif('Maglagay ng Page name','error'); return; }
+  try{
+    await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, status:'Draft'});
+    showNotif('Naidagdag ang brand creative!','success');
+    document.getElementById('ob-page').value='';
+    document.getElementById('ob-adcopy').value='';
+    document.getElementById('ob-link').value='';
+    obRemoveFile();
+    obToggleForm();
+    await loadBrandCreatives();
+  }catch(err){ showNotif('Error: '+(err.message||err),'error'); }
 }
