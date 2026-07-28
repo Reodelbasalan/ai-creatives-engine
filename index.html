@@ -1398,7 +1398,7 @@ body {
         </div>
       </div>
       <div id="topbar-center" style="display:none;position:absolute;left:50%;transform:translateX(-50%);align-items:center;gap:7px;pointer-events:none">
-        <span style="font-size:14px;font-weight:700;color:var(--text);letter-spacing:-0.3px">⚡ Image Creatives — Prompt Copilot</span>
+        <span style="font-size:14px;font-weight:700;color:var(--text);letter-spacing:-0.3px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Image Creatives — Prompt Copilot</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <div class="admin-only" style="position:relative;cursor:pointer" onclick="toggleNotifPanel()">
@@ -1473,22 +1473,22 @@ body {
 
         <!-- INPUT MODE TOGGLE -->
         <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-          <button class="input-tab active" id="tab-manual" onclick="switchTab('manual')">📝 Manual form</button>
-          <button class="input-tab" id="tab-paste" onclick="switchTab('paste')">📋 Paste client brief</button>
+          <button class="input-tab active" id="tab-manual" onclick="switchTab('manual')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg> Manual form</button>
+          <button class="input-tab" id="tab-paste" onclick="switchTab('paste')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Paste client brief</button>
         </div>
         <!-- TEMPLATES -->
         <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
           <span style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Quick templates:</span>
-          <button class="ghost-btn" onclick="applyTemplate('aesthetics')" style="font-size:11px;padding:5px 12px">💎 Aesthetics</button>
-          <button class="ghost-btn" onclick="applyTemplate('food')" style="font-size:11px;padding:5px 12px">🍜 Food</button>
-          <button class="ghost-btn" onclick="applyTemplate('fashion')" style="font-size:11px;padding:5px 12px">👗 Fashion</button>
-          <button class="ghost-btn" onclick="applyTemplate('fitness')" style="font-size:11px;padding:5px 12px">💪 Fitness</button>
+          <button class="ghost-btn" onclick="applyTemplate('aesthetics')" style="font-size:11px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M6 3h12l3 5-9 13L3 8z"/><path d="M3 8h18"/></svg> Aesthetics</button>
+          <button class="ghost-btn" onclick="applyTemplate('food')" style="font-size:11px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M4 12h16"/><path d="M5 12a7 7 0 0014 0"/><path d="M12 3v3"/></svg> Food</button>
+          <button class="ghost-btn" onclick="applyTemplate('fashion')" style="font-size:11px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M9 4l3 2 3-2 3 4-2 2v10H8V10L6 8z"/></svg> Fashion</button>
+          <button class="ghost-btn" onclick="applyTemplate('fitness')" style="font-size:11px;padding:5px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M18 3a3 3 0 013 3v4a7 7 0 01-7 7H9v4H5v-8a5 5 0 015-5h2V6a3 3 0 013-3z"/></svg> Fitness</button>
         </div>
 
         <!-- MANUAL FORM -->
         <div id="input-manual">
           <div class="form-card">
-            <div class="form-card-title"><span>🏢</span> Business info</div>
+            <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="15" y1="14" x2="15" y2="14.01"/><line x1="9" y1="18" x2="15" y2="18"/></svg></span> Business info</div>
             <div class="form-grid">
               <div class="form-field"><label class="form-label">Client name</label><input class="form-input" id="f-client" placeholder="e.g. Cosmetic Cocoon PH"/></div>
               <div class="form-field"><label class="form-label">Business type</label><select class="form-select" id="f-biztype"><option value="">Select type...</option><option>E-Commerce</option><option>Service-Based</option><option>Hybrid</option></select></div>
@@ -1500,7 +1500,7 @@ body {
             </div>
           </div>
           <div class="form-card">
-            <div class="form-card-title"><span>🎯</span> Target &amp; creative direction</div>
+            <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span> Target &amp; creative direction</div>
             <div class="form-grid">
               <div class="form-field"><label class="form-label">Target audience</label><input class="form-input" id="f-audience" placeholder="e.g. Women 25-45, Metro Manila"/></div>
               <div class="form-field"><label class="form-label">Main goal</label><select class="form-select" id="f-goal"><option value="">Select goal...</option><option>Awareness</option><option>Lead Generation</option><option>Sales / Conversion</option><option>Bookings / Appointments</option></select></div>
@@ -1517,7 +1517,7 @@ body {
         <!-- PASTE BRIEF -->
         <div id="input-paste" style="display:none">
           <div class="form-card">
-            <div class="form-card-title"><span>📋</span> Paste client brief <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">— copy-paste the complete client form submission</span></div>
+            <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="15" y2="14"/></svg></span> Paste client brief <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">— copy-paste the complete client form submission</span></div>
             <div class="form-field">
               <label class="form-label">Client brief <span class="opt">(from Google Form, email, chat, etc.)</span></label>
               <textarea class="form-textarea" id="f-brief" placeholder="Paste the entire client brief here...
@@ -1540,7 +1540,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
         <!-- CLIENT MATERIALS / REFERENCES -->
         <div class="form-card">
-          <div class="form-card-title"><span>📁</span> Client materials &amp; references <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">— optional</span></div>
+          <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/></svg></span> Client materials &amp; references <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">— optional</span></div>
           <div class="form-grid">
             <div class="form-field">
               <label class="form-label">📁 GDrive folder / reference files</label>
@@ -1551,11 +1551,11 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <input class="form-input" id="f-moodboard" placeholder="https://drive.google.com/... or any link"/>
             </div>
             <div class="form-field">
-              <label class="form-label">🎬 Sample videos / inspirations</label>
+              <label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="17" y1="5" x2="17" y2="19"/><line x1="3" y1="10" x2="7" y2="10"/><line x1="3" y1="15" x2="7" y2="15"/><line x1="17" y1="10" x2="21" y2="10"/><line x1="17" y1="15" x2="21" y2="15"/></svg> Sample videos / inspirations</label>
               <input class="form-input" id="f-sample-video" placeholder="https://drive.google.com/... or YouTube link"/>
             </div>
             <div class="form-field">
-              <label class="form-label">📝 Additional notes from client</label>
+              <label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg> Additional notes from client</label>
               <input class="form-input" id="f-client-extra" placeholder="Any extra details, links, or requests..."/>
             </div>
           </div>
@@ -1563,7 +1563,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
         <!-- VIDEO SPECS (shared) -->
         <div class="form-card">
-          <div class="form-card-title"><span>🎬</span> Video specs</div>
+          <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="17" y1="5" x2="17" y2="19"/><line x1="3" y1="10" x2="7" y2="10"/><line x1="3" y1="15" x2="7" y2="15"/><line x1="17" y1="10" x2="21" y2="10"/><line x1="17" y1="15" x2="21" y2="15"/></svg></span> Video specs</div>
           <div class="form-grid-3">
             <div class="form-field"><label class="form-label">Video size</label><select class="form-select" id="f-size"><option>9:16 Vertical — TikTok / Reels / Shorts</option><option>1:1 Square — Feed</option><option>16:9 Landscape — YouTube</option></select></div>
             <div class="form-field"><label class="form-label">Language</label><select class="form-select" id="f-lang"><option>Taglish</option><option>Pure Tagalog</option><option>English</option></select></div>
@@ -1572,9 +1572,9 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div style="margin-top:12px">
             <label class="form-label" style="margin-bottom:8px;display:block">Tone of voice</label>
             <div class="tone-grid">
-              <div class="tone-opt" onclick="selectTone(this)">⚡ Energetic &amp; hype</div>
+              <div class="tone-opt" onclick="selectTone(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Energetic &amp; hype</div>
               <div class="tone-opt" onclick="selectTone(this)">🤝 Calm &amp; trustworthy</div>
-              <div class="tone-opt" onclick="selectTone(this)">💎 Luxurious &amp; aspirational</div>
+              <div class="tone-opt" onclick="selectTone(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M6 3h12l3 5-9 13L3 8z"/><path d="M3 8h18"/></svg> Luxurious &amp; aspirational</div>
               <div class="tone-opt" onclick="selectTone(this)">🔥 Urgent &amp; direct</div>
               <div class="tone-opt" onclick="selectTone(this)">😊 Friendly &amp; relatable</div>
             </div>
@@ -1646,13 +1646,13 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
         <!-- SCRIPT (shared, optional) -->
         <div class="form-card">
-          <div class="form-card-title"><span>🎙️</span> Script <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+          <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span> Script <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
           <textarea class="form-textarea" id="f-script" placeholder="Paste existing script here if client has one, or leave blank to auto-generate..." style="min-height:80px"></textarea>
         </div>
 
         <!-- NOTES (shared) -->
         <div class="form-card">
-          <div class="form-card-title"><span>📝</span> Internal notes</div>
+          <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></span> Internal notes</div>
           <div class="form-grid">
             <div class="form-field">
               <label class="form-label">Admin notes <span class="opt">(internal only)</span></label>
@@ -1692,8 +1692,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div id="blueprint-output" style="display:none;margin-top:1rem">
             <div class="blueprint-box" id="blueprint-text"></div>
             <div class="blueprint-actions">
-              <button class="ghost-btn" onclick="copyBlueprint()">📋 Copy blueprint</button>
-              <button class="yellow-btn" onclick="saveProject()" id="save-btn">💾 Save client details</button>
+              <button class="ghost-btn" onclick="copyBlueprint()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Copy blueprint</button>
+              <button class="yellow-btn" onclick="saveProject()" id="save-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save client details</button>
             </div>
           </div>
         </div>
@@ -1717,7 +1717,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <span style="font-size:11px;color:var(--text3)">→</span>
           <input type="date" class="form-input" id="proj-date-to" style="max-width:140px;font-size:11px" onchange="filterProjects()"/>
           <button class="ghost-btn" onclick="clearProjectFilters()" style="font-size:11px">Clear</button>
-          <button class="ghost-btn" onclick="exportCSV()" style="font-size:11px;margin-left:auto">📥 Export CSV</button>
+          <button class="ghost-btn" onclick="exportCSV()" style="font-size:11px;margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
         </div>
         <!-- BULK ACTION BAR -->
         <div id="bulk-action-bar" style="display:none;gap:8px;margin-bottom:10px;padding:10px 14px;background:var(--yellow-dim);border:0.5px solid var(--yellow);border-radius:var(--radius);align-items:center;flex-wrap:wrap">
@@ -1743,7 +1743,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           </div>
           <!-- RIGHT: Submit Output -->
           <div>
-            <div class="section-label" style="margin-bottom:1rem">📤 Submit completed output</div>
+            <div class="section-label" style="margin-bottom:1rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Submit completed output</div>
             <div class="form-card">
               <div class="form-field" style="margin-bottom:10px">
                 <label class="form-label">Project / Client</label>
@@ -1768,16 +1768,16 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               </div>
               <!-- Excel/Sheet link -->
               <div class="form-field" style="margin-bottom:8px">
-                <label class="form-label">📊 Excel / Google Sheet Link <span class="opt">(optional)</span></label>
+                <label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="12" width="3" height="6"/><rect x="11" y="8" width="3" height="10"/><rect x="16" y="4" width="3" height="14"/></svg> Excel / Google Sheet Link <span class="opt">(optional)</span></label>
                 <input class="form-input" id="submit-output-sheet" placeholder="https://docs.google.com/spreadsheets/..."/>
               </div>
               <!-- Output type -->
               <div class="form-field" style="margin-bottom:8px">
                 <label class="form-label">Output type</label>
                 <select class="form-select" id="submit-output-type">
-                  <option value="video">🎬 Video</option>
+                  <option value="video"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="17" y1="5" x2="17" y2="19"/><line x1="3" y1="10" x2="7" y2="10"/><line x1="3" y1="15" x2="7" y2="15"/><line x1="17" y1="10" x2="21" y2="10"/><line x1="17" y1="15" x2="21" y2="15"/></svg> Video</option>
                   <option value="image">🖼️ Images</option>
-                  <option value="blueprint">📄 Blueprint</option>
+                  <option value="blueprint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg> Blueprint</option>
                   <option value="other">📎 Other</option>
                 </select>
               </div>
@@ -1787,8 +1787,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <textarea class="form-textarea" id="submit-output-notes" placeholder="Add notes about this output..." style="min-height:50px"></textarea>
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="yellow-btn" onclick="submitEditorOutput()" style="flex:1">📤 Submit output</button>
-                <button class="ghost-btn" onclick="submitAndMarkDone()" style="font-size:12px;color:var(--green);border-color:rgba(34,197,94,0.3)">✅ Submit &amp; Mark Done</button>
+                <button class="yellow-btn" onclick="submitEditorOutput()" style="flex:1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Submit output</button>
+                <button class="ghost-btn" onclick="submitAndMarkDone()" style="font-size:12px;color:var(--green);border-color:rgba(34,197,94,0.3)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg> Submit &amp; Mark Done</button>
               </div>
             </div>
             <!-- My Recent Outputs -->
@@ -1925,13 +1925,13 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
           <!-- MY TASKS TODAY -->
           <div class="form-card" style="margin-bottom:12px">
-            <div class="form-card-title"><span>📋</span> My tasks today</div>
+            <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg></span> My tasks today</div>
             <div id="worklog-tasks"></div>
           </div>
 
           <!-- ADD WORK UPDATE -->
           <div class="form-card" style="margin-bottom:12px">
-            <div class="form-card-title"><span>📝</span> Add work update</div>
+            <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></span> Add work update</div>
             <div class="form-grid">
               <div class="form-field">
                 <label class="form-label">Project</label>
@@ -1940,8 +1940,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <div class="form-field">
                 <label class="form-label">Status</label>
                 <select class="form-select" id="worklog-status-select">
-                  <option value="in-progress">🔄 In Progress</option>
-                  <option value="done">✅ Done</option>
+                  <option value="in-progress"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> In Progress</option>
+                  <option value="done"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg> Done</option>
                   <option value="blocked">🚫 Blocked</option>
                   <option value="review">👀 For Review</option>
                 </select>
@@ -1955,12 +1955,12 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <textarea class="form-textarea" id="worklog-update-text" placeholder="What did you do? Any blockers? What's next?" style="min-height:80px"></textarea>
               </div>
             </div>
-            <button class="yellow-btn" onclick="submitWorkUpdate()" style="margin-top:10px">📤 Submit update</button>
+            <button class="yellow-btn" onclick="submitWorkUpdate()" style="margin-top:10px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Submit update</button>
           </div>
 
           <!-- TODAY'S UPDATES -->
           <div class="form-card">
-            <div class="form-card-title"><span>📊</span> Today's updates</div>
+            <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="12" width="3" height="6"/><rect x="11" y="8" width="3" height="10"/><rect x="16" y="4" width="3" height="14"/></svg></span> Today's updates</div>
             <div id="worklog-updates-list"></div>
           </div>
         </div>
@@ -1970,7 +1970,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <div class="page" id="page-profile">
         <div style="max-width:600px">
           <div class="form-card" style="margin-bottom:12px">
-            <div class="form-card-title"><span>👤</span> My profile</div>
+            <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/></svg></span> My profile</div>
             <div style="display:flex;align-items:center;gap:16px;margin-bottom:1.5rem;padding:1rem;background:var(--bg3);border-radius:var(--radius-lg);border:0.5px solid var(--border2)">
               <div style="width:56px;height:56px;border-radius:50%;background:var(--yellow-dim);border:2px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--yellow);flex-shrink:0" id="profile-avatar">?</div>
               <div>
@@ -1985,20 +1985,20 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <input class="form-input" id="profile-name-input" placeholder="Your name" oninput="document.getElementById('profile-name-display').textContent=this.value||'?';document.getElementById('profile-avatar').textContent=(this.value||'?')[0].toUpperCase()"/>
               </div>
             </div>
-            <button class="yellow-btn" onclick="saveProfile()" style="margin-top:12px">💾 Save profile</button>
+            <button class="yellow-btn" onclick="saveProfile()" style="margin-top:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save profile</button>
           </div>
 
           <div class="form-card" style="margin-bottom:12px">
-            <div class="form-card-title"><span>🔒</span> Change password</div>
+            <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></span> Change password</div>
             <div class="form-field">
               <label class="form-label">New password</label>
               <input class="form-input" type="password" id="profile-new-pass" placeholder="Min. 6 characters"/>
             </div>
-            <button class="ghost-btn" onclick="changePassword()" style="margin-top:12px">🔑 Change password</button>
+            <button class="ghost-btn" onclick="changePassword()" style="margin-top:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.5 12.5L19 4M17 6l2 2M14 9l2 2"/></svg> Change password</button>
           </div>
 
           <div class="form-card">
-            <div class="form-card-title"><span>📊</span> My stats</div>
+            <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="12" width="3" height="6"/><rect x="11" y="8" width="3" height="10"/><rect x="16" y="4" width="3" height="14"/></svg></span> My stats</div>
             <div id="profile-stats"><div style="color:var(--text3);font-size:12px">Loading stats...</div></div>
           </div>
         </div>
@@ -2323,14 +2323,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <!-- HIGGSFIELD -->
           <div class="form-card" style="margin-bottom:16px">
             <div class="form-card-title" style="margin-bottom:1rem">
-              <span>🎬</span> Higgsfield
+              <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="17" y1="5" x2="17" y2="19"/><line x1="3" y1="10" x2="7" y2="10"/><line x1="3" y1="15" x2="7" y2="15"/><line x1="17" y1="10" x2="21" y2="10"/><line x1="17" y1="15" x2="21" y2="15"/></svg></span> Higgsfield
               <span style="font-size:10px;color:var(--green);background:var(--green-dim);padding:2px 8px;border-radius:20px;font-weight:600">Image + Video</span>
               <span style="font-size:9px;padding:2px 8px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);font-weight:600;margin-left:auto">🔐 Admin only</span>
             </div>
             <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">Connect Higgsfield — uses your existing credits.</div>
             <div style="display:flex;gap:8px;margin-bottom:1rem">
               <button id="higgs-btn-account" onclick="switchToolMode('higgs','account')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--yellow);background:var(--yellow-dim);color:var(--yellow)">🌐 Own Account</button>
-              <button id="higgs-btn-api" onclick="switchToolMode('higgs','api')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg3);color:var(--text3)">🔑 API Key</button>
+              <button id="higgs-btn-api" onclick="switchToolMode('higgs','api')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg3);color:var(--text3)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.5 12.5L19 4M17 6l2 2M14 9l2 2"/></svg> API Key</button>
             </div>
             <div id="higgs-account-section">
               <div class="form-grid">
@@ -2351,13 +2351,13 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                   </select>
                 </div>
               </div>
-              <button class="yellow-btn" onclick="testConnection('higgsfield')" style="font-size:12px;margin-top:10px">🔗 Open Higgsfield</button>
+              <button class="yellow-btn" onclick="testConnection('higgsfield')" style="font-size:12px;margin-top:10px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg> Open Higgsfield</button>
             </div>
             <div id="higgs-api-section" style="display:none">
               <label class="form-label">API Key (cloud.higgsfield.ai)</label>
               <div style="display:flex;gap:8px;margin-bottom:10px">
                 <input class="form-input" id="higgs-api-key" placeholder="higgs-xxxxxxxxx" type="password" style="flex:1"/>
-                <button class="yellow-btn" onclick="saveApiKey('higgs')" style="font-size:12px;white-space:nowrap">💾 Save</button>
+                <button class="yellow-btn" onclick="saveApiKey('higgs')" style="font-size:12px;white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save</button>
               </div>
               <div id="higgs-key-status" style="font-size:11px;color:var(--text3)"></div>
             </div>
@@ -2366,7 +2366,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <!-- DALL-E -->
           <div class="form-card" style="margin-bottom:16px">
             <div class="form-card-title" style="margin-bottom:1rem">
-              <span>🎨</span> DALL-E (OpenAI)
+              <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 100 20 2 2 0 001.4-3.4 1.5 1.5 0 011-2.6H17a5 5 0 005-5c0-5-4.5-9-10-9z"/></svg></span> DALL-E (OpenAI)
               <span style="font-size:10px;color:var(--green);background:var(--green-dim);padding:2px 8px;border-radius:20px;font-weight:600">Images</span>
               <span style="font-size:9px;padding:2px 8px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);font-weight:600;margin-left:auto">🔐 Admin only</span>
             </div>
@@ -2374,7 +2374,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <label class="form-label">API Key (sk-proj-...)</label>
             <div style="display:flex;gap:8px;margin-bottom:10px">
               <input class="form-input" id="dalle-api-key" placeholder="sk-proj-xxxxxxxxxxxxxxxxx" type="password" style="flex:1"/>
-              <button class="yellow-btn" onclick="saveApiKey('dalle')" style="font-size:12px;white-space:nowrap">💾 Save</button>
+              <button class="yellow-btn" onclick="saveApiKey('dalle')" style="font-size:12px;white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save</button>
             </div>
             <div id="dalle-key-status" style="font-size:11px;color:var(--text3);margin-bottom:10px"></div>
             <div class="form-grid">
@@ -2398,14 +2398,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <!-- GROK -->
           <div class="form-card" style="margin-bottom:16px">
             <div class="form-card-title" style="margin-bottom:1rem">
-              <span>⚡</span> Grok (xAI)
+              <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span> Grok (xAI)
               <span style="font-size:10px;color:var(--purple);background:var(--purple-dim);padding:2px 8px;border-radius:20px;font-weight:600">Video</span>
               <span style="font-size:9px;padding:2px 8px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);font-weight:600;margin-left:auto">🔐 Admin only</span>
             </div>
             <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">xAI Grok Imagine — text-to-video. API: $0.06/second.</div>
             <!-- MODE TOGGLE -->
             <div style="display:flex;gap:8px;margin-bottom:1rem">
-              <button id="grok-btn-api" onclick="switchToolMode('grok','api')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--yellow);background:var(--yellow-dim);color:var(--yellow)">🔑 API Key</button>
+              <button id="grok-btn-api" onclick="switchToolMode('grok','api')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--yellow);background:var(--yellow-dim);color:var(--yellow)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.5 12.5L19 4M17 6l2 2M14 9l2 2"/></svg> API Key</button>
               <button id="grok-btn-account" onclick="switchToolMode('grok','account')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg3);color:var(--text3)">🌐 Own Account</button>
             </div>
             <!-- API KEY MODE -->
@@ -2413,7 +2413,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <label class="form-label">API Key (xai-...)</label>
               <div style="display:flex;gap:8px;margin-bottom:10px">
                 <input class="form-input" id="grok-api-key" placeholder="xai-xxxxxxxxxxxxxxxxx" type="password" style="flex:1"/>
-                <button class="yellow-btn" onclick="saveApiKey('grok')" style="font-size:12px;white-space:nowrap">💾 Save</button>
+                <button class="yellow-btn" onclick="saveApiKey('grok')" style="font-size:12px;white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save</button>
               </div>
               <div id="grok-key-status" style="font-size:11px;color:var(--text3);margin-bottom:8px"></div>
               <div class="form-grid">
@@ -2437,7 +2437,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <!-- ACCOUNT MODE -->
             <div id="grok-account-section" style="display:none;margin-bottom:1rem;padding:12px;background:var(--bg3);border-radius:var(--radius);border:0.5px solid var(--border2)">
               <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Opens grok.com + auto-copies prompt to clipboard</div>
-              <button class="ghost-btn" onclick="testConnection('grok')" style="font-size:12px">🔗 Open Grok</button>
+              <button class="ghost-btn" onclick="testConnection('grok')" style="font-size:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg> Open Grok</button>
               <span id="grok-status" style="font-size:11px;color:var(--green);margin-left:8px"></span>
             </div>
           </div>
@@ -2452,7 +2452,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">Google Veo 3 via AI Studio. Free: 50 req/day. Paid: ~$0.35-0.50/second.</div>
             <!-- MODE TOGGLE -->
             <div style="display:flex;gap:8px;margin-bottom:1rem">
-              <button id="veo-btn-api" onclick="switchToolMode('veo','api')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--yellow);background:var(--yellow-dim);color:var(--yellow)">🔑 API Key</button>
+              <button id="veo-btn-api" onclick="switchToolMode('veo','api')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--yellow);background:var(--yellow-dim);color:var(--yellow)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.5 12.5L19 4M17 6l2 2M14 9l2 2"/></svg> API Key</button>
               <button id="veo-btn-account" onclick="switchToolMode('veo','account')" style="flex:1;padding:8px;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg3);color:var(--text3)">🌐 Own Account</button>
             </div>
             <!-- API KEY MODE -->
@@ -2460,7 +2460,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <label class="form-label">Google AI Studio API Key</label>
               <div style="display:flex;gap:8px;margin-bottom:10px">
                 <input class="form-input" id="veo-api-key" placeholder="AIzaSy-xxxxxxxxxxxxxxxxx" type="password" style="flex:1"/>
-                <button class="yellow-btn" onclick="saveApiKey('veo')" style="font-size:12px;white-space:nowrap">💾 Save</button>
+                <button class="yellow-btn" onclick="saveApiKey('veo')" style="font-size:12px;white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save</button>
               </div>
               <div id="veo-key-status" style="font-size:11px;color:var(--text3);margin-bottom:8px"></div>
               <div class="form-grid">
@@ -2483,7 +2483,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <!-- ACCOUNT MODE -->
             <div id="veo-account-section" style="display:none;margin-bottom:1rem;padding:12px;background:var(--bg3);border-radius:var(--radius);border:0.5px solid var(--border2)">
               <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Opens Google AI Studio + auto-copies prompt</div>
-              <button class="ghost-btn" onclick="testConnection('veo')" style="font-size:12px">🔗 Open AI Studio</button>
+              <button class="ghost-btn" onclick="testConnection('veo')" style="font-size:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg> Open AI Studio</button>
               <span id="veo-status" style="font-size:11px;color:var(--green);margin-left:8px"></span>
             </div>
           </div>
@@ -2495,7 +2495,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <div class="page" id="page-submission">
         <div style="max-width:700px;margin:0 auto">
           <div style="text-align:center;margin-bottom:2rem">
-            <div style="font-size:20px;font-weight:700;color:var(--yellow);margin-bottom:6px">📋 Client Submission Form</div>
+            <div style="font-size:20px;font-weight:700;color:var(--yellow);margin-bottom:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Client Submission Form</div>
             <div style="font-size:12px;color:var(--text3)">Share this link with your clients to submit their brief</div>
             <div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 14px;margin-top:12px;display:flex;align-items:center;gap:10px">
               <code style="font-size:11px;color:var(--yellow);flex:1" id="form-link-display">https://ai-creatives-engine.vercel.app/client-form</code>
@@ -2503,7 +2503,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
           </div>
           <div class="form-card">
-            <div class="form-card-title"><span>👁️</span> Form preview</div>
+            <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></span> Form preview</div>
             <div style="background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:1.5rem">
               <div style="font-size:16px;font-weight:700;color:var(--yellow);margin-bottom:4px">Video Ad Brief</div>
               <div style="font-size:11px;color:var(--text3);margin-bottom:1.5rem">Fill this out completely for best results</div>
@@ -2537,7 +2537,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <select class="form-select" id="attendance-editor-filter" style="max-width:180px;font-size:11px" onchange="loadAttendance()">
               <option value="">All editors</option>
             </select>
-            <button class="ghost-btn" onclick="exportAttendanceCSV()" style="font-size:11px">📥 Export</button>
+            <button class="ghost-btn" onclick="exportAttendanceCSV()" style="font-size:11px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
           </div>
         </div>
 
@@ -2578,13 +2578,13 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
           <!-- PROJECT SELECTOR -->
           <div class="form-card" style="margin-bottom:16px">
-            <div class="form-card-title" style="margin-bottom:1rem"><span>⚡</span> Automation Pipeline</div>
+            <div class="form-card-title" style="margin-bottom:1rem"><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span> Automation Pipeline</div>
             <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">Select a project with a blueprint to start automated generation.</div>
             <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
               <select class="form-select" id="auto-project-select" style="flex:1" onchange="loadAutomationProject()">
                 <option value="">Select project...</option>
               </select>
-              <button class="ghost-btn" onclick="loadAutomationProjects()" style="font-size:12px">🔄 Refresh</button>
+              <button class="ghost-btn" onclick="loadAutomationProjects()" style="font-size:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Refresh</button>
             </div>
             <div id="auto-project-info" style="display:none;padding:10px 14px;background:var(--bg3);border-radius:var(--radius);border:0.5px solid var(--border2);font-size:12px;color:var(--text2)"></div>
           </div>
@@ -2604,18 +2604,18 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <textarea class="form-textarea" id="auto-avatar-prompt" placeholder="e.g. Filipino woman, 25-35 years old, professional appearance, wearing white lab coat, confident smile, studio lighting, white background, 9:16 portrait aspect ratio, photorealistic" style="min-height:80px"></textarea>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-  <button class="yellow-btn" id="gen-avatar-btn" onclick="generateAvatar()">🎨 Generate Avatar (DALL-E)</button>
-  <button class="ghost-btn" onclick="generateAvatar()" style="font-size:12px">🔄 Regenerate</button>
+  <button class="yellow-btn" id="gen-avatar-btn" onclick="generateAvatar()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 100 20 2 2 0 001.4-3.4 1.5 1.5 0 011-2.6H17a5 5 0 005-5c0-5-4.5-9-10-9z"/></svg> Generate Avatar (DALL-E)</button>
+  <button class="ghost-btn" onclick="generateAvatar()" style="font-size:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Regenerate</button>
   <span style="font-size:11px;color:var(--text3)">o</span>
   <input type="file" id="avatar-upload-input" accept="image/*" onchange="uploadOwnAvatar(event)" style="display:none"/>
-  <button class="ghost-btn" onclick="document.getElementById('avatar-upload-input').click()" style="font-size:12px;color:var(--purple);border-color:rgba(127,119,221,0.3)">📤 Upload own avatar</button>
+  <button class="ghost-btn" onclick="document.getElementById('avatar-upload-input').click()" style="font-size:12px;color:var(--purple);border-color:rgba(127,119,221,0.3)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload own avatar</button>
   <span id="avatar-gen-status" style="font-size:11px;color:var(--text3)"></span>
 </div>
             <div id="avatar-result" style="margin-top:12px;display:none">
               <img id="avatar-preview" style="width:120px;height:213px;object-fit:cover;border-radius:var(--radius);border:0.5px solid var(--border2)" src=""/>
               <div style="display:flex;gap:8px;margin-top:8px">
-                <button onclick="approveAvatar()" class="yellow-btn" style="font-size:12px">✅ Approve — proceed to scenes</button>
-                <button onclick="generateAvatar()" class="ghost-btn" style="font-size:12px">🔄 Regenerate</button>
+                <button onclick="approveAvatar()" class="yellow-btn" style="font-size:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg> Approve — proceed to scenes</button>
+                <button onclick="generateAvatar()" class="ghost-btn" style="font-size:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Regenerate</button>
               </div>
             </div>
           </div>
@@ -2632,7 +2632,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
             <div id="auto-scenes-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:1rem"></div>
             <div style="display:flex;gap:8px;align-items:center">
-              <button class="yellow-btn" id="gen-all-scenes-btn" onclick="generateAllScenes()">🎨 Generate All Scenes</button>
+              <button class="yellow-btn" id="gen-all-scenes-btn" onclick="generateAllScenes()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 100 20 2 2 0 001.4-3.4 1.5 1.5 0 011-2.6H17a5 5 0 005-5c0-5-4.5-9-10-9z"/></svg> Generate All Scenes</button>
               <span id="scenes-progress" style="font-size:12px;color:var(--text3)"></span>
             </div>
           </div>
@@ -2649,7 +2649,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
             <div id="auto-animate-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:1rem"></div>
             <div style="display:flex;gap:8px;align-items:center">
-              <button class="yellow-btn" id="animate-all-btn" onclick="animateAllScenes()">🎬 Animate All via Higgsfield</button>
+              <button class="yellow-btn" id="animate-all-btn" onclick="animateAllScenes()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="17" y1="5" x2="17" y2="19"/><line x1="3" y1="10" x2="7" y2="10"/><line x1="3" y1="15" x2="7" y2="15"/><line x1="17" y1="10" x2="21" y2="10"/><line x1="17" y1="15" x2="21" y2="15"/></svg> Animate All via Higgsfield</button>
               <span id="animate-progress" style="font-size:12px;color:var(--text3)"></span>
             </div>
           </div>
@@ -2666,9 +2666,9 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
             <div id="auto-outputs-list" style="margin-bottom:1rem"></div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="yellow-btn" id="download-all-btn" onclick="downloadAllOutputs()">📥 Download All Assets</button>
-              <button class="ghost-btn" onclick="copyAllLinks()" style="font-size:12px">📋 Copy all links</button>
-              <button class="ghost-btn" onclick="notifyClientDone()" style="font-size:12px;color:var(--green);border-color:rgba(34,197,94,0.3)">✅ Notify client — done!</button>
+              <button class="yellow-btn" id="download-all-btn" onclick="downloadAllOutputs()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download All Assets</button>
+              <button class="ghost-btn" onclick="copyAllLinks()" style="font-size:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Copy all links</button>
+              <button class="ghost-btn" onclick="notifyClientDone()" style="font-size:12px;color:var(--green);border-color:rgba(34,197,94,0.3)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg> Notify client — done!</button>
             </div>
           </div>
         </div>
@@ -2696,7 +2696,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div class="form-field"><label class="form-label">Payment due date</label><input class="form-input" type="date" id="new-client-due"/></div>
             <div class="form-field"><label class="form-label">Payment status</label>
               <select class="form-select" id="new-client-payment">
-                <option value="paid">✅ Paid</option>
+                <option value="paid"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg> Paid</option>
                 <option value="unpaid">❌ Unpaid</option>
                 <option value="overdue">⚠️ Overdue</option>
               </select>
@@ -2714,7 +2714,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <input class="form-input" id="search-clients" placeholder="Search clients..." oninput="filterClients()" style="max-width:220px"/>
           <select class="form-select" id="filter-payment" onchange="filterClients()" style="max-width:160px">
             <option value="">All payments</option>
-            <option value="paid">✅ Paid</option>
+            <option value="paid"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg> Paid</option>
             <option value="unpaid">❌ Unpaid</option>
             <option value="overdue">⚠️ Overdue</option>
           </select>
@@ -2739,7 +2739,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
         <!-- SUBMIT NEW BRIEF -->
         <div class="generate-area" style="margin-top:1.5rem">
-          <div class="form-card-title" style="margin-bottom:1rem"><span>📋</span> Submit new brief</div>
+          <div class="form-card-title" style="margin-bottom:1rem"><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="15" y2="14"/></svg></span> Submit new brief</div>
           <textarea class="form-textarea" id="client-brief-input" placeholder="Describe your project...&#10;&#10;Include:&#10;- Brand name&#10;- Product/service&#10;- Target audience&#10;- Goals&#10;- Any special requests" style="min-height:160px"></textarea>
           <div class="form-grid-3" style="margin-top:10px">
             <div class="form-field">
@@ -2756,7 +2756,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
           </div>
           <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
-            <button class="yellow-btn" id="client-submit-btn" onclick="submitClientBrief()">⚡ Submit & Auto-generate blueprint</button>
+            <button class="yellow-btn" id="client-submit-btn" onclick="submitClientBrief()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Submit & Auto-generate blueprint</button>
             <span id="client-submit-status" style="font-size:12px;color:var(--text3)"></span>
           </div>
         </div>
@@ -2770,7 +2770,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <input type="date" class="form-input" id="analytics-date-from" style="max-width:140px;font-size:11px" onchange="loadAnalytics()"/>
           <span style="font-size:11px;color:var(--text3)">→</span>
           <input type="date" class="form-input" id="analytics-date-to" style="max-width:140px;font-size:11px" onchange="loadAnalytics()"/>
-          <button class="ghost-btn" onclick="generateWeeklyReport()" style="font-size:12px;margin-left:auto">📊 Weekly report</button>
+          <button class="ghost-btn" onclick="generateWeeklyReport()" style="font-size:12px;margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="12" width="3" height="6"/><rect x="11" y="8" width="3" height="10"/><rect x="16" y="4" width="3" height="14"/></svg> Weekly report</button>
         </div>
         <div class="stats-grid" id="analytics-stats"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem">
@@ -2806,15 +2806,15 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </select>
             <select class="form-select" id="outputs-type-filter" onchange="loadOutputsTable()" style="max-width:140px;font-size:11px">
               <option value="">All types</option>
-              <option value="video">🎬 Video</option>
+              <option value="video"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="17" y1="5" x2="17" y2="19"/><line x1="3" y1="10" x2="7" y2="10"/><line x1="3" y1="15" x2="7" y2="15"/><line x1="17" y1="10" x2="21" y2="10"/><line x1="17" y1="15" x2="21" y2="15"/></svg> Video</option>
               <option value="image">🖼️ Image</option>
-              <option value="blueprint">📄 Blueprint</option>
+              <option value="blueprint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg> Blueprint</option>
               <option value="other">📎 Other</option>
             </select>
             <input type="date" class="form-input" id="outputs-date-from" style="max-width:140px;font-size:11px" onchange="loadOutputsTable()"/>
             <span style="font-size:11px;color:var(--text3);line-height:32px">→</span>
             <input type="date" class="form-input" id="outputs-date-to" style="max-width:140px;font-size:11px" onchange="loadOutputsTable()"/>
-            <button class="ghost-btn" onclick="exportOutputsCSV()" style="font-size:11px">📥 Export CSV</button>
+            <button class="ghost-btn" onclick="exportOutputsCSV()" style="font-size:11px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
           </div>
         </div>
         <!-- Summary Stats -->
@@ -3076,7 +3076,29 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       .sp-spin { animation:none; }
     }
 
-    /* ─── EXTENSIONS PAGE ─── */
+    /* ─── SKELETON LOADERS ─── */
+    .skel-row { display:flex; gap:14px; align-items:center; padding:13px 16px; border-top:0.5px solid rgba(255,255,255,0.05); }
+    .skel-bar {
+      height:11px; border-radius:6px; flex-shrink:0;
+      background:linear-gradient(90deg, rgba(255,255,255,0.045) 25%, rgba(255,255,255,0.1) 37%, rgba(255,255,255,0.045) 63%);
+      background-size:400% 100%; animation:skelShine 1.4s ease infinite;
+    }
+    .skel-card { padding:12px 13px; border-radius:10px; background:rgba(255,255,255,0.02); border:0.5px solid rgba(255,255,255,0.06); margin-bottom:9px; }
+    .skel-card .skel-bar { margin-bottom:8px; }
+    .skel-card .skel-bar:last-child { margin-bottom:0; }
+    @keyframes skelShine { 0%{background-position:100% 0} 100%{background-position:0 0} }
+    @media (prefers-reduced-motion: reduce){ .skel-bar { animation:none; background:rgba(255,255,255,0.06); } }
+
+    /* ─── EMPTY STATE ILLUSTRATIONS ─── */
+    .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:40px 20px; text-align:center; }
+    .empty-state-icon {
+      width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+      background:rgba(250,204,21,0.06); border:0.5px solid rgba(250,204,21,0.16); color:rgba(250,204,21,0.55);
+    }
+    .empty-state-title { color:#c9c6be; font-size:12.5px; font-weight:650; }
+    .empty-state-sub { color:#6a6a75; font-size:11px; max-width:280px; line-height:1.5; }
+
+    /* ─── SKELETON LOADERS end ─── */
     .ext-hero {
       display:flex; align-items:center; gap:14px; margin-bottom:20px;
       background:var(--bg2,#141310); border:0.5px solid var(--border,#2a2823);
@@ -3686,7 +3708,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:0.75rem;flex-wrap:wrap;gap:10px">
       <div style="display:flex;gap:8px;align-items:center">
         <div id="icp-batch-badge" style="display:none;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);border:0.5px solid rgba(250,204,21,0.3)">Batch 1</div>
-        <button class="ghost-btn" onclick="icpNewBatch()" id="icp-new-batch-btn" style="display:none;font-size:12px;color:var(--purple);border-color:rgba(127,119,221,0.3)">🔄 New Batch (15 more)</button>
+        <button class="ghost-btn" onclick="icpNewBatch()" id="icp-new-batch-btn" style="display:none;font-size:12px;color:var(--purple);border-color:rgba(127,119,221,0.3)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> New Batch (15 more)</button>
       </div>
     </div>
 
@@ -3708,7 +3730,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
   <!-- DESIGN STEP 1 -->
   <div class="form-card" id="dsg-step1">
-    <div class="form-card-title"><span>📝</span> Step 1 — Image & Design Details</div>
+    <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></span> Step 1 — Image & Design Details</div>
     <div class="form-grid" style="gap:10px">
       <div class="form-field">
         <label class="form-label">🏷️ Business / Brand Name</label>
@@ -3720,7 +3742,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <option>🖼️ Static Images / Social Media Creatives</option>
           <option>🏞️ Facebook Cover Photo</option>
           <option>📌 Poster</option>
-          <option>📄 Flyer / Promo Flyer</option>
+          <option><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg> Flyer / Promo Flyer</option>
           <option>🎏 Banner</option>
           <option>🪧 Tarpaulin Layout</option>
           <option>🍽️ Menu Board / Restaurant Menu</option>
@@ -3758,7 +3780,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </select>
       </div>
       <div class="form-field full">
-        <label class="form-label">📝 What to HIGHLIGHT — products, services, offers, details, contact info, exact text needed</label>
+        <label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg> What to HIGHLIGHT — products, services, offers, details, contact info, exact text needed</label>
         <textarea class="form-textarea" id="dsg-highlight" placeholder="Lahat ng gusto ni client lumabas sa design — offers, price list, promo details, contact number, address, FB page..." style="min-height:80px"></textarea>
       </div>
       <div class="form-field full">
@@ -3766,7 +3788,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <input class="form-input" id="dsg-avoid" placeholder="e.g. Ayaw ng red, ayaw ng cluttered text, walang cartoon style..."/>
       </div>
       <div class="form-field">
-        <label class="form-label">🎨 Brand Colors <span style="font-size:10px;color:var(--text3)">(if any)</span></label>
+        <label class="form-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 100 20 2 2 0 001.4-3.4 1.5 1.5 0 011-2.6H17a5 5 0 005-5c0-5-4.5-9-10-9z"/></svg> Brand Colors <span style="font-size:10px;color:var(--text3)">(if any)</span></label>
         <input class="form-input" id="dsg-colors" placeholder="e.g. Rose gold, white, black"/>
       </div>
       <div class="form-field">
@@ -3792,17 +3814,17 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap">
-      <button class="primary-btn" id="dsg-gen-btn" onclick="dsgGenerate()" style="font-size:13px">🎨 Generate Design Strategies</button>
+      <button class="primary-btn" id="dsg-gen-btn" onclick="dsgGenerate()" style="font-size:13px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 100 20 2 2 0 001.4-3.4 1.5 1.5 0 011-2.6H17a5 5 0 005-5c0-5-4.5-9-10-9z"/></svg> Generate Design Strategies</button>
       <span id="dsg-status" style="font-size:11px;color:var(--text3)"></span>
       <div id="dsg-batch-badge" style="display:none;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--yellow-dim);color:var(--yellow);border:0.5px solid rgba(250,204,21,0.3)">Batch 1</div>
-      <button class="ghost-btn" onclick="dsgNewBatch()" id="dsg-new-batch-btn" style="display:none;font-size:12px;color:var(--purple);border-color:rgba(127,119,221,0.3)">🔄 New Batch</button>
+      <button class="ghost-btn" onclick="dsgNewBatch()" id="dsg-new-batch-btn" style="display:none;font-size:12px;color:var(--purple);border-color:rgba(127,119,221,0.3)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> New Batch</button>
     </div>
   </div>
 
   <!-- DESIGN STEP 2 -->
   <div id="dsg-step2" style="display:none;margin-top:1.25rem">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <div class="form-card-title" style="margin:0"><span>📋</span> Step 2 — Copy production prompt to ChatGPT <span style="font-size:10px;color:var(--text3);font-weight:400">(attach din yung client materials!)</span></div>
+      <div class="form-card-title" style="margin:0"><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="15" y2="14"/></svg></span> Step 2 — Copy production prompt to ChatGPT <span style="font-size:10px;color:var(--text3);font-weight:400">(attach din yung client materials!)</span></div>
       <div style="display:flex;align-items:center;gap:10px">
         <div id="dsg-progress" style="font-size:12px;font-weight:700;color:var(--yellow)">0 / 0 done</div>
       </div>
@@ -3933,7 +3955,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
             Cancel Generation
           </button>
-          <button class="ghost-btn" onclick="icpCopyAll()" style="font-size:11px">📄 Copy All</button>
+          <button class="ghost-btn" onclick="icpCopyAll()" style="font-size:11px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg> Copy All</button>
         </div>
       </div>
 
@@ -4052,8 +4074,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     <div class="section-label">Blueprint</div>
     <div class="blueprint-box" id="modal-blueprint" style="max-height:320px"></div>
     <div class="blueprint-actions" style="margin-top:10px">
-      <button class="ghost-btn" onclick="copyModalBlueprint()">📋 Copy blueprint</button>
-      <button class="ghost-btn" onclick="exportPDF()">📄 Export PDF</button>
+      <button class="ghost-btn" onclick="copyModalBlueprint()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Copy blueprint</button>
+      <button class="ghost-btn" onclick="exportPDF()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg> Export PDF</button>
     </div>
     <div class="section-divider"></div>
     <!-- OUTPUT TRACKER -->
@@ -4074,17 +4096,17 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     <div style="display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap">
       <input class="form-input" id="output-url-input" placeholder="Paste video/image URL or Google Drive link..." style="flex:1;font-size:12px"/>
       <select class="form-select" id="output-type-select" style="max-width:120px;font-size:12px">
-        <option value="video">🎬 Video</option>
+        <option value="video"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="17" y1="5" x2="17" y2="19"/><line x1="3" y1="10" x2="7" y2="10"/><line x1="3" y1="15" x2="7" y2="15"/><line x1="17" y1="10" x2="21" y2="10"/><line x1="17" y1="15" x2="21" y2="15"/></svg> Video</option>
         <option value="image">🖼️ Image</option>
-        <option value="blueprint">📄 Blueprint</option>
+        <option value="blueprint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg> Blueprint</option>
         <option value="other">📎 Other</option>
       </select>
       <button class="ghost-btn" onclick="addOutput()" style="white-space:nowrap;font-size:12px">+ Add</button>
     </div>
     <div class="section-divider"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="section-label" style="margin:0">🎬 Generate per scene</div>
-      <button class="ghost-btn" onclick="showPage('settings')" style="font-size:10px;padding:3px 10px">⚙️ Tool settings</button>
+      <div class="section-label" style="margin:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="17" y1="5" x2="17" y2="19"/><line x1="3" y1="10" x2="7" y2="10"/><line x1="3" y1="15" x2="7" y2="15"/><line x1="17" y1="10" x2="21" y2="10"/><line x1="17" y1="15" x2="21" y2="15"/></svg> Generate per scene</div>
+      <button class="ghost-btn" onclick="showPage('settings')" style="font-size:10px;padding:3px 10px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Tool settings</button>
     </div>
     <div id="modal-scenes" style="max-height:400px;overflow-y:auto"></div>
   </div>
@@ -4583,7 +4605,7 @@ function icpRenderCards() {
       + '</div>'
       + '<div style="display:flex;flex-direction:column;gap:6px;min-width:130px">'
       +   '<button class="yellow-btn" onclick="icpCopyPrompt(' + i + ')" id="icp-copy-' + i + '" style="font-size:11px;padding:7px 12px;box-shadow:0 2px 8px rgba(250,204,21,0.2)"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" style=\"vertical-align:-2px;margin-right:5px\"><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2\"/></svg>Copy Prompt</button>'
-      +   '<button class="ghost-btn" onclick="icpToggleDetails(' + i + ')" style="font-size:11px;padding:6px 12px">👁️ View Prompt</button>'
+      +   '<button class="ghost-btn" onclick="icpToggleDetails(' + i + ')" style="font-size:11px;padding:6px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> View Prompt</button>'
       +   '<button class="ghost-btn" onclick="icpMarkDone(' + i + ')" id="icp-done-' + i + '" style="font-size:11px;padding:6px 12px;color:var(--green);border-color:rgba(34,197,94,0.3)">✓ Mark Done</button>'
       + '</div>'
       + '</div>'
@@ -4756,7 +4778,7 @@ async function dsgGenerate(isNewBatch) {
     showNotif('Error: ' + e.message, 'error');
   }
   btn.disabled = false;
-  btn.innerHTML = '🎨 Generate Design Strategies';
+  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 100 20 2 2 0 001.4-3.4 1.5 1.5 0 011-2.6H17a5 5 0 005-5c0-5-4.5-9-10-9z"/></svg> Generate Design Strategies';
 }
 
 function dsgNewBatch() {
@@ -4786,11 +4808,11 @@ function dsgRenderCards() {
       +   sections
       +   '<div style="font-size:10px;color:var(--text3);margin-top:8px">🧠 ' + (s.trigger || '') + ' &nbsp;•&nbsp; 🛡️ ' + (s.objection || '') + '</div>'
       +   '<div style="font-size:10px;color:var(--text3);margin-top:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="vertical-align:-1.5px;margin-right:3px;opacity:0.75"><circle cx="13.5" cy="6.5" r=".8"/><circle cx="17.5" cy="10.5" r=".8"/><circle cx="8.5" cy="7.5" r=".8"/><circle cx="6.5" cy="12.5" r=".8"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1a1.6 1.6 0 011.7-1.7H16c3 0 5.5-2.5 5.5-5.5C22 6 17.5 2 12 2z"/></svg>' + (s.colors || '') + ' &nbsp;•&nbsp; <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="vertical-align:-1.5px;margin-right:3px;opacity:0.75"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>' + (s.fonts || '') + ' &nbsp;•&nbsp; <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="vertical-align:-1.5px;margin-right:3px;opacity:0.75"><path d="M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M16 9a4 4 0 010 6"/><path d="M19 6.5a8 8 0 010 11"/></svg>' + (s.cta || '') + '</div>'
-      +   '<div style="font-size:10px;color:var(--green);margin-top:3px">✅ ' + (s.safety || '') + '</div>'
+      +   '<div style="font-size:10px;color:var(--green);margin-top:3px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg> ' + (s.safety || '') + '</div>'
       + '</div>'
       + '<div style="display:flex;flex-direction:column;gap:6px;min-width:130px">'
       +   '<button class="yellow-btn" onclick="dsgCopyPrompt(' + i + ')" id="dsg-copy-' + i + '" style="font-size:11px;padding:7px 12px;box-shadow:0 2px 8px rgba(250,204,21,0.2)"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" style=\"vertical-align:-2px;margin-right:5px\"><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2\"/></svg>Copy Prompt</button>'
-      +   '<button class="ghost-btn" onclick="dsgToggleDetails(' + i + ')" style="font-size:11px;padding:6px 12px">👁️ View Prompt</button>'
+      +   '<button class="ghost-btn" onclick="dsgToggleDetails(' + i + ')" style="font-size:11px;padding:6px 12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> View Prompt</button>'
       +   '<button class="ghost-btn" onclick="dsgMarkDone(' + i + ')" id="dsg-done-' + i + '" style="font-size:11px;padding:6px 12px;color:var(--green);border-color:rgba(34,197,94,0.3)">✓ Mark Done</button>'
       + '</div>'
       + '</div>'
