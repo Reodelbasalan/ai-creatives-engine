@@ -315,6 +315,8 @@ async function loadUserRole(user){
   var{data}=await sb.from('profiles').select('role,name').eq('id',user.id).maybeSingle();
   if(data?.role==='client'){
     currentUserRole='client';
+  } else if(data?.role==='brand_intern'){
+    currentUserRole='brand_intern';
   } else if(data?.role==='admin'||ADMIN_EMAILS.indexOf(email)!==-1){
     currentUserRole='admin';
   } else {
@@ -323,15 +325,17 @@ async function loadUserRole(user){
   // Update sidebar display name
   var nameEl=document.getElementById('user-name-display');
   var roleEl=document.getElementById('user-role-label');
+  var roleLabel=currentUserRole==='admin'?'Super Admin':currentUserRole==='client'?'Client':currentUserRole==='brand_intern'?'Brand Intern':'Editor';
   if(nameEl)nameEl.textContent=data?.name||email;
-  if(roleEl)roleEl.textContent=currentUserRole==='admin'?'Super Admin':currentUserRole==='client'?'Client':'Editor';
+  if(roleEl)roleEl.textContent=roleLabel;
   document.getElementById('user-email-label').textContent=email;
-  document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
+  document.getElementById('user-role-label').textContent=roleLabel;
   applyRoleUI();
   sb.from('profiles').select('role').eq('id',user.id).maybeSingle().then(({data})=>{
     if(data?.role&&currentUserRole!=='admin'&&ADMIN_EMAILS.indexOf(email)===-1){
       currentUserRole=data.role;
-      document.getElementById('user-role-label').textContent=currentUserRole==='admin'?'Super Admin':'Editor';
+      var lbl=currentUserRole==='admin'?'Super Admin':currentUserRole==='client'?'Client':currentUserRole==='brand_intern'?'Brand Intern':'Editor';
+      document.getElementById('user-role-label').textContent=lbl;
       applyRoleUI();
     }
   }).catch(()=>{});
@@ -371,6 +375,17 @@ function applyRoleUI(){
     });
     showPage('client-dashboard');
     loadClientDashboard();
+
+  } else if(currentUserRole==='brand_intern'){
+    // Brand Intern — Own Brand Creatives only
+    document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
+    document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
+    var internNavs=['nav-brand','nav-profile'];
+    internNavs.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el)el.style.display='flex';
+    });
+    showPage('brand');
   }
 }
 
