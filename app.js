@@ -710,6 +710,13 @@ function fbPickEditor(id, name, el){
       ? escapeHtml(fbInitials(name))
       : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
   }
+  // Kung may napiling editor pero 0 pa rin ang freebies count, i-set sa 1
+  // para siguradong may magagawang task — hindi maiiwan na parang walang assignment.
+  var countEl = document.getElementById('f-freebies-count');
+  if (id && countEl && (parseInt(countEl.value,10)||0) <= 0){
+    countEl.value = 1;
+    countEl.classList.remove('fb-bump'); void countEl.offsetWidth; countEl.classList.add('fb-bump');
+  }
   fbSyncSummary();
 }
 
@@ -753,9 +760,12 @@ function fbSyncSummary(){
 // Gumawa/mag-update ng freebies row sa For Upload (tinatawag ng save + generate)
 async function fbCreateForUploadRow(projectId, clientName){
   var n = parseInt(document.getElementById('f-freebies-count')?.value, 10) || 0;
+  var editorId = document.getElementById('f-freebies-editor')?.value || null;
+  // Kung may napiling Image creator pero 0 ang bilang, huwag hayaang mawala
+  // ang assignment nang tahimik — i-set sa 1 para may talagang magagawang task.
+  if (editorId && n <= 0) n = 1;
   if (n <= 0) return;
   var dest = document.getElementById('f-freebies-dest')?.value || 'Viral clients freebies images';
-  var editorId = document.getElementById('f-freebies-editor')?.value || null;
   var label = (clientName || 'Freebies') + ' — ' + n + ' freebies';
 
   // Kunin ang pangalan ng napiling editor (owner_name ang gamit ng table)
