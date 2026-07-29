@@ -2020,11 +2020,23 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div class="ob-hero-icon">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
             </div>
-            <div>
+            <div style="flex:1">
               <div class="ob-hero-title">Own Brand Creatives</div>
               <div class="ob-hero-sub">Original content for the AI Creatives brand — separate from client work, never auto-archived</div>
             </div>
+            <div class="ob-tabs">
+              <button type="button" class="ob-tab active" id="ob-tab-list" onclick="obSwitchView('list')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+                List
+              </button>
+              <button type="button" class="ob-tab" id="ob-tab-history" onclick="obSwitchView('history')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
+                History
+              </button>
+            </div>
           </div>
+
+          <div id="ob-view-list">
 
           <button class="yellow-btn" id="ob-toggle-btn" onclick="obToggleForm()" style="display:inline-flex;align-items:center;gap:7px;font-weight:650;margin-bottom:16px">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2088,6 +2100,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <span>Page name</span><span>Ad copy</span><span>Tag</span><span>Link</span><span>Date</span><span>Status</span><span></span><span></span>
             </div>
             <div id="ob-rows"></div>
+          </div>
+          </div>
+
+          <div class="form-card" id="ob-view-history" style="display:none;padding:0;overflow:hidden">
+            <div class="table-head" style="grid-template-columns:1.4fr 0.8fr 1fr 1.2fr;font-size:10px;letter-spacing:0.06em;color:#8a8a95;padding:12px 16px">
+              <span>Page name</span><span>Action</span><span>By</span><span>Date</span>
+            </div>
+            <div id="ob-history-body"></div>
           </div>
 
         </div>
@@ -3083,6 +3103,38 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       .sp-upload { transition:none; }
       .sp-spin { animation:none; }
     }
+
+    .ob-tabs { display:inline-flex; background:#0e0e11; border:0.5px solid rgba(255,255,255,0.08); border-radius:10px; padding:3px; }
+    .ob-tab { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; border:none; background:transparent;
+      color:#8a8781; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer; transition:background .18s ease, color .18s ease; }
+    .ob-tab:hover { color:#c9c6be; }
+    .ob-tab.active { background:var(--yellow,#facc15); color:#3a2a02; font-weight:700; }
+
+    .ob-publish-btn {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:5px 11px; border-radius:20px; font-size:10.5px; font-weight:650;
+      background:rgba(94,234,212,0.1); border:0.5px solid rgba(94,234,212,0.35); color:#5eead4;
+      cursor:pointer; white-space:nowrap;
+      transition:background .16s ease, border-color .16s ease, transform .16s ease;
+    }
+    .ob-publish-btn:hover { background:rgba(94,234,212,0.18); border-color:rgba(94,234,212,0.55); transform:translateY(-1px); }
+    .ob-unpublish-btn {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:5px 11px; border-radius:20px; font-size:10.5px; font-weight:650;
+      background:rgba(251,146,60,0.1); border:0.5px solid rgba(251,146,60,0.35); color:#fb923c;
+      cursor:pointer; white-space:nowrap;
+      transition:background .16s ease, border-color .16s ease, transform .16s ease;
+    }
+    .ob-unpublish-btn:hover { background:rgba(251,146,60,0.18); border-color:rgba(251,146,60,0.55); transform:translateY(-1px); }
+    .ob-publish-btn:active, .ob-unpublish-btn:active { transform:translateY(0) scale(0.97); }
+
+    .ob-hist-row { display:grid; grid-template-columns:1.4fr 0.8fr 1fr 1.2fr; gap:12px; align-items:center;
+      padding:13px 16px; border-top:0.5px solid rgba(255,255,255,0.05); font-size:11.5px; }
+    .ob-hist-name { color:#f2f0ea; font-weight:600; }
+    .ob-hist-actor { color:#a6a39c; }
+    .ob-hist-date { color:#8a8781; }
+
+    @media (prefers-reduced-motion: reduce){ .ob-tab, .ob-publish-btn, .ob-unpublish-btn { transition:none; } }
 
     .ob-approve-btn {
       display:inline-flex; align-items:center; gap:5px;
