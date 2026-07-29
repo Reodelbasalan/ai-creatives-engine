@@ -5831,6 +5831,15 @@ function obRenderRows(){
         + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg>'
         + 'Approve</button>'
       : '';
+    var publishBtn = (st==='Approved')
+      ? '<button class="ob-publish-btn" onclick="obPublish(\''+c.id+'\')" title="Mark as published">'
+        + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'
+        + 'Publish</button>'
+      : (st==='Published')
+      ? '<button class="ob-unpublish-btn" onclick="obUnpublish(\''+c.id+'\')" title="Mark as unpublished">'
+        + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg>'
+        + 'Unpublish</button>'
+      : '';
     return '<div class="ob-row">'
       + '<div class="ob-name">'+escapeHtml(c.page_name||'—')+'</div>'
       + '<div class="ob-copy" title="'+escapeHtml(c.ad_copy||'')+'">'+escapeHtml(c.ad_copy||'—')+'</div>'
@@ -5850,6 +5859,7 @@ function obRenderRows(){
       +   '</div>'
       + '</div>'
       + approveBtn
+      + publishBtn
       + '<button class="ob-del-btn" onclick="obDeleteCreative(\''+c.id+'\')" title="Burahin">'
       +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>'
       + '</button>'
@@ -5863,6 +5873,80 @@ async function obApprove(id){
     showNotif('Creative approved','success');
     await loadBrandCreatives();
   }catch(e){ showNotif('Approve failed','error'); }
+}
+
+async function obLogHistory(creativeId, pageName, action){
+  try{
+    var actorName=(currentUser && (currentUser.user_metadata?.name || currentUser.email)) || 'Someone';
+    await sb.from('brand_creatives_log').insert({
+      creative_id: creativeId, page_name: pageName, action: action,
+      actor_id: currentUser?.id || null, actor_name: actorName
+    });
+  }catch(e){ console.error('obLogHistory failed:', e); }
+}
+
+async function obPublish(id){
+  try{
+    var item=obItems.find(function(x){ return x.id===id; });
+    await sb.from('brand_creatives').update({status:'Published', published_at:new Date().toISOString()}).eq('id',id);
+    await obLogHistory(id, item?item.page_name:'', 'published');
+    showNotif('Marked as published','success');
+    await loadBrandCreatives();
+  }catch(e){ showNotif('Publish failed','error'); }
+}
+
+async function obUnpublish(id){
+  try{
+    var item=obItems.find(function(x){ return x.id===id; });
+    await sb.from('brand_creatives').update({status:'Approved'}).eq('id',id);
+    await obLogHistory(id, item?item.page_name:'', 'unpublished');
+    showNotif('Marked as unpublished','success');
+    await loadBrandCreatives();
+  }catch(e){ showNotif('Unpublish failed','error'); }
+}
+
+var obHistoryItems=[];
+
+function obSwitchView(view){
+  var listV=document.getElementById('ob-view-list');
+  var histV=document.getElementById('ob-view-history');
+  var tabL=document.getElementById('ob-tab-list');
+  var tabH=document.getElementById('ob-tab-history');
+  if(view==='history'){
+    listV.style.display='none'; histV.style.display='';
+    tabL.classList.remove('active'); tabH.classList.add('active');
+    loadObHistory();
+  } else {
+    histV.style.display='none'; listV.style.display='';
+    tabH.classList.remove('active'); tabL.classList.add('active');
+  }
+}
+
+async function loadObHistory(){
+  var box=document.getElementById('ob-history-body');
+  if(!box) return;
+  skelRows('ob-history-body', 4);
+  try{
+    var r=await sb.from('brand_creatives_log').select('*').order('created_at',{ascending:false}).limit(200);
+    obHistoryItems=r.data||[];
+  }catch(e){ obHistoryItems=[]; }
+  if(!obHistoryItems.length){
+    box.innerHTML=emptyState(ICO_MEGAPHONE,'No publish history yet','Publish or unpublish actions will be logged here.');
+    return;
+  }
+  box.innerHTML=obHistoryItems.map(function(h){
+    var isPub=h.action==='published';
+    var badge=isPub
+      ? '<span style="background:rgba(94,234,212,0.14);color:#5eead4;font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px">Published</span>'
+      : '<span style="background:rgba(251,146,60,0.15);color:#fb923c;font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px">Unpublished</span>';
+    var when=h.created_at?new Date(h.created_at).toLocaleString('en-PH',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}):'—';
+    return '<div class="ob-hist-row">'
+      + '<div class="ob-hist-name">'+escapeHtml(h.page_name||'—')+'</div>'
+      + '<div>'+badge+'</div>'
+      + '<div class="ob-hist-actor">'+escapeHtml(h.actor_name||'Someone')+'</div>'
+      + '<div class="ob-hist-date">'+when+'</div>'
+      + '</div>';
+  }).join('');
 }
 
 async function obDeleteCreative(id){
