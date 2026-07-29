@@ -948,6 +948,8 @@ async function deleteProjectRow(id,event){
       console.error('deleteProjectRow: 0 rows affected, likely RLS blocking delete for id:',id);
       return;
     }
+    // I-clean din ang mga kaugnay na freebies/creative rows para hindi maiwan sa staff
+    await sb.from('creatives_upload').delete().eq('project_id', id);
     showNotif('Project deleted','success');
     if(selectedProjects.has(id)){ selectedProjects.delete(id); updateBulkBar(); }
     await loadAllProjects();
@@ -1240,6 +1242,16 @@ async function saveProject(){
 }
 
 // MODAL
+function copyClientDetails(){
+  var text=window.currentModalPlainText||'';
+  if(!text){ showNotif('Wala pang details na makokopya','error'); return; }
+  navigator.clipboard.writeText(text).then(function(){
+    showNotif('Nakopya ang client details!','success');
+  }).catch(function(){
+    showNotif('Hindi na-copy — subukan mo mano-mano','error');
+  });
+}
+
 async function openModal(id){
   var p=allProjects.find(x=>x.id===id);
   if(!p){
@@ -1260,28 +1272,36 @@ async function openModal(id){
     if(edData)assignedName=edData.name||edData.email;
   }
   // Build material links
-  var gdriveHtml=p.gdrive_link?'<a href="'+p.gdrive_link+'" target="_blank" style="color:var(--yellow);font-size:11px">📁 Open GDrive</a>':'—';
-  var moodHtml=p.moodboard_link?'<a href="'+p.moodboard_link+'" target="_blank" style="color:var(--yellow);font-size:11px">🖼️ Open Moodboard</a>':'—';
-  var sampleHtml=p.sample_video_link?'<a href="'+p.sample_video_link+'" target="_blank" style="color:var(--yellow);font-size:11px">🎬 Open Sample</a>':'—';
+  var gdriveHtml=p.gdrive_link?'<a href="'+p.gdrive_link+'" target="_blank" style="color:var(--yellow)">'+p.gdrive_link+'</a>':'—';
+  var moodHtml=p.moodboard_link?'<a href="'+p.moodboard_link+'" target="_blank" style="color:var(--yellow)">'+p.moodboard_link+'</a>':'—';
+  var sampleHtml=p.sample_video_link?'<a href="'+p.sample_video_link+'" target="_blank" style="color:var(--yellow)">'+p.sample_video_link+'</a>':'—';
   var colorsHtml=(p.color_primary||p.color_secondary)
     ? [p.color_primary,p.color_secondary].filter(Boolean).join(' / ')
     : '—';
-  document.getElementById('modal-detail-grid').innerHTML=[
+  var detailLines=[
     ['Client',p.client_name],['Business type',p.business_type],
-    ['FB Page',p.fb_page?`<a href="${p.fb_page}" target="_blank" style="color:var(--yellow);font-size:11px">🔗 Open FB Page</a>`:'—'],
-    ['Website',p.website?`<a href="${p.website}" target="_blank" style="color:var(--yellow);font-size:11px">🔗 Open Website</a>`:'—'],
+    ['FB Page',p.fb_page?('<a href="'+p.fb_page+'" target="_blank" style="color:var(--yellow)">'+p.fb_page+'</a>'):'—'],
+    ['Website',p.website?('<a href="'+p.website+'" target="_blank" style="color:var(--yellow)">'+p.website+'</a>'):'—'],
     ['Goal',p.goal],['Language',p.language],
     ['Video size',p.video_size],['Duration',p.duration],
     ['Tone',p.tone],['Brand colors',colorsHtml],
     ['Audience',p.audience],['Assigned to',assignedName],
-    ['Pain point',p.pain_point],['USP',p.usp]
-  ].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-val">${v||'—'}</div></div>`).join('')
-  +`<div class="detail-item" style="grid-column:1/-1"><div class="detail-label">Product / Service</div><div class="detail-val">${p.product||'—'}</div></div>`
-  +`<div class="detail-item" style="grid-column:1/-1"><div class="detail-label">Script / Emphasis</div><div class="detail-val">${p.emphasize||'—'}</div></div>`
-  +`<div class="detail-item"><div class="detail-label">GDrive Materials</div><div class="detail-val">${gdriveHtml}</div></div>`
-  +`<div class="detail-item"><div class="detail-label">Moodboard</div><div class="detail-val">${moodHtml}</div></div>`
-  +`<div class="detail-item"><div class="detail-label">Sample Video</div><div class="detail-val">${sampleHtml}</div></div>`
-  +(p.client_extra?`<div class="detail-item" style="grid-column:1/-1"><div class="detail-label">Extra Notes</div><div class="detail-val">${p.client_extra}</div></div>`:'');
+    ['Pain point',p.pain_point],['USP',p.usp],
+    ['Product / Service',p.product],
+    ['Script / Emphasis',p.emphasize],
+    ['GDrive Materials',gdriveHtml],
+    ['Moodboard',moodHtml],
+    ['Sample Video',sampleHtml]
+  ];
+  if(p.client_extra) detailLines.push(['Extra Notes',p.client_extra]);
+  document.getElementById('modal-detail-grid').innerHTML=detailLines.map(function(pair){
+    return '<span class="db-line"><span class="db-label">'+pair[0]+':</span> '+(pair[1]||'—')+'</span>';
+  }).join('');
+  // I-save ang plain-text version (walang HTML tags) para sa Copy button
+  window.currentModalPlainText=detailLines.map(function(pair){
+    var v=String(pair[1]||'—').replace(/<[^>]*>/g,'');
+    return pair[0]+': '+v;
+  }).join('\n');
   // Load team members for assignment
   const{data:members}=await sb.from('profiles').select('id,name,email,role').order('name');
   const assignSelect=document.getElementById('modal-assign-select');
@@ -1648,11 +1668,14 @@ async function bulkAssign(){
 async function bulkDelete(){
   if(!selectedProjects.size)return;
   if(!confirm(`Delete ${selectedProjects.size} projects permanently?`))return;
-  var results=await Promise.all([...selectedProjects].map(id=>
+  var ids=[...selectedProjects];
+  var results=await Promise.all(ids.map(id=>
     sb.from('projects').delete().eq('id',id).select()
   ));
   var deletedCount=results.filter(r=>r.data&&r.data.length>0).length;
   var blockedCount=results.length-deletedCount;
+  // I-clean din ang mga kaugnay na freebies/creative rows
+  await Promise.all(ids.map(id=>sb.from('creatives_upload').delete().eq('project_id',id)));
   if(blockedCount>0){
     showNotif(deletedCount+' deleted, '+blockedCount+' blocked (check RLS permissions)','error');
   } else {
