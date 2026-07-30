@@ -736,9 +736,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
   background: var(--bg3);
   border: 0.5px solid rgba(255,255,255,0.06);
   border-radius: 6px;
-  color: var(--text3);
+  color: var(--text2);
   transition: var(--transition);
   width: 28px; height: 28px;
+  font-size: 15px;
 }
 
 .modal-close:hover {
@@ -1455,11 +1456,19 @@ body {
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
           <div class="section-label" style="margin:0">Recent projects</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input type="date" class="form-input" id="dash-date-from" placeholder="From" style="max-width:140px;font-size:11px" onchange="loadDashboard()"/>
-            <span style="font-size:11px;color:var(--text3)">to</span>
-            <input type="date" class="form-input" id="dash-date-to" placeholder="To" style="max-width:140px;font-size:11px" onchange="loadDashboard()"/>
-            <button class="ghost-btn" onclick="document.getElementById('dash-date-from').value='';document.getElementById('dash-date-to').value='';loadDashboard()" style="font-size:10px;padding:4px 8px">Clear</button>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <div class="proj-date-presets" id="dash-date-presets">
+              <button type="button" class="proj-preset-pill" onclick="dashDatePreset('today',this)">Today</button>
+              <button type="button" class="proj-preset-pill" onclick="dashDatePreset('7d',this)">7D</button>
+              <button type="button" class="proj-preset-pill" onclick="dashDatePreset('30d',this)">30D</button>
+              <button type="button" class="proj-preset-pill" onclick="dashDatePreset('month',this)">This Month</button>
+              <button type="button" class="proj-preset-pill active" onclick="dashDatePreset('all',this)">All time</button>
+              <button type="button" class="proj-preset-pill" id="dash-preset-custom" onclick="openDateRangeModal('dashboard')">Custom</button>
+            </div>
+            <button type="button" class="proj-range-btn" onclick="openDateRangeModal('dashboard')">📅 <span id="dash-range-label">All time</span></button>
+            <input type="hidden" id="dash-date-from"/>
+            <input type="hidden" id="dash-date-to"/>
+            <button class="ghost-btn" onclick="clearDashboardFilters()" style="font-size:10px;padding:4px 8px">Clear</button>
           </div>
         </div>
         <div class="data-table">
@@ -1685,7 +1694,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               </select>
             </div>
           <button class="ghost-btn" id="save-details-btn" onclick="saveClientDetails()" style="color:var(--green);border-color:rgba(34,197,94,0.3);display:inline-flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save details only</button>
-          <button class="yellow-btn" id="generate-btn" onclick="generateBlueprint()" style="display:inline-flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Generate blueprint</button>
+          <button class="yellow-btn" id="generate-btn" onclick="generateBlueprint()" disabled title="Temporarily disabled — use Save details only for now" style="display:inline-flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Generate blueprint</button>
             <span id="gen-status" style="font-size:12px;color:var(--text3)"></span>
           </div>
           <div id="blueprint-output" style="display:none;margin-top:1rem">
@@ -3704,6 +3713,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
             <div><div style="font-size:18px;font-weight:750;color:var(--green);line-height:1" id="fu-published-count">0</div><div style="font-size:9px;color:#9a9aa5;text-transform:uppercase;letter-spacing:0.07em;margin-top:4px">Published</div></div>
           </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 17px;background:rgba(74,222,128,0.07);border:0.5px solid rgba(74,222,128,0.2);border-radius:14px">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/></svg>
+            <div><div style="font-size:18px;font-weight:750;color:#4ade80;line-height:1" id="fu-freebies-done-count">0</div><div style="font-size:9px;color:#9a9aa5;text-transform:uppercase;letter-spacing:0.07em;margin-top:4px">Freebies Done</div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -3767,8 +3780,13 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <input class="fu-input" id="fu-file-link" placeholder="https://drive.google.com/..."/>
       </div>
       <div>
-        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Client name <span style="color:#6a6a75;font-weight:400">(optional)</span></label>
-        <input class="fu-input" id="fu-client-name" placeholder="e.g. Glow Skin PH" autocomplete="off"/>
+        <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Client <span style="color:#6a6a75;font-weight:400">(optional — select existing or type new)</span></label>
+        <select class="fu-input" id="fu-client-select" onchange="fuClientSelectChange()">
+          <option value="">— Select client —</option>
+          <option value="__custom__">+ Type new / not listed</option>
+        </select>
+        <input class="fu-input" id="fu-client-name" placeholder="e.g. Glow Skin PH" autocomplete="off" style="display:none;margin-top:8px"/>
+        <input type="hidden" id="fu-client-project-id" value=""/>
       </div>
       <div style="grid-column:1 / -1">
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:8px;letter-spacing:0.02em">Tags <span style="color:#6a6a75;font-weight:400">(optional)</span></label>
