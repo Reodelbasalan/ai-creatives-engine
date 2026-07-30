@@ -1150,6 +1150,7 @@ function applyDateRangeModal(){
 }
 
 function renderProjectsTable(projects){
+  var isAdmin=currentUserRole==='admin';
   document.getElementById('all-projects-body').innerHTML=projects.length?projects.map(p=>`
     <div class="table-row" style="grid-template-columns:32px 2fr 1fr 1.2fr 0.8fr 80px 32px" onclick="openModal('${p.id}')">
       <div onclick="toggleSelect('${p.id}',event)" style="display:flex;align-items:center;justify-content:center">
@@ -1160,14 +1161,15 @@ function renderProjectsTable(projects){
       <div>${statusBadge(p.status)}</div>
       <div class="row-date" title="Created: ${fmtDate(p.created_at)}">${fmtDate(p.updated_at||p.created_at)}</div>
       <div class="row-date">${p.deadline?getDeadlineStatus(p.deadline):'<span style="color:#5a5a65">—</span>'}</div>
-      <div onclick="deleteProjectRow('${p.id}',event)" class="proj-row-del" title="Delete">
+      ${isAdmin?`<div onclick="deleteProjectRow('${p.id}',event)" class="proj-row-del" title="Delete">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-      </div>
+      </div>`:'<div></div>'}
     </div>`).join(''):'<div class="table-empty"><div class="table-empty-icon">🔍</div>No projects found.</div>';
 }
 
 async function deleteProjectRow(id,event){
   if(event) event.stopPropagation();
+  if(currentUserRole!=='admin'){ showNotif('Admin only — editors can\'t delete client tasks.','error'); return; }
   if(!confirm('Delete this project permanently?'))return;
   try{
     var r=await sb.from('projects').delete().eq('id',id).select();
@@ -1228,9 +1230,9 @@ async function loadEditorFreebiesTasks(){
   if(!box) return;
   var query;
   if(currentUserRole==='editor'||currentUserRole==='brand_intern'){
-    query=sb.from('creatives_upload').select('*').eq('owner_id',currentUser.id).eq('is_freebies',true).order('created_at',{ascending:false});
+    query=sb.from('creatives_upload').select('*,projects(fb_page)').eq('owner_id',currentUser.id).eq('is_freebies',true).order('created_at',{ascending:false});
   } else {
-    query=sb.from('creatives_upload').select('*').eq('is_freebies',true).order('created_at',{ascending:false});
+    query=sb.from('creatives_upload').select('*,projects(fb_page)').eq('is_freebies',true).order('created_at',{ascending:false});
   }
   var{data}=await query;
   var items=data||[];
@@ -1238,23 +1240,41 @@ async function loadEditorFreebiesTasks(){
     box.innerHTML='<div class="table-empty"><div class="table-empty-icon">'+ICO_MEGAPHONE+'</div><div>No freebies tasks yet</div><div style="font-size:11px;margin-top:4px;color:var(--text3)">Assigned freebies from new projects will show up here</div></div>';
     return;
   }
-  box.innerHTML=items.map(function(c){
-    var st=c.status||'Unpublished';
-    var badge=st==='Published'
-      ? '<span style="background:rgba(94,234,212,0.14);color:#5eead4;font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px">Published</span>'
-      : '<span style="background:rgba(250,204,21,0.14);color:#facc15;font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px">Unpublished</span>';
-    return '<div class="editor-card">'
-      + '<div class="editor-card-top">'
-      +   '<div><div class="editor-card-name">'+escapeHtml(c.project_name||'—')+'</div>'
-      +   '<div class="editor-card-meta">'+escapeHtml(c.category||'')+' · '+(c.freebies_count||0)+' freebies</div></div>'
-      +   '<div>'+badge+'</div>'
-      + '</div>'
-      + '<div class="editor-card-actions">'
-      +   (c.project_id ? '<button class="ghost-btn" onclick="openModal(\''+c.project_id+'\')">View client details</button>' : '')
-      +   '<button class="ghost-btn" onclick="showPage(\'for-upload\')">Open in For Upload</button>'
-      + '</div>'
-      + '</div>';
+  box.innerHTML=items.map(function(c,i){
+    var isDone=c.status==='Done'||c.status==='Published';
+    var fbPage=c.projects?.fb_page||'';
+    var rowNum=items.length-i;
+    var clientLabel=c.client_name||c.project_name||'—';
+    var dateStr=isDone?fmtDate(c.created_at):'—';
+    var linkCell=isDone
+      ? '<a href="'+(c.file_link||'#')+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+(c.file_link?'Open':'—')+'</a>'
+      : '<div style="display:flex;gap:6px;align-items:center">'
+        + '<input class="form-input" id="fbtask-link-'+c.id+'" placeholder="Paste file link..." value="'+(c.file_link?escapeHtml(c.file_link):'')+'" style="font-size:11px;padding:6px 8px"/>'
+        + '</div>';
+    var statusCell=isDone
+      ? '<span style="background:rgba(74,222,128,0.14);color:#4ade80;font-size:10px;font-weight:650;padding:4px 10px;border-radius:20px;white-space:nowrap">✓ Done</span>'
+      : '<button class="yellow-btn" style="font-size:11px;padding:5px 10px;white-space:nowrap" onclick="freebiesQuickSubmit(\''+c.id+'\')">Submit</button>'
+        + '<span style="display:block;margin-top:4px;background:rgba(250,204,21,0.14);color:#facc15;font-size:9px;font-weight:650;padding:2px 8px;border-radius:20px;text-align:center">Pending</span>';
+    return '<div class="table-row" style="grid-template-columns:0.4fr 1.6fr 1.6fr 2fr 1fr 1.2fr;align-items:center">'
+      +'<div style="color:var(--text3);font-size:11px">'+rowNum+'</div>'
+      +'<div><div class="row-name">'+escapeHtml(clientLabel)+'</div><div class="row-sub">'+(c.freebies_count||0)+' freebies</div></div>'
+      +'<div>'+(fbPage?'<a href="'+fbPage+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+fbPage+'</a>':'<span style="color:var(--text3);font-size:11px">—</span>')+'</div>'
+      +'<div>'+linkCell+'</div>'
+      +'<div class="row-date">'+dateStr+'</div>'
+      +'<div>'+statusCell+'</div>'
+      +'</div>';
   }).join('');
+}
+
+async function freebiesQuickSubmit(id){
+  var input=document.getElementById('fbtask-link-'+id);
+  var link=input?input.value.trim():'';
+  if(!link){ showNotif('Paste the file link first','error'); return; }
+  try{
+    await sb.from('creatives_upload').update({file_link:link,status:'Done'}).eq('id',id);
+    showNotif('Marked as Done! ✓','success');
+    loadEditorFreebiesTasks();
+  }catch(err){ showNotif('Error: '+(err?.message||err),'error'); }
 }
 
 async function markInProduction(id){
@@ -1939,6 +1959,7 @@ async function bulkAssign(){
 }
 
 async function bulkDelete(){
+  if(currentUserRole!=='admin'){ showNotif('Admin only — editors can\'t delete client tasks.','error'); return; }
   if(!selectedProjects.size)return;
   if(!confirm(`Delete ${selectedProjects.size} projects permanently?`))return;
   var ids=[...selectedProjects];
@@ -5744,7 +5765,7 @@ function renderForUpload(){
       + '<div>'+headline+'</div>'
       + '<div><div style="font-size:12px;font-weight:600;color:#e8e8ec">'+dateMain+'</div><div style="font-size:9px;color:#7a7a85;margin-top:1px">'+dateYear+' · '+dateTime+'</div></div>'
       + '<div style="display:flex;align-items:center;gap:8px">'+statusCell
-      +   '<button class="fu-del-btn" data-id="'+c.id+'" style="background:none;border:none;color:#6a6a75;cursor:pointer;font-size:12px">✕</button>'
+      +   (currentUserRole==='admin'?'<button class="fu-del-btn" data-id="'+c.id+'" style="background:none;border:none;color:#6a6a75;cursor:pointer;font-size:12px">✕</button>':'')
       + '</div>'
       + '</div>';
   }).join('');
@@ -5888,6 +5909,7 @@ async function fuAddCreative(){
 }
 
 async function fuDelete(id){
+  if (currentUserRole!=='admin'){ showNotif('Admin only — editors can\'t delete client tasks.', 'error'); return; }
   if (!confirm('Delete this creative?')) return;
   await sb.from('creatives_upload').delete().eq('id', id);
   showNotif('Deleted.', 'success');
