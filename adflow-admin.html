@@ -88,6 +88,15 @@ input[type=text],input[type=email],input[type=password],select,textarea{
   background:#090a0c;font-size:14.5px;
   transition:border-color .18s,box-shadow .18s,background .18s;}
 input::placeholder,textarea::placeholder{color:var(--ink-4);}
+.pw{position:relative;display:block;}
+.pw > input{padding-right:46px;}
+.pw .eye{position:absolute;right:7px;top:50%;transform:translateY(-50%);
+  display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:8px;
+  background:transparent;color:var(--ink-3);cursor:pointer;font-size:16px;
+  transition:color .18s,background .18s;}
+.pw .eye:hover{color:var(--ink);background:var(--card-3);}
+.pw .eye:active{transform:translateY(-50%) scale(.92);}
+.pw .eye:focus-visible{outline:2px solid var(--y);outline-offset:1px;}
 input:hover,select:hover,textarea:hover{border-color:var(--line-3);}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--y);
   box-shadow:0 0 0 3.5px var(--y-12);background:#0c0d0f;}
@@ -397,6 +406,8 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
   <symbol id="ic-zap" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
   <symbol id="ic-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></symbol>
   <symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="ic-eye" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="ic-eye-off" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></symbol>
 </svg>
 
 <!-- ══════════ SETUP ══════════ -->
@@ -742,8 +753,36 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
     );
   }
 
+  // A show/hide eye on every password field. Done in JS so both builds share
+  // it without changing their markup — new fields are covered automatically.
+  function enhancePasswords() {
+    $$('input[type="password"]').forEach((inp) => {
+      if (inp.dataset.eye) return;
+      inp.dataset.eye = "1";
+      const wrap = el("div", "pw");
+      inp.parentNode.insertBefore(wrap, inp);
+      wrap.append(inp);
+      const btn = el("button", "eye");
+      btn.type = "button";
+      btn.tabIndex = -1;
+      btn.setAttribute("aria-label", "Show password");
+      btn.title = "Show / hide";
+      btn.append(icon("ic-eye"));
+      btn.addEventListener("click", () => {
+        const show = inp.type === "password";
+        inp.type = show ? "text" : "password";
+        btn.textContent = "";
+        btn.append(icon(show ? "ic-eye-off" : "ic-eye"));
+        btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+        inp.focus();
+      });
+      wrap.append(btn);
+    });
+  }
+
   // ------------------------------------------------------------- setup gate
   function boot() {
+    enhancePasswords();
     TOKEN = store.get("adf.pass") || "";
     DRIVE = store.get("adf.drive") ?? "https://drive.google.com/drive/folders/1u5qUqxSVYVHBDLEJIubM4eS1ycxihiP5";
     if (TOKEN) start(); else $("#setup").style.display = "grid";
