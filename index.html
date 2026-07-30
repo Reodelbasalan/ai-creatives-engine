@@ -1723,9 +1723,9 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <button type="button" class="proj-preset-pill active" onclick="projDatePreset('month',this)">This Month</button>
             <button type="button" class="proj-preset-pill" onclick="projDatePreset('lastmonth',this)">Last Month</button>
             <button type="button" class="proj-preset-pill" onclick="projDatePreset('all',this)">All time</button>
-            <button type="button" class="proj-preset-pill" id="proj-preset-custom" onclick="openDateRangeModal()">Custom</button>
+            <button type="button" class="proj-preset-pill" id="proj-preset-custom" onclick="openDateRangeModal('projects')">Custom</button>
           </div>
-          <button type="button" class="proj-range-btn" onclick="openDateRangeModal()">📅 <span id="proj-range-label">This Month</span></button>
+          <button type="button" class="proj-range-btn" onclick="openDateRangeModal('projects')">📅 <span id="proj-range-label">This Month</span></button>
           <input type="hidden" id="proj-date-from"/>
           <input type="hidden" id="proj-date-to"/>
           <button class="ghost-btn" onclick="clearProjectFilters()" style="font-size:11px">Clear</button>
@@ -2842,7 +2842,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <div class="page" id="page-outputs">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
           <div class="section-label" style="margin:0">📦 Editor Copy Submission Log</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             <select class="form-select" id="outputs-editor-filter" onchange="loadOutputsTable()" style="max-width:180px;font-size:11px">
               <option value="">All editors</option>
             </select>
@@ -2853,9 +2853,19 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <option value="blueprint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg> Blueprint</option>
               <option value="other">📎 Other</option>
             </select>
-            <input type="date" class="form-input" id="outputs-date-from" style="max-width:140px;font-size:11px" onchange="loadOutputsTable()"/>
-            <span style="font-size:11px;color:var(--text3);line-height:32px">→</span>
-            <input type="date" class="form-input" id="outputs-date-to" style="max-width:140px;font-size:11px" onchange="loadOutputsTable()"/>
+            <div class="proj-date-presets" id="outputs-date-presets">
+              <button type="button" class="proj-preset-pill" onclick="outputsDatePreset('today',this)">Today</button>
+              <button type="button" class="proj-preset-pill" onclick="outputsDatePreset('yesterday',this)">Yesterday</button>
+              <button type="button" class="proj-preset-pill" onclick="outputsDatePreset('7d',this)">7D</button>
+              <button type="button" class="proj-preset-pill" onclick="outputsDatePreset('30d',this)">30D</button>
+              <button type="button" class="proj-preset-pill" onclick="outputsDatePreset('month',this)">This Month</button>
+              <button type="button" class="proj-preset-pill" onclick="outputsDatePreset('lastmonth',this)">Last Month</button>
+              <button type="button" class="proj-preset-pill active" onclick="outputsDatePreset('all',this)">All time</button>
+              <button type="button" class="proj-preset-pill" id="outputs-preset-custom" onclick="openDateRangeModal('outputs')">Custom</button>
+            </div>
+            <button type="button" class="proj-range-btn" onclick="openDateRangeModal('outputs')">📅 <span id="outputs-range-label">All time</span></button>
+            <input type="hidden" id="outputs-date-from"/>
+            <input type="hidden" id="outputs-date-to"/>
             <button class="ghost-btn" onclick="exportOutputsCSV()" style="font-size:11px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
           </div>
         </div>
@@ -4224,6 +4234,23 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 </div>
 
 <!-- MODAL -->
+<div class="modal-overlay" id="user-stats-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="us-name">—</div>
+        <div style="margin-top:4px" id="us-role-badge"></div>
+      </div>
+      <button class="modal-close" onclick="closeUserStatsModal()">✕</button>
+    </div>
+    <div class="stats-grid" id="us-stats-cards" style="margin-bottom:1.25rem"></div>
+    <div class="section-label">Monthly output (last 6 months)</div>
+    <div class="data-table" style="margin-bottom:1.25rem" id="us-monthly-table"></div>
+    <div class="section-label">Recent submissions</div>
+    <div id="us-recent-list"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="daterange-modal">
   <div class="modal" style="max-width:640px">
     <div class="modal-head">
