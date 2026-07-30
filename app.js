@@ -456,7 +456,7 @@ function showPage(page){
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
-  if(page==='all-projects')loadAllProjects();
+  if(page==='all-projects'){loadAllProjects();loadApSubmitProjectSelect();}
   if(page==='new-project')loadAssignDropdown();
   if(page==='editor-portal')loadEditorPortal();
   if(page==='users')loadUsers();
@@ -1224,6 +1224,129 @@ async function deleteProjectRow(id,event){
     await loadAllProjects();
     loadDashboard();
   }catch(err){ showNotif('Delete failed: '+(err.message||err),'error'); }
+}
+
+// ═══════════════════════════════════════
+// SUBMIT COMPLETED OUTPUT — All Projects page panel
+// (same idea as My Tasks' panel, but with its own project picker
+// since it's not scoped to one already-open project)
+// ═══════════════════════════════════════
+async function loadApSubmitProjectSelect(){
+  var sel=document.getElementById('ap-submit-project-select');
+  if(!sel)return;
+  var{data}=await sb.from('projects').select('id,client_name,status')
+    .neq('status','Approved / Done')
+    .order('client_name');
+  sel.innerHTML='<option value="">Select project...</option>'+(data||[]).map(function(p){
+    return '<option value="'+p.id+'">'+p.client_name+' ('+p.status+')</option>';
+  }).join('');
+}
+
+async function loadApSubmitClientDetails(){
+  var sel=document.getElementById('ap-submit-project-select');
+  if(!sel||!sel.value)return;
+  var{data}=await sb.from('projects').select('*').eq('id',sel.value).maybeSingle();
+  if(!data)return;
+  window._currentApSubmitProject=data;
+  var el=document.getElementById('ap-submit-client-details');
+  if(el){
+    el.innerHTML='<strong style="color:var(--yellow)">'+(data.client_name||'—')+'</strong>'
+      +(data.business_type?'<br>Type: '+data.business_type:'')
+      +(data.product?'<br>Product: '+data.product.substring(0,80)+'...':'')
+      +(data.audience?'<br>Audience: '+data.audience:'')
+      +(data.goal?'<br>Goal: '+data.goal:'')
+      +(data.video_size?'<br>Size: '+data.video_size:'')
+      +(data.color_primary?'<br>Brand color: '+data.color_primary:'');
+  }
+}
+
+function apToggleClientDetails(){
+  var el=document.getElementById('ap-submit-client-details');
+  if(!el)return;
+  if(el.style.display==='none'||!el.style.display){
+    if(!window._currentApSubmitProject){showNotif('Select a project first','error');return;}
+    el.style.display='block';
+    document.getElementById('ap-view-client-btn').textContent='🙈';
+  } else {
+    el.style.display='none';
+    document.getElementById('ap-view-client-btn').textContent='👁';
+  }
+}
+
+async function submitApAndMarkDone(){
+  await submitApOutput(true);
+}
+
+async function submitApOutput(markDone){
+  var submitBtn=document.getElementById('ap-submit-output-btn');
+  var doneBtn=document.getElementById('ap-submit-mark-done-btn');
+  if(submitBtn&&submitBtn.disabled) return; // already submitting — ignore extra clicks
+  var projectId=document.getElementById('ap-submit-project-select')?.value;
+  var url=document.getElementById('ap-submit-output-url')?.value?.trim();
+  var sheetUrl=document.getElementById('ap-submit-output-sheet')?.value?.trim()||'';
+  var type=document.getElementById('ap-submit-output-type')?.value||'video';
+  var notes=document.getElementById('ap-submit-output-notes')?.value?.trim()||'';
+  if(!projectId){showNotif('Select a project first','error');return;}
+  if(!url){showNotif('Paste the Google Drive / Video link','error');return;}
+
+  var submitBtnHtml=submitBtn?submitBtn.innerHTML:'';
+  var doneBtnHtml=doneBtn?doneBtn.innerHTML:'';
+  if(submitBtn){submitBtn.disabled=true;doneBtn&&(doneBtn.disabled=true);submitBtn.innerHTML='<span class="spinner"></span> Submitting...';}
+  else if(doneBtn){doneBtn.disabled=true;doneBtn.innerHTML='<span class="spinner"></span> Submitting...';}
+
+  try{
+    var{data:project}=await sb.from('projects').select('*').eq('id',projectId).maybeSingle();
+    var typeLabels={video:'Video output',image:'Image output',blueprint:'Blueprint PDF',other:'File'};
+    var label=typeLabels[type]||'Output';
+    if(notes)label=label+' — '+notes.substring(0,30);
+    var{error}=await sb.from('project_outputs').insert({
+      project_id:projectId,
+      user_id:currentUser.id,
+      url:url,
+      type:type,
+      label:label
+    });
+    if(error){showNotif('Error: '+error.message,'error');return;}
+    if(sheetUrl){
+      await sb.from('project_outputs').insert({
+        project_id:projectId,
+        user_id:currentUser.id,
+        url:sheetUrl,
+        type:'other',
+        label:'📊 Excel / Sheet'+(notes?' — '+notes.substring(0,20):'')
+      }).catch(function(){});
+    }
+    logActivity('OUTPUT_SUBMITTED',(project?.client_name||'Project')+' — '+type+(sheetUrl?' + Sheet':''));
+    if(markDone){
+      await sb.from('projects').update({status:'Approved / Done',updated_at:new Date().toISOString()}).eq('id',projectId);
+      showNotif('Output submitted + marked Done! ✅','success');
+    } else {
+      await sb.from('projects').update({updated_at:new Date().toISOString()}).eq('id',projectId);
+      showNotif('Output submitted! ✓','success');
+    }
+    await sb.from('notifications').insert({
+      user_id:null,
+      message:'New output submitted: "'+(project?.client_name||'Project')+'" — '+type+(sheetUrl?' + Sheet link':''),
+      type:'output',
+      project_id:projectId,
+      is_read:false
+    }).catch(function(){});
+    document.getElementById('ap-submit-output-url').value='';
+    document.getElementById('ap-submit-output-sheet').value='';
+    document.getElementById('ap-submit-output-notes').value='';
+    document.getElementById('ap-submit-client-details').style.display='none';
+    document.getElementById('ap-view-client-btn').textContent='👁';
+    window._currentApSubmitProject=null;
+    document.getElementById('ap-submit-project-select').value='';
+    loadApSubmitProjectSelect();
+    loadAllProjects();
+    if(currentUserRole==='admin')loadDashboard();
+  } catch(err){
+    showNotif('Error: '+(err?.message||err),'error');
+  } finally {
+    if(submitBtn){submitBtn.disabled=false;submitBtn.innerHTML=submitBtnHtml;}
+    if(doneBtn){doneBtn.disabled=false;doneBtn.innerHTML=doneBtnHtml;}
+  }
 }
 
 // EDITOR PORTAL
