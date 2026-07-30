@@ -1510,7 +1510,7 @@ async function loadClientAnalytics(){
   box.innerHTML='<div style="padding:20px;color:#8a8a95;font-size:11.5px">Loading...</div>';
 
   var[{data:outputs},{data:projects}]=await Promise.all([
-    sb.from('outputs').select('project_id,type,created_at'),
+    sb.from('project_outputs').select('project_id,type,created_at'),
     sb.from('projects').select('id,client_name')
   ]);
   outputs=outputs||[]; projects=projects||[];
@@ -4181,7 +4181,7 @@ async function loadMonthlyOutputSummary(){
 
   var[{data:eds},{data:allOutputs}]=await Promise.all([
     sb.from('profiles').select('id,name,email').eq('role','editor').order('name'),
-    sb.from('outputs').select('user_id,type,created_at')
+    sb.from('project_outputs').select('user_id,type,created_at')
   ]);
   eds=eds||[]; allOutputs=allOutputs||[];
 
@@ -4193,14 +4193,17 @@ async function loadMonthlyOutputSummary(){
     months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:d.toLocaleString('en-PH',{month:'short'})});
   }
 
-  // I-group ang outputs kada editor kada buwan
-  var grid={}; // grid[editorId][monthKey] = count
+  // I-group ang outputs kada editor kada buwan (kasama video/image breakdown)
+  var grid={}; // grid[editorId][monthKey] = {total,video,image}
   allOutputs.forEach(function(o){
     if(!o.user_id||!o.created_at) return;
     var d=new Date(o.created_at);
     var mk=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
     grid[o.user_id]=grid[o.user_id]||{};
-    grid[o.user_id][mk]=(grid[o.user_id][mk]||0)+1;
+    grid[o.user_id][mk]=grid[o.user_id][mk]||{total:0,video:0,image:0};
+    grid[o.user_id][mk].total++;
+    if(o.type==='video') grid[o.user_id][mk].video++;
+    if(o.type==='image') grid[o.user_id][mk].image++;
   });
 
   if(!eds.length){
@@ -4214,15 +4217,17 @@ async function loadMonthlyOutputSummary(){
 
   var rows=eds.map(function(e){
     var perMonth=grid[e.id]||{};
-    var total=0;
+    var total=0,totalVideo=0,totalImage=0;
     var cells=months.map(function(m){
-      var n=perMonth[m.key]||0; total+=n;
-      return '<div style="text-align:center;color:'+(n>0?'#f2f0ea':'#5a5a65')+';font-weight:'+(n>0?'650':'400')+'">'+n+'</div>';
+      var c=perMonth[m.key]||{total:0,video:0,image:0};
+      total+=c.total; totalVideo+=c.video; totalImage+=c.image;
+      var tip='🎬 '+c.video+' video · 🖼️ '+c.image+' image';
+      return '<div title="'+tip+'" style="text-align:center;cursor:default;color:'+(c.total>0?'#f2f0ea':'#5a5a65')+';font-weight:'+(c.total>0?'650':'400')+'">'+c.total+'</div>';
     }).join('');
     return '<div class="table-row" style="grid-template-columns:1.6fr repeat(6,0.7fr) 0.7fr">'
       + '<div><div class="row-name">'+escapeHtml(e.name||e.email)+'</div></div>'
       + cells
-      + '<div style="text-align:center;color:var(--yellow);font-weight:700">'+total+'</div>'
+      + '<div style="text-align:center;color:var(--yellow);font-weight:700" title="🎬 '+totalVideo+' video · 🖼️ '+totalImage+' image">'+total+'</div>'
       + '</div>';
   }).join('');
 
@@ -4248,7 +4253,7 @@ async function loadOutputsTable(){
 
   // Build query
   var query=sb.from('project_outputs')
-    .select('*,profiles(name,email),projects(client_name,status)')
+    .select('*,profiles(name,email),projects(client_name,status,fb_page)')
     .order('created_at',{ascending:false})
     .limit(200);
   if(editorFilter)query=query.eq('user_id',editorFilter);
@@ -4286,18 +4291,19 @@ async function loadOutputsTable(){
     return;
   }
   var typeIcons={video:'🎬',image:'🖼️',blueprint:'📄',other:'📎'};
-  bodyEl.innerHTML=outputs.map(function(o){
+  bodyEl.innerHTML=outputs.map(function(o,i){
     var date=new Date(o.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
     var editor=o.profiles?.name||o.profiles?.email||'Unknown';
     var client=o.projects?.client_name||'—';
     var projStatus=o.projects?.status||'';
+    var fbPage=o.projects?.fb_page||'';
     var icon=typeIcons[o.type]||'📎';
     var shortUrl=o.url.length>40?o.url.substring(0,40)+'...':o.url;
-    return '<div class="table-row" style="grid-template-columns:1.5fr 1.5fr 1fr 1fr 2fr 1fr">'
-      +'<div><div class="row-name">'+editor+'</div></div>'
-      +'<div><div class="row-name">'+client+'</div><div class="row-sub">'+projStatus+'</div></div>'
-      +'<div><span style="font-size:12px">'+icon+' '+o.type+'</span></div>'
-      +'<div>'+statusBadge(projStatus)+'</div>'
+    var rowNum=outputs.length-i; // number ascending from oldest = 1
+    return '<div class="table-row" style="grid-template-columns:0.4fr 1.6fr 1.6fr 2fr 1fr">'
+      +'<div style="color:var(--text3);font-size:11px">'+rowNum+'</div>'
+      +'<div><div class="row-name">'+client+'</div><div class="row-sub">'+icon+' '+o.type+' · '+editor+(projStatus?' · '+projStatus:'')+'</div></div>'
+      +'<div>'+(fbPage?'<a href="'+fbPage+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+fbPage+'</a>':'<span style="color:var(--text3);font-size:11px">—</span>')+'</div>'
       +'<div><a href="'+o.url+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+shortUrl+'</a>'
       +(o.label?'<div style="font-size:10px;color:var(--text3)">'+o.label+'</div>':'')+'</div>'
       +'<div class="row-date">'+date+'</div>'
@@ -4313,17 +4319,18 @@ function exportOutputsCSV(){
     // Better approach - re-fetch from table data
   });
   // Export from current data
-  sb.from('project_outputs').select('*,profiles(name,email),projects(client_name,status)').order('created_at',{ascending:false}).limit(500)
+  sb.from('project_outputs').select('*,profiles(name,email),projects(client_name,status,fb_page)').order('created_at',{ascending:false}).limit(500)
     .then(function({data}){
       var outputs=data||[];
-      var csv=['"Editor","Client","Type","Output URL","Label","Date"'].concat(
-        outputs.map(function(o){
+      var csv=['"#","Client Name","FB Page","Link","Type","Editor","Date Submitted"'].concat(
+        outputs.map(function(o,i){
           return [
-            o.profiles?.name||o.profiles?.email||'',
+            outputs.length-i,
             o.projects?.client_name||'',
-            o.type||'',
+            o.projects?.fb_page||'',
             o.url||'',
-            o.label||'',
+            o.type||'',
+            o.profiles?.name||o.profiles?.email||'',
             o.created_at?new Date(o.created_at).toLocaleDateString('en-PH'):''
           ].map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');
         })
