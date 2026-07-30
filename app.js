@@ -4497,11 +4497,13 @@ async function openUserStatsModal(userId){
 
   // Freebies task rows (assignment placeholders, may or may not have a file yet)
   var freebies=uploads.filter(function(u){return u.is_freebies;});
-  var freebiesDone=freebies.filter(function(f){return f.status==='Done'||f.status==='Published';}).length;
+  var pendingFreebies=freebies.filter(function(f){return !f.file_link;}).length;
 
   // For Upload submissions that actually have a delivered file/link — this is
   // the image creatives team's real output (freebies or otherwise), same idea
-  // as "Submit output" but done through For Upload instead.
+  // as "Submit output" but done through For Upload instead. Freebies aren't a
+  // separate bucket from Images — for this team they're the same work, so we
+  // fold them into one Images number instead of showing two conflicting counts.
   var delivered=uploads.filter(function(u){return u.file_link;});
 
   document.getElementById('us-name').textContent=profile.name||profile.email||'—';
@@ -4514,9 +4516,9 @@ async function openUserStatsModal(userId){
   document.getElementById('us-stats-cards').innerHTML=
     '<div class="stat-card c-yellow"><div class="stat-label">Total outputs</div><div class="stat-val" title="'+outputs.length+' via Submit output + '+delivered.length+' via For Upload">'+grandTotal+'</div></div>'
     +'<div class="stat-card c-purple"><div class="stat-label">Videos</div><div class="stat-val" style="color:var(--purple)">'+totalVideo+'</div></div>'
-    +'<div class="stat-card c-green"><div class="stat-label">Images</div><div class="stat-val" style="color:var(--green)">'+totalImage+'</div></div>'
-    +'<div class="stat-card c-amber"><div class="stat-label">Projects</div><div class="stat-val" style="color:var(--amber)">'+totalProjects+'</div></div>'
-    +(freebies.length?'<div class="stat-card c-green"><div class="stat-label">Freebies done</div><div class="stat-val" style="color:#4ade80" title="'+freebiesDone+' of '+freebies.length+' assigned">'+freebiesDone+' / '+freebies.length+'</div></div>':'');
+    +'<div class="stat-card c-green"><div class="stat-label">Images'+(freebies.length?' / Freebies':'')+'</div><div class="stat-val" style="color:var(--green)">'+totalImage+'</div>'
+    +(pendingFreebies?'<div style="font-size:9px;color:var(--text3);margin-top:2px">+'+pendingFreebies+' freebies task'+(pendingFreebies===1?'':'s')+' pending</div>':'')+'</div>'
+    +'<div class="stat-card c-amber"><div class="stat-label">Projects</div><div class="stat-val" style="color:var(--amber)">'+totalProjects+'</div></div>';
 
   // Monthly breakdown (last 6 months) — merges both sources
   var months=getLast6MonthsList();
