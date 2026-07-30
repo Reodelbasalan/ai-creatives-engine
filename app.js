@@ -4486,41 +4486,52 @@ async function openUserStatsModal(userId){
   document.getElementById('us-monthly-table').innerHTML='<div style="padding:16px;color:var(--text3);font-size:11.5px">Loading...</div>';
   document.getElementById('us-recent-list').innerHTML='';
 
-  var[{data:profile},{data:outputs},{data:freebies}]=await Promise.all([
+  var[{data:profile},{data:outputs},{data:uploads}]=await Promise.all([
     sb.from('profiles').select('*').eq('id',userId).maybeSingle(),
     sb.from('project_outputs').select('*,projects(client_name,fb_page)').eq('user_id',userId).order('created_at',{ascending:false}).limit(300),
-    sb.from('creatives_upload').select('status').eq('owner_id',userId).eq('is_freebies',true)
+    sb.from('creatives_upload').select('*').eq('owner_id',userId).order('created_at',{ascending:false}).limit(300)
   ]);
   outputs=outputs||[];
-  freebies=freebies||[];
+  uploads=uploads||[];
   if(!profile){ document.getElementById('us-name').textContent='Team member not found'; return; }
+
+  // Freebies task rows (assignment placeholders, may or may not have a file yet)
+  var freebies=uploads.filter(function(u){return u.is_freebies;});
+  var freebiesDone=freebies.filter(function(f){return f.status==='Done'||f.status==='Published';}).length;
+
+  // For Upload submissions that actually have a delivered file/link — this is
+  // the image creatives team's real output (freebies or otherwise), same idea
+  // as "Submit output" but done through For Upload instead.
+  var delivered=uploads.filter(function(u){return u.file_link;});
 
   document.getElementById('us-name').textContent=profile.name||profile.email||'—';
   document.getElementById('us-role-badge').innerHTML='<span class="user-role-badge '+(profile.role==='admin'?'role-admin':'role-editor')+'">'+(profile.role||'')+'</span>';
 
   var totalVideo=outputs.filter(function(o){return o.type==='video';}).length;
-  var totalImage=outputs.filter(function(o){return o.type==='image';}).length;
-  var totalProjects=new Set(outputs.map(function(o){return o.project_id;})).size;
-  var freebiesDone=freebies.filter(function(f){return f.status==='Done'||f.status==='Published';}).length;
+  var totalImage=outputs.filter(function(o){return o.type==='image';}).length+delivered.length;
+  var totalProjects=new Set(outputs.map(function(o){return o.project_id;}).concat(delivered.map(function(u){return u.project_id;}))).size;
+  var grandTotal=outputs.length+delivered.length;
   document.getElementById('us-stats-cards').innerHTML=
-    '<div class="stat-card c-yellow"><div class="stat-label">Total outputs</div><div class="stat-val">'+outputs.length+'</div></div>'
+    '<div class="stat-card c-yellow"><div class="stat-label">Total outputs</div><div class="stat-val" title="'+outputs.length+' via Submit output + '+delivered.length+' via For Upload">'+grandTotal+'</div></div>'
     +'<div class="stat-card c-purple"><div class="stat-label">Videos</div><div class="stat-val" style="color:var(--purple)">'+totalVideo+'</div></div>'
     +'<div class="stat-card c-green"><div class="stat-label">Images</div><div class="stat-val" style="color:var(--green)">'+totalImage+'</div></div>'
     +'<div class="stat-card c-amber"><div class="stat-label">Projects</div><div class="stat-val" style="color:var(--amber)">'+totalProjects+'</div></div>'
     +(freebies.length?'<div class="stat-card c-green"><div class="stat-label">Freebies done</div><div class="stat-val" style="color:#4ade80" title="'+freebiesDone+' of '+freebies.length+' assigned">'+freebiesDone+' / '+freebies.length+'</div></div>':'');
 
-  // Monthly breakdown (last 6 months)
+  // Monthly breakdown (last 6 months) — merges both sources
   var months=getLast6MonthsList();
   var perMonth={};
-  outputs.forEach(function(o){
-    if(!o.created_at) return;
-    var d=new Date(o.created_at);
+  function bumpMonth(dateStr,type){
+    if(!dateStr) return;
+    var d=new Date(dateStr);
     var mk=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
     perMonth[mk]=perMonth[mk]||{total:0,video:0,image:0};
     perMonth[mk].total++;
-    if(o.type==='video') perMonth[mk].video++;
-    if(o.type==='image') perMonth[mk].image++;
-  });
+    if(type==='video') perMonth[mk].video++;
+    if(type==='image') perMonth[mk].image++;
+  }
+  outputs.forEach(function(o){ bumpMonth(o.created_at,o.type); });
+  delivered.forEach(function(u){ bumpMonth(u.created_at,'image'); });
   var mHead='<div class="table-head" style="grid-template-columns:repeat(6,1fr)">'
     +months.map(function(m){ return '<span style="text-align:center">'+m.label+'</span>'; }).join('')+'</div>';
   var mRow='<div class="table-row" style="grid-template-columns:repeat(6,1fr)">'
@@ -4531,17 +4542,20 @@ async function openUserStatsModal(userId){
     }).join('')+'</div>';
   document.getElementById('us-monthly-table').innerHTML=mHead+mRow;
 
-  // Recent submissions (last 10)
+  // Recent submissions (last 10) — merged + sorted, each with an Open link
   var typeIcons={video:'🎬',image:'🖼️',blueprint:'📄',other:'📎'};
-  var recent=outputs.slice(0,10);
-  document.getElementById('us-recent-list').innerHTML=recent.length?recent.map(function(o){
-    var date=new Date(o.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
-    var icon=typeIcons[o.type]||'📎';
-    var client=o.projects?.client_name||'—';
+  var combined=outputs.map(function(o){
+    return{created_at:o.created_at,icon:typeIcons[o.type]||'📎',label:o.projects?.client_name||'—',url:o.url};
+  }).concat(delivered.map(function(u){
+    return{created_at:u.created_at,icon:u.is_freebies?'🎁':'🖼️',label:u.client_name||u.project_name||'—',url:u.file_link};
+  })).sort(function(a,b){ return new Date(b.created_at)-new Date(a.created_at); });
+  var recent=combined.slice(0,10);
+  document.getElementById('us-recent-list').innerHTML=recent.length?recent.map(function(r){
+    var date=new Date(r.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
     return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:12px">'
-      +'<span>'+icon+'</span>'
-      +'<span style="flex:1;color:var(--text)">'+client+'</span>'
-      +'<a href="'+o.url+'" target="_blank" style="color:var(--yellow);font-size:11px">Open</a>'
+      +'<span>'+r.icon+'</span>'
+      +'<span style="flex:1;color:var(--text)">'+escapeHtml(r.label)+'</span>'
+      +'<a href="'+r.url+'" target="_blank" style="color:var(--yellow);font-size:11px">Open</a>'
       +'<span style="color:var(--text3);font-size:11px;white-space:nowrap">'+date+'</span>'
       +'</div>';
   }).join(''):'<div style="padding:12px 0;color:var(--text3);font-size:11.5px">No submissions yet.</div>';
