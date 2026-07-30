@@ -4337,6 +4337,9 @@ function toggleClientDetails(){
 }
 
 async function submitEditorOutput(markDone){
+  var submitBtn=document.getElementById('submit-output-btn');
+  var doneBtn=document.getElementById('submit-mark-done-btn');
+  if(submitBtn&&submitBtn.disabled) return; // already submitting — ignore extra clicks
   var projectId=document.getElementById('submit-project-select')?.value;
   var url=document.getElementById('submit-output-url')?.value?.trim();
   var sheetUrl=document.getElementById('submit-output-sheet')?.value?.trim()||'';
@@ -4344,58 +4347,71 @@ async function submitEditorOutput(markDone){
   var notes=document.getElementById('submit-output-notes')?.value?.trim()||'';
   if(!projectId){showNotif('Select a project first','error');return;}
   if(!url){showNotif('Paste the Google Drive / Video link','error');return;}
-  var{data:project}=await sb.from('projects').select('*').eq('id',projectId).maybeSingle();
-  var typeLabels={video:'Video output',image:'Image output',blueprint:'Blueprint PDF',other:'File'};
-  var label=typeLabels[type]||'Output';
-  if(notes)label=label+' — '+notes.substring(0,30);
-  // Save main output (GDrive/video link)
-  var{error}=await sb.from('project_outputs').insert({
-    project_id:projectId,
-    user_id:currentUser.id,
-    url:url,
-    type:type,
-    label:label
-  });
-  if(error){showNotif('Error: '+error.message,'error');return;}
-  // Save sheet link if provided
-  if(sheetUrl){
-    await sb.from('project_outputs').insert({
+
+  var submitBtnOrigHtml=submitBtn?submitBtn.innerHTML:'';
+  var doneBtnOrigHtml=doneBtn?doneBtn.innerHTML:'';
+  if(submitBtn){submitBtn.disabled=true;doneBtn&&(doneBtn.disabled=true);submitBtn.innerHTML='<span class="spinner"></span> Submitting...';}
+  else if(doneBtn){doneBtn.disabled=true;doneBtn.innerHTML='<span class="spinner"></span> Submitting...';}
+
+  try{
+    var{data:project}=await sb.from('projects').select('*').eq('id',projectId).maybeSingle();
+    var typeLabels={video:'Video output',image:'Image output',blueprint:'Blueprint PDF',other:'File'};
+    var label=typeLabels[type]||'Output';
+    if(notes)label=label+' — '+notes.substring(0,30);
+    // Save main output (GDrive/video link)
+    var{error}=await sb.from('project_outputs').insert({
       project_id:projectId,
       user_id:currentUser.id,
-      url:sheetUrl,
-      type:'other',
-      label:'📊 Excel / Sheet'+(notes?' — '+notes.substring(0,20):'')
+      url:url,
+      type:type,
+      label:label
+    });
+    if(error){showNotif('Error: '+error.message,'error');return;}
+    // Save sheet link if provided
+    if(sheetUrl){
+      await sb.from('project_outputs').insert({
+        project_id:projectId,
+        user_id:currentUser.id,
+        url:sheetUrl,
+        type:'other',
+        label:'📊 Excel / Sheet'+(notes?' — '+notes.substring(0,20):'')
+      }).catch(function(){});
+    }
+    // Log activity
+    logActivity('OUTPUT_SUBMITTED',(project?.client_name||'Project')+' — '+type+(sheetUrl?' + Sheet':''));
+    // Mark done if requested — otherwise still touch updated_at so this shows up
+    // in the admin's "All Projects" list/date-filter as fresh activity today
+    if(markDone){
+      await sb.from('projects').update({status:'Approved / Done',updated_at:new Date().toISOString()}).eq('id',projectId);
+      showNotif('Output submitted + marked Done! ✅','success');
+    } else {
+      await sb.from('projects').update({updated_at:new Date().toISOString()}).eq('id',projectId);
+      showNotif('Output submitted! ✓','success');
+    }
+    // Notify admin
+    await sb.from('notifications').insert({
+      user_id:null,
+      message:'New output from editor: "'+(project?.client_name||'Project')+'" — '+type+(sheetUrl?' + Sheet link':''),
+      type:'output',
+      project_id:projectId,
+      is_read:false
     }).catch(function(){});
+    // Clear form
+    document.getElementById('submit-output-url').value='';
+    document.getElementById('submit-output-sheet').value='';
+    document.getElementById('submit-output-notes').value='';
+    document.getElementById('submit-client-details').style.display='none';
+    document.getElementById('view-client-btn').textContent='👁';
+    window._currentSubmitProject=null;
+    // Reload
+    loadEditorRecentOutputs();
+    loadEditorPortal();
+  } catch(err){
+    showNotif('Error: '+(err?.message||err),'error');
+  } finally {
+    if(submitBtn){submitBtn.disabled=false;submitBtn.innerHTML=submitBtnOrigHtml;}
+    if(doneBtn){doneBtn.disabled=false;doneBtn.innerHTML=doneBtnOrigHtml;}
   }
-  // Log activity
-  logActivity('OUTPUT_SUBMITTED',(project?.client_name||'Project')+' — '+type+(sheetUrl?' + Sheet':''));
-  // Mark done if requested — otherwise still touch updated_at so this shows up
-  // in the admin's "All Projects" list/date-filter as fresh activity today
-  if(markDone){
-    await sb.from('projects').update({status:'Approved / Done',updated_at:new Date().toISOString()}).eq('id',projectId);
-    showNotif('Output submitted + marked Done! ✅','success');
-  } else {
-    await sb.from('projects').update({updated_at:new Date().toISOString()}).eq('id',projectId);
-    showNotif('Output submitted! ✓','success');
-  }
-  // Notify admin
-  await sb.from('notifications').insert({
-    user_id:null,
-    message:'New output from editor: "'+(project?.client_name||'Project')+'" — '+type+(sheetUrl?' + Sheet link':''),
-    type:'output',
-    project_id:projectId,
-    is_read:false
-  }).catch(function(){});
-  // Clear form
-  document.getElementById('submit-output-url').value='';
-  document.getElementById('submit-output-sheet').value='';
-  document.getElementById('submit-output-notes').value='';
-  document.getElementById('submit-client-details').style.display='none';
-  document.getElementById('view-client-btn').textContent='👁';
-  window._currentSubmitProject=null;
-  // Reload
-  loadEditorRecentOutputs();
-  loadEditorPortal();
 }
 
 async function submitAndMarkDone(){
@@ -4634,15 +4650,26 @@ async function loadOutputsTable(){
     var icon=typeIcons[o.type]||'📎';
     var shortUrl=o.url.length>40?o.url.substring(0,40)+'...':o.url;
     var rowNum=outputs.length-i; // number ascending from oldest = 1
-    return '<div class="table-row" style="grid-template-columns:0.4fr 1.6fr 1.6fr 2fr 1fr">'
+    return '<div class="table-row" style="grid-template-columns:0.4fr 1.6fr 1.6fr 2fr 1fr 32px">'
       +'<div style="color:var(--text3);font-size:11px">'+rowNum+'</div>'
       +'<div><div class="row-name">'+client+'</div><div class="row-sub">'+icon+' '+o.type+' · '+editor+(projStatus?' · '+projStatus:'')+'</div></div>'
       +'<div>'+(fbPage?'<a href="'+fbPage+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+fbPage+'</a>':'<span style="color:var(--text3);font-size:11px">—</span>')+'</div>'
       +'<div><a href="'+o.url+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+shortUrl+'</a>'
       +(o.label?'<div style="font-size:10px;color:var(--text3)">'+o.label+'</div>':'')+'</div>'
       +'<div class="row-date">'+date+'</div>'
+      +'<div class="proj-row-del" title="Delete (e.g. accidental duplicate)" onclick="deleteOutputRow(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>'
       +'</div>';
   }).join('');
+}
+
+async function deleteOutputRow(id){
+  if(!confirm('Delete this output entry? (Use this to remove accidental duplicate submissions.)'))return;
+  try{
+    await sb.from('project_outputs').delete().eq('id',id);
+    showNotif('Output entry deleted.','success');
+    loadOutputsTable();
+    loadMonthlyOutputSummary();
+  }catch(err){ showNotif('Delete failed: '+(err?.message||err),'error'); }
 }
 
 function exportOutputsCSV(){
