@@ -605,12 +605,25 @@ async function loadDashboard(){
       return '<div class="pipe-card" onclick="openModal(\''+p.id+'\')"><div class="pipe-card-name">'+p.client_name+'</div><div class="pipe-card-type">'+(p.business_type||'')+"</div>"+assignedTag+approveBtn+'<button onclick="quickAssignModal(\''+p.id+'\',event)" style="margin-top:4px;width:100%;background:var(--bg2);border:0.5px solid var(--border2);color:var(--text3);border-radius:4px;padding:3px 6px;font-size:9px;cursor:pointer">👤 '+(p.assigned_to&&editorsMap[p.assigned_to]?'Re-assign':'Assign')+'</button></div>';
     }).join(""):"<div class=\"pipe-empty\">—</div>";
   });
-  document.getElementById('recent-projects-body').innerHTML=allProjects.slice(0,10).map(p=>`
+  var dashDf=document.getElementById('dash-date-from')?.value||'';
+  var dashDt=document.getElementById('dash-date-to')?.value||'';
+  var recentList=allProjects;
+  if(dashDf||dashDt){
+    recentList=allProjects.filter(function(p){
+      var activityDate=p.updated_at||p.created_at;
+      var matchDF=!dashDf||new Date(activityDate)>=new Date(dashDf+'T00:00:00');
+      var matchDT=!dashDt||new Date(activityDate)<=new Date(dashDt+'T23:59:59');
+      return matchDF&&matchDT;
+    });
+  } else {
+    recentList=allProjects.slice(0,10);
+  }
+  document.getElementById('recent-projects-body').innerHTML=recentList.map(p=>`
     <div class="table-row projects-cols" onclick="openModal('${p.id}')">
       <div><div class="row-name">${p.client_name}</div><div class="row-sub">${p.video_size||''} · ${p.language||''} · ${p.goal||''} ${getDeadlineStatus(p.deadline)}</div></div>
       <div class="row-meta">${p.business_type||'—'}</div>
       <div>${statusBadge(p.status)}</div>
-      <div class="row-date">${fmtDate(p.created_at)}</div>
+      <div class="row-date">${fmtDate(p.updated_at||p.created_at)}</div>
     </div>`).join('')||'<div class="table-empty"><div class="table-empty-icon">📋</div><div>No projects yet</div><div style="font-size:11px;margin-top:6px;color:var(--text3)">Click + New project to get started</div></div>';
 }
 
@@ -907,6 +920,28 @@ function outputsDatePreset(kind,btnEl){
   loadOutputsTable();
 }
 
+function dashDatePreset(kind,btnEl){
+  var df=document.getElementById('dash-date-from');
+  var dt=document.getElementById('dash-date-to');
+  if(!df||!dt) return;
+  var range=computeDatePresetRange(kind);
+  df.value=range.from; dt.value=range.to;
+  document.querySelectorAll('#dash-date-presets .proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
+  if(btnEl) btnEl.classList.add('active');
+  updateDashRangeLabel();
+  loadDashboard();
+}
+
+function clearDashboardFilters(){
+  document.getElementById('dash-date-from').value='';
+  document.getElementById('dash-date-to').value='';
+  document.querySelectorAll('#dash-date-presets .proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
+  var allPill=document.querySelector('#dash-date-presets .proj-preset-pill[onclick*="\'all\'"]');
+  if(allPill) allPill.classList.add('active');
+  updateDashRangeLabel();
+  loadDashboard();
+}
+
 function updateRangeLabel(fromId,toId,labelId){
   var df=document.getElementById(fromId)?.value||'';
   var dt=document.getElementById(toId)?.value||'';
@@ -925,6 +960,10 @@ function updateProjRangeLabel(){
 
 function updateOutputsRangeLabel(){
   updateRangeLabel('outputs-date-from','outputs-date-to','outputs-range-label');
+}
+
+function updateDashRangeLabel(){
+  updateRangeLabel('dash-date-from','dash-date-to','dash-range-label');
 }
 
 function filterProjects(){
@@ -972,7 +1011,8 @@ var drState={left:{y:0,m:0},right:{y:0,m:0},from:null,to:null,target:'projects'}
 var DR_MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 var DR_TARGETS={
   projects:{from:'proj-date-from',to:'proj-date-to',label:'proj-range-label',customPill:'proj-preset-custom',presetSelector:'#proj-date-presets .proj-preset-pill',reload:function(){filterProjects();}},
-  outputs:{from:'outputs-date-from',to:'outputs-date-to',label:'outputs-range-label',customPill:'outputs-preset-custom',presetSelector:'#outputs-date-presets .proj-preset-pill',reload:function(){loadOutputsTable();}}
+  outputs:{from:'outputs-date-from',to:'outputs-date-to',label:'outputs-range-label',customPill:'outputs-preset-custom',presetSelector:'#outputs-date-presets .proj-preset-pill',reload:function(){loadOutputsTable();}},
+  dashboard:{from:'dash-date-from',to:'dash-date-to',label:'dash-range-label',customPill:'dash-preset-custom',presetSelector:'#dash-date-presets .proj-preset-pill',reload:function(){loadDashboard();}}
 };
 
 function openDateRangeModal(target){
@@ -4446,11 +4486,13 @@ async function openUserStatsModal(userId){
   document.getElementById('us-monthly-table').innerHTML='<div style="padding:16px;color:var(--text3);font-size:11.5px">Loading...</div>';
   document.getElementById('us-recent-list').innerHTML='';
 
-  var[{data:profile},{data:outputs}]=await Promise.all([
+  var[{data:profile},{data:outputs},{data:freebies}]=await Promise.all([
     sb.from('profiles').select('*').eq('id',userId).maybeSingle(),
-    sb.from('project_outputs').select('*,projects(client_name,fb_page)').eq('user_id',userId).order('created_at',{ascending:false}).limit(300)
+    sb.from('project_outputs').select('*,projects(client_name,fb_page)').eq('user_id',userId).order('created_at',{ascending:false}).limit(300),
+    sb.from('creatives_upload').select('status').eq('owner_id',userId).eq('is_freebies',true)
   ]);
   outputs=outputs||[];
+  freebies=freebies||[];
   if(!profile){ document.getElementById('us-name').textContent='Team member not found'; return; }
 
   document.getElementById('us-name').textContent=profile.name||profile.email||'—';
@@ -4459,11 +4501,13 @@ async function openUserStatsModal(userId){
   var totalVideo=outputs.filter(function(o){return o.type==='video';}).length;
   var totalImage=outputs.filter(function(o){return o.type==='image';}).length;
   var totalProjects=new Set(outputs.map(function(o){return o.project_id;})).size;
+  var freebiesDone=freebies.filter(function(f){return f.status==='Done'||f.status==='Published';}).length;
   document.getElementById('us-stats-cards').innerHTML=
     '<div class="stat-card c-yellow"><div class="stat-label">Total outputs</div><div class="stat-val">'+outputs.length+'</div></div>'
     +'<div class="stat-card c-purple"><div class="stat-label">Videos</div><div class="stat-val" style="color:var(--purple)">'+totalVideo+'</div></div>'
     +'<div class="stat-card c-green"><div class="stat-label">Images</div><div class="stat-val" style="color:var(--green)">'+totalImage+'</div></div>'
-    +'<div class="stat-card c-amber"><div class="stat-label">Projects</div><div class="stat-val" style="color:var(--amber)">'+totalProjects+'</div></div>';
+    +'<div class="stat-card c-amber"><div class="stat-label">Projects</div><div class="stat-val" style="color:var(--amber)">'+totalProjects+'</div></div>'
+    +(freebies.length?'<div class="stat-card c-green"><div class="stat-label">Freebies done</div><div class="stat-val" style="color:#4ade80" title="'+freebiesDone+' of '+freebies.length+' assigned">'+freebiesDone+' / '+freebies.length+'</div></div>':'');
 
   // Monthly breakdown (last 6 months)
   var months=getLast6MonthsList();
@@ -5113,9 +5157,44 @@ function fuToggleForm(){
     wrap.style.maxHeight = '640px'; wrap.style.opacity = '1'; wrap.style.marginBottom = '20px';
     if (btn) btn.style.opacity = '0.55';
     if (typeof fuSyncFormCategory === 'function') fuSyncFormCategory();
+    fuLoadClientOptions();
   } else {
     wrap.style.maxHeight = '0'; wrap.style.opacity = '0'; wrap.style.marginBottom = '0';
     if (btn) btn.style.opacity = '1';
+  }
+}
+
+// Populate the Client select with real clients/projects so freebies
+// submissions link back to the correct project instead of free-typed text
+async function fuLoadClientOptions(){
+  var sel = document.getElementById('fu-client-select');
+  if (!sel || sel.options.length > 2) return; // already loaded once
+  try {
+    var { data:projs } = await sb.from('projects').select('id,client_name').order('client_name');
+    (projs||[]).forEach(function(p){
+      if (!p.client_name) return;
+      var opt = document.createElement('option');
+      opt.value = p.id; opt.textContent = p.client_name;
+      sel.insertBefore(opt, sel.lastElementChild); // keep "Type new" option last
+    });
+  } catch(e){}
+}
+
+function fuClientSelectChange(){
+  var sel = document.getElementById('fu-client-select');
+  var nameInput = document.getElementById('fu-client-name');
+  var pidInput = document.getElementById('fu-client-project-id');
+  if (!sel) return;
+  if (sel.value === '__custom__'){
+    if (nameInput){ nameInput.style.display = 'block'; nameInput.value = ''; nameInput.focus(); }
+    if (pidInput) pidInput.value = '';
+  } else if (sel.value === ''){
+    if (nameInput){ nameInput.style.display = 'none'; nameInput.value = ''; }
+    if (pidInput) pidInput.value = '';
+  } else {
+    var label = sel.options[sel.selectedIndex].textContent;
+    if (nameInput){ nameInput.style.display = 'none'; nameInput.value = label; }
+    if (pidInput) pidInput.value = sel.value;
   }
 }
 
@@ -5192,10 +5271,13 @@ async function loadForUpload(){
 
   var waiting = forUploadState.items.filter(function(c){ return c.status !== 'Published'; }).length;
   var published = forUploadState.items.filter(function(c){ return c.status === 'Published'; }).length;
+  var freebiesDone = forUploadState.items.filter(function(c){ return c.is_freebies && c.status === 'Done'; }).length;
   var wEl = document.getElementById('fu-waiting-count');
   var pEl = document.getElementById('fu-published-count');
+  var fdEl = document.getElementById('fu-freebies-done-count');
   if (wEl) wEl.textContent = waiting;
   if (pEl) pEl.textContent = published;
+  if (fdEl) fdEl.textContent = freebiesDone;
 
   filterForUpload();
 }
@@ -5578,10 +5660,10 @@ function renderForUpload(){
       : '<span style="color:#6a6a75">—</span>';
 
     // ── CAPSULE STATUS DROPDOWN ──
-    var pillColor = isPublished ? '#0f2a1a' : '#2e1215';
-    var pillText  = isPublished ? '#4ade80' : '#f87171';
-    var pillBorder= isPublished ? 'rgba(34,197,94,0.45)' : 'rgba(239,68,68,0.45)';
-    var pillBg    = isPublished ? 'linear-gradient(180deg,rgba(34,197,94,0.22),rgba(34,197,94,0.12))' : 'linear-gradient(180deg,rgba(239,68,68,0.22),rgba(239,68,68,0.12))';
+    var isDone = c.status === 'Done';
+    var pillText  = isPublished ? '#4ade80' : (isDone ? '#facc15' : '#f87171');
+    var pillBorder= isPublished ? 'rgba(34,197,94,0.45)' : (isDone ? 'rgba(250,204,21,0.45)' : 'rgba(239,68,68,0.45)');
+    var pillBg    = isPublished ? 'linear-gradient(180deg,rgba(34,197,94,0.22),rgba(34,197,94,0.12))' : (isDone ? 'linear-gradient(180deg,rgba(250,204,21,0.22),rgba(250,204,21,0.12))' : 'linear-gradient(180deg,rgba(239,68,68,0.22),rgba(239,68,68,0.12))');
     var statusCell =
       '<div class="fu-status-dd" id="fu-sdd-'+c.id+'">'
       + '<button class="fu-status-pill" onclick="fuStatusToggle(\''+c.id+'\')" style="background:'+pillBg+';color:'+pillText+';border:0.5px solid '+pillBorder+'">'
@@ -5591,6 +5673,7 @@ function renderForUpload(){
       + '</button>'
       + '<div class="fu-status-menu">'
       +   '<div class="fu-status-opt" onclick="fuStatusPick(\''+c.id+'\',\'Unpublished\')"><span class="fu-pill-dot" style="background:#f87171"></span>Unpublished</div>'
+      +   '<div class="fu-status-opt" onclick="fuStatusPick(\''+c.id+'\',\'Done\')"><span class="fu-pill-dot" style="background:#facc15"></span>Done</div>'
       +   '<div class="fu-status-opt" onclick="fuStatusPick(\''+c.id+'\',\'Published\')"><span class="fu-pill-dot" style="background:#4ade80"></span>Published</div>'
       + '</div>'
       + (isPublished ? fuCountdown(c.expires_at) : '')
@@ -5673,10 +5756,13 @@ async function fuSetStatus(id, status){
     // update rin ang counts sa header
     var waiting = forUploadState.items.filter(function(c){ return c.status !== 'Published'; }).length;
     var published = forUploadState.items.filter(function(c){ return c.status === 'Published'; }).length;
+    var freebiesDone = forUploadState.items.filter(function(c){ return c.is_freebies && c.status === 'Done'; }).length;
     var wEl = document.getElementById('fu-waiting-count');
     var pEl = document.getElementById('fu-published-count');
+    var fdEl = document.getElementById('fu-freebies-done-count');
     if (wEl) wEl.textContent = waiting;
     if (pEl) pEl.textContent = published;
+    if (fdEl) fdEl.textContent = freebiesDone;
     filterForUpload();
   }
 
@@ -5727,6 +5813,7 @@ async function fuAddCreative(){
     content_type: document.getElementById('fu-page')?.value || 'VIRAL UGC',
     ad_copy: document.getElementById('fu-ad-copy')?.value?.trim() || null,
     client_name: document.getElementById('fu-client-name')?.value?.trim() || null,
+    project_id: document.getElementById('fu-client-project-id')?.value || null,
     category: (typeof fuActiveCat !== 'undefined' && fuActiveCat) ? fuActiveCat : (document.getElementById('fu-category')?.value || null),
     is_freebies: fuTags.freebies,
     is_direct_client: fuTags.direct,
@@ -5747,6 +5834,12 @@ async function fuAddCreative(){
   ['fu-project-name','fu-ad-copy','fu-file-link','fu-headline','fu-client-name'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
+  var clientSel = document.getElementById('fu-client-select');
+  if (clientSel) clientSel.value = '';
+  var clientPid = document.getElementById('fu-client-project-id');
+  if (clientPid) clientPid.value = '';
+  var clientNameEl = document.getElementById('fu-client-name');
+  if (clientNameEl) clientNameEl.style.display = 'none';
   fuToggleForm();
   loadForUpload();
 }
