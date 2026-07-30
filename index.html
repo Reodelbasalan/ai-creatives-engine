@@ -1745,7 +1745,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <span id="bulk-count" style="font-size:12px;color:var(--yellow);font-weight:600">0 selected</span>
           <button class="ghost-btn" onclick="bulkApprove()" style="font-size:11px;color:var(--green);border-color:rgba(34,197,94,0.3)">✓ Approve all</button>
           <button class="ghost-btn" onclick="bulkAssign()" style="font-size:11px;color:var(--purple);border-color:rgba(127,119,221,0.3)">👤 Assign all</button>
-          <button class="ghost-btn admin-only" onclick="bulkDelete()" style="font-size:11px;color:var(--red);border-color:rgba(239,68,68,0.2)">🗑 Delete all</button>
+          <button class="ghost-btn" onclick="bulkDelete()" style="font-size:11px;color:var(--red);border-color:rgba(239,68,68,0.2)">🗑 Delete all</button>
           <button class="ghost-btn" onclick="clearSelection()" style="font-size:11px;margin-left:auto">✕ Clear</button>
         </div>
         <div class="data-table">
@@ -1763,12 +1763,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div id="editor-projects-body"></div>
 
             <div class="section-label" style="margin:22px 0 1rem">My freebies tasks</div>
-            <div class="data-table" style="overflow-x:auto">
-              <div class="table-head" style="grid-template-columns:0.4fr 1.6fr 1.6fr 2fr 1fr 1.2fr">
-                <span>#</span><span>Client Name</span><span>FB Page</span><span>Link</span><span>Date Submit</span><span>Status</span>
-              </div>
-              <div id="editor-freebies-body"></div>
-            </div>
+            <div id="editor-freebies-body"></div>
           </div>
           <!-- RIGHT: Submit Output -->
           <div>
@@ -5164,5 +5159,7 @@ function dsgUpdateProgress() {
 
 </script>
 
+<!-- AdFlow Licences sidebar — all logic in this one file -->
+<script src="/adflow-sidebar.js"></script>
 </body>
 </html>
