@@ -424,7 +424,7 @@ function showPage(page){
   if(page==='users')loadUsers();
   if(page==='dashboard')loadDashboard();
   if(page==='analytics')loadAnalytics();
-  if(page==='outputs'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadOutputsTable();}
+  if(page==='outputs'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadOutputsTable();loadMonthlyOutputSummary();}
   if(page==='clients')loadClients();
   if(page==='for-upload')loadForUpload();
   if(page==='activity')loadActivityLog();
@@ -1504,6 +1504,48 @@ function exportPDF(){
 }
 
 // ANALYTICS
+async function loadClientAnalytics(){
+  var box=document.getElementById('analytics-clients');
+  if(!box) return;
+  box.innerHTML='<div style="padding:20px;color:#8a8a95;font-size:11.5px">Loading...</div>';
+
+  var[{data:outputs},{data:projects}]=await Promise.all([
+    sb.from('outputs').select('project_id,type,created_at'),
+    sb.from('projects').select('id,client_name')
+  ]);
+  outputs=outputs||[]; projects=projects||[];
+
+  var clientMap={};
+  projects.forEach(function(p){ clientMap[p.id]=p.client_name||'Unnamed client'; });
+
+  var stats={}; // stats[clientName] = {video, image, total, last}
+  outputs.forEach(function(o){
+    var name=clientMap[o.project_id]||'Unknown client';
+    if(!stats[name]) stats[name]={video:0,image:0,total:0,last:null};
+    stats[name].total++;
+    if(o.type==='video') stats[name].video++;
+    if(o.type==='image') stats[name].image++;
+    if(!stats[name].last || new Date(o.created_at)>new Date(stats[name].last)) stats[name].last=o.created_at;
+  });
+
+  var names=Object.keys(stats).sort(function(a,b){ return stats[b].total-stats[a].total; });
+  if(!names.length){
+    box.innerHTML='<div class="table-empty"><div class="table-empty-icon">📊</div>No client outputs yet.</div>';
+    return;
+  }
+  box.innerHTML=names.map(function(name){
+    var s=stats[name];
+    var lastStr=s.last?new Date(s.last).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'—';
+    return '<div class="table-row" style="grid-template-columns:2fr 0.8fr 0.8fr 0.8fr 1fr">'
+      + '<div><div class="row-name">'+escapeHtml(name)+'</div></div>'
+      + '<div style="text-align:center;color:var(--purple)">'+s.video+'</div>'
+      + '<div style="text-align:center;color:var(--green)">'+s.image+'</div>'
+      + '<div style="text-align:center;color:var(--yellow);font-weight:700">'+s.total+'</div>'
+      + '<div class="row-date">'+lastStr+'</div>'
+      + '</div>';
+  }).join('');
+}
+
 async function loadAnalytics(){
   var monthFilter=document.getElementById('analytics-month-filter')?.value||'';
   var aFrom=document.getElementById('analytics-date-from')?.value||'';
@@ -1550,6 +1592,8 @@ async function loadAnalytics(){
       <div style="font-size:10px;color:var(--text3);min-width:28px">${pct}%</div>
     </div>`;
   }).join('');
+
+  loadClientAnalytics();
 
   // Load performance scores
   var perfData=await loadEditorPerformance();
@@ -4129,6 +4173,61 @@ async function submitAndMarkDone(){
 // ═══════════════════════════════════════
 // ADMIN OUTPUTS TABLE
 // ═══════════════════════════════════════
+
+async function loadMonthlyOutputSummary(){
+  var box=document.getElementById('monthly-output-table');
+  if(!box) return;
+  box.innerHTML='<div style="padding:20px;color:#8a8a95;font-size:11.5px">Loading...</div>';
+
+  var[{data:eds},{data:allOutputs}]=await Promise.all([
+    sb.from('profiles').select('id,name,email').eq('role','editor').order('name'),
+    sb.from('outputs').select('user_id,type,created_at')
+  ]);
+  eds=eds||[]; allOutputs=allOutputs||[];
+
+  // Bumuo ng last 6 months rolling papuntang kasalukuyan (halimbawa: Mar–Aug)
+  var now=new Date();
+  var months=[];
+  for(var i=5;i>=0;i--){
+    var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:d.toLocaleString('en-PH',{month:'short'})});
+  }
+
+  // I-group ang outputs kada editor kada buwan
+  var grid={}; // grid[editorId][monthKey] = count
+  allOutputs.forEach(function(o){
+    if(!o.user_id||!o.created_at) return;
+    var d=new Date(o.created_at);
+    var mk=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    grid[o.user_id]=grid[o.user_id]||{};
+    grid[o.user_id][mk]=(grid[o.user_id][mk]||0)+1;
+  });
+
+  if(!eds.length){
+    box.innerHTML='<div class="table-empty"><div class="table-empty-icon">📊</div>No editors yet.</div>';
+    return;
+  }
+
+  var headCells=months.map(function(m){ return '<span style="text-align:center">'+m.label+'</span>'; }).join('');
+  var head='<div class="table-head" style="grid-template-columns:1.6fr repeat(6,0.7fr) 0.7fr">'
+    + '<span>Editor</span>'+headCells+'<span style="text-align:center">Total</span></div>';
+
+  var rows=eds.map(function(e){
+    var perMonth=grid[e.id]||{};
+    var total=0;
+    var cells=months.map(function(m){
+      var n=perMonth[m.key]||0; total+=n;
+      return '<div style="text-align:center;color:'+(n>0?'#f2f0ea':'#5a5a65')+';font-weight:'+(n>0?'650':'400')+'">'+n+'</div>';
+    }).join('');
+    return '<div class="table-row" style="grid-template-columns:1.6fr repeat(6,0.7fr) 0.7fr">'
+      + '<div><div class="row-name">'+escapeHtml(e.name||e.email)+'</div></div>'
+      + cells
+      + '<div style="text-align:center;color:var(--yellow);font-weight:700">'+total+'</div>'
+      + '</div>';
+  }).join('');
+
+  box.innerHTML=head+rows;
+}
 
 async function loadOutputsTable(){
   var editorFilter=document.getElementById('outputs-editor-filter')?.value||'';
