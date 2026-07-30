@@ -859,48 +859,72 @@ function projFmtDate(d){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
+function computeDatePresetRange(kind){
+  var now=new Date();
+  var nDaysMatch=/^(\d+)d$/.exec(kind);
+  if(kind==='today'){
+    return{from:projFmtDate(now),to:projFmtDate(now)};
+  } else if(kind==='yesterday'){
+    var y=new Date(now); y.setDate(now.getDate()-1);
+    return{from:projFmtDate(y),to:projFmtDate(y)};
+  } else if(nDaysMatch){
+    var n=parseInt(nDaysMatch[1],10);
+    var start=new Date(now); start.setDate(now.getDate()-(n-1));
+    return{from:projFmtDate(start),to:projFmtDate(now)};
+  } else if(kind==='month'){
+    var start2=new Date(now.getFullYear(),now.getMonth(),1);
+    var end2=new Date(now.getFullYear(),now.getMonth()+1,0);
+    return{from:projFmtDate(start2),to:projFmtDate(end2)};
+  } else if(kind==='lastmonth'){
+    var start3=new Date(now.getFullYear(),now.getMonth()-1,1);
+    var end3=new Date(now.getFullYear(),now.getMonth(),0);
+    return{from:projFmtDate(start3),to:projFmtDate(end3)};
+  }
+  return{from:'',to:''};
+}
+
 function projDatePreset(kind,btnEl){
   var df=document.getElementById('proj-date-from');
   var dt=document.getElementById('proj-date-to');
   if(!df||!dt) return;
-  var now=new Date();
-  var nDaysMatch=/^(\d+)d$/.exec(kind);
-  if(kind==='today'){
-    df.value=projFmtDate(now); dt.value=projFmtDate(now);
-  } else if(kind==='yesterday'){
-    var y=new Date(now); y.setDate(now.getDate()-1);
-    df.value=projFmtDate(y); dt.value=projFmtDate(y);
-  } else if(nDaysMatch){
-    var n=parseInt(nDaysMatch[1],10);
-    var start=new Date(now); start.setDate(now.getDate()-(n-1));
-    df.value=projFmtDate(start); dt.value=projFmtDate(now);
-  } else if(kind==='month'){
-    var start2=new Date(now.getFullYear(),now.getMonth(),1);
-    var end2=new Date(now.getFullYear(),now.getMonth()+1,0);
-    df.value=projFmtDate(start2); dt.value=projFmtDate(end2);
-  } else if(kind==='lastmonth'){
-    var start3=new Date(now.getFullYear(),now.getMonth()-1,1);
-    var end3=new Date(now.getFullYear(),now.getMonth(),0);
-    df.value=projFmtDate(start3); dt.value=projFmtDate(end3);
-  } else {
-    df.value=''; dt.value='';
-  }
-  document.querySelectorAll('.proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
+  var range=computeDatePresetRange(kind);
+  df.value=range.from; dt.value=range.to;
+  document.querySelectorAll('#proj-date-presets .proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
   if(btnEl) btnEl.classList.add('active');
   updateProjRangeLabel();
   filterProjects();
 }
 
-function updateProjRangeLabel(){
-  var df=document.getElementById('proj-date-from')?.value||'';
-  var dt=document.getElementById('proj-date-to')?.value||'';
-  var el=document.getElementById('proj-range-label');
+function outputsDatePreset(kind,btnEl){
+  var df=document.getElementById('outputs-date-from');
+  var dt=document.getElementById('outputs-date-to');
+  if(!df||!dt) return;
+  var range=computeDatePresetRange(kind);
+  df.value=range.from; dt.value=range.to;
+  document.querySelectorAll('#outputs-date-presets .proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
+  if(btnEl) btnEl.classList.add('active');
+  updateOutputsRangeLabel();
+  loadOutputsTable();
+}
+
+function updateRangeLabel(fromId,toId,labelId){
+  var df=document.getElementById(fromId)?.value||'';
+  var dt=document.getElementById(toId)?.value||'';
+  var el=document.getElementById(labelId);
   if(!el) return;
   if(!df&&!dt){ el.textContent='All time'; return; }
   var from=df||dt, to=dt||df;
   var days=Math.round((new Date(to+'T00:00:00')-new Date(from+'T00:00:00'))/86400000)+1;
   var fmt=function(s){ var d=new Date(s+'T00:00:00'); return d.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}); };
   el.textContent=(from===to?fmt(from):fmt(from)+' → '+fmt(to))+' ('+days+'d)';
+}
+
+function updateProjRangeLabel(){
+  updateRangeLabel('proj-date-from','proj-date-to','proj-range-label');
+}
+
+function updateOutputsRangeLabel(){
+  updateRangeLabel('outputs-date-from','outputs-date-to','outputs-range-label');
 }
 
 function filterProjects(){
@@ -932,8 +956,8 @@ function clearProjectFilters(){
   });
   document.getElementById('filter-status').value='';
   document.getElementById('filter-priority').value='';
-  document.querySelectorAll('.proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
-  var allPill=document.querySelector('.proj-preset-pill[onclick*="\'all\'"]');
+  document.querySelectorAll('#proj-date-presets .proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
+  var allPill=document.querySelector('#proj-date-presets .proj-preset-pill[onclick*="\'all\'"]');
   if(allPill) allPill.classList.add('active');
   updateProjRangeLabel();
   filterProjects();
@@ -941,13 +965,21 @@ function clearProjectFilters(){
 
 // ═══════════════════════════════════════
 // CUSTOM DATE RANGE MODAL (calendar picker)
+// Shared by All Projects and Outputs pages — DR_TARGETS keys which
+// inputs/label/preset-group/reload-fn to use for each context.
 // ═══════════════════════════════════════
-var drState={left:{y:0,m:0},right:{y:0,m:0},from:null,to:null};
+var drState={left:{y:0,m:0},right:{y:0,m:0},from:null,to:null,target:'projects'};
 var DR_MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var DR_TARGETS={
+  projects:{from:'proj-date-from',to:'proj-date-to',label:'proj-range-label',customPill:'proj-preset-custom',presetSelector:'#proj-date-presets .proj-preset-pill',reload:function(){filterProjects();}},
+  outputs:{from:'outputs-date-from',to:'outputs-date-to',label:'outputs-range-label',customPill:'outputs-preset-custom',presetSelector:'#outputs-date-presets .proj-preset-pill',reload:function(){loadOutputsTable();}}
+};
 
-function openDateRangeModal(){
-  var df=document.getElementById('proj-date-from')?.value||'';
-  var dt=document.getElementById('proj-date-to')?.value||'';
+function openDateRangeModal(target){
+  drState.target=target||'projects';
+  var cfg=DR_TARGETS[drState.target];
+  var df=document.getElementById(cfg.from)?.value||'';
+  var dt=document.getElementById(cfg.to)?.value||'';
   var base=df?new Date(df+'T00:00:00'):new Date();
   drState.from=df||null;
   drState.to=dt||null;
@@ -1066,14 +1098,15 @@ function renderDrAll(){
 function applyDateRangeModal(){
   if(!drState.from){ showNotif('Pick a date range first','error'); return; }
   var to=drState.to||drState.from;
-  document.getElementById('proj-date-from').value=drState.from;
-  document.getElementById('proj-date-to').value=to;
-  document.querySelectorAll('.proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
-  var customPill=document.getElementById('proj-preset-custom');
+  var cfg=DR_TARGETS[drState.target||'projects'];
+  document.getElementById(cfg.from).value=drState.from;
+  document.getElementById(cfg.to).value=to;
+  document.querySelectorAll(cfg.presetSelector).forEach(function(p){ p.classList.remove('active'); });
+  var customPill=document.getElementById(cfg.customPill);
   if(customPill) customPill.classList.add('active');
-  updateProjRangeLabel();
+  updateRangeLabel(cfg.from,cfg.to,cfg.label);
   closeDateRangeModal();
-  filterProjects();
+  cfg.reload();
 }
 
 function renderProjectsTable(projects){
@@ -1195,11 +1228,11 @@ async function markInProduction(id){
 async function loadUsers(){
   const{data}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
   document.getElementById('users-body').innerHTML=(data||[]).length?(data).map(u=>`
-    <div class="table-row user-table-cols">
+    <div class="table-row user-table-cols" style="cursor:pointer" onclick="openUserStatsModal('${u.id}')" title="View output stats">
       <div><div class="row-name">${u.name||'—'}</div><div class="row-sub">${u.email||''}</div></div>
       <div><span class="user-role-badge ${u.role==='admin'?'role-admin':'role-editor'}">${u.role}</span></div>
       <div class="row-date">${fmtDate(u.created_at)}</div>
-      <div><button class="ghost-btn" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:rgba(239,68,68,0.2)" onclick="deleteUser('${u.id}')">Remove</button></div>
+      <div><button class="ghost-btn" style="font-size:11px;padding:4px 10px;color:var(--red);border-color:rgba(239,68,68,0.2)" onclick="event.stopPropagation();deleteUser('${u.id}')">Remove</button></div>
     </div>`).join(''):'<div class="table-empty">No team members yet.</div>';
 }
 
@@ -4333,6 +4366,16 @@ async function submitAndMarkDone(){
 // ADMIN OUTPUTS TABLE
 // ═══════════════════════════════════════
 
+function getLast6MonthsList(){
+  var now=new Date();
+  var months=[];
+  for(var i=5;i>=0;i--){
+    var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:d.toLocaleString('en-PH',{month:'short'})});
+  }
+  return months;
+}
+
 async function loadMonthlyOutputSummary(){
   var box=document.getElementById('monthly-output-table');
   if(!box) return;
@@ -4345,12 +4388,7 @@ async function loadMonthlyOutputSummary(){
   eds=eds||[]; allOutputs=allOutputs||[];
 
   // Bumuo ng last 6 months rolling papuntang kasalukuyan (halimbawa: Mar–Aug)
-  var now=new Date();
-  var months=[];
-  for(var i=5;i>=0;i--){
-    var d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:d.toLocaleString('en-PH',{month:'short'})});
-  }
+  var months=getLast6MonthsList();
 
   // I-group ang outputs kada editor kada buwan (kasama video/image breakdown)
   var grid={}; // grid[editorId][monthKey] = {total,video,image}
@@ -4384,7 +4422,7 @@ async function loadMonthlyOutputSummary(){
       return '<div title="'+tip+'" style="text-align:center;cursor:default;color:'+(c.total>0?'#f2f0ea':'#5a5a65')+';font-weight:'+(c.total>0?'650':'400')+'">'+c.total+'</div>';
     }).join('');
     return '<div class="table-row" style="grid-template-columns:1.6fr repeat(6,0.7fr) 0.7fr">'
-      + '<div><div class="row-name">'+escapeHtml(e.name||e.email)+'</div></div>'
+      + '<div><div class="row-name" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent" onmouseover="this.style.textDecorationColor=\'var(--yellow)\'" onmouseout="this.style.textDecorationColor=\'transparent\'" onclick="openUserStatsModal(\''+e.id+'\')">'+escapeHtml(e.name||e.email)+'</div></div>'
       + cells
       + '<div style="text-align:center;color:var(--yellow);font-weight:700" title="🎬 '+totalVideo+' video · 🖼️ '+totalImage+' image">'+total+'</div>'
       + '</div>';
@@ -4393,11 +4431,88 @@ async function loadMonthlyOutputSummary(){
   box.innerHTML=head+rows;
 }
 
+// ═══════════════════════════════════════
+// PER-EDITOR STATS MODAL — click an editor/graphics team member
+// (Team members page, or Monthly output summary name) to see their
+// personal total output, monthly breakdown, and recent submissions.
+// ═══════════════════════════════════════
+async function openUserStatsModal(userId){
+  var modal=document.getElementById('user-stats-modal');
+  if(!modal) return;
+  modal.classList.add('open');
+  document.getElementById('us-name').textContent='Loading...';
+  document.getElementById('us-role-badge').textContent='';
+  document.getElementById('us-stats-cards').innerHTML='';
+  document.getElementById('us-monthly-table').innerHTML='<div style="padding:16px;color:var(--text3);font-size:11.5px">Loading...</div>';
+  document.getElementById('us-recent-list').innerHTML='';
+
+  var[{data:profile},{data:outputs}]=await Promise.all([
+    sb.from('profiles').select('*').eq('id',userId).maybeSingle(),
+    sb.from('project_outputs').select('*,projects(client_name,fb_page)').eq('user_id',userId).order('created_at',{ascending:false}).limit(300)
+  ]);
+  outputs=outputs||[];
+  if(!profile){ document.getElementById('us-name').textContent='Team member not found'; return; }
+
+  document.getElementById('us-name').textContent=profile.name||profile.email||'—';
+  document.getElementById('us-role-badge').innerHTML='<span class="user-role-badge '+(profile.role==='admin'?'role-admin':'role-editor')+'">'+(profile.role||'')+'</span>';
+
+  var totalVideo=outputs.filter(function(o){return o.type==='video';}).length;
+  var totalImage=outputs.filter(function(o){return o.type==='image';}).length;
+  var totalProjects=new Set(outputs.map(function(o){return o.project_id;})).size;
+  document.getElementById('us-stats-cards').innerHTML=
+    '<div class="stat-card c-yellow"><div class="stat-label">Total outputs</div><div class="stat-val">'+outputs.length+'</div></div>'
+    +'<div class="stat-card c-purple"><div class="stat-label">Videos</div><div class="stat-val" style="color:var(--purple)">'+totalVideo+'</div></div>'
+    +'<div class="stat-card c-green"><div class="stat-label">Images</div><div class="stat-val" style="color:var(--green)">'+totalImage+'</div></div>'
+    +'<div class="stat-card c-amber"><div class="stat-label">Projects</div><div class="stat-val" style="color:var(--amber)">'+totalProjects+'</div></div>';
+
+  // Monthly breakdown (last 6 months)
+  var months=getLast6MonthsList();
+  var perMonth={};
+  outputs.forEach(function(o){
+    if(!o.created_at) return;
+    var d=new Date(o.created_at);
+    var mk=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    perMonth[mk]=perMonth[mk]||{total:0,video:0,image:0};
+    perMonth[mk].total++;
+    if(o.type==='video') perMonth[mk].video++;
+    if(o.type==='image') perMonth[mk].image++;
+  });
+  var mHead='<div class="table-head" style="grid-template-columns:repeat(6,1fr)">'
+    +months.map(function(m){ return '<span style="text-align:center">'+m.label+'</span>'; }).join('')+'</div>';
+  var mRow='<div class="table-row" style="grid-template-columns:repeat(6,1fr)">'
+    +months.map(function(m){
+      var c=perMonth[m.key]||{total:0,video:0,image:0};
+      var tip='🎬 '+c.video+' video · 🖼️ '+c.image+' image';
+      return '<div title="'+tip+'" style="text-align:center;color:'+(c.total>0?'#f2f0ea':'#5a5a65')+';font-weight:'+(c.total>0?'650':'400')+'">'+c.total+'</div>';
+    }).join('')+'</div>';
+  document.getElementById('us-monthly-table').innerHTML=mHead+mRow;
+
+  // Recent submissions (last 10)
+  var typeIcons={video:'🎬',image:'🖼️',blueprint:'📄',other:'📎'};
+  var recent=outputs.slice(0,10);
+  document.getElementById('us-recent-list').innerHTML=recent.length?recent.map(function(o){
+    var date=new Date(o.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
+    var icon=typeIcons[o.type]||'📎';
+    var client=o.projects?.client_name||'—';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:12px">'
+      +'<span>'+icon+'</span>'
+      +'<span style="flex:1;color:var(--text)">'+client+'</span>'
+      +'<a href="'+o.url+'" target="_blank" style="color:var(--yellow);font-size:11px">Open</a>'
+      +'<span style="color:var(--text3);font-size:11px;white-space:nowrap">'+date+'</span>'
+      +'</div>';
+  }).join(''):'<div style="padding:12px 0;color:var(--text3);font-size:11.5px">No submissions yet.</div>';
+}
+
+function closeUserStatsModal(){
+  document.getElementById('user-stats-modal').classList.remove('open');
+}
+
 async function loadOutputsTable(){
   var editorFilter=document.getElementById('outputs-editor-filter')?.value||'';
   var typeFilter=document.getElementById('outputs-type-filter')?.value||'';
   var dateFrom=document.getElementById('outputs-date-from')?.value||'';
   var dateTo=document.getElementById('outputs-date-to')?.value||'';
+  updateOutputsRangeLabel();
 
   // Load editors for filter dropdown
   var filterEl=document.getElementById('outputs-editor-filter');
