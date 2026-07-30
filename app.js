@@ -72,44 +72,82 @@ async function loadOutputs(projectId){
       +'<a href="'+o.url+'" target="_blank" style="font-size:12px;color:var(--yellow);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">'+o.label+'</a>'
       +'<div style="font-size:10px;color:var(--text3)">'+o.type+' · '+date+'</div>'
       +'</div>'
-      +'<button data-oid="'+o.id+'" class="del-output-btn" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:2px 6px">✕</button>'
+      +'<button onclick="deleteOutput(\''+o.id+'\')" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:2px 6px">✕</button>'
       +'</div>';
   }).join('');
 }
 
-async function addOutput(){
+async function addOutput(markDone){
   if(!currentProjectId)return;
+  var submitBtn=document.getElementById('modal-submit-output-btn');
+  var doneBtn=document.getElementById('modal-submit-done-btn');
+  if(submitBtn&&submitBtn.disabled) return; // already submitting — ignore extra clicks
   var url=document.getElementById('output-url-input')?.value?.trim();
+  var sheetUrl=document.getElementById('output-sheet-input')?.value?.trim()||'';
   var type=document.getElementById('output-type-select')?.value||'video';
+  var notes=document.getElementById('output-notes-input')?.value?.trim()||'';
   if(!url){showNotif('Paste a URL first','error');return;}
-  var typeLabels={video:'Video output',image:'Image output',blueprint:'Blueprint PDF',other:'File'};
-  var label=typeLabels[type]||'Output';
-  var{error}=await sb.from('project_outputs').insert({
-    project_id:currentProjectId,
-    user_id:currentUser.id,
-    url:url,type:type,label:label
-  });
-  if(error){showNotif('Error: '+error.message,'error');return;}
-  document.getElementById('output-url-input').value='';
-  showNotif('Output added! ✓','success');
-  loadOutputs(currentProjectId);
-  logActivity('OUTPUT_ADDED',label);
-  // Attach delete handlers
-  setTimeout(function(){
-    document.querySelectorAll('.del-output-btn').forEach(function(btn){
-      btn.addEventListener('click',function(){deleteOutput(this.dataset.oid);});
-    });
-  },200);
-  // Auto notify client if project has client_id
-  var project=allProjects.find(function(p){return p.id===currentProjectId;});
-  if(project?.client_id){
-    await sb.from('notifications').insert({
-      user_id:project.client_id,
-      message:'Your project "'+project.client_name+'" has a new '+type+' output ready!',
-      type:'output',
+
+  var submitBtnHtml=submitBtn?submitBtn.innerHTML:'';
+  var doneBtnHtml=doneBtn?doneBtn.innerHTML:'';
+  if(submitBtn){submitBtn.disabled=true;submitBtn.innerHTML='<span class="spinner"></span> Submitting...';}
+  if(doneBtn)doneBtn.disabled=true;
+
+  try{
+    var typeLabels={video:'Video output',image:'Image output',blueprint:'Blueprint PDF',other:'File'};
+    var label=typeLabels[type]||'Output';
+    if(notes)label=label+' — '+notes.substring(0,30);
+    var{error}=await sb.from('project_outputs').insert({
       project_id:currentProjectId,
-      is_read:false
-    }).then(function(){},function(){});
+      user_id:currentUser.id,
+      url:url,type:type,label:label
+    });
+    if(error){showNotif('Error: '+error.message,'error');return;}
+    if(sheetUrl){
+      await sb.from('project_outputs').insert({
+        project_id:currentProjectId,
+        user_id:currentUser.id,
+        url:sheetUrl,type:'other',
+        label:'📊 Excel / Sheet'+(notes?' — '+notes.substring(0,20):'')
+      }).catch(function(){});
+    }
+    logActivity('OUTPUT_ADDED',label);
+    // Mark done if requested — otherwise still touch updated_at so this shows
+    // up in All Projects' date-filter/list as fresh activity today
+    var project=allProjects.find(function(p){return p.id===currentProjectId;});
+    if(markDone){
+      await sb.from('projects').update({status:'Approved / Done',updated_at:new Date().toISOString()}).eq('id',currentProjectId);
+      showNotif('Output submitted + marked Done! ✅','success');
+    } else {
+      await sb.from('projects').update({updated_at:new Date().toISOString()}).eq('id',currentProjectId);
+      showNotif('Output added! ✓','success');
+    }
+    document.getElementById('output-url-input').value='';
+    document.getElementById('output-sheet-input').value='';
+    document.getElementById('output-notes-input').value='';
+    loadOutputs(currentProjectId);
+    // Auto notify client if project has client_id
+    if(project?.client_id){
+      await sb.from('notifications').insert({
+        user_id:project.client_id,
+        message:'Your project "'+project.client_name+'" has a new '+type+' output ready!',
+        type:'output',
+        project_id:currentProjectId,
+        is_read:false
+      }).then(function(){},function(){});
+    }
+    // Refresh lists so the completed client's details show up right away
+    loadAllProjects();
+    if(currentUserRole==='admin')loadDashboard();
+    if(markDone){
+      var statusSel=document.getElementById('modal-status-select');
+      if(statusSel)statusSel.value='Approved / Done';
+    }
+  } catch(err){
+    showNotif('Error: '+(err?.message||err),'error');
+  } finally {
+    if(submitBtn){submitBtn.disabled=false;submitBtn.innerHTML=submitBtnHtml;}
+    if(doneBtn){doneBtn.disabled=false;doneBtn.innerHTML=doneBtnHtml;}
   }
 }
 
