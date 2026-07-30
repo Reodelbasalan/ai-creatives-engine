@@ -1029,6 +1029,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 #nav-social:hover{color:#22d3ee;background:rgba(34,211,238,0.07)}
 #nav-social.active{color:#22d3ee;background:rgba(34,211,238,0.1);border:0.5px solid rgba(34,211,238,0.35);font-weight:600}
 #nav-social.active::before{background:#22d3ee;box-shadow:0 0 8px #22d3ee}
+#nav-adflow svg{color:#ffcc00}
+#nav-adflow{color:rgba(255,204,0,0.78)}
+#nav-adflow:hover{color:#ffcc00;background:rgba(255,204,0,0.07)}
+#nav-adflow.active{color:#ffcc00;background:rgba(255,204,0,0.1);border:0.5px solid rgba(255,204,0,0.35);font-weight:600}
+#nav-adflow.active::before{background:#ffcc00;box-shadow:0 0 8px #ffcc00}
 #nav-activity svg{color:#fbbf24}
 #nav-activity{color:rgba(251,191,36,0.78)}
 #nav-activity:hover{color:#fbbf24;background:rgba(251,191,36,0.07)}
@@ -1376,6 +1381,10 @@ body {
       <div class="nav-item" onclick="showPage('social')" id="nav-social">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Social Posting
+      </div>
+      <div class="nav-item admin-only" onclick="showPage('adflow')" id="nav-adflow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.6 17.4A2 2 0 002 18.8V21a1 1 0 001 1h3a1 1 0 001-1v-1a1 1 0 011-1h1a1 1 0 001-1v-1a1 1 0 011-1h.2a2 2 0 001.4-.6l.8-.8a6.5 6.5 0 10-4-4z"/><circle cx="16.5" cy="7.5" r="0.6" fill="currentColor" stroke="none"/></svg>
+        AdFlow Licences
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -2281,6 +2290,11 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       </div>
 
       <!-- EXTENSIONS PAGE -->
+      <!-- AdFlow Licences — the dashboard itself lives at /adflow-admin.html -->
+      <div class="page" id="page-adflow">
+        <iframe id="adflow-frame" title="AdFlow Licences"
+                style="width:100%;height:calc(100vh - 132px);min-height:560px;border:0;border-radius:14px;background:#07080a;display:block"></iframe>
+      </div>
       <div class="page" id="page-extensions">
         <div style="max-width:760px">
 
@@ -5163,5 +5177,110 @@ function dsgUpdateProgress() {
 
 </script>
 
+<!-- ═══════════ AdFlow Licences — behaviour ═══════════
+     The nav item and its container are plain HTML above. This does three
+     things only: load the dashboard on FIRST open, correct the topbar title,
+     and keep non-admins out. When the dashboard changes, only
+     /adflow-admin.html is replaced — never this. -->
+<script>
+(function () {
+  "use strict";
+
+  var PAGE = "adflow";
+  var SRC = "/adflow-admin.html";
+  var TITLE = "AdFlow Licences";
+
+  var nav = document.getElementById("nav-" + PAGE);
+  var page = document.getElementById("page-" + PAGE);
+  if (!nav || !page) return;
+
+  var loaded = false;
+
+  function open_() {
+    // showPage() already switches pages. We repeat it here not to replace it,
+    // but because app.js may keep a list of known pages. If it already did the
+    // work, doing it twice is harmless; if it refused, the click still works.
+    var pages = document.querySelectorAll(".content > .page");
+    for (var i = 0; i < pages.length; i++) pages[i].classList.remove("active");
+    page.classList.add("active");
+
+    var items = document.querySelectorAll(".nav-item");
+    for (var j = 0; j < items.length; j++) items[j].classList.remove("active");
+    nav.classList.add("active");
+
+    // showPage's titles map is local to that function, so the topbar is
+    // corrected here rather than by touching app.js.
+    var t = document.getElementById("topbar-title");
+    if (t) t.textContent = TITLE;
+
+    // Once only. No reason to refetch the dashboard on every visit.
+    var f = document.getElementById("adflow-frame");
+    if (f && !loaded) { f.src = SRC; loaded = true; }
+  }
+
+  // The inline onclick="showPage('adflow')" runs first, then this. So whatever
+  // showPage does, the final state is correct.
+  nav.addEventListener("click", function () { setTimeout(open_, 0); });
+
+  // Also covers any other code calling showPage('adflow') — a button elsewhere
+  // in the app, for instance.
+  var origShow = window.showPage;
+  if (typeof origShow === "function") {
+    window.showPage = function (p) {
+      var out = origShow.apply(this, arguments);
+      if (p === PAGE) open_();
+      return out;
+    };
+  }
+
+  // ---- admins only ----
+  // The nav item carries class "admin-only", so applyRoleUI() already covers
+  // it. This is the extra guard: when we can POSITIVELY tell the signed-in user
+  // is not an admin, hide it and kill the iframe. When the role is unknown we
+  // do NOTHING and leave applyRoleUI() to it — so the item can never vanish on
+  // a guess.
+  function roleNow() {
+    var r = window.currentUserRole;
+    if (typeof r === "string" && r) return r.trim().toLowerCase();
+    var lbl = document.getElementById("user-role-label");
+    if (lbl) {
+      var t = (lbl.textContent || "").trim().toLowerCase();
+      if (t && t !== "—" && t !== "-") return t;
+    }
+    return "";
+  }
+
+  function sync() {
+    var role = roleNow();
+    if (!role) return;
+    if (role.indexOf("admin") !== -1) {
+      nav.style.removeProperty("display");
+      return;
+    }
+    nav.style.setProperty("display", "none", "important");
+    if (page.classList.contains("active")) {
+      page.classList.remove("active");
+      var f = document.getElementById("adflow-frame");
+      if (f) { f.removeAttribute("src"); loaded = false; }
+    }
+  }
+
+  var origRole = window.applyRoleUI;
+  if (typeof origRole === "function") {
+    window.applyRoleUI = function () {
+      var out = origRole.apply(this, arguments);
+      sync();
+      return out;
+    };
+  }
+
+  sync();
+  var tries = 0;
+  var timer = setInterval(function () {
+    sync();
+    if (roleNow() || ++tries > 40) clearInterval(timer);
+  }, 400);
+})();
+</script>
 </body>
 </html>
