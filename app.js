@@ -1390,8 +1390,9 @@ async function loadApOutputsEditorFilter(){
 async function loadApOutputsTable(){
   var bodyEl=document.getElementById('ap-outputs-body');
   if(!bodyEl) return;
-  loadApOutputsEditorFilter();
-  var editorFilter=document.getElementById('ap-outputs-editor-filter')?.value||'';
+  var isAdmin=currentUserRole==='admin';
+  if(isAdmin) loadApOutputsEditorFilter();
+  var editorFilter=isAdmin?(document.getElementById('ap-outputs-editor-filter')?.value||''):currentUser.id;
   var df=document.getElementById('proj-date-from')?.value||'';
   var dt=document.getElementById('proj-date-to')?.value||'';
   var query=sb.from('project_outputs')
@@ -1404,29 +1405,34 @@ async function loadApOutputsTable(){
   var{data}=await query;
   var outputs=data||[];
 
-  // ── Stat cards: total/video/image + per-editor breakdown ──
+  // ── Stat cards: total/video/image (own totals for editors, everyone's for admin) ──
   var totalVideo=outputs.filter(function(o){return o.type==='video';}).length;
   var totalImage=outputs.filter(function(o){return o.type==='image';}).length;
   document.getElementById('ap-stat-total').textContent=outputs.length;
   document.getElementById('ap-stat-video').textContent=totalVideo;
   document.getElementById('ap-stat-image').textContent=totalImage;
-  var perEditor={};
-  outputs.forEach(function(o){
-    var name=o.profiles?.name||o.profiles?.email||'Unknown';
-    perEditor[name]=perEditor[name]||{count:0,id:o.user_id};
-    perEditor[name].count++;
-  });
-  var editorNames=Object.keys(perEditor).sort(function(a,b){return perEditor[b].count-perEditor[a].count;});
-  document.getElementById('ap-stat-per-editor').innerHTML=editorNames.map(function(name){
-    var e=perEditor[name];
-    return '<div onclick="openUserStatsModal(\''+e.id+'\')" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:12px" title="View '+name+'\'s full stats">'
-      +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+e.count+'</span>'
-      +'<span style="font-size:10px;color:#9a9aa5">'+name+'</span>'
-      +'</div>';
-  }).join('');
+  var perEditorEl=document.getElementById('ap-stat-per-editor');
+  if(isAdmin){
+    var perEditor={};
+    outputs.forEach(function(o){
+      var name=o.profiles?.name||o.profiles?.email||'Unknown';
+      perEditor[name]=perEditor[name]||{count:0,id:o.user_id};
+      perEditor[name].count++;
+    });
+    var editorNames=Object.keys(perEditor).sort(function(a,b){return perEditor[b].count-perEditor[a].count;});
+    perEditorEl.innerHTML=editorNames.map(function(name){
+      var e=perEditor[name];
+      return '<div onclick="openUserStatsModal(\''+e.id+'\')" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:12px" title="View '+name+'\'s full stats">'
+        +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+e.count+'</span>'
+        +'<span style="font-size:10px;color:#9a9aa5">'+name+'</span>'
+        +'</div>';
+    }).join('');
+  } else {
+    perEditorEl.innerHTML='';
+  }
 
   if(!outputs.length){
-    bodyEl.innerHTML='<div class="table-empty"><div class="table-empty-icon">📦</div>No done outputs '+(editorFilter||df||dt?'match this filter.':'submitted yet.')+'</div>';
+    bodyEl.innerHTML='<div class="table-empty"><div class="table-empty-icon">📦</div>No done outputs '+((isAdmin&&editorFilter)||df||dt?'match this filter.':'submitted yet.')+'</div>';
     return;
   }
   var typeIcons={video:'🎬',image:'🖼️',blueprint:'📄',other:'📎'};
@@ -1438,12 +1444,13 @@ async function loadApOutputsTable(){
     var icon=typeIcons[o.type]||'📎';
     var shortUrl=o.url.length>40?o.url.substring(0,40)+'...':o.url;
     var rowNum=outputs.length-i;
-    return '<div class="table-row" style="grid-template-columns:0.4fr 1.6fr 1.6fr 2fr 1fr 32px">'
+    return '<div class="table-row" style="grid-template-columns:0.4fr 1.4fr 1.3fr 1.7fr 0.9fr 1.1fr 32px">'
       +'<div style="color:var(--text3);font-size:11px">'+rowNum+'</div>'
-      +'<div><div class="row-name">'+client+'</div><div class="row-sub">'+icon+' '+o.type+' · <span onclick="event.stopPropagation();openUserStatsModal(\''+(o.user_id||'')+'\')" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent" onmouseover="this.style.textDecorationColor=\'var(--yellow)\'" onmouseout="this.style.textDecorationColor=\'transparent\'">'+editor+'</span></div></div>'
+      +'<div><div class="row-name">'+client+'</div><div class="row-sub">'+icon+' '+o.type+'</div></div>'
       +'<div>'+(fbPage?'<a href="'+fbPage+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+fbPage+'</a>':'<span style="color:var(--text3);font-size:11px">—</span>')+'</div>'
       +'<div><a href="'+o.url+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+shortUrl+'</a></div>'
       +'<div class="row-date">'+date+'</div>'
+      +'<div onclick="openUserStatsModal(\''+(o.user_id||'')+'\')" style="cursor:pointer;font-size:11px;color:var(--text2);text-decoration:underline;text-decoration-color:transparent" onmouseover="this.style.textDecorationColor=\'var(--yellow)\';this.style.color=\'var(--yellow)\'" onmouseout="this.style.textDecorationColor=\'transparent\';this.style.color=\'var(--text2)\'" title="View '+editor+'\'s full stats">'+editor+'</div>'
       +(currentUserRole==='admin'?'<div class="proj-row-del" title="Delete" onclick="deleteOutputRow(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>':'<div></div>')
       +'</div>';
   }).join('');
