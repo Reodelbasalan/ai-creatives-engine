@@ -1539,7 +1539,22 @@ async function freebiesQuickSubmit(id){
   var link=input?input.value.trim():'';
   if(!link){ showNotif('Paste the file link first','error'); return; }
   try{
+    var{data:task}=await sb.from('creatives_upload').select('*').eq('id',id).maybeSingle();
     await sb.from('creatives_upload').update({file_link:link,status:'Done'}).eq('id',id);
+    // Also record this as a done output so it flows into Done Output Submissions,
+    // the admin Output tracker, and per-editor stats — same as regular Submit Output
+    if(task?.project_id){
+      try{
+        await sb.from('project_outputs').insert({
+          project_id:task.project_id,
+          user_id:currentUser.id,
+          url:link,
+          type:'image',
+          label:'🎁 Freebies — '+(task.client_name||task.project_name||'')
+        });
+        await sb.from('projects').update({updated_at:new Date().toISOString()}).eq('id',task.project_id);
+      }catch(e){}
+    }
     showNotif('Marked as Done! ✓','success');
     loadEditorFreebiesTasks();
   }catch(err){ showNotif('Error: '+(err?.message||err),'error'); }
@@ -6168,6 +6183,26 @@ async function fuAddCreative(){
   if (error){ showNotif('Error: '+error.message, 'error'); return; }
   showNotif('Creative added! ✓', 'success');
   if (typeof logActivity === 'function') logActivity('CREATIVE_ADDED', projectName);
+
+  // If this creative is linked to a real project and already has a file,
+  // also record it as a done output so it flows into Done Output
+  // Submissions / Output tracker / per-editor stats (same pipeline as
+  // regular Submit Output and the My Freebies Tasks quick-submit).
+  var fuLinkedProjectId = document.getElementById('fu-client-project-id')?.value || null;
+  var fuFileLink = document.getElementById('fu-file-link')?.value?.trim() || null;
+  var fuClientLabel = document.getElementById('fu-client-name')?.value?.trim() || projectName;
+  if (fuLinkedProjectId && fuFileLink) {
+    try{
+      await sb.from('project_outputs').insert({
+        project_id: fuLinkedProjectId,
+        user_id: currentUser.id,
+        url: fuFileLink,
+        type: 'image',
+        label: (fuTags.freebies?'🎁 Freebies':'📦 Creative')+' — '+fuClientLabel
+      });
+      await sb.from('projects').update({updated_at:new Date().toISOString()}).eq('id',fuLinkedProjectId);
+    }catch(e){}
+  }
 
   fuResetTags();
   fuResetCategory();
