@@ -103,7 +103,7 @@ async function addOutput(markDone){
       url:url,type:type,label:label
     });
     if(error){showNotif('Error: '+error.message,'error');return;}
-    if(sheetUrl){
+    if(sheetUrl && sheetUrl!==url){
       try{
         await sb.from('project_outputs').insert({
           project_id:currentProjectId,
@@ -1240,14 +1240,26 @@ async function loadApSubmitProjectSelect(){
   var{data}=await sb.from('projects').select('id,client_name,status')
     .neq('status','Approved / Done')
     .order('client_name');
-  sel.innerHTML='<option value="">Select project...</option>'+(data||[]).map(function(p){
+  sel.innerHTML='<option value="">Select project...</option>'
+    +'<option value="__new__">+ New client (not listed / type name)</option>'
+    +(data||[]).map(function(p){
     return '<option value="'+p.id+'">'+p.client_name+' ('+p.status+')</option>';
   }).join('');
 }
 
 async function loadApSubmitClientDetails(){
   var sel=document.getElementById('ap-submit-project-select');
-  if(!sel||!sel.value)return;
+  var newNameInput=document.getElementById('ap-submit-new-client-name');
+  var detailsEl=document.getElementById('ap-submit-client-details');
+  if(!sel)return;
+  if(sel.value==='__new__'){
+    window._currentApSubmitProject=null;
+    if(newNameInput){ newNameInput.style.display='block'; newNameInput.focus(); }
+    if(detailsEl) detailsEl.style.display='none';
+    return;
+  }
+  if(newNameInput){ newNameInput.style.display='none'; newNameInput.value=''; }
+  if(!sel.value)return;
   var{data}=await sb.from('projects').select('*').eq('id',sel.value).maybeSingle();
   if(!data)return;
   window._currentApSubmitProject=data;
@@ -1285,11 +1297,13 @@ async function submitApOutput(markDone){
   var doneBtn=document.getElementById('ap-submit-mark-done-btn');
   if(submitBtn&&submitBtn.disabled) return; // already submitting — ignore extra clicks
   var projectId=document.getElementById('ap-submit-project-select')?.value;
+  var newClientName=document.getElementById('ap-submit-new-client-name')?.value?.trim()||'';
   var url=document.getElementById('ap-submit-output-url')?.value?.trim();
   var sheetUrl=document.getElementById('ap-submit-output-sheet')?.value?.trim()||'';
   var type=document.getElementById('ap-submit-output-type')?.value||'video';
   var notes=document.getElementById('ap-submit-output-notes')?.value?.trim()||'';
   if(!projectId){showNotif('Select a project first','error');return;}
+  if(projectId==='__new__'&&!newClientName){showNotif('Type the new client / project name','error');return;}
   if(!url){showNotif('Paste the Google Drive / Video link','error');return;}
 
   var submitBtnHtml=submitBtn?submitBtn.innerHTML:'';
@@ -1298,6 +1312,18 @@ async function submitApOutput(markDone){
   else if(doneBtn){doneBtn.disabled=true;doneBtn.innerHTML='<span class="spinner"></span> Submitting...';}
 
   try{
+    // "+ New client" — create a minimal project row first so this output
+    // (and the client) shows up properly across All Projects / analytics
+    if(projectId==='__new__'){
+      var{data:newProj,error:newProjErr}=await sb.from('projects').insert({
+        client_name:newClientName,
+        status:'New Input',
+        assigned_to:currentUser.id
+      }).select().maybeSingle();
+      if(newProjErr){showNotif('Error creating client: '+newProjErr.message,'error');return;}
+      projectId=newProj.id;
+      logActivity('PROJECT_CREATED',newClientName+' (via Submit Output)');
+    }
     var{data:project}=await sb.from('projects').select('*').eq('id',projectId).maybeSingle();
     var typeLabels={video:'Video output',image:'Image output',blueprint:'Blueprint PDF',other:'File'};
     var label=typeLabels[type]||'Output';
@@ -1310,7 +1336,7 @@ async function submitApOutput(markDone){
       label:label
     });
     if(error){showNotif('Error: '+error.message,'error');return;}
-    if(sheetUrl){
+    if(sheetUrl && sheetUrl!==url){
       try{
         await sb.from('project_outputs').insert({
           project_id:projectId,
@@ -1345,6 +1371,8 @@ async function submitApOutput(markDone){
     document.getElementById('ap-view-client-btn').textContent='👁';
     window._currentApSubmitProject=null;
     document.getElementById('ap-submit-project-select').value='';
+    var newNameEl=document.getElementById('ap-submit-new-client-name');
+    if(newNameEl){ newNameEl.style.display='none'; newNameEl.value=''; }
     loadApSubmitProjectSelect();
     loadApOutputsTable();
     loadAllProjects();
@@ -4703,7 +4731,7 @@ async function submitEditorOutput(markDone){
     });
     if(error){showNotif('Error: '+error.message,'error');return;}
     // Save sheet link if provided
-    if(sheetUrl){
+    if(sheetUrl && sheetUrl!==url){
       try{
         await sb.from('project_outputs').insert({
           project_id:projectId,
