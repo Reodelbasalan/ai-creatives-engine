@@ -1027,6 +1027,7 @@ function filterProjects(){
     var matchDT=!dt||new Date(activityDate)<=new Date(dt+'T23:59:59');
     return matchQ&&matchS&&matchP&&matchDF&&matchDT;
   }));
+  if(document.getElementById('ap-outputs-body'))loadApOutputsTable();
 }
 
 function clearProjectFilters(){
@@ -1377,16 +1378,55 @@ function apToggleForm(forceClose){
 // Table of done-output submissions on the All Projects page —
 // #, Client Name, FB Page, Link, Date Submitted (same format as the
 // admin Output tracker), sourced straight from project_outputs.
+async function loadApOutputsEditorFilter(){
+  var sel=document.getElementById('ap-outputs-editor-filter');
+  if(!sel||sel.options.length>1) return; // already loaded once
+  var{data}=await sb.from('profiles').select('id,name,email').order('name');
+  sel.innerHTML='<option value="">All editors</option>'+(data||[]).map(function(p){
+    return '<option value="'+p.id+'">'+(p.name||p.email)+'</option>';
+  }).join('');
+}
+
 async function loadApOutputsTable(){
   var bodyEl=document.getElementById('ap-outputs-body');
   if(!bodyEl) return;
-  var{data}=await sb.from('project_outputs')
-    .select('*,projects(client_name,fb_page)')
+  loadApOutputsEditorFilter();
+  var editorFilter=document.getElementById('ap-outputs-editor-filter')?.value||'';
+  var df=document.getElementById('proj-date-from')?.value||'';
+  var dt=document.getElementById('proj-date-to')?.value||'';
+  var query=sb.from('project_outputs')
+    .select('*,projects(client_name,fb_page),profiles(name,email)')
     .order('created_at',{ascending:false})
-    .limit(50);
+    .limit(300);
+  if(editorFilter) query=query.eq('user_id',editorFilter);
+  if(df) query=query.gte('created_at',df+'T00:00:00');
+  if(dt) query=query.lte('created_at',dt+'T23:59:59');
+  var{data}=await query;
   var outputs=data||[];
+
+  // ── Stat cards: total/video/image + per-editor breakdown ──
+  var totalVideo=outputs.filter(function(o){return o.type==='video';}).length;
+  var totalImage=outputs.filter(function(o){return o.type==='image';}).length;
+  document.getElementById('ap-stat-total').textContent=outputs.length;
+  document.getElementById('ap-stat-video').textContent=totalVideo;
+  document.getElementById('ap-stat-image').textContent=totalImage;
+  var perEditor={};
+  outputs.forEach(function(o){
+    var name=o.profiles?.name||o.profiles?.email||'Unknown';
+    perEditor[name]=perEditor[name]||{count:0,id:o.user_id};
+    perEditor[name].count++;
+  });
+  var editorNames=Object.keys(perEditor).sort(function(a,b){return perEditor[b].count-perEditor[a].count;});
+  document.getElementById('ap-stat-per-editor').innerHTML=editorNames.map(function(name){
+    var e=perEditor[name];
+    return '<div onclick="openUserStatsModal(\''+e.id+'\')" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:12px" title="View '+name+'\'s full stats">'
+      +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+e.count+'</span>'
+      +'<span style="font-size:10px;color:#9a9aa5">'+name+'</span>'
+      +'</div>';
+  }).join('');
+
   if(!outputs.length){
-    bodyEl.innerHTML='<div class="table-empty"><div class="table-empty-icon">📦</div>No done outputs submitted yet.</div>';
+    bodyEl.innerHTML='<div class="table-empty"><div class="table-empty-icon">📦</div>No done outputs '+(editorFilter||df||dt?'match this filter.':'submitted yet.')+'</div>';
     return;
   }
   var typeIcons={video:'🎬',image:'🖼️',blueprint:'📄',other:'📎'};
@@ -1394,12 +1434,13 @@ async function loadApOutputsTable(){
     var date=new Date(o.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
     var client=o.projects?.client_name||'—';
     var fbPage=o.projects?.fb_page||'';
+    var editor=o.profiles?.name||o.profiles?.email||'Unknown';
     var icon=typeIcons[o.type]||'📎';
     var shortUrl=o.url.length>40?o.url.substring(0,40)+'...':o.url;
     var rowNum=outputs.length-i;
     return '<div class="table-row" style="grid-template-columns:0.4fr 1.6fr 1.6fr 2fr 1fr 32px">'
       +'<div style="color:var(--text3);font-size:11px">'+rowNum+'</div>'
-      +'<div><div class="row-name">'+client+'</div><div class="row-sub">'+icon+' '+o.type+'</div></div>'
+      +'<div><div class="row-name">'+client+'</div><div class="row-sub">'+icon+' '+o.type+' · <span onclick="event.stopPropagation();openUserStatsModal(\''+(o.user_id||'')+'\')" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent" onmouseover="this.style.textDecorationColor=\'var(--yellow)\'" onmouseout="this.style.textDecorationColor=\'transparent\'">'+editor+'</span></div></div>'
       +'<div>'+(fbPage?'<a href="'+fbPage+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+fbPage+'</a>':'<span style="color:var(--text3);font-size:11px">—</span>')+'</div>'
       +'<div><a href="'+o.url+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+shortUrl+'</a></div>'
       +'<div class="row-date">'+date+'</div>'
