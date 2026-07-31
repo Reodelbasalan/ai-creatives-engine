@@ -1508,7 +1508,7 @@ async function loadApOutputsTable(){
       +'<div><a href="'+o.url+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+shortUrl+'</a></div>'
       +'<div class="row-date">'+date+'</div>'
       +'<div onclick="openUserStatsModal(\''+(o.user_id||'')+'\')" style="cursor:pointer;font-size:11px;color:var(--text2);text-decoration:underline;text-decoration-color:transparent" onmouseover="this.style.textDecorationColor=\'var(--yellow)\';this.style.color=\'var(--yellow)\'" onmouseout="this.style.textDecorationColor=\'transparent\';this.style.color=\'var(--text2)\'" title="View '+editor+'\'s full stats">'+editor+'</div>'
-      +(currentUserRole==='admin'?'<div class="proj-row-del" title="Delete" onclick="deleteOutputRow(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>':'<div></div>')
+      +((currentUserRole==='admin'||o.user_id===currentUser.id)?'<div class="proj-row-del" title="Delete" onclick="deleteOutputRow(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>':'<div></div>')
       +'</div>';
   }).join('');
 }
@@ -5041,7 +5041,12 @@ async function loadOutputsTable(){
 }
 
 async function deleteOutputRow(id){
-  if(currentUserRole!=='admin'){ showNotif('Admin only.','error'); return; }
+  try{
+    var{data:row}=await sb.from('project_outputs').select('user_id').eq('id',id).maybeSingle();
+    if(currentUserRole!=='admin' && row?.user_id!==currentUser.id){
+      showNotif('You can only delete your own submissions.','error'); return;
+    }
+  }catch(e){}
   if(!confirm('Delete this output entry? (Use this to remove accidental duplicate submissions.)'))return;
   try{
     await sb.from('project_outputs').delete().eq('id',id);
