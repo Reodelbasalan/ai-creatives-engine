@@ -1201,7 +1201,7 @@ function renderProjectsTable(projects){
       <div class="row-meta">${p.business_type||'—'}</div>
       <div>${statusBadge(p.status)}</div>
       <div class="row-date" title="Created: ${fmtDate(p.created_at)}">${fmtDate(p.updated_at||p.created_at)}</div>
-      <div class="row-date">${p.deadline?getDeadlineStatus(p.deadline):'<span style="color:#5a5a65">—</span>'}</div>
+      <div class="row-date">${p.deadline?getDeadlineStatus(p.deadline):'<span style="color:#7a7a85">—</span>'}</div>
       ${isAdmin?`<div onclick="deleteProjectRow('${p.id}',event)" class="proj-row-del" title="Delete">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
       </div>`:'<div></div>'}
@@ -1612,6 +1612,17 @@ async function freebiesQuickSubmit(id){
         await sb.from('projects').update({updated_at:new Date().toISOString()}).eq('id',task.project_id);
       }catch(e){}
     }
+    // Notify admin
+    try{
+      var editorLabel=(await sb.from('profiles').select('name,email').eq('id',currentUser.id).maybeSingle()).data;
+      await sb.from('notifications').insert({
+        user_id:null,
+        message:(editorLabel?.name||editorLabel?.email||'An editor')+' finished a freebies task: "'+(task?.client_name||task?.project_name||'Freebies')+'"',
+        type:'output',
+        project_id:task?.project_id||null,
+        is_read:false
+      });
+    }catch(e){}
     showNotif('Marked as Done! ✓','success');
     loadEditorFreebiesTasks();
   }catch(err){ showNotif('Error: '+(err?.message||err),'error'); }
@@ -4842,7 +4853,7 @@ async function loadMonthlyOutputSummary(){
       var c=perMonth[m.key]||{total:0,video:0,image:0};
       total+=c.total; totalVideo+=c.video; totalImage+=c.image;
       var tip='🎬 '+c.video+' video · 🖼️ '+c.image+' image';
-      return '<div title="'+tip+'" style="text-align:center;cursor:default;color:'+(c.total>0?'#f2f0ea':'#5a5a65')+';font-weight:'+(c.total>0?'650':'400')+'">'+c.total+'</div>';
+      return '<div title="'+tip+'" style="text-align:center;cursor:default;color:'+(c.total>0?'#f2f0ea':'#7a7a85')+';font-weight:'+(c.total>0?'650':'400')+'">'+c.total+'</div>';
     }).join('');
     return '<div class="table-row" style="grid-template-columns:1.6fr repeat(6,0.7fr) 0.7fr">'
       + '<div><div class="row-name" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent" onmouseover="this.style.textDecorationColor=\'var(--yellow)\'" onmouseout="this.style.textDecorationColor=\'transparent\'" onclick="openUserStatsModal(\''+e.id+'\')">'+escapeHtml(e.name||e.email)+'</div></div>'
@@ -4923,7 +4934,7 @@ async function openUserStatsModal(userId){
     +months.map(function(m){
       var c=perMonth[m.key]||{total:0,video:0,image:0};
       var tip='🎬 '+c.video+' video · 🖼️ '+c.image+' image';
-      return '<div title="'+tip+'" style="text-align:center;color:'+(c.total>0?'#f2f0ea':'#5a5a65')+';font-weight:'+(c.total>0?'650':'400')+'">'+c.total+'</div>';
+      return '<div title="'+tip+'" style="text-align:center;color:'+(c.total>0?'#f2f0ea':'#7a7a85')+';font-weight:'+(c.total>0?'650':'400')+'">'+c.total+'</div>';
     }).join('')+'</div>';
   document.getElementById('us-monthly-table').innerHTML=mHead+mRow;
 
@@ -5749,7 +5760,7 @@ var CONNECTORS = [
   },
   {
     id: 'flow', name: 'Google Flow', sub: 'Walang public API — hindi maikokonekta',
-    icon: '▶', iconBg: 'rgba(255,255,255,0.04)', iconColor: '#6a6a75',
+    icon: '▶', iconBg: 'rgba(255,255,255,0.04)', iconColor: '#8a8a95',
     available: false,
     note: 'Ang Flow ay consumer app lang — walang API na pwedeng tawagin mula dito. Para magamit ang Flow account mo, kailangan ng browser extension (AdFlow), hindi sa loob ng AI Creatives.'
   }
@@ -5789,7 +5800,7 @@ function renderConnectors(){
         + '<div class="conn-top">'
         +   '<div class="conn-ico" style="background:'+c.iconBg+';color:'+c.iconColor+'">'+c.icon+'</div>'
         +   '<div style="flex:1"><div class="conn-name" style="color:#8a8a95">'+c.name+'</div><div class="conn-sub">'+c.sub+'</div></div>'
-        +   '<span class="conn-badge" style="background:rgba(255,255,255,0.04);color:#6a6a75;border:0.5px solid rgba(255,255,255,0.08)">Unavailable</span>'
+        +   '<span class="conn-badge" style="background:rgba(255,255,255,0.04);color:#8a8a95;border:0.5px solid rgba(255,255,255,0.08)">Unavailable</span>'
         + '</div>'
         + '<div class="conn-body"><div class="conn-note" style="margin-top:0">'+c.note+'</div></div>'
         + '</div>';
@@ -5971,7 +5982,7 @@ function fuCountdown(expiresAt){
 }
 
 function fuPageBadge(page){
-  if (!page) return '<span style="color:#6a6a75">—</span>';
+  if (!page) return '<span style="color:#8a8a95">—</span>';
   var styles = {
     'VIRAL UGC':       { bg:'rgba(167,139,250,0.16)', c:'#b9a5fc', bd:'rgba(167,139,250,0.4)' },
     'HCSI':            { bg:'rgba(250,204,21,0.16)',  c:'#fbd94f', bd:'rgba(250,204,21,0.4)' },
@@ -6055,7 +6066,7 @@ function renderForUpload(){
   var items = forUploadState.filtered;
   if (!items.length){
     body.innerHTML = '<div class="table-empty"><div class="table-empty-icon">'
-      + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6a6a75" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
+      + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8a8a95" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
       + '</div>No creatives yet in <b style="color:#facc15">'+escapeHtml(fuActiveCat)+'</b>. Click "Add creative" above!</div>';
     return;
   }
@@ -6067,11 +6078,11 @@ function renderForUpload(){
     var isPublished = c.status === 'Published';
     var adCopy = c.ad_copy
       ? '<button class="fu-adcopy-btn" data-id="'+c.id+'" style="cursor:pointer;color:var(--yellow);background:none;border:none;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;padding:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View</button>'
-      : '<span style="color:#6a6a75">—</span>';
-    var fileLink = c.file_link ? '<a href="'+c.file_link+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg>Open</a>' : '<span style="color:#6a6a75">—</span>';
+      : '<span style="color:#8a8a95">—</span>';
+    var fileLink = c.file_link ? '<a href="'+c.file_link+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg>Open</a>' : '<span style="color:#8a8a95">—</span>';
     var headline = c.headline
       ? '<button class="fu-headline-btn" data-headline="'+escapeHtml(c.headline)+'" title="Click to copy" style="cursor:pointer;background:none;border:none;color:#d4d4dc;font-size:11px;text-align:left;padding:0;display:inline-flex;align-items:center;gap:5px">'+escapeHtml(c.headline.substring(0,26))+(c.headline.length>26?'…':'')+'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8a8a95" stroke-width="2" style="flex-shrink:0"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
-      : '<span style="color:#6a6a75">—</span>';
+      : '<span style="color:#8a8a95">—</span>';
 
     // ── CAPSULE STATUS DROPDOWN ──
     var isDone = c.status === 'Done';
@@ -6098,11 +6109,11 @@ function renderForUpload(){
       ? '<div class="fu-newclient">'
         + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
         + '<span>'+escapeHtml(c.client_name)+'</span></div>'
-      : '<span style="color:#5a5a65;font-size:11px">—</span>';
+      : '<span style="color:#7a7a85;font-size:11px">—</span>';
     var tagsCell = '';
     if (c.is_freebies) tagsCell += '<span class="fu-row-tag" style="background:rgba(74,222,128,0.14);color:#6ee7a0;border:0.5px solid rgba(74,222,128,0.3)">Freebies</span>';
     if (c.is_direct_client) tagsCell += '<span class="fu-row-tag" style="background:rgba(96,165,250,0.14);color:#7db4fb;border:0.5px solid rgba(96,165,250,0.3)">Direct client</span>';
-    if (!tagsCell) tagsCell = '<span style="color:#5a5a65;font-size:11px">—</span>';
+    if (!tagsCell) tagsCell = '<span style="color:#7a7a85;font-size:11px">—</span>';
 
     return '<div class="table-row fu-row" style="grid-template-columns:1fr 1.5fr 1fr 0.9fr 0.9fr 0.6fr 0.65fr 1.1fr 1fr 1.1fr;align-items:center">'
       + '<div>'+fuStaffChip(c.owner_name)+'</div>'
@@ -6115,7 +6126,7 @@ function renderForUpload(){
       + '<div>'+headline+'</div>'
       + '<div><div style="font-size:12px;font-weight:600;color:#e8e8ec">'+dateMain+'</div><div style="font-size:9px;color:#7a7a85;margin-top:1px">'+dateYear+' · '+dateTime+'</div></div>'
       + '<div style="display:flex;align-items:center;gap:8px">'+statusCell
-      +   (currentUserRole==='admin'?'<button class="fu-del-btn" data-id="'+c.id+'" style="background:none;border:none;color:#6a6a75;cursor:pointer;font-size:12px">✕</button>':'')
+      +   (currentUserRole==='admin'?'<button class="fu-del-btn" data-id="'+c.id+'" style="background:none;border:none;color:#8a8a95;cursor:pointer;font-size:12px">✕</button>':'')
       + '</div>'
       + '</div>';
   }).join('');
@@ -6219,6 +6230,27 @@ async function fuAddCreative(){
     if (prof?.name) ownerName = prof.name;
   } catch(e){}
 
+  // If a brand-new client name was typed (not picked from the list), create
+  // a real project for it first so it registers team-wide — shows up in
+  // All Projects, and becomes selectable in every other client dropdown
+  // (Add done output, My Freebies Tasks, etc.) for every editor/admin.
+  var fuClientSel = document.getElementById('fu-client-select');
+  var fuTypedClientName = document.getElementById('fu-client-name')?.value?.trim() || '';
+  var fuResolvedProjectId = document.getElementById('fu-client-project-id')?.value || null;
+  if (fuClientSel?.value === '__custom__' && fuTypedClientName && !fuResolvedProjectId) {
+    try{
+      var { data:newProj, error:newProjErr } = await sb.from('projects').insert({
+        client_name: fuTypedClientName,
+        status: 'New Input',
+        assigned_to: currentUser.id
+      }).select().maybeSingle();
+      if (!newProjErr && newProj) {
+        fuResolvedProjectId = newProj.id;
+        logActivity('PROJECT_CREATED', fuTypedClientName+' (via Add creative)');
+      }
+    }catch(e){}
+  }
+
   var { error } = await sb.from('creatives_upload').insert({
     owner_id: currentUser?.id,
     owner_name: ownerName,
@@ -6227,7 +6259,7 @@ async function fuAddCreative(){
     content_type: document.getElementById('fu-page')?.value || 'VIRAL UGC',
     ad_copy: document.getElementById('fu-ad-copy')?.value?.trim() || null,
     client_name: document.getElementById('fu-client-name')?.value?.trim() || null,
-    project_id: document.getElementById('fu-client-project-id')?.value || null,
+    project_id: fuResolvedProjectId || null,
     category: (typeof fuActiveCat !== 'undefined' && fuActiveCat) ? fuActiveCat : (document.getElementById('fu-category')?.value || null),
     is_freebies: fuTags.freebies,
     is_direct_client: fuTags.direct,
@@ -6240,24 +6272,32 @@ async function fuAddCreative(){
   if (error){ showNotif('Error: '+error.message, 'error'); return; }
   showNotif('Creative added! ✓', 'success');
   if (typeof logActivity === 'function') logActivity('CREATIVE_ADDED', projectName);
+  try{
+    await sb.from('notifications').insert({
+      user_id:null,
+      message:ownerName+' added a creative: "'+projectName+'"'+(fuTags.freebies?' (freebies)':''),
+      type:'output',
+      project_id:fuResolvedProjectId||null,
+      is_read:false
+    });
+  }catch(e){}
 
   // If this creative is linked to a real project and already has a file,
   // also record it as a done output so it flows into Done Output
   // Submissions / Output tracker / per-editor stats (same pipeline as
   // regular Submit Output and the My Freebies Tasks quick-submit).
-  var fuLinkedProjectId = document.getElementById('fu-client-project-id')?.value || null;
   var fuFileLink = document.getElementById('fu-file-link')?.value?.trim() || null;
-  var fuClientLabel = document.getElementById('fu-client-name')?.value?.trim() || projectName;
-  if (fuLinkedProjectId && fuFileLink) {
+  var fuClientLabel = fuTypedClientName || document.getElementById('fu-client-name')?.value?.trim() || projectName;
+  if (fuResolvedProjectId && fuFileLink) {
     try{
       await sb.from('project_outputs').insert({
-        project_id: fuLinkedProjectId,
+        project_id: fuResolvedProjectId,
         user_id: currentUser.id,
         url: fuFileLink,
         type: 'image',
         label: (fuTags.freebies?'🎁 Freebies':'📦 Creative')+' — '+fuClientLabel
       });
-      await sb.from('projects').update({updated_at:new Date().toISOString()}).eq('id',fuLinkedProjectId);
+      await sb.from('projects').update({updated_at:new Date().toISOString()}).eq('id',fuResolvedProjectId);
     }catch(e){}
   }
 
@@ -6355,7 +6395,7 @@ function fuUpdateCatCounts(){
 }
 
 function fuCatBadge(cat){
-  if (!cat) return '<span style="color:#5a5a65;font-size:11px">—</span>';
+  if (!cat) return '<span style="color:#7a7a85;font-size:11px">—</span>';
   var styles = {
     'Video editor team':             { bg:'rgba(250,204,21,0.16)',  c:'#facc15', bd:'rgba(250,204,21,0.4)',  short:'Video editor team' },
     'Viral clients freebies images': { bg:'rgba(167,139,250,0.16)', c:'#b9a5fc', bd:'rgba(167,139,250,0.4)', short:'Viral clients freebies' },
@@ -6702,7 +6742,7 @@ function obTagColor(tag){
   return palette[h%palette.length];
 }
 function obTagBadge(tag){
-  if(!tag) return '<span style="color:#5a5a65">—</span>';
+  if(!tag) return '<span style="color:#7a7a85">—</span>';
   var c=obTagColor(tag);
   return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:'+c+'"><span style="width:6px;height:6px;border-radius:50%;background:'+c+';display:inline-block"></span>'+escapeHtml(tag)+'</span>';
 }
@@ -6723,7 +6763,7 @@ function obRenderRows(){
   if(!obItems.length){ box.innerHTML=emptyState(ICO_MEGAPHONE,'No own brand creatives yet','Click "Add creative" above to log the first one.'); return; }
   var isAdmin=currentUserRole==='admin';
   box.innerHTML=obItems.map(function(c){
-    var link=c.link_url?('<a href="'+c.link_url+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px">Open<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></a>'):'<span style="color:#5a5a65">—</span>';
+    var link=c.link_url?('<a href="'+c.link_url+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px">Open<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></a>'):'<span style="color:#7a7a85">—</span>';
     var date=c.created_at?new Date(c.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'—';
     var st=c.status||'Pending approval';
     var stColors={
