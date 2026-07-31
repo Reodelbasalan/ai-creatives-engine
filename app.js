@@ -1395,15 +1395,44 @@ async function loadApOutputsTable(){
   var editorFilter=isAdmin?(document.getElementById('ap-outputs-editor-filter')?.value||''):currentUser.id;
   var df=document.getElementById('proj-date-from')?.value||'';
   var dt=document.getElementById('proj-date-to')?.value||'';
+  // NOTE: fetch project_outputs on its own (no embedded join) — if RLS
+  // blocks reading the related project/profile row (e.g. a project not
+  // assigned to this editor), an embedded select can silently drop the
+  // whole output row. Fetching separately guarantees the editor's own
+  // submissions always show, even if client/FB page can't be resolved.
   var query=sb.from('project_outputs')
-    .select('*,projects(client_name,fb_page),profiles(name,email)')
+    .select('*')
     .order('created_at',{ascending:false})
     .limit(300);
   if(editorFilter) query=query.eq('user_id',editorFilter);
   if(df) query=query.gte('created_at',df+'T00:00:00');
   if(dt) query=query.lte('created_at',dt+'T23:59:59');
-  var{data}=await query;
+  var{data,error}=await query;
+  if(error){ bodyEl.innerHTML='<div class="table-empty"><div class="table-empty-icon">⚠️</div>Couldn\'t load: '+error.message+'</div>'; return; }
   var outputs=data||[];
+
+  // Batch-fetch related project + profile info separately (best-effort —
+  // if some rows can't be resolved due to permissions, show "—" instead
+  // of hiding the row entirely)
+  var projectIds=[...new Set(outputs.map(function(o){return o.project_id;}).filter(Boolean))];
+  var userIds=[...new Set(outputs.map(function(o){return o.user_id;}).filter(Boolean))];
+  var projectsById={},profilesById={};
+  if(projectIds.length){
+    try{
+      var{data:projs}=await sb.from('projects').select('id,client_name,fb_page').in('id',projectIds);
+      (projs||[]).forEach(function(p){projectsById[p.id]=p;});
+    }catch(e){}
+  }
+  if(userIds.length){
+    try{
+      var{data:profs}=await sb.from('profiles').select('id,name,email').in('id',userIds);
+      (profs||[]).forEach(function(p){profilesById[p.id]=p;});
+    }catch(e){}
+  }
+  outputs.forEach(function(o){
+    o.projects=projectsById[o.project_id]||null;
+    o.profiles=profilesById[o.user_id]||null;
+  });
 
   // ── Stat cards: total/video/image (own totals for editors, everyone's for admin) ──
   var totalVideo=outputs.filter(function(o){return o.type==='video';}).length;
