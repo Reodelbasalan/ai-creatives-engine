@@ -104,12 +104,14 @@ async function addOutput(markDone){
     });
     if(error){showNotif('Error: '+error.message,'error');return;}
     if(sheetUrl){
-      await sb.from('project_outputs').insert({
-        project_id:currentProjectId,
-        user_id:currentUser.id,
-        url:sheetUrl,type:'other',
-        label:'📊 Excel / Sheet'+(notes?' — '+notes.substring(0,20):'')
-      }).catch(function(){});
+      try{
+        await sb.from('project_outputs').insert({
+          project_id:currentProjectId,
+          user_id:currentUser.id,
+          url:sheetUrl,type:'other',
+          label:'📊 Excel / Sheet'+(notes?' — '+notes.substring(0,20):'')
+        });
+      }catch(e){}
     }
     logActivity('OUTPUT_ADDED',label);
     // Mark done if requested — otherwise still touch updated_at so this shows
@@ -456,7 +458,7 @@ function showPage(page){
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
-  if(page==='all-projects'){loadAllProjects();loadApSubmitProjectSelect();}
+  if(page==='all-projects'){loadAllProjects();loadApSubmitProjectSelect();loadApOutputsTable();}
   if(page==='new-project')loadAssignDropdown();
   if(page==='editor-portal')loadEditorPortal();
   if(page==='users')loadUsers();
@@ -1308,13 +1310,15 @@ async function submitApOutput(markDone){
     });
     if(error){showNotif('Error: '+error.message,'error');return;}
     if(sheetUrl){
-      await sb.from('project_outputs').insert({
-        project_id:projectId,
-        user_id:currentUser.id,
-        url:sheetUrl,
-        type:'other',
-        label:'📊 Excel / Sheet'+(notes?' — '+notes.substring(0,20):'')
-      }).catch(function(){});
+      try{
+        await sb.from('project_outputs').insert({
+          project_id:projectId,
+          user_id:currentUser.id,
+          url:sheetUrl,
+          type:'other',
+          label:'📊 Excel / Sheet'+(notes?' — '+notes.substring(0,20):'')
+        });
+      }catch(e){}
     }
     logActivity('OUTPUT_SUBMITTED',(project?.client_name||'Project')+' — '+type+(sheetUrl?' + Sheet':''));
     if(markDone){
@@ -1324,13 +1328,15 @@ async function submitApOutput(markDone){
       await sb.from('projects').update({updated_at:new Date().toISOString()}).eq('id',projectId);
       showNotif('Output submitted! ✓','success');
     }
-    await sb.from('notifications').insert({
-      user_id:null,
-      message:'New output submitted: "'+(project?.client_name||'Project')+'" — '+type+(sheetUrl?' + Sheet link':''),
-      type:'output',
-      project_id:projectId,
-      is_read:false
-    }).catch(function(){});
+    try{
+      await sb.from('notifications').insert({
+        user_id:null,
+        message:'New output submitted: "'+(project?.client_name||'Project')+'" — '+type+(sheetUrl?' + Sheet link':''),
+        type:'output',
+        project_id:projectId,
+        is_read:false
+      });
+    }catch(e){}
     document.getElementById('ap-submit-output-url').value='';
     document.getElementById('ap-submit-output-sheet').value='';
     document.getElementById('ap-submit-output-notes').value='';
@@ -1339,14 +1345,67 @@ async function submitApOutput(markDone){
     window._currentApSubmitProject=null;
     document.getElementById('ap-submit-project-select').value='';
     loadApSubmitProjectSelect();
+    loadApOutputsTable();
     loadAllProjects();
     if(currentUserRole==='admin')loadDashboard();
+    apToggleForm(true); // collapse the form back closed after a successful submit
   } catch(err){
     showNotif('Error: '+(err?.message||err),'error');
   } finally {
     if(submitBtn){submitBtn.disabled=false;submitBtn.innerHTML=submitBtnHtml;}
     if(doneBtn){doneBtn.disabled=false;doneBtn.innerHTML=doneBtnHtml;}
   }
+}
+
+// Toggle the "Add done output" collapsible form open/closed (matches the
+// For Upload "+ Add creative" pattern). Pass forceClose=true to always close.
+var apFormOpen=false;
+function apToggleForm(forceClose){
+  apFormOpen = forceClose ? false : !apFormOpen;
+  var wrap=document.getElementById('ap-form-wrap');
+  var btn=document.getElementById('ap-toggle-btn');
+  if(!wrap) return;
+  if(apFormOpen){
+    wrap.style.maxHeight='900px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
+    if(btn) btn.style.opacity='0.55';
+  } else {
+    wrap.style.maxHeight='0'; wrap.style.opacity='0'; wrap.style.marginBottom='0';
+    if(btn) btn.style.opacity='1';
+  }
+}
+
+// Table of done-output submissions on the All Projects page —
+// #, Client Name, FB Page, Link, Date Submitted (same format as the
+// admin Output tracker), sourced straight from project_outputs.
+async function loadApOutputsTable(){
+  var bodyEl=document.getElementById('ap-outputs-body');
+  if(!bodyEl) return;
+  var{data}=await sb.from('project_outputs')
+    .select('*,projects(client_name,fb_page)')
+    .order('created_at',{ascending:false})
+    .limit(50);
+  var outputs=data||[];
+  if(!outputs.length){
+    bodyEl.innerHTML='<div class="table-empty"><div class="table-empty-icon">📦</div>No done outputs submitted yet.</div>';
+    return;
+  }
+  var typeIcons={video:'🎬',image:'🖼️',blueprint:'📄',other:'📎'};
+  bodyEl.innerHTML=outputs.map(function(o,i){
+    var date=new Date(o.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
+    var client=o.projects?.client_name||'—';
+    var fbPage=o.projects?.fb_page||'';
+    var icon=typeIcons[o.type]||'📎';
+    var shortUrl=o.url.length>40?o.url.substring(0,40)+'...':o.url;
+    var rowNum=outputs.length-i;
+    return '<div class="table-row" style="grid-template-columns:0.4fr 1.6fr 1.6fr 2fr 1fr 32px">'
+      +'<div style="color:var(--text3);font-size:11px">'+rowNum+'</div>'
+      +'<div><div class="row-name">'+client+'</div><div class="row-sub">'+icon+' '+o.type+'</div></div>'
+      +'<div>'+(fbPage?'<a href="'+fbPage+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+fbPage+'</a>':'<span style="color:var(--text3);font-size:11px">—</span>')+'</div>'
+      +'<div><a href="'+o.url+'" target="_blank" style="font-size:11px;color:var(--yellow);word-break:break-all">'+shortUrl+'</a></div>'
+      +'<div class="row-date">'+date+'</div>'
+      +(currentUserRole==='admin'?'<div class="proj-row-del" title="Delete" onclick="deleteOutputRow(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>':'<div></div>')
+      +'</div>';
+  }).join('');
 }
 
 // EDITOR PORTAL
@@ -2170,13 +2229,15 @@ async function loadStatusHistory(projectId){
 }
 
 async function logStatusChange(projectId,oldStatus,newStatus){
-  await sb.from('project_history').insert({
-    project_id:projectId,
-    user_id:currentUser?.id,
-    old_status:oldStatus,
-    new_status:newStatus,
-    changed_at:new Date().toISOString()
-  }).catch(()=>{});
+  try{
+    await sb.from('project_history').insert({
+      project_id:projectId,
+      user_id:currentUser?.id,
+      old_status:oldStatus,
+      new_status:newStatus,
+      changed_at:new Date().toISOString()
+    });
+  }catch(e){}
 }
 
 // WEEKLY REPORT
@@ -4551,13 +4612,15 @@ async function submitEditorOutput(markDone){
     if(error){showNotif('Error: '+error.message,'error');return;}
     // Save sheet link if provided
     if(sheetUrl){
-      await sb.from('project_outputs').insert({
-        project_id:projectId,
-        user_id:currentUser.id,
-        url:sheetUrl,
-        type:'other',
-        label:'📊 Excel / Sheet'+(notes?' — '+notes.substring(0,20):'')
-      }).catch(function(){});
+      try{
+        await sb.from('project_outputs').insert({
+          project_id:projectId,
+          user_id:currentUser.id,
+          url:sheetUrl,
+          type:'other',
+          label:'📊 Excel / Sheet'+(notes?' — '+notes.substring(0,20):'')
+        });
+      }catch(e){}
     }
     // Log activity
     logActivity('OUTPUT_SUBMITTED',(project?.client_name||'Project')+' — '+type+(sheetUrl?' + Sheet':''));
@@ -4571,13 +4634,15 @@ async function submitEditorOutput(markDone){
       showNotif('Output submitted! ✓','success');
     }
     // Notify admin
-    await sb.from('notifications').insert({
-      user_id:null,
-      message:'New output from editor: "'+(project?.client_name||'Project')+'" — '+type+(sheetUrl?' + Sheet link':''),
-      type:'output',
-      project_id:projectId,
-      is_read:false
-    }).catch(function(){});
+    try{
+      await sb.from('notifications').insert({
+        user_id:null,
+        message:'New output from editor: "'+(project?.client_name||'Project')+'" — '+type+(sheetUrl?' + Sheet link':''),
+        type:'output',
+        project_id:projectId,
+        is_read:false
+      });
+    }catch(e){}
     // Clear form
     document.getElementById('submit-output-url').value='';
     document.getElementById('submit-output-sheet').value='';
@@ -4845,12 +4910,14 @@ async function loadOutputsTable(){
 }
 
 async function deleteOutputRow(id){
+  if(currentUserRole!=='admin'){ showNotif('Admin only.','error'); return; }
   if(!confirm('Delete this output entry? (Use this to remove accidental duplicate submissions.)'))return;
   try{
     await sb.from('project_outputs').delete().eq('id',id);
     showNotif('Output entry deleted.','success');
     loadOutputsTable();
     loadMonthlyOutputSummary();
+    if(typeof loadApOutputsTable==='function')loadApOutputsTable();
   }catch(err){ showNotif('Delete failed: '+(err?.message||err),'error'); }
 }
 
@@ -4935,13 +5002,15 @@ async function doQuickAssign(projectId, editorId, editorName){
   allProjects=allProjects.map(function(p){return p.id===projectId?Object.assign({},p,{assigned_to:editorId}):p;});
   // Notify editor
   var proj=allProjects.find(function(p){return p.id===projectId;});
-  await sb.from('notifications').insert({
-    user_id:editorId,
-    message:'New project assigned to you: "'+(proj?.client_name||'Project')+'" — check My Tasks!',
-    type:'assignment',
-    project_id:projectId,
-    is_read:false
-  }).catch(function(){});
+  try{
+    await sb.from('notifications').insert({
+      user_id:editorId,
+      message:'New project assigned to you: "'+(proj?.client_name||'Project')+'" — check My Tasks!',
+      type:'assignment',
+      project_id:projectId,
+      is_read:false
+    });
+  }catch(e){}
   closeQuickAssign();
   showNotif('Assigned to '+editorName+'! ✓','success');
   // Update local allProjects so tag shows immediately
