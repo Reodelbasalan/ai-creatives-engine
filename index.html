@@ -1782,9 +1782,11 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <div style="display:flex;gap:6px">
                 <select class="form-select" id="ap-submit-project-select" style="flex:1" onchange="loadApSubmitClientDetails()">
                   <option value="">Select project...</option>
+                  <option value="__new__">+ New client (not listed / type name)</option>
                 </select>
                 <button onclick="apToggleClientDetails()" class="ghost-btn" style="font-size:11px;padding:4px 10px;white-space:nowrap" id="ap-view-client-btn" title="View client details">👁</button>
               </div>
+              <input class="form-input" id="ap-submit-new-client-name" placeholder="Type new client / project name..." style="display:none;margin-top:8px"/>
             </div>
             <div id="ap-submit-client-details" style="display:none;background:var(--bg4);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;font-size:11px;color:var(--text2);line-height:1.8"></div>
             <div class="form-field" style="margin-bottom:8px">
