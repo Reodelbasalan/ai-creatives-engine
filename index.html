@@ -3877,12 +3877,28 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       </div>
       <div>
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:7px;letter-spacing:0.02em">Client <span style="color:#8a8a95;font-weight:400">(optional — select existing or type new)</span></label>
-        <select class="fu-input" id="fu-client-select" onchange="fuClientSelectChange()">
-          <option value="">— Select client —</option>
-          <option value="__custom__">+ Type new / not listed</option>
-        </select>
+        <div class="fu-dd" id="fu-dd-client" style="width:100%;display:block">
+          <div class="fu-dd-btn" onclick="fuClientDdToggle()" style="width:100%;justify-content:space-between">
+            <span style="display:flex;align-items:center;gap:8px;overflow:hidden">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8a8a95" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span data-label style="color:#8a8a95;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Select client</span>
+            </span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="fu-dd-menu">
+            <div style="padding:4px 4px 7px">
+              <input id="fu-client-search" placeholder="Search client..." autocomplete="off" oninput="fuClientDdFilter(this.value)" onclick="event.stopPropagation()" style="width:100%;box-sizing:border-box;background:#0e0e11;border:0.5px solid rgba(255,255,255,0.09);color:#f2f2f5;font-size:12px;padding:8px 10px;border-radius:8px;outline:none"/>
+            </div>
+            <div id="fu-client-dd-list"></div>
+            <div class="fu-dd-item" onclick="fuClientDdPickCustom()" style="border-top:0.5px solid rgba(255,255,255,0.07);margin-top:4px;padding-top:9px;color:#e8e8ec">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Type new / not listed
+            </div>
+          </div>
+        </div>
         <input class="fu-input" id="fu-client-name" placeholder="e.g. Glow Skin PH" autocomplete="off" style="display:none;margin-top:8px"/>
         <input type="hidden" id="fu-client-project-id" value=""/>
+        <input type="hidden" id="fu-client-select" value=""/>
       </div>
       <div style="grid-column:1 / -1">
         <label style="display:block;font-size:11px;font-weight:600;color:#9a9aa5;margin-bottom:8px;letter-spacing:0.02em">Tags <span style="color:#8a8a95;font-weight:400">(optional)</span></label>
