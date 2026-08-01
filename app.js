@@ -5654,20 +5654,74 @@ function fuToggleForm(){
   }
 }
 
-// Populate the Client select with real clients/projects so freebies
+// Populate the custom Client dropdown with real clients/projects so freebies
 // submissions link back to the correct project instead of free-typed text
+var fuClientOptions = [];
 async function fuLoadClientOptions(){
-  var sel = document.getElementById('fu-client-select');
-  if (!sel || sel.options.length > 2) return; // already loaded once
+  var list = document.getElementById('fu-client-dd-list');
+  if (!list || fuClientOptions.length) { fuRenderClientDd(); return; } // load once
   try {
     var { data:projs } = await sb.from('projects').select('id,client_name').order('client_name');
-    (projs||[]).forEach(function(p){
-      if (!p.client_name) return;
-      var opt = document.createElement('option');
-      opt.value = p.id; opt.textContent = p.client_name;
-      sel.insertBefore(opt, sel.lastElementChild); // keep "Type new" option last
-    });
-  } catch(e){}
+    var seen = {};
+    fuClientOptions = (projs||[]).filter(function(p){
+      if (!p.client_name) return false;
+      var k = p.client_name.trim().toLowerCase();
+      if (seen[k]) return false; seen[k] = 1; return true;
+    }).map(function(p){ return { id:p.id, name:p.client_name.trim() }; });
+  } catch(e){ fuClientOptions = []; }
+  fuRenderClientDd();
+}
+function fuRenderClientDd(filter){
+  var list = document.getElementById('fu-client-dd-list');
+  if (!list) return;
+  var f = (filter||'').trim().toLowerCase();
+  var items = fuClientOptions.filter(function(o){ return !f || o.name.toLowerCase().indexOf(f)>=0; });
+  if (!items.length){
+    list.innerHTML = '<div style="padding:10px 11px;font-size:12px;color:#7a7a85">No match — use \'Type new\' below</div>';
+    return;
+  }
+  list.innerHTML = items.map(function(o){
+    return '<div class="fu-dd-item" onclick="fuClientDdPick(\''+o.id+'\', \''+o.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')+'\')">'
+      + '<span class="fu-dd-dot" style="background:rgba(255,255,255,0.2)"></span>'
+      + escapeHtml(o.name) + '</div>';
+  }).join('');
+}
+function fuClientDdToggle(){
+  var dd = document.getElementById('fu-dd-client');
+  if (!dd) return;
+  var wasOpen = dd.classList.contains('open');
+  document.querySelectorAll('.fu-dd.open').forEach(function(x){ x.classList.remove('open'); });
+  if (!wasOpen){
+    dd.classList.add('open');
+    fuRenderClientDd('');
+    var srch = document.getElementById('fu-client-search');
+    if (srch){ srch.value=''; setTimeout(function(){ srch.focus(); }, 40); }
+  }
+}
+function fuClientDdFilter(v){ fuRenderClientDd(v); }
+function fuClientDdSetLabel(text, isPlaceholder){
+  var dd = document.getElementById('fu-dd-client');
+  var lbl = dd ? dd.querySelector('[data-label]') : null;
+  if (lbl){ lbl.textContent = text; lbl.style.color = isPlaceholder ? '#8a8a95' : '#f2f2f5'; }
+}
+function fuClientDdPick(pid, name){
+  document.getElementById('fu-client-select').value = pid;      // real project id
+  document.getElementById('fu-client-project-id').value = pid;
+  var nameInput = document.getElementById('fu-client-name');
+  if (nameInput){ nameInput.style.display='none'; nameInput.value = name; }
+  fuClientDdSetLabel(name, false);
+  var dd = document.getElementById('fu-dd-client'); if (dd) dd.classList.remove('open');
+}
+function fuClientDdPickCustom(){
+  document.getElementById('fu-client-select').value = '__custom__';
+  document.getElementById('fu-client-project-id').value = '';
+  var nameInput = document.getElementById('fu-client-name');
+  if (nameInput){ nameInput.style.display='block'; nameInput.value=''; nameInput.focus(); }
+  fuClientDdSetLabel('Type new / not listed', false);
+  var dd = document.getElementById('fu-dd-client'); if (dd) dd.classList.remove('open');
+  // siguraduhing hindi maputol ang form
+  var wrap = document.getElementById('fu-form-wrap');
+  if (wrap){ wrap.style.overflow='visible'; wrap.style.maxHeight='760px'; }
 }
 
 function fuClientSelectChange(){
@@ -6458,6 +6512,7 @@ async function fuAddCreative(){
   if (clientPid) clientPid.value = '';
   var clientNameEl = document.getElementById('fu-client-name');
   if (clientNameEl) clientNameEl.style.display = 'none';
+  if (typeof fuClientDdSetLabel === 'function') fuClientDdSetLabel('Select client', true);
   fuToggleForm();
   loadForUpload();
 }
