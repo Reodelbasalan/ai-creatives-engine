@@ -1247,17 +1247,44 @@ async function loadApSubmitProjectSelect(){
   }).join('');
 }
 
-// Task 1 — custom business type toggle sa Add done output form
-function apBiztypeChange(){
-  var sel=document.getElementById('ap-submit-biztype');
-  var custom=document.getElementById('ap-submit-biztype-custom');
-  if(!sel||!custom)return;
-  if(sel.value==='__custom__'){
-    custom.style.display='block'; custom.focus();
-  } else {
-    custom.style.display='none'; custom.value='';
-  }
+// Task 1 — modern custom business type dropdown (Add done output form)
+function apBizToggle(e){
+  if(e) e.stopPropagation();
+  var dd=document.getElementById('ap-biz-dd');
+  if(dd) dd.classList.toggle('open');
 }
+function apBizSetActive(el){
+  var menu=document.querySelector('#ap-biz-dd .ob-dd-menu');
+  if(menu) menu.querySelectorAll('.ob-dd-item').forEach(function(i){ i.classList.remove('active'); });
+  if(el) el.classList.add('active');
+}
+function apBizPick(value, label, el){
+  document.getElementById('ap-submit-biztype').value=value;
+  var lbl=document.getElementById('ap-biz-label'); if(lbl) lbl.textContent=label;
+  // kopyahin ang icon ng napiling item papunta sa button
+  var iconWrap=document.getElementById('ap-biz-icon');
+  if(iconWrap && el){ var svg=el.querySelector('svg'); if(svg) iconWrap.innerHTML=svg.outerHTML; iconWrap.style.color=value?'#facc15':'#8a8a95'; }
+  var custom=document.getElementById('ap-submit-biztype-custom');
+  if(custom){ custom.style.display='none'; custom.value=''; }
+  apBizSetActive(el);
+  var dd=document.getElementById('ap-biz-dd'); if(dd) dd.classList.remove('open');
+}
+function apBizPickCustom(el){
+  document.getElementById('ap-submit-biztype').value='__custom__';
+  var lbl=document.getElementById('ap-biz-label'); if(lbl) lbl.textContent='Custom';
+  var iconWrap=document.getElementById('ap-biz-icon');
+  if(iconWrap && el){ var svg=el.querySelector('svg'); if(svg) iconWrap.innerHTML=svg.outerHTML; iconWrap.style.color='#facc15'; }
+  apBizSetActive(el);
+  var dd=document.getElementById('ap-biz-dd'); if(dd) dd.classList.remove('open');
+  var custom=document.getElementById('ap-submit-biztype-custom');
+  if(custom){ custom.style.display='block'; custom.focus(); }
+}
+// isara pag nag-click sa labas
+document.addEventListener('click', function(e){
+  if(!e.target.closest('#ap-biz-dd')){
+    var dd=document.getElementById('ap-biz-dd'); if(dd) dd.classList.remove('open');
+  }
+});
 
 async function loadApSubmitClientDetails(){
   var sel=document.getElementById('ap-submit-project-select');
@@ -1323,12 +1350,17 @@ async function submitApOutput(markDone){
   if(submitBtn){submitBtn.disabled=true;doneBtn&&(doneBtn.disabled=true);submitBtn.innerHTML='<span class="spinner"></span> Submitting...';}
   else if(doneBtn){doneBtn.disabled=true;doneBtn.innerHTML='<span class="spinner"></span> Submitting...';}
 
+  // Task 1 — kunin ang business type (hidden input mula sa modern dropdown)
+  var bizSel=document.getElementById('ap-submit-biztype')?.value||'';
+  var bizType=bizSel==='__custom__'?(document.getElementById('ap-submit-biztype-custom')?.value?.trim()||''):(bizSel||'');
+
   try{
     // "+ New client" — create a minimal project row first so this output
     // (and the client) shows up properly across All Projects / analytics
     if(projectId==='__new__'){
       var{data:newProj,error:newProjErr}=await sb.from('projects').insert({
         client_name:newClientName,
+        business_type:bizType||null,
         status:'New Input',
         assigned_to:currentUser.id
       }).select().maybeSingle();
@@ -1385,6 +1417,9 @@ async function submitApOutput(markDone){
     document.getElementById('ap-submit-output-notes').value='';
     var bizSelEl=document.getElementById('ap-submit-biztype'); if(bizSelEl)bizSelEl.value='';
     var bizCustomEl=document.getElementById('ap-submit-biztype-custom'); if(bizCustomEl){bizCustomEl.style.display='none';bizCustomEl.value='';}
+    var bizLbl=document.getElementById('ap-biz-label'); if(bizLbl)bizLbl.textContent='None';
+    var bizIcon=document.getElementById('ap-biz-icon'); if(bizIcon){bizIcon.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="8" y1="12" x2="16" y2="12"/></svg>';bizIcon.style.color='#8a8a95';}
+    var bizMenu=document.querySelector('#ap-biz-dd .ob-dd-menu'); if(bizMenu){bizMenu.querySelectorAll('.ob-dd-item').forEach(function(i,ix){i.classList.toggle('active',ix===0);});}
     document.getElementById('ap-submit-client-details').style.display='none';
     document.getElementById('ap-view-client-btn').textContent='👁';
     window._currentApSubmitProject=null;
