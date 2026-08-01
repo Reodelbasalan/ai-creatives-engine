@@ -1260,7 +1260,7 @@ function apBizSetActive(el){
 }
 function apBizPick(value, label, el){
   document.getElementById('ap-submit-biztype').value=value;
-  var lbl=document.getElementById('ap-biz-label'); if(lbl) lbl.textContent=label;
+  var lbl=document.getElementById('ap-biz-label'); if(lbl){ lbl.textContent=label; lbl.style.color='#f2f0ea'; }
   // kopyahin ang icon ng napiling item papunta sa button
   var iconWrap=document.getElementById('ap-biz-icon');
   if(iconWrap && el){ var svg=el.querySelector('svg'); if(svg) iconWrap.innerHTML=svg.outerHTML; iconWrap.style.color=value?'#facc15':'#8a8a95'; }
@@ -1271,7 +1271,7 @@ function apBizPick(value, label, el){
 }
 function apBizPickCustom(el){
   document.getElementById('ap-submit-biztype').value='__custom__';
-  var lbl=document.getElementById('ap-biz-label'); if(lbl) lbl.textContent='Custom';
+  var lbl=document.getElementById('ap-biz-label'); if(lbl){ lbl.textContent='Custom'; lbl.style.color='#f2f0ea'; }
   var iconWrap=document.getElementById('ap-biz-icon');
   if(iconWrap && el){ var svg=el.querySelector('svg'); if(svg) iconWrap.innerHTML=svg.outerHTML; iconWrap.style.color='#facc15'; }
   apBizSetActive(el);
@@ -1417,7 +1417,7 @@ async function submitApOutput(markDone){
     document.getElementById('ap-submit-output-notes').value='';
     var bizSelEl=document.getElementById('ap-submit-biztype'); if(bizSelEl)bizSelEl.value='';
     var bizCustomEl=document.getElementById('ap-submit-biztype-custom'); if(bizCustomEl){bizCustomEl.style.display='none';bizCustomEl.value='';}
-    var bizLbl=document.getElementById('ap-biz-label'); if(bizLbl)bizLbl.textContent='None';
+    var bizLbl=document.getElementById('ap-biz-label'); if(bizLbl){bizLbl.textContent='None';bizLbl.style.color='';}
     var bizIcon=document.getElementById('ap-biz-icon'); if(bizIcon){bizIcon.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="8" y1="12" x2="16" y2="12"/></svg>';bizIcon.style.color='#8a8a95';}
     var bizMenu=document.querySelector('#ap-biz-dd .ob-dd-menu'); if(bizMenu){bizMenu.querySelectorAll('.ob-dd-item').forEach(function(i,ix){i.classList.toggle('active',ix===0);});}
     document.getElementById('ap-submit-client-details').style.display='none';
