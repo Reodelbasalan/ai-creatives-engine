@@ -1247,6 +1247,18 @@ async function loadApSubmitProjectSelect(){
   }).join('');
 }
 
+// Task 1 — custom business type toggle sa Add done output form
+function apBiztypeChange(){
+  var sel=document.getElementById('ap-submit-biztype');
+  var custom=document.getElementById('ap-submit-biztype-custom');
+  if(!sel||!custom)return;
+  if(sel.value==='__custom__'){
+    custom.style.display='block'; custom.focus();
+  } else {
+    custom.style.display='none'; custom.value='';
+  }
+}
+
 async function loadApSubmitClientDetails(){
   var sel=document.getElementById('ap-submit-project-select');
   var newNameInput=document.getElementById('ap-submit-new-client-name');
@@ -1325,6 +1337,10 @@ async function submitApOutput(markDone){
       logActivity('PROJECT_CREATED',newClientName+' (via Submit Output)');
     }
     var{data:project}=await sb.from('projects').select('*').eq('id',projectId).maybeSingle();
+    // Task 1 — kung may pinili/tinype na business type at existing project, i-update lang kung wala pang laman
+    if(bizType && project && !project.business_type){
+      try{ await sb.from('projects').update({business_type:bizType}).eq('id',projectId); }catch(e){}
+    }
     var typeLabels={video:'Video output',image:'Image output',blueprint:'Blueprint PDF',other:'File'};
     var label=typeLabels[type]||'Output';
     if(notes)label=label+' — '+notes.substring(0,30);
@@ -1367,6 +1383,8 @@ async function submitApOutput(markDone){
     document.getElementById('ap-submit-output-url').value='';
     document.getElementById('ap-submit-output-sheet').value='';
     document.getElementById('ap-submit-output-notes').value='';
+    var bizSelEl=document.getElementById('ap-submit-biztype'); if(bizSelEl)bizSelEl.value='';
+    var bizCustomEl=document.getElementById('ap-submit-biztype-custom'); if(bizCustomEl){bizCustomEl.style.display='none';bizCustomEl.value='';}
     document.getElementById('ap-submit-client-details').style.display='none';
     document.getElementById('ap-view-client-btn').textContent='👁';
     window._currentApSubmitProject=null;
@@ -5657,6 +5675,79 @@ document.addEventListener('click', function(e){
   }
 });
 
+// ══════════════════════════════════════════════
+// FOR UPLOAD — List / History tabs
+// Same behavior as Own Brand Creatives history: logs
+// every publish/unpublish/status action with actor + date
+// ══════════════════════════════════════════════
+var fuHistoryItems=[];
+
+function fuSwitchView(view){
+  var listV=document.getElementById('fu-view-list');
+  var histV=document.getElementById('fu-view-history');
+  var tabL=document.getElementById('fu-tab-list');
+  var tabH=document.getElementById('fu-tab-history');
+  if(view==='history'){
+    if(listV) listV.style.display='none';
+    if(histV) histV.style.display='';
+    if(tabL) tabL.classList.remove('active');
+    if(tabH) tabH.classList.add('active');
+    loadFuHistory();
+  } else {
+    if(histV) histV.style.display='none';
+    if(listV) listV.style.display='';
+    if(tabH) tabH.classList.remove('active');
+    if(tabL) tabL.classList.add('active');
+  }
+}
+
+async function loadFuHistory(){
+  var box=document.getElementById('fu-history-body');
+  if(!box) return;
+  skelRows('fu-history-body', 4);
+  try{
+    var r=await sb.from('creatives_upload_log').select('*').order('created_at',{ascending:false}).limit(200);
+    fuHistoryItems=r.data||[];
+  }catch(e){ fuHistoryItems=[]; }
+  if(!fuHistoryItems.length){
+    box.innerHTML=emptyState(ICO_INBOX,'No history yet','Publish, unpublish, and status changes will be logged here.');
+    return;
+  }
+  box.innerHTML=fuHistoryItems.map(function(h){
+    var act=(h.action||'').toLowerCase();
+    var conf={
+      'published':{bg:'rgba(94,234,212,0.14)',c:'#5eead4',t:'Published'},
+      'unpublished':{bg:'rgba(251,146,60,0.15)',c:'#fb923c',t:'Unpublished'},
+      'done':{bg:'rgba(250,204,21,0.14)',c:'#facc15',t:'Done'},
+      'uploaded':{bg:'rgba(96,165,250,0.14)',c:'#7db4fb',t:'Uploaded'}
+    };
+    var cf=conf[act]||{bg:'rgba(255,255,255,0.06)',c:'#c8c8d0',t:(h.action||'\u2014')};
+    var badge='<span style="background:'+cf.bg+';color:'+cf.c+';font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px">'+cf.t+'</span>';
+    var when=h.created_at?new Date(h.created_at).toLocaleString('en-PH',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}):'\u2014';
+    return '<div class="ob-hist-row">'
+      + '<div class="ob-hist-name">'+escapeHtml(h.page_name||h.project_name||'\u2014')+'</div>'
+      + '<div>'+badge+'</div>'
+      + '<div class="ob-hist-actor">'+escapeHtml(h.actor_name||'Someone')+'</div>'
+      + '<div class="ob-hist-date">'+when+'</div>'
+      + '</div>';
+  }).join('');
+}
+
+// Same as obLogHistory — tinatawag tuwing may status change
+async function fuLogHistory(creative, action){
+  try{
+    var actorName=(currentUser && (currentUser.user_metadata && currentUser.user_metadata.name || currentUser.email)) || 'Someone';
+    await sb.from('creatives_upload_log').insert({
+      creative_id: creative && creative.id || null,
+      project_name: creative && creative.project_name || null,
+      page_name: (creative && creative.content_type) || (creative && creative.project_name) || null,
+      action: action,
+      actor_id: currentUser && currentUser.id || null,
+      actor_name: actorName
+    });
+  }catch(e){ console.error('fuLogHistory failed:', e); }
+}
+
 async function loadForUpload(){
   skelRows('fu-table-body', 5);
   var nowIso = new Date().toISOString();
@@ -6211,6 +6302,10 @@ async function fuSetStatus(id, status){
   }
   showNotif(status === 'Published' ? 'Published! Auto-removes in 48h ✓' : 'Set to Unpublished ✓', 'success');
   if (typeof logActivity === 'function') logActivity('CREATIVE_'+status.toUpperCase(), id);
+  // Log sa History (same as Own Brand Creatives)
+  if (typeof fuLogHistory === 'function') fuLogHistory(item, status.toLowerCase());
+  var histV=document.getElementById('fu-view-history');
+  if(histV && histV.style.display!=='none' && typeof loadFuHistory==='function') loadFuHistory();
 }
 // isara ang status dropdown pag nag-click sa labas
 document.addEventListener('click', function(e){
