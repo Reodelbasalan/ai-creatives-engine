@@ -5644,7 +5644,11 @@ function fuToggleForm(){
     if (btn) btn.style.opacity = '0.55';
     if (typeof fuSyncFormCategory === 'function') fuSyncFormCategory();
     fuLoadClientOptions();
+    // pagkatapos ng open animation, i-visible ang overflow para hindi maputol
+    // ang form kapag lumaki (hal. pag custom client name ang pinili)
+    setTimeout(function(){ if(forUploadState.formOpen) wrap.style.overflow='visible'; }, 380);
   } else {
+    wrap.style.overflow = 'hidden'; // ibalik bago mag-collapse
     wrap.style.maxHeight = '0'; wrap.style.opacity = '0'; wrap.style.marginBottom = '0';
     if (btn) btn.style.opacity = '1';
   }
@@ -5671,9 +5675,11 @@ function fuClientSelectChange(){
   var nameInput = document.getElementById('fu-client-name');
   var pidInput = document.getElementById('fu-client-project-id');
   if (!sel) return;
+  var wrap = document.getElementById('fu-form-wrap');
   if (sel.value === '__custom__'){
     if (nameInput){ nameInput.style.display = 'block'; nameInput.value = ''; nameInput.focus(); }
     if (pidInput) pidInput.value = '';
+    if (wrap){ wrap.style.overflow='visible'; wrap.style.maxHeight='760px'; }
   } else if (sel.value === ''){
     if (nameInput){ nameInput.style.display = 'none'; nameInput.value = ''; }
     if (pidInput) pidInput.value = '';
