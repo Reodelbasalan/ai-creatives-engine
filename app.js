@@ -1450,7 +1450,10 @@ function apToggleForm(forceClose){
   if(apFormOpen){
     wrap.style.maxHeight='900px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
     if(btn) btn.style.opacity='0.55';
+    // pagkatapos ng open animation, i-visible ang overflow para hindi maputol ang dropdown
+    setTimeout(function(){ if(apFormOpen) wrap.style.overflow='visible'; }, 320);
   } else {
+    wrap.style.overflow='hidden'; // ibalik bago mag-collapse
     wrap.style.maxHeight='0'; wrap.style.opacity='0'; wrap.style.marginBottom='0';
     if(btn) btn.style.opacity='1';
   }
