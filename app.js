@@ -467,7 +467,7 @@ function showPage(page){
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
   if(page==='all-projects'){loadAllProjects();loadApSubmitProjectSelect();loadApOutputsTable();}
-  if(page==='new-project'){loadAssignDropdown(); if(typeof npStartPolling==='function') npStartPolling();}
+  if(page==='new-project'){loadAssignDropdown(); if(typeof npStartPolling==='function') npStartPolling(); setTimeout(function(){if(typeof fbValidateSubmit==='function')fbValidateSubmit();},400);}
   if(page==='editor-portal')loadEditorPortal();
   if(page==='users')loadUsers();
   if(page==='dashboard')loadDashboard();
@@ -546,8 +546,52 @@ function fmtDate(d){return new Date(d).toLocaleDateString('en-PH',{month:'short'
 // ═══════════════════════════════════════
 // SAVE CLIENT DETAILS (no blueprint yet)
 // ═══════════════════════════════════════
+// ── LIVE SUBMIT VALIDATION — dim ang button habang kulang ──
+function fbValidateSubmit(){
+  var btn=document.getElementById('save-details-btn');
+  var hint=document.getElementById('fb-submit-hint');
+  if(!btn) return;
+  var isPaste=document.getElementById('tab-paste')?.classList.contains('active');
+  var brief=(document.getElementById('f-brief')?.value||'').trim();
+  var client=(document.getElementById('f-client')?.value||'').trim();
+  var freebies=parseInt(document.getElementById('f-freebies-count')?.value,10)||0;
+  var veditor=document.getElementById('f-assign-to')?.value||'';
+  var missing=[];
+  if(isPaste){ if(!brief) missing.push('Brief'); } else { if(!client) missing.push('Client name'); }
+  if(freebies<1) missing.push('Freebies count');
+  if(!veditor) missing.push('Video editor');
+  var ok=missing.length===0;
+  btn.style.opacity=ok?'1':'0.45';
+  btn.style.cursor=ok?'pointer':'not-allowed';
+  btn.style.pointerEvents='auto';
+  if(hint){
+    hint.textContent=ok?'':'Kulang pa: '+missing.join(', ');
+    hint.style.display=ok?'none':'';
+  }
+  return ok;
+}
+
 async function saveClientDetails(){
   var btn=document.getElementById('save-details-btn');
+  // ── VALIDATION GATE — kailangan kumpleto bago mag-submit ──
+  var vIsPaste=document.getElementById('tab-paste').classList.contains('active');
+  var vBrief=(document.getElementById('f-brief')?.value||'').trim();
+  var vClient=(document.getElementById('f-client')?.value||'').trim();
+  var vFreebies=parseInt(document.getElementById('f-freebies-count')?.value,10)||0;
+  var vVeditor=document.getElementById('f-assign-to')?.value||'';
+  var missing=[];
+  if(vIsPaste){ if(!vBrief) missing.push('Client brief'); }
+  else { if(!vClient) missing.push('Client name'); }
+  if(vFreebies<1) missing.push('Freebies count');
+  if(!vVeditor) missing.push('Video editor');
+  if(missing.length){
+    showNotif('Kulang pa: '+missing.join(', ')+' — kumpletuhin muna bago mag-submit','error');
+    var first=missing[0];
+    var focusMap={'Client brief':'f-brief','Client name':'f-client','Freebies count':'f-freebies-count','Video editor':'f-assign-to'};
+    var fe=document.getElementById(focusMap[first]);
+    if(fe){ fe.focus(); fe.scrollIntoView({behavior:'smooth',block:'center'}); }
+    return;
+  }
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Saving...';}
   var isPaste=document.getElementById('tab-paste').classList.contains('active');
   var clientName='';
@@ -1998,6 +2042,7 @@ function switchTab(tab){
   if(op) op.style.display = (tab==='paste') ? 'flex' : 'none';
   var lay=document.querySelector('.np-layout');
   if(lay) lay.style.gridTemplateColumns = (tab==='paste') ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr)';
+  if(typeof fbValidateSubmit==='function') fbValidateSubmit();
 }
 
 // BLUEPRINT GENERATOR
