@@ -1715,12 +1715,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
             <span id="draft-saved-indicator" style="font-size:10px;color:var(--green);opacity:0;transition:opacity 0.3s">✓ Draft saved</span>
           </div>
-          <!-- Video editor assignment ay ginagawa na sa taas (Freebies Assignment). Itong dropdown na 'to ay auto-sync na lang (nakatago para hindi doble). -->
-          <div style="display:none">
-              <select class="form-select" id="f-assign-to" style="max-width:220px;font-size:12px">
-                <option value="">Unassigned</option>
-              </select>
-            </div>
+          <!-- Video editor assignment ay ginagawa na sa taas (Freebies Assignment). Ito ay hidden mirror para tama ang assigned_to. -->
+          <input type="hidden" id="f-assign-to" value=""/>
           <button class="ghost-btn" id="save-details-btn" onclick="saveClientDetails()" style="color:var(--green);border-color:rgba(34,197,94,0.3);display:inline-flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save details only</button>
           <span id="fb-submit-hint" style="font-size:11px;color:var(--amber);display:none;margin-left:2px"></span>
           <button class="yellow-btn" id="generate-btn" onclick="generateBlueprint()" disabled title="Temporarily disabled — use Save details only for now" style="display:inline-flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Generate blueprint</button>
@@ -1737,7 +1733,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div><!-- /np-main -->
 
         <!-- ORDERS INBOX PANEL -->
-        <div class="np-orders" id="np-orders" style="display:none">
+        <div class="np-orders" id="np-orders" style="display:flex">
           <div class="npo-head">
             <div class="npo-title">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.5L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.5-6.5A2 2 0 0016.76 4H7.24a2 2 0 00-1.74 1.5z"/></svg>
@@ -1747,6 +1743,41 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div class="npo-live"><span class="dot"></span>Live sync</div>
           </div>
           <div class="npo-list" id="npo-list"></div>
+
+          <!-- HISTORY — lahat ng pumasok na client/project (For Upload style) -->
+          <div style="margin-top:20px;padding-top:18px;border-top:0.5px solid var(--border)">
+            <!-- Header -->
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
+              <div style="width:34px;height:34px;border-radius:10px;background:rgba(250,204,21,0.12);border:0.5px solid rgba(250,204,21,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
+              </div>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700;color:var(--text);letter-spacing:-0.2px">Order History</div>
+                <div style="font-size:10.5px;color:var(--text3);margin-top:1px">Lahat ng pumasok na client/order</div>
+              </div>
+            </div>
+            <!-- Mini stats -->
+            <div style="display:flex;gap:8px;margin-bottom:14px">
+              <div style="flex:1;background:rgba(250,204,21,0.06);border:0.5px solid rgba(250,204,21,0.18);border-radius:11px;padding:9px 11px">
+                <div style="font-size:17px;font-weight:750;color:var(--yellow);line-height:1" id="np-hist-count">0</div>
+                <div style="font-size:8.5px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px">Total</div>
+              </div>
+              <div style="flex:1;background:rgba(34,197,94,0.06);border:0.5px solid rgba(34,197,94,0.18);border-radius:11px;padding:9px 11px">
+                <div style="font-size:17px;font-weight:750;color:var(--green);line-height:1" id="np-hist-assigned">0</div>
+                <div style="font-size:8.5px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px">Assigned</div>
+              </div>
+              <div style="flex:1;background:rgba(96,165,250,0.06);border:0.5px solid rgba(96,165,250,0.18);border-radius:11px;padding:9px 11px">
+                <div style="font-size:17px;font-weight:750;color:#7db4fb;line-height:1" id="np-hist-today">0</div>
+                <div style="font-size:8.5px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px">Today</div>
+              </div>
+            </div>
+            <!-- Column header -->
+            <div style="display:grid;grid-template-columns:1.5fr 0.9fr;gap:8px;padding:0 4px 8px;border-bottom:0.5px solid var(--border)">
+              <span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Client</span>
+              <span style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;text-align:right">Status · Date</span>
+            </div>
+            <div id="np-hist-list" style="display:flex;flex-direction:column;gap:0;max-height:440px;overflow-y:auto"></div>
+          </div>
         </div>
 
        </div><!-- /np-layout -->
