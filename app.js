@@ -467,7 +467,7 @@ function showPage(page){
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
   if(page==='all-projects'){loadAllProjects();loadApSubmitProjectSelect();loadApOutputsTable();}
-  if(page==='new-project')loadAssignDropdown();
+  if(page==='new-project'){loadAssignDropdown(); if(typeof npStartPolling==='function') npStartPolling();}
   if(page==='editor-portal')loadEditorPortal();
   if(page==='users')loadUsers();
   if(page==='dashboard')loadDashboard();
@@ -794,6 +794,65 @@ async function fbLoadEditors(){
   }).join('');
   if (!fbEditors.length) html += '<div class="fb-dd-empty">Walang editor na naka-register</div>';
   menu.innerHTML = html;
+
+  // DEFAULT: auto-pick Romulo bilang Image creator + set count to 30
+  // (default lang — pwede pa ring palitan kada project)
+  var hEd = document.getElementById('f-freebies-editor');
+  var cnt = document.getElementById('f-freebies-count');
+  if (hEd && !hEd.value){
+    var romulo = fbEditors.find(function(e){
+      var nm = (e.name || e.email || '').toLowerCase();
+      return nm.indexOf('romulo') >= 0;
+    });
+    if (romulo){
+      var nm = romulo.name || romulo.email;
+      var lbl = document.getElementById('fb-editor-label');
+      var av = document.getElementById('fb-editor-av');
+      if (lbl) lbl.textContent = nm;
+      if (av) av.innerHTML = escapeHtml(fbInitials(nm));
+      hEd.value = romulo.id;
+      // i-highlight ang tamang item sa menu
+      menu.querySelectorAll('.fb-dd-item').forEach(function(x){
+        x.classList.toggle('active', x.textContent.trim() === nm);
+      });
+    }
+  }
+  if (cnt && (parseInt(cnt.value,10) || 0) === 0){ cnt.value = 30; }
+
+  // Populate din ang Video editor menu (same editors list)
+  var vmenu = document.getElementById('fb-veditor-menu');
+  if (vmenu){
+    var vhtml = '<div class="fb-dd-item active" onclick="fbPickVEditor(\'\',\'\',this)">'
+      + '<span class="fb-av"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Walang assign</div>';
+    vhtml += fbEditors.map(function(e){
+      var nm = e.name || e.email || 'Editor';
+      return '<div class="fb-dd-item" onclick="fbPickVEditor(\''+e.id+'\',\''+escapeHtml(nm).replace(/'/g,"\\'")+'\',this)">'
+        + '<span class="fb-av">'+escapeHtml(fbInitials(nm))+'</span>'+escapeHtml(nm)+'</div>';
+    }).join('');
+    if (!fbEditors.length) vhtml += '<div class="fb-dd-empty">Walang editor na naka-register</div>';
+    vmenu.innerHTML = vhtml;
+  }
+}
+
+function fbPickVEditor(id, name, el){
+  var dd = document.getElementById('fb-dd-veditor');
+  if (dd){
+    dd.querySelectorAll('.fb-dd-item').forEach(function(x){ x.classList.remove('active'); });
+    if (el) el.classList.add('active');
+    dd.classList.remove('open');
+  }
+  var lbl = document.getElementById('fb-veditor-label');
+  var av = document.getElementById('fb-veditor-av');
+  var h = document.getElementById('f-freebies-veditor');
+  if (lbl) lbl.textContent = name || 'Unassigned';
+  if (h) h.value = id || '';
+  if (av){
+    av.innerHTML = id ? escapeHtml(fbInitials(name))
+      : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+  }
+  // I-sync sa main Video editor assign dropdown para talagang ma-assign ang project
+  var mainSel = document.getElementById('f-assign-to');
+  if (mainSel && id){ mainSel.value = id; }
 }
 
 function fbSyncSummary(){
@@ -891,6 +950,175 @@ function fbResetForm(){
   var menu = document.getElementById('fb-editor-menu');
   if (menu) menu.querySelectorAll('.fb-dd-item').forEach(function(x,i){ x.classList.toggle('active', i===0); });
   fbSyncSummary();
+}
+
+// ══════════════════════════════════════════════════════════
+// ORDERS INBOX — auto-synced orders galing sa VIRAL ORDER FORM
+// Right panel sa New Project. Auto-refresh, expand, confirm-fill,
+// In progress badge, at done animation pag na-submit.
+// ══════════════════════════════════════════════════════════
+var npOrders = [];
+var npOpenId = null;
+var npPollTimer = null;
+
+async function npLoadOrders(){
+  var list = document.getElementById('npo-list');
+  if (!list) return;
+  try {
+    var res = await sb.from('synced_orders')
+      .select('*')
+      .in('status', ['new','inprogress'])
+      .order('created_at', { ascending:false })
+      .limit(100);
+    npOrders = res.data || [];
+  } catch(e){ npOrders = []; }
+  npRenderOrders();
+}
+
+function npFmtDate(ts){
+  if (!ts) return '';
+  var d = new Date(ts);
+  if (isNaN(d)) return String(ts);
+  return d.toLocaleDateString('en-PH',{month:'short',day:'numeric'}) + ' · ' +
+         d.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'});
+}
+
+function npRenderOrders(){
+  var list = document.getElementById('npo-list');
+  var cnt = document.getElementById('npo-count');
+  if (!list) return;
+  if (cnt) cnt.textContent = npOrders.length;
+  if (!npOrders.length){
+    list.innerHTML = '<div class="npo-empty">'
+      + '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.5L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.5-6.5A2 2 0 0016.76 4H7.24a2 2 0 00-1.74 1.5z"/></svg>'
+      + '<div style="font-size:12.5px;font-weight:600;color:var(--text2)">Walang bagong order</div>'
+      + '<div style="font-size:11px;margin-top:3px">Auto-lalabas dito ang orders galing sa order form.</div>'
+      + '</div>';
+    return;
+  }
+  list.innerHTML = npOrders.map(function(o){
+    var isOpen = o.id === npOpenId;
+    var inprog = o.status === 'inprogress';
+    var rows = [
+      ['Goal', o.goal], ['Voice', o.voice], ['Language', o.language],
+      ['Size', o.video_size], ['Type', o.video_type], ['Contact', o.contact]
+    ].filter(function(r){ return r[1]; }).map(function(r){
+      return '<div class="npo-row"><span class="npo-k">'+r[0]+'</span><span class="npo-v">'+escapeHtml(r[1])+'</span></div>';
+    }).join('');
+    return '<div class="npo-card '+(isOpen?'open':'')+' '+(inprog?'inprog':'')+'" id="npo-card-'+o.id+'" onclick="npToggle(\''+o.id+'\')">'
+      + '<div class="npo-cardhead">'
+        + '<div class="npo-cardtop">'
+          + '<span class="npo-name"><span class="npo-dot"></span>'+escapeHtml(o.client_name||'Walang pangalan')
+            + '<span class="npo-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></span>'
+          + '<svg class="npo-chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'
+        + '</div>'
+        + '<div class="npo-meta"><span class="npo-date">'+npFmtDate(o.order_ts||o.created_at)+'</span>'
+          + (inprog?'<span class="npo-badge"><span class="npo-spin"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M21 12a9 9 0 11-6.2-8.5"/></svg></span>In progress</span>':'')
+        + '</div>'
+      + '</div>'
+      + '<div class="npo-body">'
+        + '<div class="npo-fields">'+rows+'</div>'
+        + '<div class="npo-actions">'
+          + (inprog
+              ? '<button class="yellow-btn npo-fill" onclick="event.stopPropagation();npSubmit(\''+o.id+'\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Submit as project</button>'
+              : '<button class="yellow-btn npo-fill" onclick="event.stopPropagation();npFill(\''+o.id+'\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Confirm &amp; fill</button>')
+          + '<button class="ghost-btn" onclick="event.stopPropagation();npDismiss(\''+o.id+'\')" style="padding:9px 12px" aria-label="Dismiss"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+        + '</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+function npToggle(id){ npOpenId = npOpenId === id ? null : id; npRenderOrders(); }
+
+// Buuin ang formatted brief text mula sa order
+function npBuildBrief(o){
+  var lines = [];
+  if (o.client_name) lines.push('Client Name: ' + o.client_name);
+  if (o.fb_page) lines.push('FB Page: ' + o.fb_page);
+  if (o.goal) lines.push('Goal: ' + o.goal);
+  if (o.voice) lines.push('Voice Actor/Avatar: ' + o.voice);
+  if (o.language) lines.push('Language: ' + o.language);
+  if (o.video_size) lines.push('Video Size: ' + o.video_size);
+  if (o.video_type) lines.push('Video Type: ' + o.video_type);
+  if (o.avatar_details) lines.push('Model/Avatar: ' + o.avatar_details);
+  if (o.emphasize) lines.push('Emphasize: ' + o.emphasize);
+  if (o.tone) lines.push('Tone: ' + o.tone);
+  if (o.attire) lines.push('Attire/Requests: ' + o.attire);
+  if (o.outfit) lines.push('Outfit: ' + o.outfit);
+  if (o.raw_materials) lines.push('Raw Materials: ' + o.raw_materials);
+  if (o.contact) lines.push('Contact: ' + o.contact);
+  return lines.join('\n');
+}
+
+// Confirm & fill → papasok sa brief textbox + mark In progress (nananatili sa list)
+async function npFill(id){
+  var o = npOrders.find(function(x){ return x.id === id; });
+  if (!o) return;
+  // Lumipat sa Paste tab tapos i-fill ang textarea
+  if (typeof switchTab === 'function') switchTab('paste');
+  var ta = document.getElementById('f-brief');
+  if (ta){ ta.value = npBuildBrief(o); ta.dispatchEvent(new Event('input')); }
+  var cli = document.getElementById('f-client');
+  if (cli && o.client_name && !cli.value) cli.value = o.client_name;
+  // Mark as inprogress sa DB + local
+  o.status = 'inprogress';
+  try { await sb.from('synced_orders').update({ status:'inprogress' }).eq('id', id); } catch(e){}
+  npRenderOrders();
+  if (typeof showNotif === 'function') showNotif('Nailagay sa brief — I-submit na para maging project', 'success');
+}
+
+// Submit as project → done animation → mawawala sa list
+async function npSubmit(id){
+  var o = npOrders.find(function(x){ return x.id === id; });
+  if (!o) return;
+  var card = document.getElementById('npo-card-'+id);
+  // I-save muna bilang project (gamit ang existing saveProject kung meron)
+  var projectId = null;
+  try {
+    var ins = await sb.from('projects').insert({
+      client_name: o.client_name || 'Order',
+      status: 'New Input',
+      assigned_to: currentUser ? currentUser.id : null
+    }).select().maybeSingle();
+    if (ins && ins.data) projectId = ins.data.id;
+  } catch(e){}
+  try {
+    await sb.from('synced_orders').update({ status:'done', project_id: projectId }).eq('id', id);
+  } catch(e){}
+  if (typeof logActivity === 'function') logActivity('ORDER_SUBMITTED', o.client_name || '');
+  // Done animation → tanggalin sa list
+  if (card){
+    card.classList.remove('open');
+    card.classList.add('done');
+    setTimeout(function(){
+      npOrders = npOrders.filter(function(x){ return x.id !== id; });
+      npOpenId = null;
+      npRenderOrders();
+      if (typeof loadAllProjects === 'function') loadAllProjects();
+    }, 1650);
+  } else {
+    npOrders = npOrders.filter(function(x){ return x.id !== id; });
+    npRenderOrders();
+  }
+  if (typeof showNotif === 'function') showNotif('Project created from order ✓', 'success');
+}
+
+async function npDismiss(id){
+  try { await sb.from('synced_orders').update({ status:'dismissed' }).eq('id', id); } catch(e){}
+  npOrders = npOrders.filter(function(x){ return x.id !== id; });
+  if (npOpenId === id) npOpenId = null;
+  npRenderOrders();
+}
+
+// 24/7 feel: mag-poll kada 20s habang nasa New Project page
+function npStartPolling(){
+  npLoadOrders();
+  if (npPollTimer) clearInterval(npPollTimer);
+  npPollTimer = setInterval(function(){
+    var pg = document.getElementById('page-new-project');
+    if (pg && pg.classList.contains('active')) npLoadOrders();
+  }, 20000);
 }
 
 async function loadAssignDropdown(){
