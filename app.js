@@ -969,8 +969,16 @@ async function npLoadOrders(){
       .select('*')
       .in('status', ['new','inprogress'])
       .order('created_at', { ascending:false })
-      .limit(100);
-    npOrders = res.data || [];
+      .limit(300);
+    var raw = res.data || [];
+    // Itago ang mga junk/incomplete rows — dapat may client name AT
+    // kahit isang tunay na detalye (goal/voice/video type)
+    npOrders = raw.filter(function(o){
+      var name = (o.client_name || '').trim();
+      var hasName = name && name.toLowerCase() !== 'walang pangalan';
+      var hasDetail = (o.goal || o.voice || o.video_type || o.language || o.video_size || '').trim();
+      return hasName && hasDetail;
+    });
   } catch(e){ npOrders = []; }
   npRenderOrders();
 }
