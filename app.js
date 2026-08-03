@@ -2052,15 +2052,24 @@ async function loadEditorFreebiesTasks(){
   if(!box) return;
   var query;
   if(currentUserRole==='editor'||currentUserRole==='brand_intern'){
-    query=sb.from('creatives_upload').select('*,projects(fb_page)').eq('owner_id',currentUser.id).eq('is_freebies',true).order('created_at',{ascending:false});
+    query=sb.from('creatives_upload').select('*').eq('owner_id',currentUser.id).eq('is_freebies',true).order('created_at',{ascending:false});
   } else {
-    query=sb.from('creatives_upload').select('*,projects(fb_page)').eq('is_freebies',true).order('created_at',{ascending:false});
+    query=sb.from('creatives_upload').select('*').eq('is_freebies',true).order('created_at',{ascending:false});
   }
   var{data,error}=await query;
   var items=data||[];
+  // Kunin ang fb_page separately (para iwas 400 error sa join)
+  try{
+    var pids=items.map(function(c){return c.project_id;}).filter(Boolean);
+    if(pids.length){
+      var pr=await sb.from('projects').select('id,fb_page').in('id',pids);
+      var pmap={};(pr.data||[]).forEach(function(p){pmap[p.id]=p.fb_page;});
+      items.forEach(function(c){ c.projects={fb_page:pmap[c.project_id]||''}; });
+    }
+  }catch(e){}
   // DEBUG — makikita sa browser console (F12) kung bakit walang lumalabas
   try{
-    console.log('[FREEBIES TASKS] role=',currentUserRole,'currentUser.id=',currentUser&&currentUser.id,'items=',items.length,'error=',error);
+    console.log('[FREEBIES TASKS] role=',currentUserRole,'currentUser.id=',currentUser&&currentUser.id,'items=',items.length,'error=',error&&(error.message||error.details||JSON.stringify(error)));
     if(items.length) console.log('[FREEBIES TASKS] sample owner_id=',items[0].owner_id,'is_freebies=',items[0].is_freebies,'status=',items[0].status);
   }catch(e){}
   if(!items.length){
