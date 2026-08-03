@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>AI Creatives Engine</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="/adflow-sidebar.js"></script>
 <style>
 /* CUSTOM DATE PICKER */
@@ -2924,18 +2925,29 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
 
         <!-- SUMMARY CARDS -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.25rem">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1rem">
           <div class="stat-card c-green"><div class="stat-label">Total Sales</div><div class="stat-val" style="color:var(--green)" id="fin-stat-sales">₱0</div></div>
           <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-val" style="color:#f87171" id="fin-stat-expenses">₱0</div></div>
           <div class="stat-card c-yellow"><div class="stat-label">Net Profit</div><div class="stat-val" id="fin-stat-net">₱0</div></div>
           <div class="stat-card c-purple"><div class="stat-label">Ads Spent</div><div class="stat-val" style="color:var(--purple)" id="fin-stat-ads">₱0</div></div>
           <div class="stat-card c-amber"><div class="stat-label">Total Orders</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-orders">0</div></div>
+          <div class="stat-card" style="cursor:pointer" onclick="promptFinTarget()" title="Click to set monthly target">
+            <div class="stat-label">Gap to Target <span id="fin-target-label" style="color:var(--text3)"></span></div>
+            <div class="stat-val" id="fin-stat-gap">Set target</div>
+          </div>
+        </div>
+
+        <!-- TOP VA PERFORMER -->
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">🏆 Top VA Performers</div>
+          <div id="fin-va-leaderboard" style="display:flex;gap:10px;flex-wrap:wrap"></div>
         </div>
 
         <!-- TABS -->
         <div style="display:flex;gap:8px;margin-bottom:14px">
           <button type="button" class="proj-preset-pill active" id="fin-tab-sales-btn" onclick="finSwitchTab('sales')" style="padding:8px 18px">💵 Sales</button>
           <button type="button" class="proj-preset-pill" id="fin-tab-expenses-btn" onclick="finSwitchTab('expenses')" style="padding:8px 18px">🧾 Expenses</button>
+          <button type="button" class="proj-preset-pill" id="fin-tab-daily-btn" onclick="finSwitchTab('daily')" style="padding:8px 18px">📆 Daily Breakdown</button>
         </div>
 
         <!-- SALES TAB -->
@@ -2971,8 +2983,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
           </div>
           <div class="data-table">
-            <div class="table-head" style="grid-template-columns:0.4fr 0.9fr 1.4fr 1fr 1fr 1fr 1fr 1fr 32px">
-              <span>#</span><span>Date</span><span>Client</span><span>Package</span><span>Sales</span><span>VA</span><span>Ads Spent</span><span>Status</span><span></span>
+            <div class="table-head" style="grid-template-columns:0.4fr 0.9fr 1.4fr 1fr 1fr 1fr 1fr 1fr 32px 32px">
+              <span>#</span><span>Date</span><span>Client</span><span>Package</span><span>Sales</span><span>VA</span><span>Ads Spent</span><span>Status</span><span></span><span></span>
             </div>
             <div id="fin-sales-body"></div>
           </div>
@@ -3005,6 +3017,17 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <span>#</span><span>Date</span><span>Category</span><span>Item</span><span>Amount</span><span>Notes</span><span></span>
             </div>
             <div id="fin-expenses-body"></div>
+          </div>
+        </div>
+
+        <!-- DAILY BREAKDOWN TAB -->
+        <div id="fin-daily-tab" style="display:none">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Shows every date in the selected range — which days had sales and which didn't. Narrow the date range above for a more readable list on longer spans.</div>
+          <div class="data-table">
+            <div class="table-head" style="grid-template-columns:1.2fr 1fr 1fr 1fr">
+              <span>Date</span><span>Orders</span><span>Sales</span><span>Status</span>
+            </div>
+            <div id="fin-daily-body"></div>
           </div>
         </div>
       </div>
@@ -4514,6 +4537,31 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     <div class="data-table" style="margin-bottom:1.25rem" id="us-monthly-table"></div>
     <div class="section-label">Recent submissions</div>
     <div id="us-recent-list"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="invoice-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head">
+      <div class="modal-title">🧾 Generate Invoice</div>
+      <button class="modal-close" onclick="closeInvoiceModal()">✕</button>
+    </div>
+    <div style="background:var(--bg4);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 12px;margin-bottom:14px;font-size:11.5px;color:var(--text2);line-height:1.7" id="inv-preview-summary"></div>
+    <div class="form-grid">
+      <div class="form-field"><label class="form-label">Invoice No.</label><input class="form-input" id="inv-number" placeholder="0001"/></div>
+      <div class="form-field"><label class="form-label">Sale type</label>
+        <select class="form-select" id="inv-sale-type"><option>Cash Sales</option><option>Charge Sales</option></select>
+      </div>
+      <div class="form-field full"><label class="form-label">Registered Name <span class="opt">(Sold To)</span></label><input class="form-input" id="inv-client-name"/></div>
+      <div class="form-field"><label class="form-label">TIN <span class="opt">(optional)</span></label><input class="form-input" id="inv-tin" placeholder="000-000-000-000"/></div>
+      <div class="form-field"><label class="form-label">Business Address <span class="opt">(optional)</span></label><input class="form-input" id="inv-address"/></div>
+      <div class="form-field full"><label class="form-label">Item / Nature of Service</label><input class="form-input" id="inv-item-desc"/></div>
+      <div class="form-field"><label class="form-label">Quantity</label><input type="number" class="form-input" id="inv-qty" value="1"/></div>
+      <div class="form-field"><label class="form-label">Unit Price (₱)</label><input type="number" class="form-input" id="inv-unit-price"/></div>
+      <div class="form-field"><label class="form-label">Less Discount (₱) <span class="opt">(optional)</span></label><input type="number" class="form-input" id="inv-discount" value="0"/></div>
+      <div class="form-field"><label class="form-label">Less Withholding Tax (₱) <span class="opt">(optional)</span></label><input type="number" class="form-input" id="inv-wtax" value="0"/></div>
+    </div>
+    <button class="yellow-btn" onclick="generateInvoicePDF()" style="margin-top:14px;width:100%"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Invoice PDF</button>
   </div>
 </div>
 
