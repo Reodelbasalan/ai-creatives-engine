@@ -2724,7 +2724,15 @@ async function switchChatRoom(room){
   var announceNotice=document.getElementById('announce-notice');
   if(titleEl)titleEl.textContent=info?info.title:(isDM?'💬 Direct Message':'# '+room);
   if(descEl)descEl.textContent=info?info.desc:(isDM?'Private conversation':'');
-  // Announcements — editor read-only
+  // Announcements — editor read-only. Re-verify the role fresh from the
+  // database (instead of trusting the possibly-stale currentUserRole
+  // global) so a real admin never gets incorrectly locked out.
+  if(info&&info.adminOnly&&currentUser?.id){
+    try{
+      var{data:freshProfile}=await sb.from('profiles').select('role').eq('id',currentUser.id).maybeSingle();
+      if(freshProfile?.role) currentUserRole=freshProfile.role;
+    }catch(e){}
+  }
   var isAdminOnlyRoom=info&&info.adminOnly&&currentUserRole!=='admin';
   if(inputEl){
     inputEl.disabled=isAdminOnlyRoom;
@@ -2872,6 +2880,12 @@ async function sendMessage(){
   if(!msg){return;}
   if(!currentUser){showNotif('Not logged in','error');return;}
   var info=CHANNEL_INFO[currentRoom];
+  if(info&&info.adminOnly&&currentUserRole!=='admin'){
+    try{
+      var{data:freshProfile}=await sb.from('profiles').select('role').eq('id',currentUser.id).maybeSingle();
+      if(freshProfile?.role) currentUserRole=freshProfile.role;
+    }catch(e){}
+  }
   if(info&&info.adminOnly&&currentUserRole!=='admin'){
     showNotif('Only admins can post in #'+currentRoom,'error');return;
   }
@@ -5191,6 +5205,42 @@ async function deleteOutputRow(id){
 var finActiveTab='sales';
 var finPHP=function(n){ return '₱'+Number(n||0).toLocaleString('en-PH',{maximumFractionDigits:2}); };
 
+function finApplySalesSearch(salesArr){
+  var q=(document.getElementById('fin-sales-search')?.value||'').trim().toLowerCase();
+  if(!q) return salesArr;
+  return salesArr.filter(function(o){
+    return (o.client_name||'').toLowerCase().includes(q)
+      || (o.business||'').toLowerCase().includes(q)
+      || (o.contact||'').toLowerCase().includes(q)
+      || (o.email||'').toLowerCase().includes(q);
+  });
+}
+
+function finFilterSales(){
+  renderFinSalesTable(finApplySalesSearch(window._finSalesCache||[]));
+}
+
+function renderFinSalesTable(sales){
+  var salesBody=document.getElementById('fin-sales-body');
+  if(!salesBody) return;
+  salesBody.innerHTML=sales.length?sales.map(function(o,i){
+    var statusColors={Paid:'#4ade80',Balance:'#facc15',Pending:'#fb923c',Refunded:'#f87171'};
+    var sc=statusColors[o.paid_status]||'#9a9aa5';
+    return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.4fr 1fr 1fr 1fr 1fr 1fr 32px 32px">'
+      +'<div style="color:var(--text3);font-size:11px">'+(sales.length-i)+'</div>'
+      +'<div class="row-date">'+fmtDate(o.order_date)+'</div>'
+      +'<div><div class="row-name">'+(o.client_name||'—')+'</div><div class="row-sub">'+(o.business||o.contact||'')+'</div></div>'
+      +'<div style="font-size:11px;color:var(--text2)">'+(o.order_package||'—')+'</div>'
+      +'<div style="font-weight:650;color:var(--green)">'+finPHP(o.sales_amount)+'</div>'
+      +'<div style="font-size:11px;color:var(--text2)">'+(o.va_name||'—')+'</div>'
+      +'<div style="font-size:11px;color:var(--text2)">'+(o.ads_spent?finPHP(o.ads_spent):'—')+'</div>'
+      +'<div><span style="font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px;background:'+sc+'22;color:'+sc+'">'+(o.paid_status||'—')+'</span></div>'
+      +'<div class="proj-row-del" title="Generate Invoice" onclick="openInvoiceModal(\''+o.id+'\')" style="color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>'
+      +'<div class="proj-row-del" title="Delete" onclick="deleteSale(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>'
+      +'</div>';
+  }).join(''):'<div class="table-empty"><div class="table-empty-icon">💵</div>No sales match'+(document.getElementById('fin-sales-search')?.value?' your search.':' in this period yet.')+'</div>';
+}
+
 async function promptFinTarget(){
   var{data:row}=await sb.from('app_settings').select('value').eq('key','monthly_sales_target').maybeSingle();
   var current=row?row.value:'';
@@ -5323,9 +5373,16 @@ async function loadFinancePage(){
   var salesBody=document.getElementById('fin-sales-body');
   var expBody=document.getElementById('fin-expenses-body');
   if(!salesBody||!expBody) return;
+  var dfEl=document.getElementById('fin-date-from');
+  var dtEl=document.getElementById('fin-date-to');
+  if(dfEl && dtEl && !dfEl.value && !dtEl.value){
+    var monthPill=document.querySelector('#fin-date-presets .proj-preset-pill[onclick*="\'month\'"]');
+    finDatePreset('month',monthPill);
+    return;
+  }
   updateFinRangeLabel();
-  var df=document.getElementById('fin-date-from')?.value||'';
-  var dt=document.getElementById('fin-date-to')?.value||'';
+  var df=dfEl?.value||'';
+  var dt=dtEl?.value||'';
 
   var salesQuery=sb.from('sales_orders').select('*').order('order_date',{ascending:false}).limit(500);
   if(df) salesQuery=salesQuery.gte('order_date',df);
@@ -5368,10 +5425,11 @@ async function loadFinancePage(){
         gapValEl.textContent=gap>0?finPHP(gap)+' to go':'Target hit! +'+finPHP(-gap);
         gapValEl.style.color=gap>0?'#facc15':'#4ade80';
         gapValEl.style.fontSize='16px';
+        gapValEl.style.textDecoration='none';
       }
     } else {
       if(gapLabelEl) gapLabelEl.textContent='';
-      if(gapValEl){ gapValEl.textContent='Set target'; gapValEl.style.color='var(--text3)'; gapValEl.style.fontSize='13px'; }
+      if(gapValEl){ gapValEl.textContent='+ Set target'; gapValEl.style.color='var(--yellow)'; gapValEl.style.fontSize='13px'; gapValEl.style.textDecoration='underline'; gapValEl.style.textDecorationStyle='dotted'; }
     }
   }catch(e){}
 
@@ -5434,23 +5492,9 @@ async function loadFinancePage(){
   }
 
   // ── Sales table ──
+  window._finSalesCache=sales;
   if(!salesErr){
-    salesBody.innerHTML=sales.length?sales.map(function(o,i){
-      var statusColors={Paid:'#4ade80',Balance:'#facc15',Pending:'#fb923c',Refunded:'#f87171'};
-      var sc=statusColors[o.paid_status]||'#9a9aa5';
-      return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.4fr 1fr 1fr 1fr 1fr 1fr 32px 32px">'
-        +'<div style="color:var(--text3);font-size:11px">'+(sales.length-i)+'</div>'
-        +'<div class="row-date">'+fmtDate(o.order_date)+'</div>'
-        +'<div><div class="row-name">'+(o.client_name||'—')+'</div><div class="row-sub">'+(o.business||o.contact||'')+'</div></div>'
-        +'<div style="font-size:11px;color:var(--text2)">'+(o.order_package||'—')+'</div>'
-        +'<div style="font-weight:650;color:var(--green)">'+finPHP(o.sales_amount)+'</div>'
-        +'<div style="font-size:11px;color:var(--text2)">'+(o.va_name||'—')+'</div>'
-        +'<div style="font-size:11px;color:var(--text2)">'+(o.ads_spent?finPHP(o.ads_spent):'—')+'</div>'
-        +'<div><span style="font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px;background:'+sc+'22;color:'+sc+'">'+(o.paid_status||'—')+'</span></div>'
-        +'<div class="proj-row-del" title="Generate Invoice" onclick="openInvoiceModal(\''+o.id+'\')" style="color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>'
-        +'<div class="proj-row-del" title="Delete" onclick="deleteSale(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>'
-        +'</div>';
-    }).join(''):'<div class="table-empty"><div class="table-empty-icon">💵</div>No sales in this period yet.</div>';
+    renderFinSalesTable(finApplySalesSearch(sales));
   }
 
   // ── Expenses table ──
