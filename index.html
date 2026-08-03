@@ -3716,9 +3716,9 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     @media (prefers-reduced-motion: reduce){ .fu-newclient { transition:none; } }
 
     /* ─── ORDERS INBOX (New Project right panel) ─── */
-    .np-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:22px; align-items:start; }
+    .np-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:22px; align-items:stretch; }
     @media (max-width:1100px){ .np-layout { grid-template-columns:1fr !important; } .np-orders { order:-1; } }
-    .np-orders { position:sticky; top:16px; align-self:start; background:var(--bg2); border:0.5px solid var(--border); border-radius:18px; padding:22px 20px; display:flex; flex-direction:column; min-height:640px; max-height:calc(100vh - 40px); }
+    .np-orders { align-self:stretch; background:var(--bg2); border:0.5px solid var(--border); border-radius:18px; padding:22px 20px; display:flex; flex-direction:column; }
     .npo-list { display:flex; flex-direction:column; gap:13px; overflow-y:auto; padding-right:4px; flex:1; }
     .npo-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-shrink:0; }
     .npo-title { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:600; color:var(--text); }
