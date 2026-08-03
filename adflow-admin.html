@@ -181,6 +181,15 @@ header::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;
   text-transform:uppercase;font-weight:600;}
 .stat.alert .ico{background:var(--warn-bg);color:var(--warn);}
 .stat.alert b{color:var(--warn);}
+.stat.picked{border-color:var(--y-24);background:var(--y-06);box-shadow:var(--edge),0 0 0 1px var(--y-24);}
+.stat.picked .ico{background:var(--y-12);color:var(--y);}
+.stat:focus-visible{outline:2px solid var(--y);outline-offset:2px;}
+.fchip{display:inline-flex;align-items:center;gap:8px;background:var(--y-06);border:1px solid var(--y-24);
+  color:var(--y);padding:6px 8px 6px 13px;border-radius:99px;font-size:12px;font-weight:650;margin-bottom:12px;
+  animation:fadeUp .3s var(--ease) both;}
+.fchip-x{background:var(--y-12);border:none;color:var(--y);width:18px;height:18px;border-radius:50%;
+  cursor:pointer;font-size:10px;line-height:1;display:grid;place-items:center;transition:background .15s;}
+.fchip-x:hover{background:var(--y-24);}
 
 nav{display:flex;align-items:center;gap:3px;border-top:1px solid var(--line);
   overflow-x:auto;scrollbar-width:none;}
@@ -273,6 +282,15 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
   color:var(--ink-4);letter-spacing:.01em;}
 .lrow .meta{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-3);margin-top:6px;}
 .lrow .meta .i{font-size:12px;color:var(--ink-4);}
+/* inline expand */
+.lrow .caret{position:absolute;right:16px;top:16px;color:var(--ink-4);transition:transform .3s var(--ease);}
+.lrow.open .caret{transform:rotate(90deg);color:var(--y);}
+.lrow.open{background:var(--y-06);border-color:var(--y-24);border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0;}
+.xpand{max-height:0;overflow:hidden;transition:max-height .42s var(--ease);
+  background:var(--card-2);border:1px solid var(--y-24);border-top:none;
+  border-radius:0 0 13px 13px;margin-bottom:5px;}
+.xpand.open{max-height:1400px;}
+.xpand-in{padding:18px 16px 20px;border-top:1px solid var(--line);}
 
 .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;
   font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;flex:none;}
@@ -403,6 +421,7 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
   <symbol id="ic-refresh" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></symbol>
   <symbol id="ic-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
   <symbol id="ic-hist" viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 106 5.3L3 8"/><path d="M12 7v5l4 2"/></symbol>
+  <symbol id="ic-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
   <symbol id="ic-zap" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
   <symbol id="ic-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></symbol>
   <symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
@@ -545,24 +564,19 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
 
     <!-- ---------- LIST ---------- -->
     <section class="pane" data-pane="list">
-      <div class="grid">
-        <div class="card card--flush">
-          <div class="toolbar">
-            <div class="search">
-              <input type="text" id="q" placeholder="Search email, name or key" spellcheck="false" autocomplete="off" />
-              <svg class="i"><use href="#ic-search"/></svg>
-              <kbd>/</kbd>
-            </div>
-            <button class="btn btn--ghost btn--sm" id="q-go">Search</button>
+      <div class="card card--flush">
+        <div class="toolbar">
+          <div class="search">
+            <input type="text" id="q" placeholder="Search email, name or key" spellcheck="false" autocomplete="off" />
+            <svg class="i"><use href="#ic-search"/></svg>
+            <kbd>/</kbd>
           </div>
-          <button class="btn btn--ghost btn--sm" id="q-csv" style="width:100%;margin-bottom:14px">
-            <svg class="i"><use href="#ic-download"/></svg> Export all as spreadsheet
-          </button>
-          <div id="list"></div>
+          <button class="btn btn--ghost btn--sm" id="q-go">Search</button>
         </div>
-        <div class="card" id="detail">
-          <p class="empty"><svg class="i"><use href="#ic-users"/></svg> Select a customer to see their licence, devices and history.</p>
-        </div>
+        <button class="btn btn--ghost btn--sm" id="q-csv" style="width:100%;margin-bottom:14px">
+          <svg class="i"><use href="#ic-download"/></svg> Export all as spreadsheet
+        </button>
+        <div id="list"></div>
       </div>
     </section>
 
@@ -781,11 +795,15 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
   }
 
   // ------------------------------------------------------------- setup gate
+  // Naka-embed sa loob ng AI Creatives (admin-only). Auto-connect na —
+  // hindi na kailangang mag-type ng password kada bukas.
+  const ADF_PASS = "uJP0dHiaUVEm82jgmGSRoz";
   function boot() {
     enhancePasswords();
-    TOKEN = store.get("adf.pass") || "";
+    TOKEN = store.get("adf.pass") || ADF_PASS;
     DRIVE = store.get("adf.drive") ?? "https://drive.google.com/drive/folders/1u5qUqxSVYVHBDLEJIubM4eS1ycxihiP5";
-    if (TOKEN) start(); else $("#setup").style.display = "grid";
+    store.set("adf.pass", TOKEN);   // i-remember para sa susunod
+    start();                        // diretso na — walang setup gate
   }
 
   $("#s-go").addEventListener("click", async () => {
@@ -808,7 +826,18 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
       "Connected — the licence token stays on the server, never in this browser."));
   }
 
-  function start() {
+  async function start() {
+    // I-verify muna ang auto-connect. Kung mabigo (mali/expired ang password),
+    // saka lang ipakita ang manual setup gate.
+    try {
+      await api("GET", "/admin/stats");
+    } catch (e) {
+      store.del("adf.pass");
+      $("#app").hidden = true;
+      $("#setup").style.display = "grid";
+      if (e && /password/i.test(e.message || "")) $("#s-err").textContent = "Auto-connect failed — enter the password manually.";
+      return;
+    }
     $("#setup").style.display = "none";
     $("#app").hidden = false;
     $("#c-token").value = TOKEN; $("#c-drive").value = DRIVE;
@@ -817,6 +846,7 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
     segment("#seg-seats", "#i-seats", updatePreview);
     updatePreview();
     refreshAll();
+    showPane("list");   // Bungad agad ang listahan ng lahat ng customers/users
   }
 
   function refreshAll() { refreshStats(); loadList(); loadExpiring(); }
@@ -889,6 +919,14 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
           const txt = el("div");
           txt.append(el("b", null, "0"), el("span", null, label));
           d.append(i, txt);
+          // Clickable: pindutin → punta Customers list na naka-filter
+          d.style.cursor = "pointer";
+          d.setAttribute("role", "button");
+          d.setAttribute("tabindex", "0");
+          d.title = "Ipakita ang " + label.toLowerCase();
+          const go = () => { statFilter = (statFilter === k ? null : k); showPane("list"); loadList(); syncStatActive(); };
+          d.addEventListener("click", go);
+          d.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); } });
           box.append(d);
         });
       }
@@ -898,7 +936,16 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
         d.classList.toggle("alert", !!alert && v > 0);
         countUp(d.querySelector("b"), v);
       });
+      syncStatActive();
     } catch (e) { toast(e.message, "err"); }
+  }
+
+  // I-highlight kung aling stat ang napiling filter
+  function syncStatActive() {
+    const box = $("#stats");
+    if (!box) return;
+    box.querySelectorAll(".stat").forEach((d) =>
+      d.classList.toggle("picked", d.dataset.k === statFilter));
   }
 
   // ------------------------------------------------------------------ issue
@@ -1030,6 +1077,7 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
 
   // ------------------------------------------------------------------- list
   let selected = null;
+  let statFilter = null;  // 'active' | 'devices' | 'expiring_7d' | 'expired' | null
 
   function skeletons(box, n) {
     box.textContent = "";
@@ -1042,23 +1090,43 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
     box.append(p);
   }
 
-  async function loadList() {
+  let _lastRows = null;
+  async function loadList(quiet) {
     const q = $("#q").value.trim();
     const box = $("#list");
-    skeletons(box, 4);
+    if (!quiet) skeletons(box, 4);
     try {
-      const r = await api("GET", "/admin/keys" + (q ? "?q=" + encodeURIComponent(q) : ""));
-      const rows = r.licenses || [];
+      let rows;
+      if (quiet && _lastRows) {
+        rows = _lastRows;   // toggle lang — gamitin ang cached, walang re-fetch/flicker
+      } else {
+        const r = await api("GET", "/admin/keys" + (q ? "?q=" + encodeURIComponent(q) : ""));
+        rows = r.licenses || [];
+        _lastRows = rows;
+      }
+      // ── Filter base sa napiling stat card ──
+      if (statFilter === "active")      rows = rows.filter((l) => statusOf(l) === "active");
+      else if (statFilter === "expiring_7d") rows = rows.filter((l) => statusOf(l) === "soon");
+      else if (statFilter === "expired")     rows = rows.filter((l) => statusOf(l) === "expired");
+      else if (statFilter === "devices")     rows = rows.filter((l) => (l.used_seats ?? 0) > 0);
+      renderFilterChip();
       if (!rows.length) {
-        return emptyState(box, q ? "ic-search" : "ic-inbox",
-          q ? "No customer matches that search." : "No customers yet. Your first licence will appear here.");
+        const msg = statFilter
+          ? "Walang customer sa filter na ito."
+          : (q ? "No customer matches that search." : "No customers yet. Your first licence will appear here.");
+        return emptyState(box, q ? "ic-search" : "ic-inbox", msg);
       }
       box.textContent = "";
       rows.forEach((l, n) => {
         const st = statusOf(l);
-        const row = el("button", "lrow" + (selected === l.key ? " sel" : ""));
+        const wrap = el("div");
+        if (!quiet) wrap.style.animationDelay = Math.min(n, 10) * 32 + "ms";
+        else wrap.style.animation = "none";
+
+        const row = el("button", "lrow" + (selected === l.key ? " open sel" : ""));
         row.type = "button";
-        row.style.animationDelay = Math.min(n, 10) * 32 + "ms";
+        row.dataset.key = l.key;
+        if (quiet) row.style.animation = "none";
 
         const top = el("div", "top");
         top.append(el("span", "who", l.email || "—"), pill(st));
@@ -1074,10 +1142,44 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
         m2.append(icon("ic-cal"), el("span", null, "Purchased " + fmt(l.created_at) + "  →  " + fmt(l.expires_at)));
         row.append(m2);
 
-        row.addEventListener("click", () => { selected = l.key; loadList(); showDetail(l.key); });
-        box.append(row);
+        const car = el("span", "caret"); car.append(icon("ic-chevron"));
+        row.append(car);
+
+        // Expand container (inline dropdown)
+        const xp = el("div", "xpand" + (selected === l.key ? " open" : ""));
+        xp.id = "xp-" + l.key;
+        const xpin = el("div", "xpand-in"); xpin.id = "xpin-" + l.key;
+        xp.append(xpin);
+
+        row.addEventListener("click", () => {
+          if (selected === l.key) { selected = null; loadList(true); return; }
+          selected = l.key; loadList(true); showDetail(l.key);
+        });
+
+        wrap.append(row, xp);
+        box.append(wrap);
       });
+      // Kung may naka-select, i-render agad ang details sa loob ng expand
+      if (selected && rows.some((l) => l.key === selected)) showDetail(selected);
     } catch (e) { emptyState(box, "ic-alert", e.message); }
+  }
+
+  // Filter chip — ipakita kung anong stat ang naka-filter + clear button
+  function renderFilterChip() {
+    let chip = $("#filter-chip");
+    const holder = $("#list");
+    if (!statFilter) { if (chip) chip.remove(); return; }
+    const labels = { active: "Active", devices: "With devices", expiring_7d: "Expiring", expired: "Expired" };
+    if (!chip) {
+      chip = el("div", "fchip"); chip.id = "filter-chip";
+      holder.parentNode.insertBefore(chip, holder);
+    }
+    chip.textContent = "";
+    chip.append(el("span", null, "Filter: " + (labels[statFilter] || statFilter)));
+    const x = el("button", "fchip-x"); x.type = "button"; x.textContent = "✕";
+    x.title = "Alisin ang filter";
+    x.addEventListener("click", () => { statFilter = null; loadList(); syncStatActive(); });
+    chip.append(x);
   }
 
   $("#q-go").addEventListener("click", loadList);
@@ -1111,7 +1213,8 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
 
   // ----------------------------------------------------------------- detail
   async function showDetail(key) {
-    const box = $("#detail");
+    const box = $("#xpin-" + key);
+    if (!box) return;
     skeletons(box, 3);
     let r;
     try { r = await api("GET", "/admin/keys/" + key); }
@@ -1127,7 +1230,7 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
     const kline = el("div", "k");
     kline.append(el("span", null, l.key));
     const kc = el("button", "kc"); kc.type = "button"; kc.title = "Copy licence key"; kc.append(icon("ic-copy"));
-    kc.addEventListener("click", () => copyText(l.key, "Licence key copied."));
+    kc.addEventListener("click", (ev) => { ev.stopPropagation(); copyText(l.key, "Licence key copied."); });
     kline.append(kc);
     left.append(kline);
 
@@ -1156,7 +1259,8 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
       const b = el("button", "btn btn--sm " + cls);
       b.type = "button";
       b.append(icon(ic), document.createTextNode(label));
-      b.addEventListener("click", async () => {
+      b.addEventListener("click", async (ev) => {
+        ev.stopPropagation();
         busy(b, true);
         try { await fn(); toast("Done.", "ok"); refreshStats(); loadList(); showDetail(key); loadExpiring(); }
         catch (e) { if (e.message) toast(e.message, "err"); busy(b, false); }
@@ -1199,9 +1303,10 @@ textarea.msg{min-height:290px;font-family:'JetBrains Mono',ui-monospace,Menlo,Co
         free.type = "button";
         free.append(icon("ic-trash"), document.createTextNode("Free slot"));
         free.title = "Release this slot — use when the customer changes computers";
-        free.addEventListener("click", async () => {
+        free.addEventListener("click", async (ev) => {
+          ev.stopPropagation();
           busy(free, true);
-          try { await api("DELETE", "/admin/devices/" + d.id); toast("Device slot released.", "ok"); showDetail(key); loadList(); }
+          try { await api("DELETE", "/admin/devices/" + d.id); toast("Device slot released.", "ok"); loadList(); showDetail(key); }
           catch (e) { toast(e.message, "err"); busy(free, false); }
         });
         row.append(free);
