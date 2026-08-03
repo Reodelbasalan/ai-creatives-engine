@@ -467,7 +467,7 @@ function showPage(page){
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
   if(page==='all-projects'){loadAllProjects();loadApSubmitProjectSelect();loadApOutputsTable();}
-  if(page==='new-project'){loadAssignDropdown(); if(typeof npStartPolling==='function') npStartPolling(); setTimeout(function(){if(typeof fbValidateSubmit==='function')fbValidateSubmit();},500);}
+  if(page==='new-project'){loadAssignDropdown(); if(typeof npStartPolling==='function') npStartPolling(); if(typeof npLoadHistory==='function') npLoadHistory(); setTimeout(function(){if(typeof fbValidateSubmit==='function')fbValidateSubmit(); var atab=document.getElementById('tab-paste')?.classList.contains('active')?'paste':'manual'; if(typeof switchTab==='function') switchTab(atab);},500);}
   if(page==='editor-portal')loadEditorPortal();
   if(page==='users')loadUsers();
   if(page==='dashboard')loadDashboard();
@@ -571,8 +571,11 @@ function fbValidateSubmit(){
   return ok;
 }
 
+var _fbSaving=false;
 async function saveClientDetails(){
   var btn=document.getElementById('save-details-btn');
+  // ── DOUBLE-SUBMIT GUARD — iwas doble sa All Projects ──
+  if(_fbSaving){ return; }
   // ── VALIDATION GATE — kailangan kumpleto bago mag-submit ──
   var vIsPaste=document.getElementById('tab-paste').classList.contains('active');
   var vBrief=(document.getElementById('f-brief')?.value||'').trim();
@@ -587,6 +590,7 @@ async function saveClientDetails(){
     showNotif('Kulang pa: '+missing.join(', ')+' — kumpletuhin muna bago mag-submit','error');
     return;
   }
+  _fbSaving=true;
   // Siguraduhin naka-sync ang main assign field para tama ang assigned_to
   var vSync=document.getElementById('f-assign-to');
   if(vSync && vVeditor){ vSync.value=vVeditor; }
@@ -596,7 +600,7 @@ async function saveClientDetails(){
   var product='',emphasize='',script='';
   if(isPaste){
     var brief=document.getElementById('f-brief').value.trim();
-    if(!brief){showNotif('Paste client brief first','error');if(btn){btn.disabled=false;btn.innerHTML=FB_SAVE_LABEL;}return;}
+    if(!brief){showNotif('Paste client brief first','error');if(btn){btn.disabled=false;btn.innerHTML=FB_SAVE_LABEL;}_fbSaving=false;return;}
     function extractField(text,keys){
       var ls=text.split('\n');
       for(var i=0;i<ls.length;i++){
@@ -623,7 +627,7 @@ async function saveClientDetails(){
     emphasize=document.getElementById('f-script')?.value||extractField(brief,['emphasize','script','highlight','focus']);
   } else {
     clientName=document.getElementById('f-client')?.value?.trim();
-    if(!clientName){showNotif('Client name required','error');if(btn){btn.disabled=false;btn.innerHTML=FB_SAVE_LABEL;}return;}
+    if(!clientName){showNotif('Client name required','error');if(btn){btn.disabled=false;btn.innerHTML=FB_SAVE_LABEL;}_fbSaving=false;return;}
     product=document.getElementById('f-product')?.value?.trim()||'';
     emphasize=document.getElementById('f-emphasize')?.value||'';
     script=document.getElementById('f-script')?.value||'';
@@ -649,7 +653,7 @@ async function saveClientDetails(){
     tone:selectedToneVal||'',
     status:'New Input',
     blueprint:null,
-    assigned_to:document.getElementById('f-assign-to')?.value||null,
+    assigned_to:(document.getElementById('f-freebies-veditor')?.value||document.getElementById('f-assign-to')?.value||null),
     created_by:currentUser?.id,
     gdrive_link:document.getElementById('f-gdrive')?.value?.trim()||null,
     moodboard_link:document.getElementById('f-moodboard')?.value?.trim()||null,
@@ -657,7 +661,7 @@ async function saveClientDetails(){
     client_extra:document.getElementById('f-client-extra')?.value?.trim()||null
   }).select();
   if(btn){btn.disabled=false;btn.innerHTML=FB_SAVE_LABEL;}
-  if(error){showNotif('Error: '+error.message,'error');return;}
+  if(error){showNotif('Error: '+error.message,'error');_fbSaving=false;return;}
   showNotif('Client saved! Nakalista na sa All Projects.','success');
   // ── HISTORY LOG — kasama ang freebies count + video editor ──
   var logFreebies=parseInt(document.getElementById('f-freebies-count')?.value,10)||0;
@@ -666,14 +670,28 @@ async function saveClientDetails(){
   var logDetails=clientName+' — '+logFreebies+' freebies'+(logVeditorName?(' | Editor: '+logVeditorName):'');
   logActivity('CLIENT_SAVED',logDetails);
   if (typeof fbCreateForUploadRow === 'function') { await fbCreateForUploadRow(data && data[0] && data[0].id, clientName); fbResetForm(); }
-  var videoEditorId=document.getElementById('f-assign-to')?.value||'';
+  var videoEditorId=(document.getElementById('f-freebies-veditor')?.value||document.getElementById('f-assign-to')?.value||'');
   if(videoEditorId){ await notifyEditorAssigned(videoEditorId, clientName); }
   // Clear form
   ['f-client','f-biztype','f-product','f-pain','f-usp','f-audience','f-goal','f-emphasize','f-brief','f-script','f-fb','f-website','f-color1','f-color2','f-gdrive','f-moodboard','f-sample-video','f-client-extra'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var fa=document.getElementById('f-assign-to'); if(fa) fa.value='';
+  var fv=document.getElementById('f-freebies-veditor'); if(fv) fv.value='';
+  var fvl=document.getElementById('fb-veditor-label'); if(fvl) fvl.textContent='Unassigned';
   selectedToneVal='';
   document.querySelectorAll('.tone-opt').forEach(function(t){t.classList.remove('selected');});
   if(typeof fbValidateSubmit==='function') fbValidateSubmit();
+  // ── AUTO-DONE ang order na na-fill (para hindi na kailangan ng hiwalay na Submit) ──
+  var _filledId = window._npFillingOrderId;
+  if(_filledId){
+    var _newProjId = (data && data[0] && data[0].id) || null;
+    try { await sb.from('synced_orders').update({ status:'done', project_id:_newProjId }).eq('id', _filledId); } catch(e){}
+    if (typeof logActivity === 'function') logActivity('ORDER_SUBMITTED', clientName || '');
+    if (typeof npOrders !== 'undefined') { npOrders = npOrders.filter(function(x){ return x.id !== _filledId; }); }
+    window._npFillingOrderId = null;
+    if (typeof npRenderOrders === 'function') npRenderOrders();
+  }
+  if(typeof npLoadHistory==='function') npLoadHistory();
+  _fbSaving=false;
   showPage('all-projects');
 }
 // DASHBOARD
@@ -1033,6 +1051,122 @@ async function npLoadOrders(){
   npRenderOrders();
 }
 
+// ── HISTORY — lahat ng pumasok na client/project (mula sa projects table) ──
+async function npLoadHistory(){
+  var list = document.getElementById('np-hist-list');
+  var cnt = document.getElementById('np-hist-count');
+  if (!list) return;
+  var rows=[];
+  try {
+    var res = await sb.from('projects')
+      .select('*')
+      .order('created_at',{ascending:false})
+      .limit(200);
+    rows = res.data || [];
+  } catch(e){ rows=[]; }
+  // Editor name lookup
+  var emap={};
+  try {
+    var er = await sb.from('profiles').select('id,name,email');
+    (er.data||[]).forEach(function(p){ emap[p.id]=p.name||p.email; });
+  } catch(e){}
+  // ── Stats (For Upload style: Total / Assigned / Today) ──
+  var todayStr = new Date().toDateString();
+  var assignedCount = rows.filter(function(p){ return !!p.assigned_to; }).length;
+  var todayCount = rows.filter(function(p){ return p.created_at && new Date(p.created_at).toDateString()===todayStr; }).length;
+  if (cnt) cnt.textContent = rows.length;
+  var aEl=document.getElementById('np-hist-assigned'); if(aEl) aEl.textContent=assignedCount;
+  var tEl=document.getElementById('np-hist-today'); if(tEl) tEl.textContent=todayCount;
+  if (!rows.length){
+    list.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:24px 0;line-height:1.6">Wala pang naipasok na client.<br>Lalabas dito lahat ng na-submit mo.</div>';
+    return;
+  }
+  window._npHistRows = rows;
+  window._npHistEditorMap = emap;
+  var statusConf={
+    'New Input':{bg:'rgba(34,197,94,0.14)',c:'#4ade80'},
+    'Generating AI':{bg:'rgba(167,139,250,0.14)',c:'#a78bfa'},
+    'Ready for Editor':{bg:'rgba(250,204,21,0.14)',c:'#facc15'},
+    'In Production':{bg:'rgba(250,204,21,0.14)',c:'#facc15'},
+    'Approved / Done':{bg:'rgba(74,222,128,0.14)',c:'#4ade80'}
+  };
+  list.innerHTML = rows.map(function(p){
+    var cf=statusConf[p.status]||{bg:'rgba(255,255,255,0.06)',c:'#c8c8d0'};
+    var editor=p.assigned_to&&emap[p.assigned_to]?emap[p.assigned_to]:'';
+    var badge='<span style="background:'+cf.bg+';color:'+cf.c+';font-size:9px;font-weight:650;padding:2px 7px;border-radius:20px;white-space:nowrap">'+(p.status||'—')+'</span>';
+    return '<div style="border-bottom:0.5px solid var(--border)">'
+      + '<div onclick="npToggleHist(\''+p.id+'\')" style="display:grid;grid-template-columns:14px 1.5fr 0.9fr;gap:8px;align-items:center;padding:10px 4px;cursor:pointer;transition:background .15s" onmouseover="this.style.background=\'rgba(255,255,255,0.02)\'" onmouseout="this.style.background=\'transparent\'">'
+      +   '<svg id="np-hist-caret-'+p.id+'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s"><polyline points="9 18 15 12 9 6"/></svg>'
+      +   '<div style="min-width:0">'
+      +     '<div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(p.client_name||'—')+'</div>'
+      +     '<div style="font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">'+(editor?('👤 '+escapeHtml(editor)):escapeHtml(p.business_type||'—'))+'</div>'
+      +   '</div>'
+      +   '<div style="text-align:right;min-width:0">'+badge+'<div style="font-size:9px;color:var(--text3);white-space:nowrap;margin-top:3px">'+npFmtDate(p.created_at)+'</div></div>'
+      + '</div>'
+      + '<div id="np-hist-detail-'+p.id+'" style="display:none;padding:2px 4px 14px"></div>'
+      + '</div>';
+  }).join('');
+}
+
+// Toggle expand ng isang history row → ipakita lahat ng field
+function npToggleHist(id){
+  var box=document.getElementById('np-hist-detail-'+id);
+  var caret=document.getElementById('np-hist-caret-'+id);
+  if(!box) return;
+  var isOpen=box.style.display!=='none';
+  if(isOpen){ box.style.display='none'; if(caret) caret.style.transform='rotate(0deg)'; return; }
+  var rows=window._npHistRows||[];
+  var emap=window._npHistEditorMap||{};
+  var p=rows.find(function(x){ return x.id===id; });
+  if(!p){ return; }
+  if(caret) caret.style.transform='rotate(90deg)';
+  var editor=p.assigned_to&&emap[p.assigned_to]?emap[p.assigned_to]:'—';
+  // Field rows — ipakita lang kung may laman
+  function fld(label,val,isLink){
+    if(val===null||val===undefined||String(val).trim()==='') return '';
+    var v=String(val).trim();
+    var disp=isLink
+      ? '<a href="'+escapeHtml(v)+'" target="_blank" rel="noopener" style="color:var(--yellow);text-decoration:none;word-break:break-all">'+escapeHtml(v.length>40?v.slice(0,40)+'…':v)+'</a>'
+      : escapeHtml(v);
+    return '<div style="display:flex;gap:8px;padding:4px 0;border-bottom:0.5px solid rgba(255,255,255,0.04)">'
+      + '<span style="flex-shrink:0;width:78px;font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;font-weight:600;padding-top:1px">'+label+'</span>'
+      + '<span style="flex:1;font-size:11.5px;color:var(--text2);line-height:1.5;min-width:0">'+disp+'</span>'
+      + '</div>';
+  }
+  var colors='';
+  if(p.color_primary||p.color_secondary){
+    if(p.color_primary) colors+='<span style="display:inline-flex;align-items:center;gap:4px;margin-right:8px"><span style="width:11px;height:11px;border-radius:3px;background:'+escapeHtml(p.color_primary)+';border:0.5px solid var(--border);display:inline-block"></span>'+escapeHtml(p.color_primary)+'</span>';
+    if(p.color_secondary) colors+='<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:11px;height:11px;border-radius:3px;background:'+escapeHtml(p.color_secondary)+';border:0.5px solid var(--border);display:inline-block"></span>'+escapeHtml(p.color_secondary)+'</span>';
+  }
+  var html='<div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;padding:11px 12px">'
+    + fld('Editor',editor)
+    + fld('Business',p.business_type)
+    + fld('Product',p.product)
+    + fld('Goal',p.goal)
+    + fld('Audience',p.audience)
+    + fld('Pain point',p.pain_point)
+    + fld('USP',p.usp)
+    + fld('Emphasize',p.emphasize)
+    + fld('Tone',p.tone)
+    + fld('Voice/Avatar',p.voice_actor||p.avatar_desc)
+    + fld('Video size',p.video_size)
+    + fld('Duration',p.duration)
+    + fld('Language',p.language)
+    + (colors?('<div style="display:flex;gap:8px;padding:4px 0;border-bottom:0.5px solid rgba(255,255,255,0.04)"><span style="flex-shrink:0;width:78px;font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;font-weight:600;padding-top:1px">Colors</span><span style="flex:1;font-size:11px;color:var(--text2)">'+colors+'</span></div>'):'')
+    + fld('FB page',p.fb_page,true)
+    + fld('Website',p.website,true)
+    + fld('GDrive',p.gdrive_link,true)
+    + fld('Moodboard',p.moodboard_link,true)
+    + fld('Sample vid',p.sample_video_link,true)
+    + fld('Extra',p.client_extra)
+    + '<div style="margin-top:10px;display:flex;gap:6px">'
+    +   '<button onclick="openModal(\''+p.id+'\')" style="flex:1;background:var(--bg2);border:0.5px solid var(--border2);color:var(--text2);border-radius:7px;padding:6px;font-size:10.5px;cursor:pointer;font-weight:600">📄 View full project</button>'
+    + '</div>'
+    + '</div>';
+  box.innerHTML=html;
+  box.style.display='block';
+}
+
 function npFmtDate(ts){
   if (!ts) return '';
   var d = new Date(ts);
@@ -1078,7 +1212,7 @@ function npRenderOrders(){
         + '<div class="npo-fields">'+rows+'</div>'
         + '<div class="npo-actions">'
           + (inprog
-              ? '<button class="yellow-btn npo-fill" onclick="event.stopPropagation();npSubmit(\''+o.id+'\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Submit as project</button>'
+              ? '<button class="yellow-btn npo-fill" onclick="event.stopPropagation();npFill(\''+o.id+'\')" title="Naka-fill na — kumpletuhin at i-Save details sa form"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>Naka-fill — i-Save details na</button>'
               : '<button class="yellow-btn npo-fill" onclick="event.stopPropagation();npFill(\''+o.id+'\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Confirm &amp; fill</button>')
           + '<button class="ghost-btn" onclick="event.stopPropagation();npDismiss(\''+o.id+'\')" style="padding:9px 12px" aria-label="Dismiss"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
         + '</div>'
@@ -1121,45 +1255,17 @@ async function npFill(id){
   if (cli && o.client_name && !cli.value) cli.value = o.client_name;
   // Mark as inprogress sa DB + local
   o.status = 'inprogress';
+  window._npFillingOrderId = id;  // itrack para ma-auto-done pag na-save na
   try { await sb.from('synced_orders').update({ status:'inprogress' }).eq('id', id); } catch(e){}
   npRenderOrders();
-  if (typeof showNotif === 'function') showNotif('Nailagay sa brief — I-submit na para maging project', 'success');
+  if (typeof showNotif === 'function') showNotif('Nailagay sa brief — kumpletuhin at i-Save details na', 'success');
 }
 
-// Submit as project → done animation → mawawala sa list
+// (DEPRECATED) Dating gumagawa ng sariling project — nagdodoble. Ngayon,
+// ang tamang flow ay: Fill → Save details = tapos na (auto-done ang order).
+// Kung mapindot man 'to, i-fill na lang niya ang order, hindi gagawa ng project.
 async function npSubmit(id){
-  var o = npOrders.find(function(x){ return x.id === id; });
-  if (!o) return;
-  var card = document.getElementById('npo-card-'+id);
-  // I-save muna bilang project (gamit ang existing saveProject kung meron)
-  var projectId = null;
-  try {
-    var ins = await sb.from('projects').insert({
-      client_name: o.client_name || 'Order',
-      status: 'New Input',
-      assigned_to: currentUser ? currentUser.id : null
-    }).select().maybeSingle();
-    if (ins && ins.data) projectId = ins.data.id;
-  } catch(e){}
-  try {
-    await sb.from('synced_orders').update({ status:'done', project_id: projectId }).eq('id', id);
-  } catch(e){}
-  if (typeof logActivity === 'function') logActivity('ORDER_SUBMITTED', o.client_name || '');
-  // Done animation → tanggalin sa list
-  if (card){
-    card.classList.remove('open');
-    card.classList.add('done');
-    setTimeout(function(){
-      npOrders = npOrders.filter(function(x){ return x.id !== id; });
-      npOpenId = null;
-      npRenderOrders();
-      if (typeof loadAllProjects === 'function') loadAllProjects();
-    }, 1650);
-  } else {
-    npOrders = npOrders.filter(function(x){ return x.id !== id; });
-    npRenderOrders();
-  }
-  if (typeof showNotif === 'function') showNotif('Project created from order ✓', 'success');
+  return npFill(id);
 }
 
 async function npDismiss(id){
@@ -1170,13 +1276,27 @@ async function npDismiss(id){
 }
 
 // 24/7 feel: mag-poll kada 20s habang nasa New Project page
+var npRealtimeChan = null;
 function npStartPolling(){
   npLoadOrders();
   if (npPollTimer) clearInterval(npPollTimer);
   npPollTimer = setInterval(function(){
     var pg = document.getElementById('page-new-project');
     if (pg && pg.classList.contains('active')) npLoadOrders();
-  }, 20000);
+  }, 5000);
+  // ── REALTIME — instant refresh pag may bagong order (walang delay) ──
+  try {
+    if (!npRealtimeChan && sb && typeof sb.channel === 'function'){
+      npRealtimeChan = sb.channel('synced_orders_rt')
+        .on('postgres_changes',
+            { event:'*', schema:'public', table:'synced_orders' },
+            function(){
+              var pg = document.getElementById('page-new-project');
+              if (pg && pg.classList.contains('active')) npLoadOrders();
+            })
+        .subscribe();
+    }
+  } catch(e){ /* realtime optional — poll pa rin ang fallback */ }
 }
 
 async function loadAssignDropdown(){
@@ -2044,11 +2164,17 @@ function switchTab(tab){
   document.getElementById('tab-manual').classList.toggle('active',tab==='manual');
   document.getElementById('tab-paste').classList.toggle('active',tab==='paste');
   if(typeof fbValidateSubmit==='function') setTimeout(fbValidateSubmit,0);
-  // Ipakita ang Orders panel sa Paste tab lang (hindi sa Manual form)
+  // Panel palaging nakikita (para lagi visible ang History). Sa Manual tab,
+  // itago lang ang New Orders section — History nananatili.
   var op=document.getElementById('np-orders');
-  if(op) op.style.display = (tab==='paste') ? 'flex' : 'none';
+  if(op) op.style.display = 'flex';
+  var noHead=document.querySelector('#np-orders .npo-head');
+  var noList=document.getElementById('npo-list');
+  var showOrders=(tab==='paste');
+  if(noHead) noHead.style.display=showOrders?'':'none';
+  if(noList) noList.style.display=showOrders?'':'none';
   var lay=document.querySelector('.np-layout');
-  if(lay) lay.style.gridTemplateColumns = (tab==='paste') ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr)';
+  if(lay) lay.style.gridTemplateColumns = 'minmax(0,1fr) 420px';
 }
 
 // BLUEPRINT GENERATOR
