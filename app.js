@@ -998,9 +998,9 @@ function npRenderOrders(){
   if (cnt) cnt.textContent = npOrders.length;
   if (!npOrders.length){
     list.innerHTML = '<div class="npo-empty">'
-      + '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.5L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.5-6.5A2 2 0 0016.76 4H7.24a2 2 0 00-1.74 1.5z"/></svg>'
-      + '<div style="font-size:12.5px;font-weight:600;color:var(--text2)">Walang bagong order</div>'
-      + '<div style="font-size:11px;margin-top:3px">Auto-lalabas dito ang orders galing sa order form.</div>'
+      + '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:16px"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.5L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.5-6.5A2 2 0 0016.76 4H7.24a2 2 0 00-1.74 1.5z"/></svg>'
+      + '<div style="font-size:14px;font-weight:600;color:var(--text2)">Walang bagong order</div>'
+      + '<div style="font-size:12px;margin-top:5px;max-width:230px;line-height:1.6">Auto-lalabas dito ang orders galing sa order form.</div>'
       + '</div>';
     return;
   }
@@ -1997,7 +1997,7 @@ function switchTab(tab){
   var op=document.getElementById('np-orders');
   if(op) op.style.display = (tab==='paste') ? 'flex' : 'none';
   var lay=document.querySelector('.np-layout');
-  if(lay) lay.style.gridTemplateColumns = (tab==='paste') ? 'minmax(0,1fr) 370px' : 'minmax(0,1fr)';
+  if(lay) lay.style.gridTemplateColumns = (tab==='paste') ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr)';
 }
 
 // BLUEPRINT GENERATOR
