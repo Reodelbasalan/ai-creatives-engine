@@ -1512,7 +1512,7 @@ body {
           <div class="form-card">
             <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="15" y1="14" x2="15" y2="14.01"/><line x1="9" y1="18" x2="15" y2="18"/></svg></span> Business info</div>
             <div class="form-grid">
-              <div class="form-field"><label class="form-label">Client name</label><input class="form-input" id="f-client" placeholder="e.g. Cosmetic Cocoon PH"/></div>
+              <div class="form-field"><label class="form-label">Client name</label><input class="form-input" id="f-client" placeholder="e.g. Cosmetic Cocoon PH" oninput="fbValidateSubmit()"/></div>
               <div class="form-field"><label class="form-label">Business type</label><select class="form-select" id="f-biztype"><option value="">Select type...</option><option>E-Commerce</option><option>Service-Based</option><option>Hybrid</option></select></div>
               <div class="form-field"><label class="form-label">FB Page URL <span class="opt">(optional)</span></label><input class="form-input" id="f-fb" placeholder="https://facebook.com/yourpage"/></div>
               <div class="form-field"><label class="form-label">Website URL <span class="opt">(optional)</span></label><input class="form-input" id="f-website" placeholder="https://yourwebsite.com"/></div>
@@ -1542,7 +1542,7 @@ body {
             <div class="form-card-title"><span style="display:inline-flex;color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="15" y2="14"/></svg></span> Paste client brief <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">— copy-paste the complete client form submission</span></div>
             <div class="form-field">
               <label class="form-label">Client brief <span class="opt">(from Google Form, email, chat, etc.)</span></label>
-              <textarea class="form-textarea" id="f-brief" placeholder="Paste the entire client brief here...
+              <textarea class="form-textarea" id="f-brief" oninput="fbValidateSubmit()" placeholder="Paste the entire client brief here...
 
 Example:
 Client Name: Cosmetic Cocoon PH
@@ -1618,7 +1618,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <button type="button" class="fb-step-btn" onclick="fbStep(-1)" aria-label="Bawasan">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
-                <input type="number" id="f-freebies-count" class="fb-step-input" value="0" min="0" max="99" oninput="fbSyncSummary()"/>
+                <input type="number" id="f-freebies-count" class="fb-step-input" value="0" min="0" max="99" oninput="fbSyncSummary();fbValidateSubmit()"/>
                 <button type="button" class="fb-step-btn fb-step-plus" onclick="fbStep(1)" aria-label="Dagdagan">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
@@ -1717,11 +1717,12 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           </div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
               <label style="font-size:11px;color:var(--text2);font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/></svg>Video editor:</label>
-              <select class="form-select" id="f-assign-to" style="max-width:220px;font-size:12px">
-                <option value="">Unassigned (assign later)</option>
+              <select class="form-select" id="f-assign-to" style="max-width:220px;font-size:12px" onchange="fbValidateSubmit()">
+                <option value="">Select video editor... (required)</option>
               </select>
             </div>
           <button class="ghost-btn" id="save-details-btn" onclick="saveClientDetails()" style="color:var(--green);border-color:rgba(34,197,94,0.3);display:inline-flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save details only</button>
+          <span id="fb-submit-hint" style="font-size:11px;color:var(--amber);display:none;margin-left:2px"></span>
           <button class="yellow-btn" id="generate-btn" onclick="generateBlueprint()" disabled title="Temporarily disabled — use Save details only for now" style="display:inline-flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Generate blueprint</button>
             <span id="gen-status" style="font-size:12px;color:var(--text3)"></span>
           </div>
