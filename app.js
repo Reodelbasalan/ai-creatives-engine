@@ -467,7 +467,7 @@ function showPage(page){
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
   if(page==='all-projects'){loadAllProjects();loadApSubmitProjectSelect();loadApOutputsTable();}
-  if(page==='new-project'){loadAssignDropdown(); if(typeof npStartPolling==='function') npStartPolling(); setTimeout(function(){if(typeof fbValidateSubmit==='function')fbValidateSubmit();},400);}
+  if(page==='new-project'){loadAssignDropdown(); if(typeof npStartPolling==='function') npStartPolling(); setTimeout(function(){if(typeof fbValidateSubmit==='function')fbValidateSubmit();},500);}
   if(page==='editor-portal')loadEditorPortal();
   if(page==='users')loadUsers();
   if(page==='dashboard')loadDashboard();
@@ -555,7 +555,8 @@ function fbValidateSubmit(){
   var brief=(document.getElementById('f-brief')?.value||'').trim();
   var client=(document.getElementById('f-client')?.value||'').trim();
   var freebies=parseInt(document.getElementById('f-freebies-count')?.value,10)||0;
-  var veditor=document.getElementById('f-assign-to')?.value||'';
+  // Video editor pwedeng galing sa freebies dropdown (taas) o sa main assign
+  var veditor=(document.getElementById('f-freebies-veditor')?.value||'')||(document.getElementById('f-assign-to')?.value||'');
   var missing=[];
   if(isPaste){ if(!brief) missing.push('Brief'); } else { if(!client) missing.push('Client name'); }
   if(freebies<1) missing.push('Freebies count');
@@ -563,7 +564,6 @@ function fbValidateSubmit(){
   var ok=missing.length===0;
   btn.style.opacity=ok?'1':'0.45';
   btn.style.cursor=ok?'pointer':'not-allowed';
-  btn.style.pointerEvents='auto';
   if(hint){
     hint.textContent=ok?'':'Kulang pa: '+missing.join(', ');
     hint.style.display=ok?'none':'';
@@ -578,20 +578,18 @@ async function saveClientDetails(){
   var vBrief=(document.getElementById('f-brief')?.value||'').trim();
   var vClient=(document.getElementById('f-client')?.value||'').trim();
   var vFreebies=parseInt(document.getElementById('f-freebies-count')?.value,10)||0;
-  var vVeditor=document.getElementById('f-assign-to')?.value||'';
+  var vVeditor=(document.getElementById('f-freebies-veditor')?.value||'')||(document.getElementById('f-assign-to')?.value||'');
   var missing=[];
-  if(vIsPaste){ if(!vBrief) missing.push('Client brief'); }
-  else { if(!vClient) missing.push('Client name'); }
+  if(vIsPaste){ if(!vBrief) missing.push('Brief'); } else { if(!vClient) missing.push('Client name'); }
   if(vFreebies<1) missing.push('Freebies count');
   if(!vVeditor) missing.push('Video editor');
   if(missing.length){
     showNotif('Kulang pa: '+missing.join(', ')+' — kumpletuhin muna bago mag-submit','error');
-    var first=missing[0];
-    var focusMap={'Client brief':'f-brief','Client name':'f-client','Freebies count':'f-freebies-count','Video editor':'f-assign-to'};
-    var fe=document.getElementById(focusMap[first]);
-    if(fe){ fe.focus(); fe.scrollIntoView({behavior:'smooth',block:'center'}); }
     return;
   }
+  // Siguraduhin naka-sync ang main assign field para tama ang assigned_to
+  var vSync=document.getElementById('f-assign-to');
+  if(vSync && vVeditor){ vSync.value=vVeditor; }
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Saving...';}
   var isPaste=document.getElementById('tab-paste').classList.contains('active');
   var clientName='';
@@ -663,8 +661,8 @@ async function saveClientDetails(){
   showNotif('Client saved! Nakalista na sa All Projects.','success');
   // ── HISTORY LOG — kasama ang freebies count + video editor ──
   var logFreebies=parseInt(document.getElementById('f-freebies-count')?.value,10)||0;
-  var logVeditorSel=document.getElementById('f-assign-to');
-  var logVeditorName=(logVeditorSel && logVeditorSel.selectedIndex>=0)?(logVeditorSel.options[logVeditorSel.selectedIndex]?.text||'').trim():'';
+  var logVeditorName=(document.getElementById('fb-veditor-label')?.textContent||'').trim();
+  if(logVeditorName==='Unassigned') logVeditorName='';
   var logDetails=clientName+' — '+logFreebies+' freebies'+(logVeditorName?(' | Editor: '+logVeditorName):'');
   logActivity('CLIENT_SAVED',logDetails);
   if (typeof fbCreateForUploadRow === 'function') { await fbCreateForUploadRow(data && data[0] && data[0].id, clientName); fbResetForm(); }
@@ -672,7 +670,6 @@ async function saveClientDetails(){
   if(videoEditorId){ await notifyEditorAssigned(videoEditorId, clientName); }
   // Clear form
   ['f-client','f-biztype','f-product','f-pain','f-usp','f-audience','f-goal','f-emphasize','f-brief','f-script','f-fb','f-website','f-color1','f-color2','f-gdrive','f-moodboard','f-sample-video','f-client-extra'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-  var fc=document.getElementById('f-freebies-count'); if(fc) fc.value=0;
   var fa=document.getElementById('f-assign-to'); if(fa) fa.value='';
   selectedToneVal='';
   document.querySelectorAll('.tone-opt').forEach(function(t){t.classList.remove('selected');});
@@ -904,7 +901,8 @@ function fbPickVEditor(id, name, el){
   }
   // I-sync sa main Video editor assign dropdown para talagang ma-assign ang project
   var mainSel = document.getElementById('f-assign-to');
-  if (mainSel && id){ mainSel.value = id; }
+  if (mainSel){ mainSel.value = id || ''; }
+  if(typeof fbValidateSubmit==='function') fbValidateSubmit();
 }
 
 function fbSyncSummary(){
@@ -2045,12 +2043,12 @@ function switchTab(tab){
   document.getElementById('input-paste').style.display=tab==='paste'?'block':'none';
   document.getElementById('tab-manual').classList.toggle('active',tab==='manual');
   document.getElementById('tab-paste').classList.toggle('active',tab==='paste');
+  if(typeof fbValidateSubmit==='function') setTimeout(fbValidateSubmit,0);
   // Ipakita ang Orders panel sa Paste tab lang (hindi sa Manual form)
   var op=document.getElementById('np-orders');
   if(op) op.style.display = (tab==='paste') ? 'flex' : 'none';
   var lay=document.querySelector('.np-layout');
   if(lay) lay.style.gridTemplateColumns = (tab==='paste') ? 'minmax(0,1fr) 420px' : 'minmax(0,1fr)';
-  if(typeof fbValidateSubmit==='function') fbValidateSubmit();
 }
 
 // BLUEPRINT GENERATOR
@@ -4612,7 +4610,7 @@ async function loadActivityLog(){
   var bodyEl=document.getElementById('activity-log-body');
   if(!bodyEl)return;
   if(!records.length){bodyEl.innerHTML='<div class="table-empty"><div class="table-empty-icon">📋</div>No activity yet.</div>';return;}
-  var actionColor={LOGIN:'var(--green)',CLIENT_SAVED:'var(--green)',TIME_IN:'var(--green)',TIME_OUT:'var(--red)',OUTPUT_ADDED:'var(--amber)',API_KEY_UPDATED:'var(--purple)',AVATAR_GENERATED:'var(--purple)',WORK_UPDATE:'var(--amber)',PROJECT_COMPLETED:'#4caf50'};
+  var actionColor={LOGIN:'var(--green)',TIME_IN:'var(--green)',TIME_OUT:'var(--red)',OUTPUT_ADDED:'var(--amber)',API_KEY_UPDATED:'var(--purple)',AVATAR_GENERATED:'var(--purple)',WORK_UPDATE:'var(--amber)',PROJECT_COMPLETED:'#4caf50'};
   bodyEl.innerHTML=records.map(function(r){
     var name=r.profiles?.name||r.profiles?.email||'System';
     var time=new Date(r.created_at).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
