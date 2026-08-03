@@ -1715,10 +1715,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
             <span id="draft-saved-indicator" style="font-size:10px;color:var(--green);opacity:0;transition:opacity 0.3s">✓ Draft saved</span>
           </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-              <label style="font-size:11px;color:var(--text2);font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/></svg>Video editor:</label>
-              <select class="form-select" id="f-assign-to" style="max-width:220px;font-size:12px" onchange="fbValidateSubmit()">
-                <option value="">Select video editor... (required)</option>
+          <!-- Video editor assignment ay ginagawa na sa taas (Freebies Assignment). Itong dropdown na 'to ay auto-sync na lang (nakatago para hindi doble). -->
+          <div style="display:none">
+              <select class="form-select" id="f-assign-to" style="max-width:220px;font-size:12px">
+                <option value="">Unassigned</option>
               </select>
             </div>
           <button class="ghost-btn" id="save-details-btn" onclick="saveClientDetails()" style="color:var(--green);border-color:rgba(34,197,94,0.3);display:inline-flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save details only</button>
