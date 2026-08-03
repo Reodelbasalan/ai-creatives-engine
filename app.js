@@ -660,16 +660,24 @@ async function saveClientDetails(){
   }).select();
   if(btn){btn.disabled=false;btn.innerHTML=FB_SAVE_LABEL;}
   if(error){showNotif('Error: '+error.message,'error');return;}
-  showNotif('Client details saved! Generate blueprint when ready.','success');
-  logActivity('CLIENT_SAVED',clientName);
+  showNotif('Client saved! Nakalista na sa All Projects.','success');
+  // ── HISTORY LOG — kasama ang freebies count + video editor ──
+  var logFreebies=parseInt(document.getElementById('f-freebies-count')?.value,10)||0;
+  var logVeditorSel=document.getElementById('f-assign-to');
+  var logVeditorName=(logVeditorSel && logVeditorSel.selectedIndex>=0)?(logVeditorSel.options[logVeditorSel.selectedIndex]?.text||'').trim():'';
+  var logDetails=clientName+' — '+logFreebies+' freebies'+(logVeditorName?(' | Editor: '+logVeditorName):'');
+  logActivity('CLIENT_SAVED',logDetails);
   if (typeof fbCreateForUploadRow === 'function') { await fbCreateForUploadRow(data && data[0] && data[0].id, clientName); fbResetForm(); }
   var videoEditorId=document.getElementById('f-assign-to')?.value||'';
   if(videoEditorId){ await notifyEditorAssigned(videoEditorId, clientName); }
   // Clear form
   ['f-client','f-biztype','f-product','f-pain','f-usp','f-audience','f-goal','f-emphasize','f-brief','f-script','f-fb','f-website','f-color1','f-color2','f-gdrive','f-moodboard','f-sample-video','f-client-extra'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var fc=document.getElementById('f-freebies-count'); if(fc) fc.value=0;
+  var fa=document.getElementById('f-assign-to'); if(fa) fa.value='';
   selectedToneVal='';
   document.querySelectorAll('.tone-opt').forEach(function(t){t.classList.remove('selected');});
-  showPage('dashboard');
+  if(typeof fbValidateSubmit==='function') fbValidateSubmit();
+  showPage('all-projects');
 }
 // DASHBOARD
 async function loadDashboard(){
@@ -4604,7 +4612,7 @@ async function loadActivityLog(){
   var bodyEl=document.getElementById('activity-log-body');
   if(!bodyEl)return;
   if(!records.length){bodyEl.innerHTML='<div class="table-empty"><div class="table-empty-icon">📋</div>No activity yet.</div>';return;}
-  var actionColor={LOGIN:'var(--green)',TIME_IN:'var(--green)',TIME_OUT:'var(--red)',OUTPUT_ADDED:'var(--amber)',API_KEY_UPDATED:'var(--purple)',AVATAR_GENERATED:'var(--purple)',WORK_UPDATE:'var(--amber)',PROJECT_COMPLETED:'#4caf50'};
+  var actionColor={LOGIN:'var(--green)',CLIENT_SAVED:'var(--green)',TIME_IN:'var(--green)',TIME_OUT:'var(--red)',OUTPUT_ADDED:'var(--amber)',API_KEY_UPDATED:'var(--purple)',AVATAR_GENERATED:'var(--purple)',WORK_UPDATE:'var(--amber)',PROJECT_COMPLETED:'#4caf50'};
   bodyEl.innerHTML=records.map(function(r){
     var name=r.profiles?.name||r.profiles?.email||'System';
     var time=new Date(r.created_at).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
