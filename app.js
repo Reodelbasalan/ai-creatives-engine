@@ -948,9 +948,16 @@ function fbSyncSummary(){
 async function fbCreateForUploadRow(projectId, clientName){
   var n = parseInt(document.getElementById('f-freebies-count')?.value, 10) || 0;
   var editorId = document.getElementById('f-freebies-editor')?.value || null;
-  // Kung may napiling Image creator pero 0 ang bilang, huwag hayaang mawala
-  // ang assignment nang tahimik — i-set sa 1 para may talagang magagawang task.
-  if (editorId && n <= 0) n = 1;
+  // FALLBACK: kung walang Image creator na naka-set, i-default kay Romulo
+  // (para laging may makakakita ng freebies task, hindi mawawala)
+  if (!editorId && Array.isArray(fbEditors) && fbEditors.length){
+    var rom = fbEditors.find(function(e){
+      var nm=(e.name||e.email||'').toLowerCase(); return nm.indexOf('romulo')>=0;
+    });
+    if (rom) editorId = rom.id;
+  }
+  // Kung may Image creator pero walang bilang, i-default sa 30 (para may task talaga)
+  if (editorId && n <= 0) n = 30;
   if (n <= 0) return;
   var dest = document.getElementById('f-freebies-dest')?.value || 'Viral clients freebies images';
   var label = (clientName || 'Freebies') + ' — ' + n + ' freebies';
@@ -7672,7 +7679,7 @@ async function fuDelete(id){
 // CATEGORY TABS — 5 sections, per-tab upload
 // ══════════════════════════════════════════════
 // Icon labels (walang emoji)
-var FB_SAVE_LABEL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save details only';
+var FB_SAVE_LABEL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save &amp; Submit';
 var FB_SEND_LABEL = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Save &amp; send to editor';
 
 // Badge kapag freebies row (galing New project)
