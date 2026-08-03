@@ -454,7 +454,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
@@ -464,6 +464,7 @@ function showPage(page){
   if(page==='users')loadUsers();
   if(page==='dashboard')loadDashboard();
   if(page==='analytics')loadAnalytics();
+  if(page==='finance'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadFinancePage();}
   if(page==='outputs'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadOutputsTable();loadMonthlyOutputSummary();}
   if(page==='clients')loadClients();
   if(page==='for-upload')loadForUpload();
@@ -982,6 +983,18 @@ function clearDashboardFilters(){
   loadDashboard();
 }
 
+function finDatePreset(kind,btnEl){
+  var df=document.getElementById('fin-date-from');
+  var dt=document.getElementById('fin-date-to');
+  if(!df||!dt) return;
+  var range=computeDatePresetRange(kind);
+  df.value=range.from; dt.value=range.to;
+  document.querySelectorAll('#fin-date-presets .proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
+  if(btnEl) btnEl.classList.add('active');
+  updateFinRangeLabel();
+  loadFinancePage();
+}
+
 function updateRangeLabel(fromId,toId,labelId){
   var df=document.getElementById(fromId)?.value||'';
   var dt=document.getElementById(toId)?.value||'';
@@ -1004,6 +1017,10 @@ function updateOutputsRangeLabel(){
 
 function updateDashRangeLabel(){
   updateRangeLabel('dash-date-from','dash-date-to','dash-range-label');
+}
+
+function updateFinRangeLabel(){
+  updateRangeLabel('fin-date-from','fin-date-to','fin-range-label');
 }
 
 function filterProjects(){
@@ -1053,7 +1070,8 @@ var DR_MONTH_NAMES=['January','February','March','April','May','June','July','Au
 var DR_TARGETS={
   projects:{from:'proj-date-from',to:'proj-date-to',label:'proj-range-label',customPill:'proj-preset-custom',presetSelector:'#proj-date-presets .proj-preset-pill',reload:function(){filterProjects();}},
   outputs:{from:'outputs-date-from',to:'outputs-date-to',label:'outputs-range-label',customPill:'outputs-preset-custom',presetSelector:'#outputs-date-presets .proj-preset-pill',reload:function(){loadOutputsTable();}},
-  dashboard:{from:'dash-date-from',to:'dash-date-to',label:'dash-range-label',customPill:'dash-preset-custom',presetSelector:'#dash-date-presets .proj-preset-pill',reload:function(){loadDashboard();}}
+  dashboard:{from:'dash-date-from',to:'dash-date-to',label:'dash-range-label',customPill:'dash-preset-custom',presetSelector:'#dash-date-presets .proj-preset-pill',reload:function(){loadDashboard();}},
+  finance:{from:'fin-date-from',to:'fin-date-to',label:'fin-range-label',customPill:'fin-preset-custom',presetSelector:'#fin-date-presets .proj-preset-pill',reload:function(){loadFinancePage();}}
 };
 
 function openDateRangeModal(target){
@@ -2527,27 +2545,73 @@ async function loadProfile(){
   var nameEl=document.getElementById('profile-name-input');
   var emailEl=document.getElementById('profile-email-display');
   var roleEl=document.getElementById('profile-role-display');
+  var joinedEl=document.getElementById('profile-joined-display');
   var statsEl=document.getElementById('profile-stats');
+  var recentEl=document.getElementById('profile-recent-outputs');
   var displayName=profile.name||currentUser.email||'';
   if(nameEl)nameEl.value=displayName;
   if(emailEl)emailEl.textContent=currentUser.email||'';
   if(roleEl)roleEl.textContent=currentUserRole==='admin'?'Super Admin':'Editor';
+  if(joinedEl&&profile.created_at) joinedEl.textContent='Member since '+fmtDate(profile.created_at);
   // Fix profile display
   var nameDisplay=document.getElementById('profile-name-display');
   var avatarEl=document.getElementById('profile-avatar');
   if(nameDisplay)nameDisplay.textContent=displayName||'—';
   if(avatarEl)avatarEl.textContent=(displayName[0]||'?').toUpperCase();
-  // Load stats
+
+  // Load stats — pulls from actual delivered output (project_outputs +
+  // For Upload creatives), same data source as the admin's per-editor view,
+  // so what you see here matches what admin sees when they check on you.
   if(statsEl){
-    var{data:projects}=await sb.from('projects').select('status,assigned_to').eq('assigned_to',currentUser.id);
-    var all=projects||[];
+    var[{data:assignedProjects},{data:outputs},{data:uploads}]=await Promise.all([
+      sb.from('projects').select('status,assigned_to').eq('assigned_to',currentUser.id),
+      sb.from('project_outputs').select('type,created_at').eq('user_id',currentUser.id),
+      sb.from('creatives_upload').select('is_freebies,status,file_link').eq('owner_id',currentUser.id)
+    ]);
+    var all=assignedProjects||[];
     var done=all.filter(function(p){return p.status==='Approved / Done';}).length;
     var inProd=all.filter(function(p){return p.status==='In Production';}).length;
-    statsEl.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
-      +'<div class="stat-card c-yellow" style="text-align:center"><div class="stat-label">Assigned</div><div class="stat-val">'+all.length+'</div></div>'
+    outputs=outputs||[];
+    var delivered=(uploads||[]).filter(function(u){return u.file_link;});
+    var totalOutputs=outputs.length+delivered.length;
+    var totalVideo=outputs.filter(function(o){return o.type==='video';}).length;
+    var totalImage=outputs.filter(function(o){return o.type==='image';}).length+delivered.length;
+    var freebies=(uploads||[]).filter(function(u){return u.is_freebies;});
+    var freebiesDone=freebies.filter(function(f){return f.status==='Done'||f.status==='Published';}).length;
+    statsEl.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">'
+      +'<div class="stat-card c-yellow" style="text-align:center"><div class="stat-label">Total outputs</div><div class="stat-val">'+totalOutputs+'</div></div>'
+      +'<div class="stat-card c-purple" style="text-align:center"><div class="stat-label">Videos</div><div class="stat-val" style="color:var(--purple)">'+totalVideo+'</div></div>'
+      +'<div class="stat-card c-green" style="text-align:center"><div class="stat-label">Images</div><div class="stat-val" style="color:var(--green)">'+totalImage+'</div></div>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
+      +'<div class="stat-card c-amber" style="text-align:center"><div class="stat-label">Assigned</div><div class="stat-val" style="color:var(--amber)">'+all.length+'</div></div>'
       +'<div class="stat-card c-amber" style="text-align:center"><div class="stat-label">In prod</div><div class="stat-val" style="color:var(--amber)">'+inProd+'</div></div>'
       +'<div class="stat-card c-green" style="text-align:center"><div class="stat-label">Completed</div><div class="stat-val" style="color:var(--green)">'+done+'</div></div>'
-      +'</div>';
+      +'</div>'
+      +(freebies.length?'<div style="margin-top:10px;font-size:11px;color:var(--text2)">🎁 Freebies done: <strong style="color:#4ade80">'+freebiesDone+' / '+freebies.length+'</strong></div>':'');
+  }
+
+  // Recent submissions — quick self-service access to your own last few outputs
+  if(recentEl){
+    var[{data:recentOutputs},{data:recentUploads}]=await Promise.all([
+      sb.from('project_outputs').select('*,projects(client_name)').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(20),
+      sb.from('creatives_upload').select('*').eq('owner_id',currentUser.id).not('file_link','is',null).order('created_at',{ascending:false}).limit(20)
+    ]);
+    var typeIcons={video:'🎬',image:'🖼️',blueprint:'📄',other:'📎'};
+    var combined=(recentOutputs||[]).map(function(o){
+      return{created_at:o.created_at,icon:typeIcons[o.type]||'📎',label:o.projects?.client_name||'—',url:o.url};
+    }).concat((recentUploads||[]).map(function(u){
+      return{created_at:u.created_at,icon:u.is_freebies?'🎁':'🖼️',label:u.client_name||u.project_name||'—',url:u.file_link};
+    })).sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);}).slice(0,5);
+    recentEl.innerHTML=combined.length?combined.map(function(r){
+      var date=new Date(r.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
+      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:12px">'
+        +'<span>'+r.icon+'</span>'
+        +'<span style="flex:1;color:var(--text)">'+r.label+'</span>'
+        +'<a href="'+r.url+'" target="_blank" style="color:var(--yellow);font-size:11px">Open</a>'
+        +'<span style="color:var(--text3);font-size:11px;white-space:nowrap">'+date+'</span>'
+        +'</div>';
+    }).join(''):'<div style="color:var(--text3);font-size:12px">No submissions yet.</div>';
   }
 }
 
@@ -5111,6 +5175,224 @@ async function deleteOutputRow(id){
     loadMonthlyOutputSummary();
     if(typeof loadApOutputsTable==='function')loadApOutputsTable();
   }catch(err){ showNotif('Delete failed: '+(err?.message||err),'error'); }
+}
+
+// ═══════════════════════════════════════
+// SALES & EXPENSES (FINANCE) — admin-only
+// ═══════════════════════════════════════
+var finActiveTab='sales';
+var finPHP=function(n){ return '₱'+Number(n||0).toLocaleString('en-PH',{maximumFractionDigits:2}); };
+
+function finSwitchTab(tab){
+  finActiveTab=tab;
+  document.getElementById('fin-sales-tab').style.display=tab==='sales'?'block':'none';
+  document.getElementById('fin-expenses-tab').style.display=tab==='expenses'?'block':'none';
+  document.getElementById('fin-tab-sales-btn').classList.toggle('active',tab==='sales');
+  document.getElementById('fin-tab-expenses-btn').classList.toggle('active',tab==='expenses');
+}
+
+function finToggleSalesForm(forceClose){
+  var wrap=document.getElementById('fin-sales-form-wrap');
+  var isOpen=wrap.style.maxHeight&&wrap.style.maxHeight!=='0px'&&wrap.style.maxHeight!=='0';
+  var open=forceClose?false:!isOpen;
+  if(open){
+    wrap.style.maxHeight='900px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
+    var dateEl=document.getElementById('fin-sale-date');
+    if(dateEl&&!dateEl.value) dateEl.value=new Date().toISOString().slice(0,10);
+  } else {
+    wrap.style.maxHeight='0'; wrap.style.opacity='0'; wrap.style.marginBottom='0';
+  }
+}
+
+function finToggleExpenseForm(forceClose){
+  var wrap=document.getElementById('fin-expense-form-wrap');
+  var isOpen=wrap.style.maxHeight&&wrap.style.maxHeight!=='0px'&&wrap.style.maxHeight!=='0';
+  var open=forceClose?false:!isOpen;
+  if(open){
+    wrap.style.maxHeight='700px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
+    var dateEl=document.getElementById('fin-exp-date');
+    if(dateEl&&!dateEl.value) dateEl.value=new Date().toISOString().slice(0,10);
+  } else {
+    wrap.style.maxHeight='0'; wrap.style.opacity='0'; wrap.style.marginBottom='0';
+  }
+}
+
+async function submitSale(){
+  var btn=document.getElementById('fin-sale-submit-btn');
+  if(btn&&btn.disabled) return;
+  var payload={
+    order_date:document.getElementById('fin-sale-date')?.value||new Date().toISOString().slice(0,10),
+    client_name:document.getElementById('fin-sale-client')?.value?.trim(),
+    contact:document.getElementById('fin-sale-contact')?.value?.trim()||null,
+    business:document.getElementById('fin-sale-business')?.value?.trim()||null,
+    email:document.getElementById('fin-sale-email')?.value?.trim()||null,
+    order_package:document.getElementById('fin-sale-package')?.value||null,
+    video_type:document.getElementById('fin-sale-videotype')?.value?.trim()||null,
+    sales_amount:parseFloat(document.getElementById('fin-sale-amount')?.value)||0,
+    va_name:document.getElementById('fin-sale-va')?.value?.trim()||null,
+    ads_spent:parseFloat(document.getElementById('fin-sale-ads')?.value)||0,
+    paid_status:document.getElementById('fin-sale-paid')?.value||'Balance',
+    created_by:currentUser.id
+  };
+  if(!payload.client_name){ showNotif('Client name is required','error'); return; }
+  var origHtml=btn?btn.innerHTML:'';
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Saving...'; }
+  try{
+    var{error}=await sb.from('sales_orders').insert(payload);
+    if(error){ showNotif('Error: '+error.message,'error'); return; }
+    showNotif('Sale saved! ✓','success');
+    ['fin-sale-client','fin-sale-contact','fin-sale-business','fin-sale-email','fin-sale-videotype','fin-sale-amount','fin-sale-va','fin-sale-ads'].forEach(function(id){
+      var el=document.getElementById(id); if(el)el.value='';
+    });
+    finToggleSalesForm(true);
+    loadFinancePage();
+  }catch(err){ showNotif('Error: '+(err?.message||err),'error'); }
+  finally{ if(btn){ btn.disabled=false; btn.innerHTML=origHtml; } }
+}
+
+async function submitExpense(){
+  var btn=document.getElementById('fin-exp-submit-btn');
+  if(btn&&btn.disabled) return;
+  var payload={
+    expense_date:document.getElementById('fin-exp-date')?.value||new Date().toISOString().slice(0,10),
+    category:document.getElementById('fin-exp-category')?.value||'Other',
+    item_name:document.getElementById('fin-exp-item')?.value?.trim(),
+    amount:parseFloat(document.getElementById('fin-exp-amount')?.value)||0,
+    notes:document.getElementById('fin-exp-notes')?.value?.trim()||null,
+    created_by:currentUser.id
+  };
+  if(!payload.item_name){ showNotif('Item / description is required','error'); return; }
+  var origHtml=btn?btn.innerHTML:'';
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Saving...'; }
+  try{
+    var{error}=await sb.from('business_expenses').insert(payload);
+    if(error){ showNotif('Error: '+error.message,'error'); return; }
+    showNotif('Expense saved! ✓','success');
+    ['fin-exp-item','fin-exp-amount','fin-exp-notes'].forEach(function(id){
+      var el=document.getElementById(id); if(el)el.value='';
+    });
+    finToggleExpenseForm(true);
+    loadFinancePage();
+  }catch(err){ showNotif('Error: '+(err?.message||err),'error'); }
+  finally{ if(btn){ btn.disabled=false; btn.innerHTML=origHtml; } }
+}
+
+async function deleteSale(id){
+  if(!confirm('Delete this sale entry?'))return;
+  try{
+    await sb.from('sales_orders').delete().eq('id',id);
+    showNotif('Sale deleted.','success');
+    loadFinancePage();
+  }catch(err){ showNotif('Delete failed: '+(err?.message||err),'error'); }
+}
+
+async function deleteExpense(id){
+  if(!confirm('Delete this expense entry?'))return;
+  try{
+    await sb.from('business_expenses').delete().eq('id',id);
+    showNotif('Expense deleted.','success');
+    loadFinancePage();
+  }catch(err){ showNotif('Delete failed: '+(err?.message||err),'error'); }
+}
+
+async function loadFinancePage(){
+  var salesBody=document.getElementById('fin-sales-body');
+  var expBody=document.getElementById('fin-expenses-body');
+  if(!salesBody||!expBody) return;
+  updateFinRangeLabel();
+  var df=document.getElementById('fin-date-from')?.value||'';
+  var dt=document.getElementById('fin-date-to')?.value||'';
+
+  var salesQuery=sb.from('sales_orders').select('*').order('order_date',{ascending:false}).limit(500);
+  if(df) salesQuery=salesQuery.gte('order_date',df);
+  if(dt) salesQuery=salesQuery.lte('order_date',dt);
+  var expQuery=sb.from('business_expenses').select('*').order('expense_date',{ascending:false}).limit(500);
+  if(df) expQuery=expQuery.gte('expense_date',df);
+  if(dt) expQuery=expQuery.lte('expense_date',dt);
+
+  var[{data:sales,error:salesErr},{data:expenses,error:expErr}]=await Promise.all([salesQuery,expQuery]);
+
+  if(salesErr){
+    salesBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">⚠️</div>Couldn\'t load sales — make sure the <code>sales_orders</code> table exists in Supabase (see setup SQL).</div>';
+  }
+  if(expErr){
+    expBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">⚠️</div>Couldn\'t load expenses — make sure the <code>business_expenses</code> table exists in Supabase (see setup SQL).</div>';
+  }
+  sales=sales||[]; expenses=expenses||[];
+
+  // ── Stats ──
+  var totalSales=sales.reduce(function(s,o){return s+(Number(o.sales_amount)||0);},0);
+  var totalExpenses=expenses.reduce(function(s,e){return s+(Number(e.amount)||0);},0);
+  var totalAds=sales.reduce(function(s,o){return s+(Number(o.ads_spent)||0);},0);
+  var net=totalSales-totalExpenses;
+  var elS=document.getElementById('fin-stat-sales'); if(elS)elS.textContent=finPHP(totalSales);
+  var elE=document.getElementById('fin-stat-expenses'); if(elE)elE.textContent=finPHP(totalExpenses);
+  var elN=document.getElementById('fin-stat-net'); if(elN){ elN.textContent=finPHP(net); elN.style.color=net>=0?'var(--green)':'#f87171'; }
+  var elA=document.getElementById('fin-stat-ads'); if(elA)elA.textContent=finPHP(totalAds);
+  var elO=document.getElementById('fin-stat-orders'); if(elO)elO.textContent=sales.length;
+
+  // ── Sales table ──
+  if(!salesErr){
+    salesBody.innerHTML=sales.length?sales.map(function(o,i){
+      var statusColors={Paid:'#4ade80',Balance:'#facc15',Pending:'#fb923c',Refunded:'#f87171'};
+      var sc=statusColors[o.paid_status]||'#9a9aa5';
+      return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.4fr 1fr 1fr 1fr 1fr 1fr 32px">'
+        +'<div style="color:var(--text3);font-size:11px">'+(sales.length-i)+'</div>'
+        +'<div class="row-date">'+fmtDate(o.order_date)+'</div>'
+        +'<div><div class="row-name">'+(o.client_name||'—')+'</div><div class="row-sub">'+(o.business||o.contact||'')+'</div></div>'
+        +'<div style="font-size:11px;color:var(--text2)">'+(o.order_package||'—')+'</div>'
+        +'<div style="font-weight:650;color:var(--green)">'+finPHP(o.sales_amount)+'</div>'
+        +'<div style="font-size:11px;color:var(--text2)">'+(o.va_name||'—')+'</div>'
+        +'<div style="font-size:11px;color:var(--text2)">'+(o.ads_spent?finPHP(o.ads_spent):'—')+'</div>'
+        +'<div><span style="font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px;background:'+sc+'22;color:'+sc+'">'+(o.paid_status||'—')+'</span></div>'
+        +'<div class="proj-row-del" title="Delete" onclick="deleteSale(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>'
+        +'</div>';
+    }).join(''):'<div class="table-empty"><div class="table-empty-icon">💵</div>No sales in this period yet.</div>';
+  }
+
+  // ── Expenses table ──
+  if(!expErr){
+    expBody.innerHTML=expenses.length?expenses.map(function(e,i){
+      return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.2fr 1.6fr 1fr 1.4fr 32px">'
+        +'<div style="color:var(--text3);font-size:11px">'+(expenses.length-i)+'</div>'
+        +'<div class="row-date">'+fmtDate(e.expense_date)+'</div>'
+        +'<div style="font-size:11px;color:var(--text2)">'+(e.category||'—')+'</div>'
+        +'<div class="row-name">'+(e.item_name||'—')+'</div>'
+        +'<div style="font-weight:650;color:#f87171">'+finPHP(e.amount)+'</div>'
+        +'<div style="font-size:11px;color:var(--text3)">'+(e.notes||'—')+'</div>'
+        +'<div class="proj-row-del" title="Delete" onclick="deleteExpense(\''+e.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>'
+        +'</div>';
+    }).join(''):'<div class="table-empty"><div class="table-empty-icon">🧾</div>No expenses in this period yet.</div>';
+  }
+}
+
+async function exportFinanceCSV(){
+  var df=document.getElementById('fin-date-from')?.value||'';
+  var dt=document.getElementById('fin-date-to')?.value||'';
+  var salesQuery=sb.from('sales_orders').select('*').order('order_date',{ascending:false});
+  if(df) salesQuery=salesQuery.gte('order_date',df);
+  if(dt) salesQuery=salesQuery.lte('order_date',dt);
+  var expQuery=sb.from('business_expenses').select('*').order('expense_date',{ascending:false});
+  if(df) expQuery=expQuery.gte('expense_date',df);
+  if(dt) expQuery=expQuery.lte('expense_date',dt);
+  var[{data:sales},{data:expenses}]=await Promise.all([salesQuery,expQuery]);
+  var esc=function(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'; };
+  var rows=['SALES','Date,Client,Contact,Business,Email,Package,Video Type,Sales,VA,Ads Spent,Status'];
+  (sales||[]).forEach(function(o){
+    rows.push([o.order_date,o.client_name,o.contact,o.business,o.email,o.order_package,o.video_type,o.sales_amount,o.va_name,o.ads_spent,o.paid_status].map(esc).join(','));
+  });
+  rows.push('');
+  rows.push('EXPENSES');
+  rows.push('Date,Category,Item,Amount,Notes');
+  (expenses||[]).forEach(function(e){
+    rows.push([e.expense_date,e.category,e.item_name,e.amount,e.notes].map(esc).join(','));
+  });
+  var blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='sales-expenses-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function exportOutputsCSV(){
