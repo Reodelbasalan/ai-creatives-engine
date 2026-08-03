@@ -1997,7 +1997,7 @@ function switchTab(tab){
   var op=document.getElementById('np-orders');
   if(op) op.style.display = (tab==='paste') ? 'flex' : 'none';
   var lay=document.querySelector('.np-layout');
-  if(lay) lay.style.gridTemplateColumns = (tab==='paste') ? 'minmax(0,1fr) 340px' : 'minmax(0,1fr)';
+  if(lay) lay.style.gridTemplateColumns = (tab==='paste') ? 'minmax(0,1fr) 370px' : 'minmax(0,1fr)';
 }
 
 // BLUEPRINT GENERATOR
