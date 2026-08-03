@@ -2929,7 +2929,6 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div class="stat-card c-green"><div class="stat-label">Total Sales</div><div class="stat-val" style="color:var(--green)" id="fin-stat-sales">₱0</div></div>
           <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-val" style="color:#f87171" id="fin-stat-expenses">₱0</div></div>
           <div class="stat-card c-yellow"><div class="stat-label">Net Profit</div><div class="stat-val" id="fin-stat-net">₱0</div></div>
-          <div class="stat-card c-purple"><div class="stat-label">Ads Spent</div><div class="stat-val" style="color:var(--purple)" id="fin-stat-ads">₱0</div></div>
           <div class="stat-card c-amber"><div class="stat-label">Total Orders</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-orders">0</div></div>
           <div class="stat-card" style="cursor:pointer" onclick="promptFinTarget()" title="Click to set your sales target">
             <div class="stat-label" style="display:flex;align-items:center;gap:5px">🎯 Gap to Target <span id="fin-target-label" style="color:var(--text3)"></span></div>
@@ -2938,6 +2937,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
         <div style="font-size:10px;color:var(--text3);margin-top:-10px;margin-bottom:1rem">🎯 Click the "Gap to Target" card to set or update your sales goal for the selected period.</div>
 
+        <!-- ADS METRICS -->
+        <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">📈 Ads Metrics</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.25rem">
+          <div class="stat-card c-purple"><div class="stat-label">Total Ads Spent</div><div class="stat-val" style="color:var(--purple)" id="fin-stat-ads">₱0</div></div>
+          <div class="stat-card c-purple"><div class="stat-label">Avg Cost/Message</div><div class="stat-val" style="color:var(--purple)" id="fin-stat-cpm">₱0</div></div>
+          <div class="stat-card c-amber"><div class="stat-label">Total Messages</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-msgs">0</div></div>
+        </div>
+
         <!-- TOP VA PERFORMER -->
         <div style="margin-bottom:1.25rem">
           <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">🏆 Top VA Performers</div>
@@ -2945,9 +2952,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
 
         <!-- TABS -->
-        <div style="display:flex;gap:8px;margin-bottom:14px">
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
           <button type="button" class="proj-preset-pill active" id="fin-tab-sales-btn" onclick="finSwitchTab('sales')" style="padding:8px 18px">💵 Sales</button>
           <button type="button" class="proj-preset-pill" id="fin-tab-expenses-btn" onclick="finSwitchTab('expenses')" style="padding:8px 18px">🧾 Expenses</button>
+          <button type="button" class="proj-preset-pill" id="fin-tab-ads-btn" onclick="finSwitchTab('ads')" style="padding:8px 18px">📈 Ads Spend</button>
           <button type="button" class="proj-preset-pill" id="fin-tab-daily-btn" onclick="finSwitchTab('daily')" style="padding:8px 18px">📆 Daily Breakdown</button>
         </div>
 
@@ -2962,7 +2970,11 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <button onclick="finToggleSalesForm(true)" class="modal-close" style="position:absolute;top:14px;right:14px" title="Close">✕</button>
               <div class="form-grid">
                 <div class="form-field"><label class="form-label">Date</label><input type="date" class="form-input" id="fin-sale-date"/></div>
-                <div class="form-field"><label class="form-label">Client name</label><input class="form-input" id="fin-sale-client" placeholder="e.g. Juan Dela Cruz"/></div>
+                <div class="form-field">
+                  <label class="form-label">Client name <span class="opt">(start typing to find an existing client)</span></label>
+                  <input class="form-input" id="fin-sale-client" list="fin-client-datalist" placeholder="e.g. Juan Dela Cruz" oninput="finAutofillClient()" autocomplete="off"/>
+                  <datalist id="fin-client-datalist"></datalist>
+                </div>
                 <div class="form-field"><label class="form-label">Contact <span class="opt">(optional)</span></label><input class="form-input" id="fin-sale-contact" placeholder="Phone / FB"/></div>
                 <div class="form-field"><label class="form-label">Business <span class="opt">(optional)</span></label><input class="form-input" id="fin-sale-business" placeholder="Business name"/></div>
                 <div class="form-field"><label class="form-label">Email <span class="opt">(optional)</span></label><input class="form-input" id="fin-sale-email" placeholder="Gmail"/></div>
@@ -2974,21 +2986,47 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <div class="form-field"><label class="form-label">Video type <span class="opt">(optional)</span></label><input class="form-input" id="fin-sale-videotype" placeholder="e.g. UGC / Static"/></div>
                 <div class="form-field"><label class="form-label">Sales amount (₱)</label><input type="number" class="form-input" id="fin-sale-amount" placeholder="0"/></div>
                 <div class="form-field"><label class="form-label">VA / Assigned to <span class="opt">(optional)</span></label><input class="form-input" id="fin-sale-va" placeholder="e.g. Hazel"/></div>
-                <div class="form-field"><label class="form-label">Ads spent (₱) <span class="opt">(optional)</span></label><input type="number" class="form-input" id="fin-sale-ads" placeholder="0"/></div>
                 <div class="form-field"><label class="form-label">Paid status</label>
                   <select class="form-select" id="fin-sale-paid">
                     <option>Paid</option><option selected>Balance</option><option>Pending</option><option>Refunded</option>
                   </select>
                 </div>
+                <div class="form-field full"><label class="form-label">Notes <span class="opt">(optional)</span></label><input class="form-input" id="fin-sale-notes" placeholder="Any extra remarks about this sale..."/></div>
               </div>
               <button class="yellow-btn" id="fin-sale-submit-btn" onclick="submitSale()" style="margin-top:14px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Save sale</button>
             </div>
           </div>
           <div class="data-table">
-            <div class="table-head" style="grid-template-columns:0.4fr 0.9fr 1.4fr 1fr 1fr 1fr 1fr 1fr 32px 32px">
-              <span>#</span><span>Date</span><span>Client</span><span>Package</span><span>Sales</span><span>VA</span><span>Ads Spent</span><span>Status</span><span></span><span></span>
+            <div class="table-head" style="grid-template-columns:0.4fr 0.9fr 1.6fr 1fr 1fr 1fr 1fr 32px 32px">
+              <span>#</span><span>Date</span><span>Client</span><span>Package</span><span>Sales</span><span>VA</span><span>Status</span><span></span><span></span>
             </div>
             <div id="fin-sales-body"></div>
+          </div>
+        </div>
+
+        <!-- ADS SPEND TAB -->
+        <div id="fin-ads-tab" style="display:none">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+            <button class="yellow-btn" id="fin-ads-toggle-btn" onclick="finToggleAdsForm()" style="font-size:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add daily ads spend</button>
+          </div>
+          <div id="fin-ads-form-wrap" style="max-height:0;opacity:0;overflow:hidden;transition:all .3s ease;margin-bottom:0">
+            <div class="form-card" style="margin-bottom:16px;position:relative">
+              <button onclick="finToggleAdsForm(true)" class="modal-close" style="position:absolute;top:14px;right:14px" title="Close">✕</button>
+              <div class="form-grid">
+                <div class="form-field"><label class="form-label">Date</label><input type="date" class="form-input" id="fin-ads-date"/></div>
+                <div class="form-field"><label class="form-label">Total ads spent (₱)</label><input type="number" class="form-input" id="fin-ads-spent" placeholder="0"/></div>
+                <div class="form-field"><label class="form-label">Cost per message (₱)</label><input type="number" class="form-input" id="fin-ads-cpm" placeholder="0"/></div>
+                <div class="form-field"><label class="form-label">Total messages</label><input type="number" class="form-input" id="fin-ads-msgs" placeholder="0"/></div>
+                <div class="form-field full"><label class="form-label">Notes <span class="opt">(optional)</span></label><input class="form-input" id="fin-ads-notes" placeholder="Any extra remarks..."/></div>
+              </div>
+              <button class="yellow-btn" id="fin-ads-submit-btn" onclick="submitAdsSpend()" style="margin-top:14px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Save ads spend</button>
+            </div>
+          </div>
+          <div class="data-table">
+            <div class="table-head" style="grid-template-columns:0.4fr 1.2fr 1fr 1fr 1.6fr 32px">
+              <span>#</span><span>Date</span><span>Ads Spent</span><span>Cost/Msg</span><span>Messages / Notes</span><span></span>
+            </div>
+            <div id="fin-ads-body"></div>
           </div>
         </div>
 
