@@ -682,16 +682,29 @@ async function saveClientDetails(){
   if(typeof fbValidateSubmit==='function') fbValidateSubmit();
   // ── AUTO-DONE ang order na na-fill (para hindi na kailangan ng hiwalay na Submit) ──
   var _filledId = window._npFillingOrderId;
+  if(typeof npLoadHistory==='function') npLoadHistory();
+  _fbSaving=false;
   if(_filledId){
     var _newProjId = (data && data[0] && data[0].id) || null;
     try { await sb.from('synced_orders').update({ status:'done', project_id:_newProjId }).eq('id', _filledId); } catch(e){}
     if (typeof logActivity === 'function') logActivity('ORDER_SUBMITTED', clientName || '');
-    if (typeof npOrders !== 'undefined') { npOrders = npOrders.filter(function(x){ return x.id !== _filledId; }); }
     window._npFillingOrderId = null;
-    if (typeof npRenderOrders === 'function') npRenderOrders();
+    // Ipakita muna ang slide-out (done animation) bago lumipat sa All Projects
+    var _card = document.getElementById('npo-card-'+_filledId);
+    if(_card){
+      _card.classList.remove('open');
+      _card.classList.add('done');
+      setTimeout(function(){
+        if (typeof npOrders !== 'undefined') { npOrders = npOrders.filter(function(x){ return x.id !== _filledId; }); }
+        if (typeof npRenderOrders === 'function') npRenderOrders();
+        showPage('all-projects');
+      }, 1200);
+      return;
+    } else {
+      if (typeof npOrders !== 'undefined') { npOrders = npOrders.filter(function(x){ return x.id !== _filledId; }); }
+      if (typeof npRenderOrders === 'function') npRenderOrders();
+    }
   }
-  if(typeof npLoadHistory==='function') npLoadHistory();
-  _fbSaving=false;
   showPage('all-projects');
 }
 // DASHBOARD
@@ -1221,8 +1234,8 @@ function npRenderOrders(){
         + '<div class="npo-fields">'+rows+'</div>'
         + '<div class="npo-actions">'
           + (inprog
-              ? '<button class="yellow-btn npo-fill" onclick="event.stopPropagation();npFill(\''+o.id+'\')" title="Naka-fill na — kumpletuhin at i-Save details sa form"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>Naka-fill — i-Save details na</button>'
-              : '<button class="yellow-btn npo-fill" onclick="event.stopPropagation();npFill(\''+o.id+'\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Confirm &amp; fill</button>')
+              ? '<button class="yellow-btn npo-fill" onclick="event.stopPropagation();npFill(\''+o.id+'\')" title="Nasa form na — kumpletuhin at i-Save details"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>Nasa form na — i-Save</button>'
+              : '<button class="yellow-btn npo-fill" onclick="event.stopPropagation();npFill(\''+o.id+'\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Confirm order</button>')
           + '<button class="ghost-btn" onclick="event.stopPropagation();npDismiss(\''+o.id+'\')" style="padding:9px 12px" aria-label="Dismiss"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
         + '</div>'
       + '</div>'
