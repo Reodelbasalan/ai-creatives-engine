@@ -989,6 +989,7 @@ async function fbCreateForUploadRow(projectId, clientName){
   };
 
   try {
+    console.log('[FREEBIES CREATE] editorId=',editorId,'ownerId=',ownerId,'ownerName=',ownerName,'count=',n,'projectId=',projectId);
     var existing = null;
     if (projectId){
       var q = await sb.from('creatives_upload').select('id').eq('project_id', projectId).eq('is_freebies', true).limit(1);
@@ -1001,7 +1002,8 @@ async function fbCreateForUploadRow(projectId, clientName){
       res = await sb.from('creatives_upload').insert(payload);
     }
     if (res && res.error) throw res.error;
-    showNotif(n + ' freebies naipasa sa ' + dest, 'success');
+    console.log('[FREEBIES CREATE] SUCCESS — saved owner_id=',ownerId);
+    showNotif(n + ' freebies naipasa kay ' + ownerName, 'success');
     if (ownerId){
       await sb.from('notifications').insert({
         user_id: ownerId,
@@ -2054,8 +2056,13 @@ async function loadEditorFreebiesTasks(){
   } else {
     query=sb.from('creatives_upload').select('*,projects(fb_page)').eq('is_freebies',true).order('created_at',{ascending:false});
   }
-  var{data}=await query;
+  var{data,error}=await query;
   var items=data||[];
+  // DEBUG — makikita sa browser console (F12) kung bakit walang lumalabas
+  try{
+    console.log('[FREEBIES TASKS] role=',currentUserRole,'currentUser.id=',currentUser&&currentUser.id,'items=',items.length,'error=',error);
+    if(items.length) console.log('[FREEBIES TASKS] sample owner_id=',items[0].owner_id,'is_freebies=',items[0].is_freebies,'status=',items[0].status);
+  }catch(e){}
   if(!items.length){
     box.innerHTML='<div class="table-empty"><div class="table-empty-icon">'+ICO_MEGAPHONE+'</div><div>No freebies tasks yet</div><div style="font-size:11px;margin-top:4px;color:var(--text3)">Assigned freebies from new projects will show up here</div></div>';
     return;
