@@ -381,6 +381,13 @@ async function loadUserRole(user){
   }).catch(()=>{});
 }
 
+// Non-admin accounts allowed to see Sales & Expenses (VAs who input sales).
+// Edit this list (or ask Claude to) to add/remove people.
+var FINANCE_ALLOWED_EMAILS=['hazel@aicreatives.com','mheca@aicreatives.com'];
+function canAccessFinance(){
+  return currentUserRole==='admin' || FINANCE_ALLOWED_EMAILS.indexOf((currentUser?.email||'').toLowerCase())>=0;
+}
+
 function applyRoleUI(){
   var isAdmin=currentUserRole==='admin';
   var isEditor=currentUserRole==='editor';
@@ -398,6 +405,7 @@ function applyRoleUI(){
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
     // Show editor-allowed nav items — force show even if admin-only class
     var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance','nav-for-upload','nav-extensions','nav-social','nav-brand'];
+    if(canAccessFinance()) editorNavs.push('nav-finance');
     editorNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el){el.style.display='flex';el.style.setProperty('display','flex','important');}
@@ -464,7 +472,7 @@ function showPage(page){
   if(page==='users')loadUsers();
   if(page==='dashboard')loadDashboard();
   if(page==='analytics')loadAnalytics();
-  if(page==='finance'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadFinancePage();}
+  if(page==='finance'){if(!canAccessFinance()){showNotif('Admin only!','error');return;}loadFinancePage();}
   if(page==='outputs'){if(currentUserRole!=='admin'){showNotif('Admin only!','error');return;}loadOutputsTable();loadMonthlyOutputSummary();}
   if(page==='clients')loadClients();
   if(page==='for-upload')loadForUpload();
@@ -5183,12 +5191,28 @@ async function deleteOutputRow(id){
 var finActiveTab='sales';
 var finPHP=function(n){ return '₱'+Number(n||0).toLocaleString('en-PH',{maximumFractionDigits:2}); };
 
+async function promptFinTarget(){
+  var{data:row}=await sb.from('app_settings').select('value').eq('key','monthly_sales_target').maybeSingle();
+  var current=row?row.value:'';
+  var input=prompt('Set your sales target for the currently selected date range (₱):',current||'');
+  if(input===null) return;
+  var val=parseFloat(input);
+  if(isNaN(val)||val<0){ showNotif('Enter a valid number','error'); return; }
+  try{
+    await sb.from('app_settings').upsert({key:'monthly_sales_target',value:String(val),updated_at:new Date().toISOString()});
+    showNotif('Target updated! ✓','success');
+    loadFinancePage();
+  }catch(err){ showNotif('Error: '+(err?.message||err),'error'); }
+}
+
 function finSwitchTab(tab){
   finActiveTab=tab;
   document.getElementById('fin-sales-tab').style.display=tab==='sales'?'block':'none';
   document.getElementById('fin-expenses-tab').style.display=tab==='expenses'?'block':'none';
+  document.getElementById('fin-daily-tab').style.display=tab==='daily'?'block':'none';
   document.getElementById('fin-tab-sales-btn').classList.toggle('active',tab==='sales');
   document.getElementById('fin-tab-expenses-btn').classList.toggle('active',tab==='expenses');
+  document.getElementById('fin-tab-daily-btn').classList.toggle('active',tab==='daily');
 }
 
 function finToggleSalesForm(forceClose){
@@ -5331,12 +5355,90 @@ async function loadFinancePage(){
   var elA=document.getElementById('fin-stat-ads'); if(elA)elA.textContent=finPHP(totalAds);
   var elO=document.getElementById('fin-stat-orders'); if(elO)elO.textContent=sales.length;
 
+  // ── Sales Target / Gap ──
+  try{
+    var{data:targetRow}=await sb.from('app_settings').select('value').eq('key','monthly_sales_target').maybeSingle();
+    var target=targetRow?parseFloat(targetRow.value):0;
+    var gapLabelEl=document.getElementById('fin-target-label');
+    var gapValEl=document.getElementById('fin-stat-gap');
+    if(target>0){
+      var gap=target-totalSales;
+      if(gapLabelEl) gapLabelEl.textContent='(of '+finPHP(target)+')';
+      if(gapValEl){
+        gapValEl.textContent=gap>0?finPHP(gap)+' to go':'Target hit! +'+finPHP(-gap);
+        gapValEl.style.color=gap>0?'#facc15':'#4ade80';
+        gapValEl.style.fontSize='16px';
+      }
+    } else {
+      if(gapLabelEl) gapLabelEl.textContent='';
+      if(gapValEl){ gapValEl.textContent='Set target'; gapValEl.style.color='var(--text3)'; gapValEl.style.fontSize='13px'; }
+    }
+  }catch(e){}
+
+  // ── Top VA Performers ──
+  var vaBoard=document.getElementById('fin-va-leaderboard');
+  if(vaBoard){
+    var perVa={};
+    sales.forEach(function(o){
+      var name=(o.va_name||'').trim();
+      if(!name) return;
+      perVa[name]=perVa[name]||{sales:0,orders:0};
+      perVa[name].sales+=Number(o.sales_amount)||0;
+      perVa[name].orders++;
+    });
+    var vaNames=Object.keys(perVa).sort(function(a,b){return perVa[b].sales-perVa[a].sales;});
+    vaBoard.innerHTML=vaNames.length?vaNames.map(function(name,i){
+      var v=perVa[name];
+      var medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:'+(i===0?'rgba(250,204,21,0.08)':'var(--bg3)')+';border:0.5px solid '+(i===0?'rgba(250,204,21,0.3)':'var(--border2)')+';border-radius:12px">'
+        +'<span style="font-size:18px">'+(medal||'👤')+'</span>'
+        +'<div><div style="font-size:12px;font-weight:700;color:var(--text)">'+name+'</div>'
+        +'<div style="font-size:11px;color:var(--green);font-weight:650">'+finPHP(v.sales)+'</div>'
+        +'<div style="font-size:10px;color:var(--text3)">'+v.orders+' order'+(v.orders===1?'':'s')+'</div></div>'
+        +'</div>';
+    }).join(''):'<div style="font-size:11.5px;color:var(--text3)">No VA-tagged sales in this period yet.</div>';
+  }
+
+  // ── Daily Breakdown ──
+  var dailyBody=document.getElementById('fin-daily-body');
+  if(dailyBody){
+    if(!df||!dt){
+      dailyBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">📆</div>Pick a specific date range above to see the daily breakdown.</div>';
+    } else {
+      var start=new Date(df+'T00:00:00'), end=new Date(dt+'T00:00:00');
+      var spanDays=Math.round((end-start)/86400000)+1;
+      if(spanDays>62){
+        dailyBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">📆</div>Range is over 2 months — narrow it down (e.g. This Month) for a readable daily list.</div>';
+      } else {
+        var byDate={};
+        sales.forEach(function(o){
+          byDate[o.order_date]=byDate[o.order_date]||{total:0,count:0};
+          byDate[o.order_date].total+=Number(o.sales_amount)||0;
+          byDate[o.order_date].count++;
+        });
+        var rows=[];
+        for(var d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
+          var key=d.toISOString().slice(0,10);
+          var info=byDate[key]||{total:0,count:0};
+          var hasSale=info.count>0;
+          rows.push('<div class="table-row" style="grid-template-columns:1.2fr 1fr 1fr 1fr">'
+            +'<div class="row-date">'+fmtDate(key)+'</div>'
+            +'<div style="font-size:11px;color:var(--text2)">'+info.count+'</div>'
+            +'<div style="font-weight:650;color:'+(hasSale?'var(--green)':'var(--text3)')+'">'+finPHP(info.total)+'</div>'
+            +'<div><span style="font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px;background:'+(hasSale?'rgba(74,222,128,0.14);color:#4ade80':'rgba(239,68,68,0.1);color:#f87171')+'">'+(hasSale?'Has Sale':'No Sale')+'</span></div>'
+            +'</div>');
+        }
+        dailyBody.innerHTML=rows.reverse().join('');
+      }
+    }
+  }
+
   // ── Sales table ──
   if(!salesErr){
     salesBody.innerHTML=sales.length?sales.map(function(o,i){
       var statusColors={Paid:'#4ade80',Balance:'#facc15',Pending:'#fb923c',Refunded:'#f87171'};
       var sc=statusColors[o.paid_status]||'#9a9aa5';
-      return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.4fr 1fr 1fr 1fr 1fr 1fr 32px">'
+      return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.4fr 1fr 1fr 1fr 1fr 1fr 32px 32px">'
         +'<div style="color:var(--text3);font-size:11px">'+(sales.length-i)+'</div>'
         +'<div class="row-date">'+fmtDate(o.order_date)+'</div>'
         +'<div><div class="row-name">'+(o.client_name||'—')+'</div><div class="row-sub">'+(o.business||o.contact||'')+'</div></div>'
@@ -5345,6 +5447,7 @@ async function loadFinancePage(){
         +'<div style="font-size:11px;color:var(--text2)">'+(o.va_name||'—')+'</div>'
         +'<div style="font-size:11px;color:var(--text2)">'+(o.ads_spent?finPHP(o.ads_spent):'—')+'</div>'
         +'<div><span style="font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px;background:'+sc+'22;color:'+sc+'">'+(o.paid_status||'—')+'</span></div>'
+        +'<div class="proj-row-del" title="Generate Invoice" onclick="openInvoiceModal(\''+o.id+'\')" style="color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>'
         +'<div class="proj-row-del" title="Delete" onclick="deleteSale(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>'
         +'</div>';
     }).join(''):'<div class="table-empty"><div class="table-empty-icon">💵</div>No sales in this period yet.</div>';
@@ -5394,6 +5497,181 @@ async function exportFinanceCSV(){
   a.click();
   URL.revokeObjectURL(url);
 }
+
+// ═══════════════════════════════════════
+// INVOICE GENERATOR — replicates the Adgenius Service Invoice layout.
+// Business header is fixed here to match the letterhead; ask Claude to
+// update BIZ_INFO below if the company details ever change.
+// ═══════════════════════════════════════
+var BIZ_INFO={
+  name:'ADGENIUS DIGITAL MARKETING SERVICES',
+  prop:'REODEL A. BASALAN - Prop.',
+  tinLine:'NONVAT Reg. TIN: 375-724-693-00000',
+  address:'42 C. Vizcara St., Purok 1 New Lower Bicutan, City of Taguig NCR, Second District Philippines'
+};
+var _invCurrentSale=null;
+
+async function openInvoiceModal(saleId){
+  var{data:sale}=await sb.from('sales_orders').select('*').eq('id',saleId).maybeSingle();
+  if(!sale){ showNotif('Could not load this sale','error'); return; }
+  _invCurrentSale=sale;
+  var{count}=await sb.from('sales_orders').select('id',{count:'exact',head:true});
+  var suggestedNum=String((count||1)).padStart(4,'0');
+  document.getElementById('inv-number').value=suggestedNum;
+  document.getElementById('inv-sale-type').value=sale.paid_status==='Paid'?'Cash Sales':'Charge Sales';
+  document.getElementById('inv-client-name').value=sale.client_name||'';
+  document.getElementById('inv-tin').value='';
+  document.getElementById('inv-address').value=sale.business||'';
+  document.getElementById('inv-item-desc').value=[sale.order_package,sale.video_type].filter(Boolean).join(' — ')||'Service';
+  document.getElementById('inv-qty').value=1;
+  document.getElementById('inv-unit-price').value=sale.sales_amount||0;
+  document.getElementById('inv-discount').value=0;
+  document.getElementById('inv-wtax').value=0;
+  document.getElementById('inv-preview-summary').innerHTML='<strong style="color:var(--yellow)">'+(sale.client_name||'—')+'</strong> · '+fmtDate(sale.order_date)+' · '+finPHP(sale.sales_amount)+'<br>Review the details below, then generate the PDF.';
+  document.getElementById('invoice-modal').classList.add('open');
+}
+
+function closeInvoiceModal(){
+  document.getElementById('invoice-modal').classList.remove('open');
+}
+
+function generateInvoicePDF(){
+  if(typeof window.jspdf==='undefined'){ showNotif('PDF library failed to load — check your connection and try again.','error'); return; }
+  var{jsPDF}=window.jspdf;
+  var doc=new jsPDF({unit:'pt',format:'a5'});
+  var pw=doc.internal.pageSize.getWidth();
+  var margin=28;
+  var y=margin;
+
+  var invNo=document.getElementById('inv-number').value||'0001';
+  var saleType=document.getElementById('inv-sale-type').value;
+  var clientName=document.getElementById('inv-client-name').value||'—';
+  var tin=document.getElementById('inv-tin').value||'';
+  var address=document.getElementById('inv-address').value||'';
+  var itemDesc=document.getElementById('inv-item-desc').value||'Service';
+  var qty=parseFloat(document.getElementById('inv-qty').value)||1;
+  var unitPrice=parseFloat(document.getElementById('inv-unit-price').value)||0;
+  var discount=parseFloat(document.getElementById('inv-discount').value)||0;
+  var wtax=parseFloat(document.getElementById('inv-wtax').value)||0;
+  var amount=qty*unitPrice;
+  var totalSales=amount;
+  var totalDue=totalSales-discount-wtax;
+  var dateStr=_invCurrentSale?new Date(_invCurrentSale.order_date).toLocaleDateString('en-PH',{month:'2-digit',day:'2-digit',year:'2-digit'}):'';
+  var peso=function(n){ return 'P '+Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+
+  // Outer border
+  doc.setDrawColor(0); doc.setLineWidth(1.2);
+  doc.rect(margin-10,margin-10,pw-2*(margin-10),doc.internal.pageSize.getHeight()-2*(margin-10));
+
+  // Header
+  doc.setFont('helvetica','bold'); doc.setFontSize(15);
+  doc.text(BIZ_INFO.name,margin,y+10);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+  doc.text(BIZ_INFO.prop,margin,y+24);
+  doc.text(BIZ_INFO.tinLine,margin,y+35);
+  doc.text(BIZ_INFO.address,margin,y+46,{maxWidth:pw-2*margin-90});
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(10);
+  doc.text('SERVICE',pw-margin,y+10,{align:'right'});
+  doc.text('INVOICE',pw-margin,y+22,{align:'right'});
+  doc.setFontSize(9);
+  doc.text('No.',pw-margin-55,y+38);
+  doc.setTextColor(200,0,0);
+  doc.text(invNo,pw-margin,y+38,{align:'right'});
+  doc.setTextColor(0,0,0);
+
+  y+=58;
+  doc.setFontSize(8.5);
+  doc.text((saleType==='Cash Sales'?'☑':'☐')+' CASH SALES',margin,y);
+  doc.text((saleType==='Charge Sales'?'☑':'☐')+' CHARGE SALES',margin,y+11);
+  doc.rect(pw-margin-95,y-9,95,12);
+  doc.text('DATE: '+dateStr,pw-margin-90,y);
+
+  y+=26;
+  doc.setLineWidth(0.7); doc.line(margin,y,pw-margin,y);
+  y+=13;
+  doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.text('SOLD TO:',margin,y);
+  y+=13;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+  doc.text('Registered Name:',margin,y);
+  doc.setFont('helvetica','bold');
+  doc.text(clientName,margin+90,y);
+  y+=14;
+  doc.setFont('helvetica','normal');
+  doc.text('TIN:',margin,y);
+  doc.text(tin,margin+30,y);
+  y+=14;
+  doc.text('Business Address:',margin,y);
+  doc.text(address,margin+95,y,{maxWidth:pw-2*margin-95});
+  y+=18;
+  doc.line(margin,y,pw-margin,y);
+
+  // Item table
+  y+=4;
+  var col1=margin,col2=margin+180,col3=margin+240,col4=pw-margin;
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('Item Description/Nature of Service',col1+2,y+10);
+  doc.text('Qty',col2+2,y+10);
+  doc.text('Unit Price',col3+2,y+10);
+  doc.text('Amount',col4-2,y+10,{align:'right'});
+  doc.rect(margin,y,pw-2*margin,16);
+  doc.line(col2,y,col2,y+16); doc.line(col3,y,col3,y+16);
+  y+=16;
+  var rowH=16, tableTop=y;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+  doc.rect(margin,y,pw-2*margin,rowH);
+  doc.line(col2,y,col2,y+rowH); doc.line(col3,y,col3,y+rowH);
+  doc.text(itemDesc,col1+2,y+11,{maxWidth:col2-col1-4});
+  doc.text(String(qty),col2+2,y+11);
+  doc.text(peso(unitPrice),col3+2,y+11);
+  doc.text(peso(amount),col4-2,y+11,{align:'right'});
+  y+=rowH;
+  // a few empty rows for the physical-invoice look
+  for(var r=0;r<4;r++){
+    doc.rect(margin,y,pw-2*margin,rowH);
+    doc.line(col2,y,col2,y+rowH); doc.line(col3,y,col3,y+rowH);
+    y+=rowH;
+  }
+
+  // Totals box
+  var totBoxW=170, totBoxX=pw-margin-totBoxW;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+  function totRow(label,val,bold){
+    doc.rect(totBoxX,y,totBoxW-60,16); doc.rect(totBoxX+totBoxW-60,y,60,16);
+    doc.setFont('helvetica',bold?'bold':'normal');
+    doc.text(label,totBoxX+4,y+11);
+    doc.text(peso(val),totBoxX+totBoxW-4,y+11,{align:'right'});
+    y+=16;
+  }
+  totRow('Total Sales',totalSales,false);
+  totRow('Less: Discount',discount,false);
+  totRow('Less: Withholding Tax',wtax,false);
+  totRow('TOTAL AMOUNT DUE',totalDue,true);
+
+  y+=26;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.rect(margin,y-10,10,10);
+  doc.text('Received the amount of',margin+14,y-2);
+  y+=14;
+  doc.line(margin,y+8,margin+120,y+8);
+  doc.setFont('helvetica','bold'); doc.text(peso(totalDue),margin,y+6);
+
+  y+=30;
+  doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
+  doc.text('"THIS DOCUMENT IS',margin,y);
+  doc.text('NOT VALID FOR CLAIM',margin,y+11);
+  doc.text('OF INPUT TAXES"',margin,y+22);
+
+  doc.line(pw-margin-140,y+20,pw-margin,y+20);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+  doc.text('Signature',pw-margin-140,y+29);
+
+  doc.save('Invoice-'+invNo+'-'+clientName.replace(/[^a-z0-9]/gi,'')+'.pdf');
+  closeInvoiceModal();
+  showNotif('Invoice generated! 🧾','success');
+}
+
 
 function exportOutputsCSV(){
   var rows=document.querySelectorAll('#outputs-table-body .table-row');
