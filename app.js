@@ -1993,6 +1993,11 @@ function switchTab(tab){
   document.getElementById('input-paste').style.display=tab==='paste'?'block':'none';
   document.getElementById('tab-manual').classList.toggle('active',tab==='manual');
   document.getElementById('tab-paste').classList.toggle('active',tab==='paste');
+  // Ipakita ang Orders panel sa Paste tab lang (hindi sa Manual form)
+  var op=document.getElementById('np-orders');
+  if(op) op.style.display = (tab==='paste') ? 'flex' : 'none';
+  var lay=document.querySelector('.np-layout');
+  if(lay) lay.style.gridTemplateColumns = (tab==='paste') ? 'minmax(0,1fr) 340px' : 'minmax(0,1fr)';
 }
 
 // BLUEPRINT GENERATOR
