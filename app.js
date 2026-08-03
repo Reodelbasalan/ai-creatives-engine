@@ -5220,20 +5220,35 @@ function finFilterSales(){
   renderFinSalesTable(finApplySalesSearch(window._finSalesCache||[]));
 }
 
+function renderFinAdsTable(adsLog){
+  var body=document.getElementById('fin-ads-body');
+  if(!body) return;
+  body.innerHTML=adsLog.length?adsLog.map(function(a,i){
+    return '<div class="table-row" style="grid-template-columns:0.4fr 1.2fr 1fr 1fr 1.6fr 32px">'
+      +'<div style="color:var(--text3);font-size:11px">'+(adsLog.length-i)+'</div>'
+      +'<div class="row-date">'+fmtDate(a.spend_date)+'</div>'
+      +'<div style="font-weight:650;color:var(--purple)">'+finPHP(a.total_ads_spent)+'</div>'
+      +'<div style="font-size:11px;color:var(--text2)">'+(a.cost_per_message?finPHP(a.cost_per_message):'—')+'</div>'
+      +'<div style="font-size:11px;color:var(--text2)">'+(a.total_messages||0)+' msgs'+(a.notes?' · '+a.notes:'')+'</div>'
+      +'<div class="proj-row-del" title="Delete" onclick="deleteAdsSpend(\''+a.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>'
+      +'</div>';
+  }).join(''):'<div class="table-empty"><div class="table-empty-icon">📈</div>No ads spend logged in this period yet.</div>';
+}
+
 function renderFinSalesTable(sales){
   var salesBody=document.getElementById('fin-sales-body');
   if(!salesBody) return;
   salesBody.innerHTML=sales.length?sales.map(function(o,i){
     var statusColors={Paid:'#4ade80',Balance:'#facc15',Pending:'#fb923c',Refunded:'#f87171'};
     var sc=statusColors[o.paid_status]||'#9a9aa5';
-    return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.4fr 1fr 1fr 1fr 1fr 1fr 32px 32px">'
+    var subParts=[o.business||o.contact,o.notes].filter(Boolean);
+    return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.6fr 1fr 1fr 1fr 1fr 32px 32px">'
       +'<div style="color:var(--text3);font-size:11px">'+(sales.length-i)+'</div>'
       +'<div class="row-date">'+fmtDate(o.order_date)+'</div>'
-      +'<div><div class="row-name">'+(o.client_name||'—')+'</div><div class="row-sub">'+(o.business||o.contact||'')+'</div></div>'
+      +'<div><div class="row-name">'+(o.client_name||'—')+'</div><div class="row-sub">'+subParts.join(' · ')+'</div></div>'
       +'<div style="font-size:11px;color:var(--text2)">'+(o.order_package||'—')+'</div>'
       +'<div style="font-weight:650;color:var(--green)">'+finPHP(o.sales_amount)+'</div>'
       +'<div style="font-size:11px;color:var(--text2)">'+(o.va_name||'—')+'</div>'
-      +'<div style="font-size:11px;color:var(--text2)">'+(o.ads_spent?finPHP(o.ads_spent):'—')+'</div>'
       +'<div><span style="font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px;background:'+sc+'22;color:'+sc+'">'+(o.paid_status||'—')+'</span></div>'
       +'<div class="proj-row-del" title="Generate Invoice" onclick="openInvoiceModal(\''+o.id+'\')" style="color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>'
       +'<div class="proj-row-del" title="Delete" onclick="deleteSale(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>'
@@ -5259,9 +5274,11 @@ function finSwitchTab(tab){
   finActiveTab=tab;
   document.getElementById('fin-sales-tab').style.display=tab==='sales'?'block':'none';
   document.getElementById('fin-expenses-tab').style.display=tab==='expenses'?'block':'none';
+  document.getElementById('fin-ads-tab').style.display=tab==='ads'?'block':'none';
   document.getElementById('fin-daily-tab').style.display=tab==='daily'?'block':'none';
   document.getElementById('fin-tab-sales-btn').classList.toggle('active',tab==='sales');
   document.getElementById('fin-tab-expenses-btn').classList.toggle('active',tab==='expenses');
+  document.getElementById('fin-tab-ads-btn').classList.toggle('active',tab==='ads');
   document.getElementById('fin-tab-daily-btn').classList.toggle('active',tab==='daily');
 }
 
@@ -5291,6 +5308,79 @@ function finToggleExpenseForm(forceClose){
   }
 }
 
+function finToggleAdsForm(forceClose){
+  var wrap=document.getElementById('fin-ads-form-wrap');
+  var isOpen=wrap.style.maxHeight&&wrap.style.maxHeight!=='0px'&&wrap.style.maxHeight!=='0';
+  var open=forceClose?false:!isOpen;
+  if(open){
+    wrap.style.maxHeight='700px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
+    var dateEl=document.getElementById('fin-ads-date');
+    if(dateEl&&!dateEl.value) dateEl.value=new Date().toISOString().slice(0,10);
+  } else {
+    wrap.style.maxHeight='0'; wrap.style.opacity='0'; wrap.style.marginBottom='0';
+  }
+}
+
+async function submitAdsSpend(){
+  var btn=document.getElementById('fin-ads-submit-btn');
+  if(btn&&btn.disabled) return;
+  var payload={
+    spend_date:document.getElementById('fin-ads-date')?.value||new Date().toISOString().slice(0,10),
+    total_ads_spent:parseFloat(document.getElementById('fin-ads-spent')?.value)||0,
+    cost_per_message:parseFloat(document.getElementById('fin-ads-cpm')?.value)||0,
+    total_messages:parseInt(document.getElementById('fin-ads-msgs')?.value)||0,
+    notes:document.getElementById('fin-ads-notes')?.value?.trim()||null,
+    created_by:currentUser.id
+  };
+  var origHtml=btn?btn.innerHTML:'';
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Saving...'; }
+  try{
+    var{error}=await sb.from('ads_spend_log').insert(payload);
+    if(error){ showNotif('Error: '+error.message,'error'); return; }
+    showNotif('Ads spend saved! ✓','success');
+    ['fin-ads-spent','fin-ads-cpm','fin-ads-msgs','fin-ads-notes'].forEach(function(id){
+      var el=document.getElementById(id); if(el)el.value='';
+    });
+    finToggleAdsForm(true);
+    loadFinancePage();
+  }catch(err){ showNotif('Error: '+(err?.message||err),'error'); }
+  finally{ if(btn){ btn.disabled=false; btn.innerHTML=origHtml; } }
+}
+
+async function deleteAdsSpend(id){
+  if(!confirm('Delete this ads spend entry?'))return;
+  try{
+    await sb.from('ads_spend_log').delete().eq('id',id);
+    showNotif('Entry deleted.','success');
+    loadFinancePage();
+  }catch(err){ showNotif('Delete failed: '+(err?.message||err),'error'); }
+}
+
+// ── Client autocomplete for Add Sale — pulls from previous sales so you
+// don't have to retype details for a client you've already sold to ──
+var _finClientLookup={};
+function finPopulateClientDatalist(){
+  var dl=document.getElementById('fin-client-datalist');
+  if(!dl) return;
+  var salesCache=window._finAllSalesEver||[];
+  _finClientLookup={};
+  salesCache.forEach(function(o){
+    if(o.client_name) _finClientLookup[o.client_name]=o; // last one wins = most recent
+  });
+  dl.innerHTML=Object.keys(_finClientLookup).sort().map(function(name){
+    return '<option value="'+name.replace(/"/g,'&quot;')+'">';
+  }).join('');
+}
+function finAutofillClient(){
+  var name=document.getElementById('fin-sale-client')?.value;
+  var match=_finClientLookup[name];
+  if(!match) return;
+  var c=document.getElementById('fin-sale-contact'); if(c&&!c.value) c.value=match.contact||'';
+  var b=document.getElementById('fin-sale-business'); if(b&&!b.value) b.value=match.business||'';
+  var e=document.getElementById('fin-sale-email'); if(e&&!e.value) e.value=match.email||'';
+  showNotif('Filled in from a previous sale for '+name,'success');
+}
+
 async function submitSale(){
   var btn=document.getElementById('fin-sale-submit-btn');
   if(btn&&btn.disabled) return;
@@ -5304,8 +5394,8 @@ async function submitSale(){
     video_type:document.getElementById('fin-sale-videotype')?.value?.trim()||null,
     sales_amount:parseFloat(document.getElementById('fin-sale-amount')?.value)||0,
     va_name:document.getElementById('fin-sale-va')?.value?.trim()||null,
-    ads_spent:parseFloat(document.getElementById('fin-sale-ads')?.value)||0,
     paid_status:document.getElementById('fin-sale-paid')?.value||'Balance',
+    notes:document.getElementById('fin-sale-notes')?.value?.trim()||null,
     created_by:currentUser.id
   };
   if(!payload.client_name){ showNotif('Client name is required','error'); return; }
@@ -5315,7 +5405,7 @@ async function submitSale(){
     var{error}=await sb.from('sales_orders').insert(payload);
     if(error){ showNotif('Error: '+error.message,'error'); return; }
     showNotif('Sale saved! ✓','success');
-    ['fin-sale-client','fin-sale-contact','fin-sale-business','fin-sale-email','fin-sale-videotype','fin-sale-amount','fin-sale-va','fin-sale-ads'].forEach(function(id){
+    ['fin-sale-client','fin-sale-contact','fin-sale-business','fin-sale-email','fin-sale-videotype','fin-sale-amount','fin-sale-va','fin-sale-notes'].forEach(function(id){
       var el=document.getElementById(id); if(el)el.value='';
     });
     finToggleSalesForm(true);
@@ -5390,8 +5480,16 @@ async function loadFinancePage(){
   var expQuery=sb.from('business_expenses').select('*').order('expense_date',{ascending:false}).limit(500);
   if(df) expQuery=expQuery.gte('expense_date',df);
   if(dt) expQuery=expQuery.lte('expense_date',dt);
+  var adsQuery=sb.from('ads_spend_log').select('*').order('spend_date',{ascending:false}).limit(500);
+  if(df) adsQuery=adsQuery.gte('spend_date',df);
+  if(dt) adsQuery=adsQuery.lte('spend_date',dt);
 
-  var[{data:sales,error:salesErr},{data:expenses,error:expErr}]=await Promise.all([salesQuery,expQuery]);
+  var[{data:sales,error:salesErr},{data:expenses,error:expErr},{data:adsLog,error:adsErr}]=await Promise.all([salesQuery,expQuery,adsQuery]);
+
+  // Client lookup for autofill — pulls from ALL sales ever (not just this
+  // date range) so past clients are always found regardless of filter
+  sb.from('sales_orders').select('client_name,contact,business,email').order('created_at',{ascending:true}).limit(1000)
+    .then(function(res){ window._finAllSalesEver=res.data||[]; finPopulateClientDatalist(); });
 
   if(salesErr){
     salesBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">⚠️</div>Couldn\'t load sales — make sure the <code>sales_orders</code> table exists in Supabase (see setup SQL).</div>';
@@ -5399,18 +5497,33 @@ async function loadFinancePage(){
   if(expErr){
     expBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">⚠️</div>Couldn\'t load expenses — make sure the <code>business_expenses</code> table exists in Supabase (see setup SQL).</div>';
   }
-  sales=sales||[]; expenses=expenses||[];
+  sales=sales||[]; expenses=expenses||[]; adsLog=adsLog||[];
+  if(adsErr){
+    var adsBodyErr=document.getElementById('fin-ads-body');
+    if(adsBodyErr) adsBodyErr.innerHTML='<div class="table-empty"><div class="table-empty-icon">⚠️</div>Couldn\'t load ads spend — make sure the <code>ads_spend_log</code> table exists in Supabase (see setup SQL).</div>';
+  }
 
   // ── Stats ──
   var totalSales=sales.reduce(function(s,o){return s+(Number(o.sales_amount)||0);},0);
   var totalExpenses=expenses.reduce(function(s,e){return s+(Number(e.amount)||0);},0);
-  var totalAds=sales.reduce(function(s,o){return s+(Number(o.ads_spent)||0);},0);
+  var totalAds=adsLog.reduce(function(s,a){return s+(Number(a.total_ads_spent)||0);},0);
+  var totalMsgs=adsLog.reduce(function(s,a){return s+(Number(a.total_messages)||0);},0);
+  var cpmEntries=adsLog.filter(function(a){return Number(a.cost_per_message)>0;});
+  var avgCpm=cpmEntries.length?cpmEntries.reduce(function(s,a){return s+Number(a.cost_per_message);},0)/cpmEntries.length:0;
   var net=totalSales-totalExpenses;
   var elS=document.getElementById('fin-stat-sales'); if(elS)elS.textContent=finPHP(totalSales);
   var elE=document.getElementById('fin-stat-expenses'); if(elE)elE.textContent=finPHP(totalExpenses);
   var elN=document.getElementById('fin-stat-net'); if(elN){ elN.textContent=finPHP(net); elN.style.color=net>=0?'var(--green)':'#f87171'; }
   var elA=document.getElementById('fin-stat-ads'); if(elA)elA.textContent=finPHP(totalAds);
+  var elCpm=document.getElementById('fin-stat-cpm'); if(elCpm)elCpm.textContent=finPHP(avgCpm);
+  var elMsgs=document.getElementById('fin-stat-msgs'); if(elMsgs)elMsgs.textContent=totalMsgs;
   var elO=document.getElementById('fin-stat-orders'); if(elO)elO.textContent=sales.length;
+
+  // ── Ads Spend table ──
+  if(!adsErr){
+    renderFinAdsTable(adsLog);
+  }
+
 
   // ── Sales Target / Gap ──
   try{
@@ -5522,17 +5635,26 @@ async function exportFinanceCSV(){
   var expQuery=sb.from('business_expenses').select('*').order('expense_date',{ascending:false});
   if(df) expQuery=expQuery.gte('expense_date',df);
   if(dt) expQuery=expQuery.lte('expense_date',dt);
-  var[{data:sales},{data:expenses}]=await Promise.all([salesQuery,expQuery]);
+  var adsQuery=sb.from('ads_spend_log').select('*').order('spend_date',{ascending:false});
+  if(df) adsQuery=adsQuery.gte('spend_date',df);
+  if(dt) adsQuery=adsQuery.lte('spend_date',dt);
+  var[{data:sales},{data:expenses},{data:adsLog}]=await Promise.all([salesQuery,expQuery,adsQuery]);
   var esc=function(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'; };
-  var rows=['SALES','Date,Client,Contact,Business,Email,Package,Video Type,Sales,VA,Ads Spent,Status'];
+  var rows=['SALES','Date,Client,Contact,Business,Email,Package,Video Type,Sales,VA,Status,Notes'];
   (sales||[]).forEach(function(o){
-    rows.push([o.order_date,o.client_name,o.contact,o.business,o.email,o.order_package,o.video_type,o.sales_amount,o.va_name,o.ads_spent,o.paid_status].map(esc).join(','));
+    rows.push([o.order_date,o.client_name,o.contact,o.business,o.email,o.order_package,o.video_type,o.sales_amount,o.va_name,o.paid_status,o.notes].map(esc).join(','));
   });
   rows.push('');
   rows.push('EXPENSES');
   rows.push('Date,Category,Item,Amount,Notes');
   (expenses||[]).forEach(function(e){
     rows.push([e.expense_date,e.category,e.item_name,e.amount,e.notes].map(esc).join(','));
+  });
+  rows.push('');
+  rows.push('ADS SPEND');
+  rows.push('Date,Total Ads Spent,Cost Per Message,Total Messages,Notes');
+  (adsLog||[]).forEach(function(a){
+    rows.push([a.spend_date,a.total_ads_spent,a.cost_per_message,a.total_messages,a.notes].map(esc).join(','));
   });
   var blob=new Blob([rows.join('\n')],{type:'text/csv'});
   var url=URL.createObjectURL(blob);
