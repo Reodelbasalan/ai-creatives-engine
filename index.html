@@ -2452,52 +2452,55 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <!-- Stats -->
           <div class="stats-grid" id="ct-stats" style="margin-bottom:14px"></div>
 
-          <!-- Follow-up reminders -->
-          <div id="ct-reminders" style="margin-bottom:14px"></div>
-
           <!-- Log a call -->
           <div class="form-card" style="margin-bottom:14px">
             <div class="form-card-title"><span>📞</span> Log a call</div>
             <div class="form-grid">
               <div class="form-field">
                 <label class="form-label">Client / Company *</label>
-                <input class="form-input" id="ct-client" placeholder="e.g. BioCore Wellness PH">
+                <input class="form-input" id="ct-client" placeholder="e.g. Ath Talks">
               </div>
               <div class="form-field">
                 <label class="form-label">Contact Person</label>
-                <input class="form-input" id="ct-contact" placeholder="e.g. Ms. Anna">
+                <input class="form-input" id="ct-contact" placeholder="e.g. Athree Darimbang">
               </div>
               <div class="form-field">
-                <label class="form-label">Phone</label>
+                <label class="form-label">Phone Number</label>
                 <input class="form-input" id="ct-phone" placeholder="09xx xxx xxxx">
               </div>
               <div class="form-field">
                 <label class="form-label">Package Interest</label>
-                <input class="form-input" id="ct-package" placeholder="e.g. UGC Starter">
+                <input class="form-input" id="ct-package" list="ct-package-list" placeholder="e.g. Boost Package">
+                <datalist id="ct-package-list">
+                  <option value="Trial Package"></option>
+                  <option value="Starter Package"></option>
+                  <option value="Boost Package"></option>
+                  <option value="Pro Package"></option>
+                  <option value="Elite Package"></option>
+                  <option value="Trial HCSI"></option>
+                  <option value="Starter HCSI"></option>
+                  <option value="Ads Package"></option>
+                  <option value="Chatbot Setup"></option>
+                  <option value="Revision"></option>
+                  <option value="Canvassing"></option>
+                </datalist>
               </div>
               <div class="form-field">
-                <label class="form-label">Call Date/Time</label>
-                <input class="form-input" id="ct-callat" type="datetime-local">
+                <label class="form-label">Call Date</label>
+                <input class="form-input" id="ct-calldate" type="date">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Call Time</label>
+                <input class="form-input" id="ct-calltime" type="time">
               </div>
               <div class="form-field">
                 <label class="form-label">Call Status</label>
                 <select class="form-select" id="ct-callstatus">
                   <option value="Completed">Completed</option>
                   <option value="No Answer">No Answer</option>
-                </select>
-              </div>
-              <div class="form-field">
-                <label class="form-label">Disposition</label>
-                <select class="form-select" id="ct-disposition">
-                  <option value="Closed">Closed</option>
                   <option value="Callback">Callback</option>
                   <option value="Rescheduled">Rescheduled</option>
-                  <option value="Not Interested">Not Interested</option>
                 </select>
-              </div>
-              <div class="form-field">
-                <label class="form-label">Follow-Up Date</label>
-                <input class="form-input" id="ct-followup" type="date">
               </div>
               <div class="form-field">
                 <label class="form-label">Deal Status</label>
@@ -2510,19 +2513,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 </select>
               </div>
               <div class="form-field">
-                <label class="form-label">Quote Sent?</label>
-                <select class="form-select" id="ct-quote">
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
-                </select>
-              </div>
-              <div class="form-field">
                 <label class="form-label">Est. Value (₱)</label>
-                <input class="form-input" id="ct-value" type="number" min="0" step="100" placeholder="0">
-              </div>
-              <div class="form-field full">
-                <label class="form-label">Remarks</label>
-                <textarea class="form-textarea" id="ct-remarks" rows="2" placeholder="Notes about the call..."></textarea>
+                <input class="form-input" id="ct-value" type="number" min="0" step="1" placeholder="0">
               </div>
             </div>
             <div style="margin-top:12px">
@@ -2550,12 +2542,11 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
           <!-- Main table -->
           <div class="data-table" style="margin-bottom:16px">
-            <div class="table-head" style="grid-template-columns:1.6fr 1.3fr 1fr 1fr 0.9fr 0.9fr 90px">
+            <div class="table-head" style="grid-template-columns:1.6fr 1.3fr 1.1fr 1fr 0.9fr 80px">
               <span>Client / Contact</span>
               <span>Phone / Package</span>
-              <span>Call</span>
+              <span>Call Date/Time</span>
               <span>Deal</span>
-              <span>Follow-up</span>
               <span>Value</span>
               <span></span>
             </div>
