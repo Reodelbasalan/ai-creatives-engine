@@ -8442,13 +8442,16 @@ function ctFilteredLogs(){
   var q=(document.getElementById('ct-search')?.value||'').toLowerCase().trim();
   var va=document.getElementById('ct-filter-va')?.value||'';
   var deal=document.getElementById('ct-filter-deal')?.value||'';
-  var month=document.getElementById('ct-filter-month')?.value||''; // YYYY-MM
+  var from=document.getElementById('ct-date-from')?.value||''; // YYYY-MM-DD
+  var to=document.getElementById('ct-date-to')?.value||'';     // YYYY-MM-DD
   return callLogsCache.filter(function(c){
     if(va && c.agent_id!==va) return false;
     if(deal && (c.deal_status||'')!==deal) return false;
-    if(month){
-      var d=c.call_at?String(c.call_at).slice(0,7):'';
-      if(d!==month) return false;
+    if(from||to){
+      var d=c.call_at?String(c.call_at).slice(0,10):''; // YYYY-MM-DD
+      if(!d) return false;
+      if(from && d<from) return false;
+      if(to && d>to) return false;
     }
     if(q){
       var hay=((c.client||'')+' '+(c.contact||'')+' '+(c.phone||'')+' '+(c.package||'')+' '+(c.agent_name||'')).toLowerCase();
@@ -8456,6 +8459,17 @@ function ctFilteredLogs(){
     }
     return true;
   });
+}
+
+function ctDatePreset(kind,btnEl){
+  var df=document.getElementById('ct-date-from');
+  var dt=document.getElementById('ct-date-to');
+  if(!df||!dt) return;
+  var range=(typeof computeDatePresetRange==='function')?computeDatePresetRange(kind):{from:'',to:''};
+  df.value=range.from||''; dt.value=range.to||'';
+  document.querySelectorAll('#ct-date-presets .proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
+  if(btnEl) btnEl.classList.add('active');
+  renderCallLogs();
 }
 
 function renderCallStats(){
@@ -8579,6 +8593,10 @@ async function deleteCallLog(id){
 }
 
 function clearCallFilters(){
-  ['ct-search','ct-filter-va','ct-filter-deal','ct-filter-month'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['ct-search','ct-filter-va','ct-filter-deal','ct-date-from','ct-date-to'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  // reset preset pills to All time
+  document.querySelectorAll('#ct-date-presets .proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
+  var pills=document.querySelectorAll('#ct-date-presets .proj-preset-pill');
+  if(pills.length) pills[pills.length-1].classList.add('active'); // "All time" is last
   renderCallLogs();
 }
