@@ -2554,6 +2554,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <button type="button" class="proj-preset-pill" onclick="ctDatePreset('month',this)">This Month</button>
             <button type="button" class="proj-preset-pill" onclick="ctDatePreset('lastmonth',this)">Last Month</button>
             <button type="button" class="proj-preset-pill active" onclick="ctDatePreset('all',this)">All time</button>
+            <button type="button" class="proj-preset-pill" id="ct-preset-custom" onclick="openDateRangeModal('call-tracker')">Custom</button>
+            <button type="button" class="proj-range-btn" onclick="openDateRangeModal('call-tracker')">📅 <span id="ct-range-label">All time</span></button>
             <input type="hidden" id="ct-date-from"/>
             <input type="hidden" id="ct-date-to"/>
           </div>
