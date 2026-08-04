@@ -1388,6 +1388,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Social Posting
       </div>
+      <div class="nav-item" onclick="showPage('call-tracker')" id="nav-call-tracker">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Call Tracker
+      </div>
     </nav>
     <div class="sidebar-footer">
       <div class="user-card">
@@ -2435,6 +2439,141 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <span><span class="sp-dot" style="background:#e44084"></span>Instagram</span>
                 <span><span class="sp-dot" style="background:#facc15"></span>Story</span>
               </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CALL TRACKER PAGE -->
+      <div class="page" id="page-call-tracker">
+        <div style="max-width:1100px">
+
+          <!-- Stats -->
+          <div class="stats-grid" id="ct-stats" style="margin-bottom:14px"></div>
+
+          <!-- Follow-up reminders -->
+          <div id="ct-reminders" style="margin-bottom:14px"></div>
+
+          <!-- Log a call -->
+          <div class="form-card" style="margin-bottom:14px">
+            <div class="form-card-title"><span>📞</span> Log a call</div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label class="form-label">Client / Company *</label>
+                <input class="form-input" id="ct-client" placeholder="e.g. BioCore Wellness PH">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Contact Person</label>
+                <input class="form-input" id="ct-contact" placeholder="e.g. Ms. Anna">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Phone</label>
+                <input class="form-input" id="ct-phone" placeholder="09xx xxx xxxx">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Package Interest</label>
+                <input class="form-input" id="ct-package" placeholder="e.g. UGC Starter">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Call Date/Time</label>
+                <input class="form-input" id="ct-callat" type="datetime-local">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Call Status</label>
+                <select class="form-select" id="ct-callstatus">
+                  <option value="Completed">Completed</option>
+                  <option value="No Answer">No Answer</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Disposition</label>
+                <select class="form-select" id="ct-disposition">
+                  <option value="Closed">Closed</option>
+                  <option value="Callback">Callback</option>
+                  <option value="Rescheduled">Rescheduled</option>
+                  <option value="Not Interested">Not Interested</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Follow-Up Date</label>
+                <input class="form-input" id="ct-followup" type="date">
+              </div>
+              <div class="form-field">
+                <label class="form-label">Deal Status</label>
+                <select class="form-select" id="ct-dealstatus">
+                  <option value="Prospect">Prospect</option>
+                  <option value="Negotiating">Negotiating</option>
+                  <option value="Won">Won</option>
+                  <option value="Lost">Lost</option>
+                  <option value="Cold Lead">Cold Lead</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Quote Sent?</label>
+                <select class="form-select" id="ct-quote">
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Est. Value (₱)</label>
+                <input class="form-input" id="ct-value" type="number" min="0" step="100" placeholder="0">
+              </div>
+              <div class="form-field full">
+                <label class="form-label">Remarks</label>
+                <textarea class="form-textarea" id="ct-remarks" rows="2" placeholder="Notes about the call..."></textarea>
+              </div>
+            </div>
+            <div style="margin-top:12px">
+              <button class="yellow-btn" id="ct-save-btn" onclick="saveCallLog()">Log call</button>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+            <input class="form-input" id="ct-search" placeholder="Search client / contact / phone..." style="max-width:240px" oninput="renderCallLogs()">
+            <select class="form-select admin-only" id="ct-filter-va" style="max-width:180px" onchange="renderCallLogs()">
+              <option value="">All VAs</option>
+            </select>
+            <select class="form-select" id="ct-filter-deal" style="max-width:160px" onchange="renderCallLogs()">
+              <option value="">All deal status</option>
+              <option value="Prospect">Prospect</option>
+              <option value="Negotiating">Negotiating</option>
+              <option value="Won">Won</option>
+              <option value="Lost">Lost</option>
+              <option value="Cold Lead">Cold Lead</option>
+            </select>
+            <input class="form-input" id="ct-filter-month" type="month" style="max-width:150px" onchange="renderCallLogs()">
+            <button class="ghost-btn" onclick="clearCallFilters()" style="font-size:11px">Clear</button>
+          </div>
+
+          <!-- Main table -->
+          <div class="data-table" style="margin-bottom:16px">
+            <div class="table-head" style="grid-template-columns:1.6fr 1.3fr 1fr 1fr 0.9fr 0.9fr 90px">
+              <span>Client / Contact</span>
+              <span>Phone / Package</span>
+              <span>Call</span>
+              <span>Deal</span>
+              <span>Follow-up</span>
+              <span>Value</span>
+              <span></span>
+            </div>
+            <div id="ct-body"></div>
+          </div>
+
+          <!-- VA Performance (admin only) -->
+          <div class="admin-only" id="ct-performance-wrap">
+            <div class="form-card-title" style="margin-bottom:8px"><span>📊</span> VA Performance</div>
+            <div class="data-table">
+              <div class="table-head" style="grid-template-columns:2fr 1fr 1fr 1fr 1.2fr">
+                <span>VA</span>
+                <span>Total calls</span>
+                <span>Won</span>
+                <span>Conversion</span>
+                <span>Total value</span>
+              </div>
+              <div id="ct-performance-body"></div>
             </div>
           </div>
 
