@@ -2529,7 +2529,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           </div>
 
           <!-- Filters -->
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
             <input class="form-input" id="ct-search" placeholder="Search client / contact / phone..." style="max-width:240px" oninput="renderCallLogs()">
             <select class="form-select admin-only" id="ct-filter-va" style="max-width:180px" onchange="renderCallLogs()">
               <option value="">All VAs</option>
@@ -2542,8 +2542,20 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <option value="Lost">Lost</option>
               <option value="Cold Lead">Cold Lead</option>
             </select>
-            <input class="form-input" id="ct-filter-month" type="month" style="max-width:150px" onchange="renderCallLogs()">
             <button class="ghost-btn" onclick="clearCallFilters()" style="font-size:11px">Clear</button>
+          </div>
+          <!-- Date preset pills -->
+          <div class="proj-date-presets" id="ct-date-presets" style="margin-bottom:12px">
+            <button type="button" class="proj-preset-pill" onclick="ctDatePreset('today',this)">Today</button>
+            <button type="button" class="proj-preset-pill" onclick="ctDatePreset('yesterday',this)">Yesterday</button>
+            <button type="button" class="proj-preset-pill" onclick="ctDatePreset('7d',this)">7D</button>
+            <button type="button" class="proj-preset-pill" onclick="ctDatePreset('30d',this)">30D</button>
+            <button type="button" class="proj-preset-pill" onclick="ctDatePreset('90d',this)">90D</button>
+            <button type="button" class="proj-preset-pill" onclick="ctDatePreset('month',this)">This Month</button>
+            <button type="button" class="proj-preset-pill" onclick="ctDatePreset('lastmonth',this)">Last Month</button>
+            <button type="button" class="proj-preset-pill active" onclick="ctDatePreset('all',this)">All time</button>
+            <input type="hidden" id="ct-date-from"/>
+            <input type="hidden" id="ct-date-to"/>
           </div>
 
           <!-- Main table -->
