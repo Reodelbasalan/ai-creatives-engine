@@ -1521,12 +1521,14 @@ var DR_TARGETS={
   projects:{from:'proj-date-from',to:'proj-date-to',label:'proj-range-label',customPill:'proj-preset-custom',presetSelector:'#proj-date-presets .proj-preset-pill',reload:function(){filterProjects();}},
   outputs:{from:'outputs-date-from',to:'outputs-date-to',label:'outputs-range-label',customPill:'outputs-preset-custom',presetSelector:'#outputs-date-presets .proj-preset-pill',reload:function(){loadOutputsTable();}},
   dashboard:{from:'dash-date-from',to:'dash-date-to',label:'dash-range-label',customPill:'dash-preset-custom',presetSelector:'#dash-date-presets .proj-preset-pill',reload:function(){loadDashboard();}},
-  finance:{from:'fin-date-from',to:'fin-date-to',label:'fin-range-label',customPill:'fin-preset-custom',presetSelector:'#fin-date-presets .proj-preset-pill',reload:function(){loadFinancePage();}}
+  finance:{from:'fin-date-from',to:'fin-date-to',label:'fin-range-label',customPill:'fin-preset-custom',presetSelector:'#fin-date-presets .proj-preset-pill',reload:function(){loadFinancePage();}},
+  'call-tracker':{from:'ct-date-from',to:'ct-date-to',label:'ct-range-label',customPill:'ct-preset-custom',presetSelector:'#ct-date-presets .proj-preset-pill',reload:function(){renderCallLogs();}}
 };
 
 function openDateRangeModal(target){
   drState.target=target||'projects';
   var cfg=DR_TARGETS[drState.target];
+  if(!cfg){ console.error('openDateRangeModal: unknown target',drState.target); showNotif('Date picker not ready — refresh the page','error'); return; }
   var df=document.getElementById(cfg.from)?.value||'';
   var dt=document.getElementById(cfg.to)?.value||'';
   var base=df?new Date(df+'T00:00:00'):new Date();
@@ -8469,6 +8471,7 @@ function ctDatePreset(kind,btnEl){
   df.value=range.from||''; dt.value=range.to||'';
   document.querySelectorAll('#ct-date-presets .proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
   if(btnEl) btnEl.classList.add('active');
+  if(typeof updateRangeLabel==='function') updateRangeLabel('ct-date-from','ct-date-to','ct-range-label');
   renderCallLogs();
 }
 
@@ -8596,7 +8599,8 @@ function clearCallFilters(){
   ['ct-search','ct-filter-va','ct-filter-deal','ct-date-from','ct-date-to'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   // reset preset pills to All time
   document.querySelectorAll('#ct-date-presets .proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
-  var pills=document.querySelectorAll('#ct-date-presets .proj-preset-pill');
-  if(pills.length) pills[pills.length-1].classList.add('active'); // "All time" is last
+  var allBtn=document.querySelector('#ct-date-presets .proj-preset-pill[onclick*="\'all\'"]');
+  if(allBtn) allBtn.classList.add('active');
+  if(typeof updateRangeLabel==='function') updateRangeLabel('ct-date-from','ct-date-to','ct-range-label');
   renderCallLogs();
 }
