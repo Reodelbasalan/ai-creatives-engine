@@ -8418,7 +8418,6 @@ async function loadCallTracker(){
   }
 
   renderCallStats();
-  renderCallReminders();
   renderCallLogs();
   if(isAdmin) renderVAPerformance();
 }
@@ -8463,43 +8462,6 @@ function renderCallStats(){
     +'<div class="stat-card c-amber"><div class="stat-label">Total value</div><div class="stat-val" style="color:var(--amber)">'+ctPeso(value)+'</div></div>';
 }
 
-function renderCallReminders(){
-  var el=document.getElementById('ct-reminders');
-  if(!el)return;
-  var today=new Date(); today.setHours(0,0,0,0);
-  var in2=new Date(today); in2.setDate(in2.getDate()+2);
-  var open=callLogsCache.filter(function(c){
-    if(!c.followup_date) return false;
-    var ds=(c.deal_status||'');
-    if(ds==='Won'||ds==='Lost') return false; // no follow-up needed
-    return true;
-  });
-  var items=open.map(function(c){
-    var fd=new Date(c.followup_date+'T00:00:00');
-    var overdue=fd<today;
-    var soon=!overdue && fd<=in2;
-    return {c:c,fd:fd,overdue:overdue,soon:soon};
-  }).filter(function(x){return x.overdue||x.soon;})
-    .sort(function(a,b){return a.fd-b.fd;});
-
-  if(!items.length){ el.innerHTML=''; return; }
-
-  el.innerHTML='<div class="form-card" style="padding:12px 14px">'
-    +'<div class="form-card-title" style="margin-bottom:8px"><span>⏰</span> Follow-up reminders <span style="font-weight:600;color:var(--text3);font-size:10px">('+items.length+')</span></div>'
-    +items.map(function(x){
-      var color=x.overdue?'var(--red)':'var(--amber)';
-      var bg=x.overdue?'rgba(239,68,68,0.08)':'rgba(245,158,11,0.08)';
-      var tag=x.overdue?'OVERDUE':'DUE SOON';
-      return '<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;background:'+bg+';margin-bottom:5px">'
-        +'<span style="font-size:9px;font-weight:700;color:'+color+';border:1px solid '+color+';border-radius:4px;padding:2px 6px;white-space:nowrap">'+tag+'</span>'
-        +'<div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;color:var(--text)">'+ctEsc(x.c.client||'—')+'</div>'
-        +'<div style="font-size:11px;color:var(--text3)">'+ctEsc(x.c.contact||'')+(x.c.phone?' · '+ctEsc(x.c.phone):'')+'</div></div>'
-        +'<div style="font-size:11px;color:'+color+';font-weight:600;white-space:nowrap">'+ctEsc(x.c.followup_date)+'</div>'
-        +'</div>';
-    }).join('')
-    +'</div>';
-}
-
 function renderCallLogs(){
   var body=document.getElementById('ct-body');
   if(!body)return;
@@ -8508,14 +8470,18 @@ function renderCallLogs(){
   if(!rows.length){ body.innerHTML='<div class="table-empty"><div class="table-empty-icon">📞</div>No calls logged yet.</div>'; return; }
   body.innerHTML=rows.map(function(c){
     var dealColor=c.deal_status==='Won'?'var(--green)':c.deal_status==='Lost'?'var(--red)':c.deal_status==='Negotiating'?'var(--amber)':c.deal_status==='Cold Lead'?'var(--text3)':'var(--purple)';
-    var callTime=c.call_at?String(c.call_at).slice(0,16).replace('T',' '):'—';
+    var callDate='—',callTime='';
+    if(c.call_at){
+      var d=new Date(c.call_at);
+      callDate=String(c.call_at).slice(0,10);
+      callTime=d.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',hour12:true});
+    }
     var vaLine=isAdmin&&c.agent_name?'<div class="row-sub" style="font-size:10px">👤 '+ctEsc(c.agent_name)+'</div>':'';
-    return '<div class="table-row" style="grid-template-columns:1.6fr 1.3fr 1fr 1fr 0.9fr 0.9fr 90px">'
+    return '<div class="table-row" style="grid-template-columns:1.6fr 1.3fr 1.1fr 1fr 0.9fr 80px">'
       +'<div><div class="row-name">'+ctEsc(c.client||'—')+'</div><div class="row-sub">'+ctEsc(c.contact||'')+'</div>'+vaLine+'</div>'
       +'<div><div class="row-meta" style="font-size:11px">'+ctEsc(c.phone||'—')+'</div><div class="row-sub">'+ctEsc(c.package||'')+'</div></div>'
-      +'<div><div class="row-meta" style="font-size:11px">'+ctEsc(c.call_status||'—')+'</div><div class="row-sub">'+ctEsc(c.disposition||'')+'</div><div class="row-sub" style="font-size:10px">'+callTime+'</div></div>'
-      +'<div><span style="font-size:10px;color:'+dealColor+';font-weight:700">'+ctEsc(c.deal_status||'Prospect')+'</span>'+(c.quote_sent?'<div class="row-sub" style="font-size:10px">📄 Quoted</div>':'')+'</div>'
-      +'<div class="row-date">'+(c.followup_date||'—')+'</div>'
+      +'<div><div class="row-meta" style="font-size:11px">'+callDate+'</div><div class="row-sub">'+callTime+'</div><div class="row-sub" style="font-size:10px">'+ctEsc(c.call_status||'')+'</div></div>'
+      +'<div><span style="font-size:10px;color:'+dealColor+';font-weight:700">'+ctEsc(c.deal_status||'Prospect')+'</span></div>'
       +'<div class="row-meta" style="font-size:11px;color:'+(Number(c.est_value)>0?'var(--amber)':'var(--text3)')+'">'+ctPeso(c.est_value)+'</div>'
       +'<div><button onclick="deleteCallLog(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button></div>'
       +'</div>';
@@ -8549,7 +8515,14 @@ function renderVAPerformance(){
 async function saveCallLog(){
   var client=document.getElementById('ct-client')?.value?.trim();
   if(!client){ showNotif('Client / Company is required','error'); return; }
-  var callAtRaw=document.getElementById('ct-callat')?.value||'';
+  var callDate=document.getElementById('ct-calldate')?.value||''; // YYYY-MM-DD
+  var callTime=document.getElementById('ct-calltime')?.value||''; // HH:MM
+  var callAt=null;
+  if(callDate){
+    callAt=new Date((callTime?callDate+'T'+callTime:callDate+'T00:00')).toISOString();
+  } else {
+    callAt=new Date().toISOString();
+  }
   var payload={
     agent_id:currentUser?.id,
     agent_name:document.getElementById('user-name-display')?.textContent||currentUser?.email||'',
@@ -8557,14 +8530,10 @@ async function saveCallLog(){
     contact:document.getElementById('ct-contact')?.value?.trim()||null,
     phone:document.getElementById('ct-phone')?.value?.trim()||null,
     package:document.getElementById('ct-package')?.value?.trim()||null,
-    call_at:callAtRaw?new Date(callAtRaw).toISOString():new Date().toISOString(),
+    call_at:callAt,
     call_status:document.getElementById('ct-callstatus')?.value||null,
-    disposition:document.getElementById('ct-disposition')?.value||null,
-    followup_date:document.getElementById('ct-followup')?.value||null,
     deal_status:document.getElementById('ct-dealstatus')?.value||'Prospect',
-    quote_sent:(document.getElementById('ct-quote')?.value==='yes'),
-    est_value:Number(document.getElementById('ct-value')?.value)||0,
-    remarks:document.getElementById('ct-remarks')?.value?.trim()||null
+    est_value:Number(document.getElementById('ct-value')?.value)||0
   };
   var btn=document.getElementById('ct-save-btn');
   if(btn){btn.disabled=true;btn.textContent='Saving...';}
@@ -8572,9 +8541,9 @@ async function saveCallLog(){
   if(btn){btn.disabled=false;btn.textContent='Log call';}
   if(error){ showNotif('Error: '+error.message,'error'); return; }
   showNotif('Call logged! ✓','success');
-  ['ct-client','ct-contact','ct-phone','ct-package','ct-callat','ct-followup','ct-value','ct-remarks'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-  var qs=document.getElementById('ct-quote'); if(qs)qs.value='no';
+  ['ct-client','ct-contact','ct-phone','ct-package','ct-calldate','ct-calltime','ct-value'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var ds=document.getElementById('ct-dealstatus'); if(ds)ds.value='Prospect';
+  var cs=document.getElementById('ct-callstatus'); if(cs)cs.value='Completed';
   loadCallTracker();
 }
 
