@@ -8403,17 +8403,30 @@ async function loadCallTracker(){
   // Toggle admin-only bits
   document.querySelectorAll('#page-call-tracker .admin-only').forEach(function(el){el.style.display=isAdmin?'':'none';});
 
-  // Populate VA filter dropdown (admin only)
+  // Populate Agent dropdown (admin only) — pili kung kaninong VA yung call
   if(isAdmin){
+    var{data:profs}=await sb.from('profiles').select('id,name,email,role').order('name');
+    var vas=(profs||[]).filter(function(p){ return p.role==='caller'||p.role==='admin'||p.role==='editor'; });
+    var agentSel=document.getElementById('ct-agent');
+    if(agentSel){
+      var curA=agentSel.value;
+      agentSel.innerHTML='<option value="">— Ako (admin) —</option>'+vas.map(function(p){
+        return '<option value="'+p.id+'" data-name="'+ctEsc(p.name||p.email)+'">'+ctEsc(p.name||p.email)+'</option>';
+      }).join('');
+      agentSel.value=curA;
+    }
+    // VA filter dropdown — gamitin ang profile names (mas malinis kaysa email)
     var vaSel=document.getElementById('ct-filter-va');
     if(vaSel){
+      var curF=vaSel.value;
+      // isama lahat ng may logs + lahat ng VA
       var names={};
-      callLogsCache.forEach(function(c){ if(c.agent_id) names[c.agent_id]=c.agent_name||'Unknown'; });
-      var cur=vaSel.value;
+      vas.forEach(function(p){ names[p.id]=p.name||p.email; });
+      callLogsCache.forEach(function(c){ if(c.agent_id&&!names[c.agent_id]) names[c.agent_id]=c.agent_name||'Unknown'; });
       vaSel.innerHTML='<option value="">All VAs</option>'+Object.keys(names).map(function(id){
         return '<option value="'+id+'">'+ctEsc(names[id])+'</option>';
       }).join('');
-      vaSel.value=cur;
+      vaSel.value=curF;
     }
   }
 
@@ -8451,8 +8464,8 @@ function renderCallStats(){
   var total=rows.length;
   var won=rows.filter(function(c){return (c.deal_status||'')==='Won';}).length;
   var conv=total?Math.round(won/total*100):0;
-  var value=rows.filter(function(c){return (c.deal_status||'')==='Won';})
-                .reduce(function(s,c){return s+(Number(c.est_value)||0);},0);
+  // Total value = sum of ALL est_value (kahit hindi pa Won) — tulad ng sheet
+  var value=rows.reduce(function(s,c){return s+(Number(c.est_value)||0);},0);
   var el=document.getElementById('ct-stats');
   if(!el)return;
   el.innerHTML=''
@@ -8496,7 +8509,8 @@ function renderVAPerformance(){
     var k=c.agent_id||'unknown';
     if(!byVA[k]) byVA[k]={name:c.agent_name||'Unknown',total:0,won:0,value:0};
     byVA[k].total++;
-    if((c.deal_status||'')==='Won'){ byVA[k].won++; byVA[k].value+=(Number(c.est_value)||0); }
+    byVA[k].value+=(Number(c.est_value)||0); // total value = lahat ng est. value
+    if((c.deal_status||'')==='Won'){ byVA[k].won++; }
   });
   var list=Object.keys(byVA).map(function(k){return byVA[k];}).sort(function(a,b){return b.value-a.value;});
   if(!list.length){ body.innerHTML='<div class="table-empty"><div class="table-empty-icon">📊</div>No data yet.</div>'; return; }
@@ -8523,9 +8537,18 @@ async function saveCallLog(){
   } else {
     callAt=new Date().toISOString();
   }
+  // Agent: kung admin at may pinili sa dropdown, gamitin yun; kung wala, sarili
+  var agentId=currentUser?.id;
+  var agentName=document.getElementById('user-name-display')?.textContent||currentUser?.email||'';
+  var agentSel=document.getElementById('ct-agent');
+  if(currentUserRole==='admin' && agentSel && agentSel.value){
+    agentId=agentSel.value;
+    var opt=agentSel.options[agentSel.selectedIndex];
+    agentName=opt?.getAttribute('data-name')||opt?.textContent||agentName;
+  }
   var payload={
-    agent_id:currentUser?.id,
-    agent_name:document.getElementById('user-name-display')?.textContent||currentUser?.email||'',
+    agent_id:agentId,
+    agent_name:agentName,
     client:client,
     contact:document.getElementById('ct-contact')?.value?.trim()||null,
     phone:document.getElementById('ct-phone')?.value?.trim()||null,
