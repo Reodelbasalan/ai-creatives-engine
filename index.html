@@ -1392,6 +1392,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         Call Tracker
       </div>
+      <div class="nav-item" onclick="showPage('advertiser-tasks')" id="nav-advertiser-tasks">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Advertiser Tasks
+      </div>
     </nav>
     <div class="sidebar-footer">
       <div class="user-card">
@@ -2585,6 +2589,73 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <span>Total value</span>
               </div>
               <div id="ct-performance-body"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ADVERTISER TASKS PAGE -->
+      <div class="page" id="page-advertiser-tasks">
+        <div style="max-width:1000px">
+
+          <!-- Add task -->
+          <div class="form-card" style="margin-bottom:14px">
+            <div class="form-card-title"><span>📋</span> Add task</div>
+            <div class="form-grid">
+              <div class="form-field full">
+                <label class="form-label">Task *</label>
+                <input class="form-input" id="at-title" placeholder="e.g. Launch Batik SW ads for Weng">
+              </div>
+              <div class="form-field full">
+                <label class="form-label">Details (optional)</label>
+                <textarea class="form-textarea" id="at-details" rows="2" placeholder="Notes about the task..."></textarea>
+              </div>
+              <div class="form-field admin-only" id="at-assignee-field">
+                <label class="form-label">Assign to</label>
+                <select class="form-select" id="at-assignee">
+                  <option value="">— Ako (admin) —</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:12px">
+              <button class="yellow-btn" id="at-save-btn" onclick="saveAdvertiserTask()">Add task</button>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+            <input class="form-input" id="at-search" placeholder="Search task..." style="max-width:260px" oninput="renderAdvertiserTasks()">
+            <select class="form-select admin-only" id="at-filter-assignee" style="max-width:180px" onchange="renderAdvertiserTasks()">
+              <option value="">All advertisers</option>
+            </select>
+            <button class="ghost-btn" id="at-toggle-history" onclick="atToggleHistory()" style="font-size:11px">📜 View history</button>
+          </div>
+
+          <!-- Active tasks -->
+          <div id="at-active-wrap">
+            <div class="data-table" style="margin-bottom:16px">
+              <div class="table-head" style="grid-template-columns:2.2fr 1.1fr 1fr 90px">
+                <span>Task</span>
+                <span>Assigned to</span>
+                <span>Status</span>
+                <span></span>
+              </div>
+              <div id="at-active-body"></div>
+            </div>
+          </div>
+
+          <!-- History (hidden by default) -->
+          <div id="at-history-wrap" style="display:none">
+            <div class="form-card-title" style="margin-bottom:8px"><span>📜</span> Task history</div>
+            <div class="data-table">
+              <div class="table-head" style="grid-template-columns:2.2fr 1.1fr 1fr 1.1fr">
+                <span>Task</span>
+                <span>Assigned to</span>
+                <span>Status</span>
+                <span>Done at</span>
+              </div>
+              <div id="at-history-body"></div>
             </div>
           </div>
 
