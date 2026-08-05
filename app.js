@@ -359,6 +359,8 @@ async function loadUserRole(user){
     currentUserRole='brand_intern';
   } else if(data?.role==='caller'){
     currentUserRole='caller';
+  } else if(data?.role==='advertiser'){
+    currentUserRole='advertiser';
   } else if(data?.role==='admin'||ADMIN_EMAILS.indexOf(email)!==-1){
     currentUserRole='admin';
   } else {
@@ -367,7 +369,7 @@ async function loadUserRole(user){
   // Update sidebar display name
   var nameEl=document.getElementById('user-name-display');
   var roleEl=document.getElementById('user-role-label');
-  var roleLabel=currentUserRole==='admin'?'Super Admin':currentUserRole==='client'?'Client':currentUserRole==='brand_intern'?'Brand Intern':currentUserRole==='caller'?'Caller (VA)':'Editor';
+  var roleLabel=currentUserRole==='admin'?'Super Admin':currentUserRole==='client'?'Client':currentUserRole==='brand_intern'?'Brand Intern':currentUserRole==='caller'?'Caller (VA)':currentUserRole==='advertiser'?'Advertiser':'Editor';
   if(nameEl)nameEl.textContent=data?.name||email;
   if(roleEl)roleEl.textContent=roleLabel;
   document.getElementById('user-email-label').textContent=email;
@@ -376,7 +378,7 @@ async function loadUserRole(user){
   sb.from('profiles').select('role').eq('id',user.id).maybeSingle().then(({data})=>{
     if(data?.role&&currentUserRole!=='admin'&&ADMIN_EMAILS.indexOf(email)===-1){
       currentUserRole=data.role;
-      var lbl=currentUserRole==='admin'?'Super Admin':currentUserRole==='client'?'Client':currentUserRole==='brand_intern'?'Brand Intern':currentUserRole==='caller'?'Caller (VA)':'Editor';
+      var lbl=currentUserRole==='admin'?'Super Admin':currentUserRole==='client'?'Client':currentUserRole==='brand_intern'?'Brand Intern':currentUserRole==='caller'?'Caller (VA)':currentUserRole==='advertiser'?'Advertiser':'Editor';
       document.getElementById('user-role-label').textContent=lbl;
       applyRoleUI();
     }
@@ -447,6 +449,17 @@ function applyRoleUI(){
       if(el)el.style.display='flex';
     });
     showPage('call-tracker');
+
+  } else if(currentUserRole==='advertiser'){
+    // Advertiser — Advertiser Tasks only (sarili + admin pwede mag-assign)
+    document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
+    document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
+    var advNavs=['nav-advertiser-tasks','nav-profile'];
+    advNavs.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el)el.style.display='flex';
+    });
+    showPage('advertiser-tasks');
   }
 }
 
@@ -475,7 +488,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
@@ -498,6 +511,7 @@ function showPage(page){
   if(page==='social'){loadSocial();}
   if(page==='brand'){loadBrandCreatives();}
   if(page==='call-tracker'){loadCallTracker();}
+  if(page==='advertiser-tasks'){loadAdvertiserTasks();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
@@ -8603,4 +8617,176 @@ function clearCallFilters(){
   if(allBtn) allBtn.classList.add('active');
   if(typeof updateRangeLabel==='function') updateRangeLabel('ct-date-from','ct-date-to','ct-range-label');
   renderCallLogs();
+}
+
+
+// ============================================================
+// ADVERTISER TASKS
+// ============================================================
+var advTasksCache=[];
+var advHistoryMode=false;
+
+async function loadAdvertiserTasks(){
+  var isAdmin=currentUserRole==='admin';
+  var q=sb.from('advertiser_tasks').select('*').order('created_at',{ascending:false});
+  if(!isAdmin && currentUser?.id){ q=q.eq('assignee_id',currentUser.id); }
+  var{data,error}=await q;
+  if(error){ showNotif('Error loading tasks: '+error.message,'error'); advTasksCache=[]; }
+  else { advTasksCache=data||[]; }
+
+  document.querySelectorAll('#page-advertiser-tasks .admin-only').forEach(function(el){el.style.display=isAdmin?'':'none';});
+
+  if(isAdmin){
+    var{data:profs}=await sb.from('profiles').select('id,name,email,role').order('name');
+    var advs=(profs||[]).filter(function(p){ return p.role==='advertiser'||p.role==='admin'; });
+    var assigneeSel=document.getElementById('at-assignee');
+    if(assigneeSel){
+      var curA=assigneeSel.value;
+      assigneeSel.innerHTML='<option value="">— Ako (admin) —</option>'+advs.map(function(p){
+        return '<option value="'+p.id+'" data-name="'+ctEsc(p.name||p.email)+'">'+ctEsc(p.name||p.email)+'</option>';
+      }).join('');
+      assigneeSel.value=curA;
+    }
+    var filterSel=document.getElementById('at-filter-assignee');
+    if(filterSel){
+      var curF=filterSel.value;
+      var names={};
+      advs.forEach(function(p){ names[p.id]=p.name||p.email; });
+      advTasksCache.forEach(function(t){ if(t.assignee_id&&!names[t.assignee_id]) names[t.assignee_id]=t.assignee_name||'Unknown'; });
+      filterSel.innerHTML='<option value="">All advertisers</option>'+Object.keys(names).map(function(id){
+        return '<option value="'+id+'">'+ctEsc(names[id])+'</option>';
+      }).join('');
+      filterSel.value=curF;
+    }
+  }
+
+  renderAdvertiserTasks();
+}
+
+function atFilteredTasks(){
+  var q=(document.getElementById('at-search')?.value||'').toLowerCase().trim();
+  var assignee=document.getElementById('at-filter-assignee')?.value||'';
+  return advTasksCache.filter(function(t){
+    if(assignee && t.assignee_id!==assignee) return false;
+    if(q && (t.title||'').toLowerCase().indexOf(q)===-1 && (t.details||'').toLowerCase().indexOf(q)===-1) return false;
+    return true;
+  });
+}
+
+function atStatusColor(s){
+  return s==='Done'?'var(--green)':s==='Not Done'?'var(--red)':'var(--amber)';
+}
+
+function renderAdvertiserTasks(){
+  var isAdmin=currentUserRole==='admin';
+  var rows=atFilteredTasks();
+  var active=rows.filter(function(t){ return (t.status||'In Progress')!=='Done'&&(t.status||'')!=='Not Done'; });
+  var history=rows.filter(function(t){ return (t.status||'')==='Done'||(t.status||'')==='Not Done'; });
+
+  var activeBody=document.getElementById('at-active-body');
+  if(activeBody){
+    if(!active.length){ activeBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">📋</div>No active tasks.</div>'; }
+    else {
+      activeBody.innerHTML=active.map(function(t){
+        var assigneeLine=isAdmin?ctEsc(t.assignee_name||'—'):'';
+        return '<div class="table-row" style="grid-template-columns:2.2fr 1.1fr 1fr 90px">'
+          +'<div><div class="row-name">'+ctEsc(t.title||'—')+'</div>'+(t.details?'<div class="row-sub">'+ctEsc(t.details)+'</div>':'')+'</div>'
+          +'<div class="row-meta" style="font-size:11px">'+assigneeLine+'</div>'
+          +'<div>'+atStatusSelect(t)+'</div>'
+          +'<div><button onclick="deleteAdvertiserTask(\''+t.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button></div>'
+          +'</div>';
+      }).join('');
+    }
+  }
+
+  var historyBody=document.getElementById('at-history-body');
+  if(historyBody){
+    if(!history.length){ historyBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">📜</div>No completed tasks yet.</div>'; }
+    else {
+      historyBody.innerHTML=history.map(function(t){
+        var assigneeLine=isAdmin?ctEsc(t.assignee_name||'—'):'';
+        var doneAt=t.done_at?String(t.done_at).slice(0,16).replace('T',' '):'—';
+        return '<div class="table-row" style="grid-template-columns:2.2fr 1.1fr 1fr 1.1fr;cursor:pointer" onclick="atReopenTask(\''+t.id+'\')" title="Click to reopen">'
+          +'<div><div class="row-name">'+ctEsc(t.title||'—')+'</div>'+(t.details?'<div class="row-sub">'+ctEsc(t.details)+'</div>':'')+'</div>'
+          +'<div class="row-meta" style="font-size:11px">'+assigneeLine+'</div>'
+          +'<div><span style="font-size:10px;color:'+atStatusColor(t.status)+';font-weight:700">'+ctEsc(t.status||'')+'</span></div>'
+          +'<div class="row-meta" style="font-size:11px">'+doneAt+'</div>'
+          +'</div>';
+      }).join('');
+    }
+  }
+}
+
+function atStatusSelect(t){
+  var statuses=['In Progress','Done','Not Done'];
+  return '<select class="form-select" style="font-size:11px;padding:5px 8px" onchange="updateAdvertiserTaskStatus(\''+t.id+'\',this.value)">'
+    +statuses.map(function(s){
+      return '<option value="'+s+'"'+(t.status===s?' selected':'')+'>'+s+'</option>';
+    }).join('')
+    +'</select>';
+}
+
+function atToggleHistory(){
+  advHistoryMode=!advHistoryMode;
+  document.getElementById('at-active-wrap').style.display=advHistoryMode?'none':'';
+  document.getElementById('at-history-wrap').style.display=advHistoryMode?'':'none';
+  var btn=document.getElementById('at-toggle-history');
+  if(btn) btn.textContent=advHistoryMode?'📋 Back to active tasks':'📜 View history';
+}
+
+async function atReopenTask(id){
+  if(!confirm('I-reopen ang task na ito pabalik sa In Progress?'))return;
+  var{error}=await sb.from('advertiser_tasks').update({status:'In Progress',done_at:null,updated_at:new Date().toISOString()}).eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Task reopened','success');
+  loadAdvertiserTasks();
+}
+
+async function saveAdvertiserTask(){
+  var title=document.getElementById('at-title')?.value?.trim();
+  if(!title){ showNotif('Task is required','error'); return; }
+  var assigneeId=currentUser?.id;
+  var assigneeName=document.getElementById('user-name-display')?.textContent||currentUser?.email||'';
+  var assigneeSel=document.getElementById('at-assignee');
+  if(currentUserRole==='admin' && assigneeSel && assigneeSel.value){
+    assigneeId=assigneeSel.value;
+    var opt=assigneeSel.options[assigneeSel.selectedIndex];
+    assigneeName=opt?.getAttribute('data-name')||opt?.textContent||assigneeName;
+  }
+  var payload={
+    title:title,
+    details:document.getElementById('at-details')?.value?.trim()||null,
+    assignee_id:assigneeId,
+    assignee_name:assigneeName,
+    status:'In Progress',
+    created_by:currentUser?.id,
+    created_by_name:document.getElementById('user-name-display')?.textContent||currentUser?.email||''
+  };
+  var btn=document.getElementById('at-save-btn');
+  if(btn){btn.disabled=true;btn.textContent='Adding...';}
+  var{error}=await sb.from('advertiser_tasks').insert(payload);
+  if(btn){btn.disabled=false;btn.textContent='Add task';}
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Task added! ✓','success');
+  ['at-title','at-details'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var asel=document.getElementById('at-assignee'); if(asel)asel.value='';
+  loadAdvertiserTasks();
+}
+
+async function updateAdvertiserTaskStatus(id,status){
+  var payload={status:status,updated_at:new Date().toISOString()};
+  if(status==='Done'||status==='Not Done'){ payload.done_at=new Date().toISOString(); }
+  else { payload.done_at=null; }
+  var{error}=await sb.from('advertiser_tasks').update(payload).eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Status updated','success');
+  loadAdvertiserTasks();
+}
+
+async function deleteAdvertiserTask(id){
+  if(!confirm('Delete this task?'))return;
+  var{error}=await sb.from('advertiser_tasks').delete().eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Task deleted','success');
+  loadAdvertiserTasks();
 }
