@@ -8689,11 +8689,11 @@ function renderAdvertiserTasks(){
     else {
       activeBody.innerHTML=active.map(function(t){
         var assigneeLine=isAdmin?ctEsc(t.assignee_name||'—'):'';
-        return '<div class="table-row" style="grid-template-columns:2.2fr 1.1fr 1fr 90px">'
+        return '<div class="table-row" style="grid-template-columns:2.2fr 1.1fr 1fr 90px;cursor:pointer" onclick="openAtDetailModal(\''+t.id+'\')">'
           +'<div><div class="row-name">'+ctEsc(t.title||'—')+'</div>'+(t.details?'<div class="row-sub">'+ctEsc(t.details)+'</div>':'')+'</div>'
           +'<div class="row-meta" style="font-size:11px">'+assigneeLine+'</div>'
-          +'<div>'+atStatusSelect(t)+'</div>'
-          +'<div><button onclick="deleteAdvertiserTask(\''+t.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button></div>'
+          +'<div onclick="event.stopPropagation()">'+atStatusSelect(t)+'</div>'
+          +'<div onclick="event.stopPropagation()"><button onclick="deleteAdvertiserTask(\''+t.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button></div>'
           +'</div>';
       }).join('');
     }
@@ -8706,7 +8706,7 @@ function renderAdvertiserTasks(){
       historyBody.innerHTML=history.map(function(t){
         var assigneeLine=isAdmin?ctEsc(t.assignee_name||'—'):'';
         var doneAt=t.done_at?String(t.done_at).slice(0,16).replace('T',' '):'—';
-        return '<div class="table-row" style="grid-template-columns:2.2fr 1.1fr 1fr 1.1fr;cursor:pointer" onclick="atReopenTask(\''+t.id+'\')" title="Click to reopen">'
+        return '<div class="table-row" style="grid-template-columns:2.2fr 1.1fr 1fr 1.1fr;cursor:pointer" onclick="openAtDetailModal(\''+t.id+'\')" title="Click to view detail">'
           +'<div><div class="row-name">'+ctEsc(t.title||'—')+'</div>'+(t.details?'<div class="row-sub">'+ctEsc(t.details)+'</div>':'')+'</div>'
           +'<div class="row-meta" style="font-size:11px">'+assigneeLine+'</div>'
           +'<div><span style="font-size:10px;color:'+atStatusColor(t.status)+';font-weight:700">'+ctEsc(t.status||'')+'</span></div>'
@@ -8715,6 +8715,41 @@ function renderAdvertiserTasks(){
       }).join('');
     }
   }
+}
+
+function openAtDetailModal(id){
+  var t=advTasksCache.find(function(x){ return x.id===id; });
+  if(!t){ showNotif('Task not found','error'); return; }
+  var isAdmin=currentUserRole==='admin';
+  var isHistory=(t.status==='Done'||t.status==='Not Done');
+  var createdAt=t.created_at?String(t.created_at).slice(0,16).replace('T',' '):'—';
+  var doneAt=t.done_at?String(t.done_at).slice(0,16).replace('T',' '):'—';
+
+  var body='<div style="margin-bottom:10px"><div style="font-size:15px;font-weight:700;color:var(--text)">'+ctEsc(t.title||'—')+'</div></div>';
+  if(t.details){ body+='<div style="background:var(--bg4);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;white-space:pre-wrap">'+ctEsc(t.details)+'</div>'; }
+  body+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:11.5px">'
+    +'<div><span style="color:var(--text3)">Status:</span> <span style="color:'+atStatusColor(t.status)+';font-weight:700">'+ctEsc(t.status||'')+'</span></div>'
+    +(isAdmin?'<div><span style="color:var(--text3)">Assigned to:</span> '+ctEsc(t.assignee_name||'—')+'</div>':'')
+    +'<div><span style="color:var(--text3)">Created:</span> '+createdAt+(t.created_by_name?' by '+ctEsc(t.created_by_name):'')+'</div>'
+    +(isHistory?'<div><span style="color:var(--text3)">Done at:</span> '+doneAt+'</div>':'')
+    +'</div>';
+
+  document.getElementById('at-detail-body').innerHTML=body;
+
+  var actions='';
+  if(isHistory){
+    actions+='<button class="yellow-btn" onclick="atReopenTask(\''+t.id+'\');closeAtDetailModal()" style="flex:1">↺ Reopen task</button>';
+  } else {
+    actions+='<div style="flex:1">'+atStatusSelect(t)+'</div>';
+  }
+  actions+='<button class="ghost-btn" onclick="deleteAdvertiserTask(\''+t.id+'\');closeAtDetailModal()" style="color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button>';
+  document.getElementById('at-detail-actions').innerHTML=actions;
+
+  document.getElementById('at-detail-modal').classList.add('open');
+}
+
+function closeAtDetailModal(){
+  document.getElementById('at-detail-modal').classList.remove('open');
 }
 
 function atStatusSelect(t){
