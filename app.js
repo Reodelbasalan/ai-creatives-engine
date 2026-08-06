@@ -1398,6 +1398,17 @@ function computeDatePresetRange(kind){
     var start3=new Date(now.getFullYear(),now.getMonth()-1,1);
     var end3=new Date(now.getFullYear(),now.getMonth(),0);
     return{from:projFmtDate(start3),to:projFmtDate(end3)};
+  } else if(kind==='week'){
+    var dow=now.getDay(); var diffToMon=(dow===0?6:dow-1);
+    var wkStart=new Date(now); wkStart.setDate(now.getDate()-diffToMon);
+    var wkEnd=new Date(wkStart); wkEnd.setDate(wkStart.getDate()+6);
+    return{from:projFmtDate(wkStart),to:projFmtDate(wkEnd)};
+  } else if(kind==='lastweek'){
+    var dow2=now.getDay(); var diffToMon2=(dow2===0?6:dow2-1);
+    var thisWkStart=new Date(now); thisWkStart.setDate(now.getDate()-diffToMon2);
+    var lwEnd=new Date(thisWkStart); lwEnd.setDate(thisWkStart.getDate()-1);
+    var lwStart=new Date(lwEnd); lwStart.setDate(lwEnd.getDate()-6);
+    return{from:projFmtDate(lwStart),to:projFmtDate(lwEnd)};
   }
   return{from:'',to:''};
 }
@@ -8866,15 +8877,15 @@ async function loadSalesTracker(){
   // Admin-only bits scoped to this page
   document.querySelectorAll('#page-sales-tracker .admin-only').forEach(function(el){el.style.display=isAdmin?'':'none';});
 
-  // Populate page dropdowns
-  var pageOptsHtml='<option value="">Select page...</option>'+stPagesCache.map(function(p){
-    return '<option value="'+p.id+'">'+ctEsc(p.name)+(p.category?' — '+ctEsc(p.category):'')+'</option>';
-  }).join('');
+  // Populate page name suggestions (datalist) for quick-entry auto-create
+  var pageListEl=document.getElementById('st-page-list');
+  if(pageListEl){
+    pageListEl.innerHTML=stPagesCache.map(function(p){ return '<option value="'+ctEsc(p.name)+'"></option>'; }).join('');
+  }
   var pageOptsAllHtml='<option value="">All pages</option>'+stPagesCache.map(function(p){
     return '<option value="'+p.id+'">'+ctEsc(p.name)+'</option>';
   }).join('');
-  ['se-page','ge-page'].forEach(function(id){ var el=document.getElementById(id); if(el){var cur=el.value; el.innerHTML=pageOptsHtml; el.value=cur;} });
-  ['se-filter-page','ge-filter-page','st-dash-page'].forEach(function(id){ var el=document.getElementById(id); if(el){var cur=el.value; el.innerHTML=pageOptsAllHtml.replace('All pages','All pages'); el.value=cur;} });
+  ['se-filter-page','ge-filter-page','st-dash-page'].forEach(function(id){ var el=document.getElementById(id); if(el){var cur=el.value; el.innerHTML=pageOptsAllHtml; el.value=cur;} });
 
   // Category dropdown + datalist
   var cats=Array.from(new Set(stPagesCache.map(function(p){return p.category;}).filter(Boolean))).sort();
@@ -9055,6 +9066,71 @@ function renderSalesDashboard(){
       }).join('');
     }
   }
+
+  // Per-page daily breakdown — lumalabas lang kung specific page ang napili
+  var dailyWrap=document.getElementById('st-page-daily-wrap');
+  if(dailyWrap){
+    if(pageFilter){
+      var p=pmap[pageFilter];
+      document.getElementById('st-page-daily-name').textContent=p?p.name:'';
+      var dailyRows=salesRows.filter(function(e){ return e.page_id===pageFilter; })
+        .slice().sort(function(a,b){ return a.entry_date<b.entry_date?-1:1; });
+      var dailyBody=document.getElementById('st-page-daily-body');
+      if(dailyBody){
+        if(!dailyRows.length){ dailyBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">🔍</div>No entries for this range.</div>'; }
+        else {
+          dailyBody.innerHTML=dailyRows.map(function(e){
+            return '<div class="table-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">'
+              +'<div class="row-meta" style="font-size:11px">'+ctEsc(e.entry_date)+'</div>'
+              +'<div class="row-meta" style="color:var(--green)">'+ctPeso(e.order_value)+'</div>'
+              +'<div class="row-meta" style="color:var(--amber)">'+ctPeso(e.adspent)+'</div>'
+              +'<div class="row-meta">'+stRoas(e.order_value,e.adspent)+'</div>'
+              +'<div class="row-meta">'+(e.order_qty||0)+'</div>'
+              +'</div>';
+          }).join('');
+        }
+      }
+      dailyWrap.style.display='';
+    } else {
+      dailyWrap.style.display='none';
+    }
+  }
+}
+
+function stFindPageByName(name){
+  var n=(name||'').trim().toLowerCase();
+  if(!n) return null;
+  return stPagesCache.find(function(p){ return (p.name||'').trim().toLowerCase()===n; })||null;
+}
+
+async function stResolvePageId(name,category){
+  name=(name||'').trim();
+  var existing=stFindPageByName(name);
+  if(existing) return existing.id;
+  // Bagong page — auto-create
+  var{data,error}=await sb.from('sales_pages').insert({
+    name:name,
+    category:(category||'').trim()||null,
+    created_by:currentUser?.id
+  }).select().single();
+  if(error){ throw new Error(error.message); }
+  stPagesCache.push(data);
+  return data.id;
+}
+
+function stSyncCategoryHint(prefix){
+  var nameEl=document.getElementById(prefix+'-page-name');
+  var hintEl=document.getElementById(prefix+'-page-hint');
+  if(!nameEl||!hintEl) return;
+  var existing=stFindPageByName(nameEl.value);
+  if(!nameEl.value.trim()){ hintEl.textContent=''; return; }
+  if(existing){
+    hintEl.innerHTML='✓ Existing page'+(existing.category?' — Category: <b>'+ctEsc(existing.category)+'</b>':'');
+    hintEl.style.color='var(--green)';
+  } else {
+    hintEl.textContent='🆕 Bagong page — ma-a-add sa list';
+    hintEl.style.color='var(--amber)';
+  }
 }
 
 // ── SALES ENTRY ──
@@ -9066,9 +9142,18 @@ function sePreviewRoas(){
 }
 
 async function saveSalesEntry(){
-  var pageId=document.getElementById('se-page')?.value;
+  var pageName=document.getElementById('se-page-name')?.value?.trim();
   var date=document.getElementById('se-date')?.value;
-  if(!pageId||!date){ showNotif('Page at Date ay required','error'); return; }
+  if(!pageName||!date){ showNotif('FB Page name at Date ay required','error'); return; }
+  var btn=document.getElementById('se-save-btn');
+  if(btn){btn.disabled=true;btn.textContent='Saving...';}
+  var pageId;
+  try{
+    pageId=await stResolvePageId(pageName,document.getElementById('se-category')?.value);
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='Save entry';}
+    showNotif('Error: '+e.message,'error'); return;
+  }
   var payload={
     page_id:pageId,
     entry_date:date,
@@ -9078,8 +9163,6 @@ async function saveSalesEntry(){
     created_by:currentUser?.id,
     created_by_name:document.getElementById('user-name-display')?.textContent||currentUser?.email||''
   };
-  var btn=document.getElementById('se-save-btn');
-  if(btn){btn.disabled=true;btn.textContent='Saving...';}
   var{error}=await sb.from('sales_entries').upsert(payload,{onConflict:'page_id,entry_date'});
   if(btn){btn.disabled=false;btn.textContent='Save entry';}
   if(error){ showNotif('Error: '+error.message,'error'); return; }
@@ -9091,8 +9174,15 @@ async function saveSalesEntry(){
 
 function renderSalesEntries(){
   var filterPage=document.getElementById('se-filter-page')?.value||'';
+  var from=document.getElementById('se-filter-from')?.value||'';
+  var to=document.getElementById('se-filter-to')?.value||'';
   var pmap=stPageMap();
-  var rows=stSalesCache.filter(function(e){ return !filterPage||e.page_id===filterPage; });
+  var rows=stSalesCache.filter(function(e){
+    if(filterPage && e.page_id!==filterPage) return false;
+    if(from && e.entry_date<from) return false;
+    if(to && e.entry_date>to) return false;
+    return true;
+  });
   var body=document.getElementById('se-body');
   if(!body) return;
   if(!rows.length){ body.innerHTML='<div class="table-empty"><div class="table-empty-icon">💰</div>No entries yet.</div>'; return; }
@@ -9131,9 +9221,18 @@ function gePreviewPct(){
 }
 
 async function saveGenderEntry(){
-  var pageId=document.getElementById('ge-page')?.value;
+  var pageName=document.getElementById('ge-page-name')?.value?.trim();
   var date=document.getElementById('ge-date')?.value;
-  if(!pageId||!date){ showNotif('Page at Date ay required','error'); return; }
+  if(!pageName||!date){ showNotif('FB Page name at Date ay required','error'); return; }
+  var btn=document.getElementById('ge-save-btn');
+  if(btn){btn.disabled=true;btn.textContent='Saving...';}
+  var pageId;
+  try{
+    pageId=await stResolvePageId(pageName,null);
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='Save entry';}
+    showNotif('Error: '+e.message,'error'); return;
+  }
   var payload={
     page_id:pageId,
     entry_date:date,
@@ -9142,8 +9241,6 @@ async function saveGenderEntry(){
     created_by:currentUser?.id,
     created_by_name:document.getElementById('user-name-display')?.textContent||currentUser?.email||''
   };
-  var btn=document.getElementById('ge-save-btn');
-  if(btn){btn.disabled=true;btn.textContent='Saving...';}
   var{error}=await sb.from('gender_entries').upsert(payload,{onConflict:'page_id,entry_date'});
   if(btn){btn.disabled=false;btn.textContent='Save entry';}
   if(error){ showNotif('Error: '+error.message,'error'); return; }
@@ -9155,8 +9252,15 @@ async function saveGenderEntry(){
 
 function renderGenderEntries(){
   var filterPage=document.getElementById('ge-filter-page')?.value||'';
+  var from=document.getElementById('ge-filter-from')?.value||'';
+  var to=document.getElementById('ge-filter-to')?.value||'';
   var pmap=stPageMap();
-  var rows=stGenderCache.filter(function(e){ return !filterPage||e.page_id===filterPage; });
+  var rows=stGenderCache.filter(function(e){
+    if(filterPage && e.page_id!==filterPage) return false;
+    if(from && e.entry_date<from) return false;
+    if(to && e.entry_date>to) return false;
+    return true;
+  });
   var body=document.getElementById('ge-body');
   if(!body) return;
   if(!rows.length){ body.innerHTML='<div class="table-empty"><div class="table-empty-icon">👥</div>No entries yet.</div>'; return; }
