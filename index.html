@@ -2707,6 +2707,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <div class="proj-date-presets" id="st-date-presets" style="margin-bottom:14px">
               <button type="button" class="proj-preset-pill" onclick="stDatePreset('today',this)">Today</button>
               <button type="button" class="proj-preset-pill" onclick="stDatePreset('yesterday',this)">Yesterday</button>
+              <button type="button" class="proj-preset-pill" onclick="stDatePreset('week',this)">This Week</button>
+              <button type="button" class="proj-preset-pill" onclick="stDatePreset('lastweek',this)">Last Week</button>
               <button type="button" class="proj-preset-pill" onclick="stDatePreset('7d',this)">7D</button>
               <button type="button" class="proj-preset-pill active" onclick="stDatePreset('30d',this)">30D</button>
               <button type="button" class="proj-preset-pill" onclick="stDatePreset('90d',this)">90D</button>
@@ -2738,6 +2740,21 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <div id="st-category-body"></div>
             </div>
 
+            <!-- Per-page daily breakdown (specific page view) -->
+            <div id="st-page-daily-wrap" style="display:none;margin-bottom:16px">
+              <div class="form-card-title" style="margin-bottom:8px"><span>🔍</span> Daily breakdown — <span id="st-page-daily-name"></span></div>
+              <div class="data-table">
+                <div class="table-head" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">
+                  <span>Date</span>
+                  <span>Sales</span>
+                  <span>Ad Spend</span>
+                  <span>ROAS</span>
+                  <span>Orders</span>
+                </div>
+                <div id="st-page-daily-body"></div>
+              </div>
+            </div>
+
             <!-- Per-page breakdown -->
             <div class="form-card-title" style="margin-bottom:8px"><span>📄</span> Per page</div>
             <div class="data-table">
@@ -2753,14 +2770,22 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
           </div>
 
+          <!-- Shared page name suggestions -->
+          <datalist id="st-page-list"></datalist>
+
           <!-- ═══ SALES ENTRY VIEW ═══ -->
           <div id="st-view-sales" style="display:none">
             <div class="form-card" style="margin-bottom:14px">
               <div class="form-card-title"><span>💰</span> Log sales / ad spend</div>
               <div class="form-grid">
                 <div class="form-field">
-                  <label class="form-label">Page *</label>
-                  <select class="form-select" id="se-page"><option value="">Select page...</option></select>
+                  <label class="form-label">FB Page name *</label>
+                  <input class="form-input" id="se-page-name" list="st-page-list" placeholder="e.g. Skin Solutions UAE" oninput="stSyncCategoryHint('se')">
+                  <div id="se-page-hint" style="font-size:10.5px;color:var(--text3);margin-top:4px"></div>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Category <span class="opt">(kung bagong page)</span></label>
+                  <input class="form-input" id="se-category" list="pg-category-list" placeholder="e.g. UAE - VAS">
                 </div>
                 <div class="form-field">
                   <label class="form-label">Date *</label>
@@ -2789,10 +2814,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               </div>
             </div>
 
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
               <select class="form-select" id="se-filter-page" style="max-width:220px" onchange="renderSalesEntries()">
                 <option value="">All pages</option>
               </select>
+              <input class="form-input" id="se-filter-from" type="date" style="max-width:150px" onchange="renderSalesEntries()" title="From date">
+              <span style="color:var(--text3);font-size:11px">to</span>
+              <input class="form-input" id="se-filter-to" type="date" style="max-width:150px" onchange="renderSalesEntries()" title="To date">
+              <button class="ghost-btn" onclick="document.getElementById('se-filter-page').value='';document.getElementById('se-filter-from').value='';document.getElementById('se-filter-to').value='';renderSalesEntries()" style="font-size:11px">Clear</button>
             </div>
             <div class="data-table">
               <div class="table-head" style="grid-template-columns:1fr 1.6fr 1fr 1fr 0.8fr 0.9fr 70px">
@@ -2814,8 +2843,9 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <div class="form-card-title"><span>👥</span> Log gender monitoring</div>
               <div class="form-grid">
                 <div class="form-field">
-                  <label class="form-label">Page *</label>
-                  <select class="form-select" id="ge-page"><option value="">Select page...</option></select>
+                  <label class="form-label">FB Page name *</label>
+                  <input class="form-input" id="ge-page-name" list="st-page-list" placeholder="e.g. Skin Solutions UAE" oninput="stSyncCategoryHint('ge')">
+                  <div id="ge-page-hint" style="font-size:10.5px;color:var(--text3);margin-top:4px"></div>
                 </div>
                 <div class="form-field">
                   <label class="form-label">Date *</label>
@@ -2837,10 +2867,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               </div>
             </div>
 
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
               <select class="form-select" id="ge-filter-page" style="max-width:220px" onchange="renderGenderEntries()">
                 <option value="">All pages</option>
               </select>
+              <input class="form-input" id="ge-filter-from" type="date" style="max-width:150px" onchange="renderGenderEntries()" title="From date">
+              <span style="color:var(--text3);font-size:11px">to</span>
+              <input class="form-input" id="ge-filter-to" type="date" style="max-width:150px" onchange="renderGenderEntries()" title="To date">
+              <button class="ghost-btn" onclick="document.getElementById('ge-filter-page').value='';document.getElementById('ge-filter-from').value='';document.getElementById('ge-filter-to').value='';renderGenderEntries()" style="font-size:11px">Clear</button>
             </div>
             <div class="data-table">
               <div class="table-head" style="grid-template-columns:1fr 1.6fr 1fr 1fr 1fr 0.9fr 70px">
