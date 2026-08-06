@@ -8847,6 +8847,41 @@ var stPagesCache=[];
 var stSalesCache=[];
 var stGenderCache=[];
 
+var CURRENCY_SYMBOLS={PHP:'₱',AED:'AED ',SAR:'SAR ',USD:'$'};
+
+function stMoney(amount,currency){
+  var cur=currency||'PHP';
+  var sym=CURRENCY_SYMBOLS[cur]||(cur+' ');
+  return sym+(Number(amount)||0).toLocaleString('en-US',{maximumFractionDigits:2});
+}
+
+// Sum a numeric field across rows, grouped by each row's page currency
+function stSumByCurrency(rows,pmap,field){
+  var sums={};
+  rows.forEach(function(r){
+    var p=pmap[r.page_id];
+    var cur=(p&&p.currency)||'PHP';
+    sums[cur]=(sums[cur]||0)+(Number(r[field])||0);
+  });
+  return sums;
+}
+
+// Format {PHP:1000,AED:500} → "₱1,000 + AED 500"
+function stFmtCurrencyTotals(sumsObj){
+  var keys=Object.keys(sumsObj).filter(function(k){return sumsObj[k];});
+  if(!keys.length) return stMoney(0,'PHP');
+  return keys.map(function(k){ return stMoney(sumsObj[k],k); }).join(' + ');
+}
+
+// ROAS per currency, joined if more than one currency present
+function stRoasMulti(salesSums,adspentSums){
+  var keys=Array.from(new Set(Object.keys(salesSums).concat(Object.keys(adspentSums))));
+  keys=keys.filter(function(k){ return salesSums[k]||adspentSums[k]; });
+  if(!keys.length) return '0.00';
+  if(keys.length===1){ return stRoas(salesSums[keys[0]]||0,adspentSums[keys[0]]||0); }
+  return keys.map(function(k){ return k+' '+stRoas(salesSums[k]||0,adspentSums[k]||0); }).join(' · ');
+}
+
 function stRoas(sales,adspent){
   sales=Number(sales)||0; adspent=Number(adspent)||0;
   if(!adspent) return sales>0?'—':'0.00';
@@ -8978,17 +9013,19 @@ function renderSalesDashboard(){
   var salesRows=stSalesCache.filter(function(e){ return inScope(e.page_id)&&inRange(e.entry_date); });
   var genderRows=stGenderCache.filter(function(e){ return inScope(e.page_id)&&inRange(e.entry_date); });
 
-  var totalSales=salesRows.reduce(function(s,e){return s+(Number(e.order_value)||0);},0);
-  var totalAdspent=salesRows.reduce(function(s,e){return s+(Number(e.adspent)||0);},0);
+  var salesSumsTop=stSumByCurrency(salesRows,pmap,'order_value');
+  var adspentSumsTop=stSumByCurrency(salesRows,pmap,'adspent');
   var totalOrders=salesRows.reduce(function(s,e){return s+(Number(e.order_qty)||0);},0);
-  var roas=stRoas(totalSales,totalAdspent);
+  var roasStr=stRoasMulti(salesSumsTop,adspentSumsTop);
+  var salesStr=stFmtCurrencyTotals(salesSumsTop);
+  var adspentStr=stFmtCurrencyTotals(adspentSumsTop);
 
   var statsEl=document.getElementById('st-stats');
   if(statsEl){
     statsEl.innerHTML=''
-      +'<div class="stat-card c-green"><div class="stat-label">Total Sales</div><div class="stat-val" style="color:var(--green)">'+ctPeso(totalSales)+'</div></div>'
-      +'<div class="stat-card c-amber"><div class="stat-label">Total Ad Spend</div><div class="stat-val" style="color:var(--amber)">'+ctPeso(totalAdspent)+'</div></div>'
-      +'<div class="stat-card c-purple"><div class="stat-label">Total ROAS</div><div class="stat-val">'+roas+'</div></div>'
+      +'<div class="stat-card c-green"><div class="stat-label">Total Sales</div><div class="stat-val" style="color:var(--green);font-size:'+(salesStr.length>14?'16px':'22px')+'">'+salesStr+'</div></div>'
+      +'<div class="stat-card c-amber"><div class="stat-label">Total Ad Spend</div><div class="stat-val" style="color:var(--amber);font-size:'+(adspentStr.length>14?'16px':'22px')+'">'+adspentStr+'</div></div>'
+      +'<div class="stat-card c-purple"><div class="stat-label">Total ROAS</div><div class="stat-val" style="font-size:'+(roasStr.length>10?'16px':'22px')+'">'+roasStr+'</div></div>'
       +'<div class="stat-card c-yellow"><div class="stat-label">Total Orders</div><div class="stat-val">'+totalOrders+'</div></div>';
   }
 
@@ -9015,9 +9052,10 @@ function renderSalesDashboard(){
   var byCat={};
   salesRows.forEach(function(e){
     var p=pmap[e.page_id]; var cat=(p&&p.category)||'(Uncategorized)';
-    if(!byCat[cat]) byCat[cat]={sales:0,adspent:0,orders:0};
-    byCat[cat].sales+=(Number(e.order_value)||0);
-    byCat[cat].adspent+=(Number(e.adspent)||0);
+    var cur=(p&&p.currency)||'PHP';
+    if(!byCat[cat]) byCat[cat]={sales:{},adspent:{},orders:0};
+    byCat[cat].sales[cur]=(byCat[cat].sales[cur]||0)+(Number(e.order_value)||0);
+    byCat[cat].adspent[cur]=(byCat[cat].adspent[cur]||0)+(Number(e.adspent)||0);
     byCat[cat].orders+=(Number(e.order_qty)||0);
   });
   var catBody=document.getElementById('st-category-body');
@@ -9029,9 +9067,9 @@ function renderSalesDashboard(){
         var c=byCat[cat];
         return '<div class="table-row" style="grid-template-columns:1.6fr 1fr 1fr 1fr 1fr">'
           +'<div class="row-name">'+ctEsc(cat)+'</div>'
-          +'<div class="row-meta" style="color:var(--green)">'+ctPeso(c.sales)+'</div>'
-          +'<div class="row-meta" style="color:var(--amber)">'+ctPeso(c.adspent)+'</div>'
-          +'<div class="row-meta">'+stRoas(c.sales,c.adspent)+'</div>'
+          +'<div class="row-meta" style="color:var(--green);font-size:11px">'+stFmtCurrencyTotals(c.sales)+'</div>'
+          +'<div class="row-meta" style="color:var(--amber);font-size:11px">'+stFmtCurrencyTotals(c.adspent)+'</div>'
+          +'<div class="row-meta" style="font-size:11px">'+stRoasMulti(c.sales,c.adspent)+'</div>'
           +'<div class="row-meta">'+c.orders+'</div>'
           +'</div>';
       }).join('');
@@ -9053,13 +9091,13 @@ function renderSalesDashboard(){
     if(!pageKeys.length){ pageBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">📄</div>No data for this range.</div>'; }
     else {
       pageBody.innerHTML=pageKeys.map(function(pid){
-        var p=pmap[pid]||{name:'Unknown',category:''};
+        var p=pmap[pid]||{name:'Unknown',category:'',currency:'PHP'};
         var c=byPage[pid];
         return '<div class="table-row" style="grid-template-columns:1.6fr 1.1fr 1fr 1fr 0.8fr 0.9fr">'
           +'<div class="row-name">'+ctEsc(p.name)+'</div>'
           +'<div class="row-meta" style="font-size:11px">'+ctEsc(p.category||'—')+'</div>'
-          +'<div class="row-meta" style="color:var(--green)">'+ctPeso(c.sales)+'</div>'
-          +'<div class="row-meta" style="color:var(--amber)">'+ctPeso(c.adspent)+'</div>'
+          +'<div class="row-meta" style="color:var(--green)">'+stMoney(c.sales,p.currency)+'</div>'
+          +'<div class="row-meta" style="color:var(--amber)">'+stMoney(c.adspent,p.currency)+'</div>'
           +'<div class="row-meta">'+stRoas(c.sales,c.adspent)+'</div>'
           +'<div class="row-meta">'+c.orders+'</div>'
           +'</div>';
@@ -9082,8 +9120,8 @@ function renderSalesDashboard(){
           dailyBody.innerHTML=dailyRows.map(function(e){
             return '<div class="table-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr">'
               +'<div class="row-meta" style="font-size:11px">'+ctEsc(e.entry_date)+'</div>'
-              +'<div class="row-meta" style="color:var(--green)">'+ctPeso(e.order_value)+'</div>'
-              +'<div class="row-meta" style="color:var(--amber)">'+ctPeso(e.adspent)+'</div>'
+              +'<div class="row-meta" style="color:var(--green)">'+stMoney(e.order_value,p&&p.currency)+'</div>'
+              +'<div class="row-meta" style="color:var(--amber)">'+stMoney(e.adspent,p&&p.currency)+'</div>'
               +'<div class="row-meta">'+stRoas(e.order_value,e.adspent)+'</div>'
               +'<div class="row-meta">'+(e.order_qty||0)+'</div>'
               +'</div>';
@@ -9103,7 +9141,7 @@ function stFindPageByName(name){
   return stPagesCache.find(function(p){ return (p.name||'').trim().toLowerCase()===n; })||null;
 }
 
-async function stResolvePageId(name,category){
+async function stResolvePageId(name,category,currency){
   name=(name||'').trim();
   var existing=stFindPageByName(name);
   if(existing) return existing.id;
@@ -9111,6 +9149,7 @@ async function stResolvePageId(name,category){
   var{data,error}=await sb.from('sales_pages').insert({
     name:name,
     category:(category||'').trim()||null,
+    currency:currency||'PHP',
     created_by:currentUser?.id
   }).select().single();
   if(error){ throw new Error(error.message); }
@@ -9149,7 +9188,7 @@ async function saveSalesEntry(){
   if(btn){btn.disabled=true;btn.textContent='Saving...';}
   var pageId;
   try{
-    pageId=await stResolvePageId(pageName,document.getElementById('se-category')?.value);
+    pageId=await stResolvePageId(pageName,document.getElementById('se-category')?.value,document.getElementById('se-currency')?.value);
   }catch(e){
     if(btn){btn.disabled=false;btn.textContent='Save entry';}
     showNotif('Error: '+e.message,'error'); return;
@@ -9184,20 +9223,41 @@ function renderSalesEntries(){
     return true;
   });
   var body=document.getElementById('se-body');
+  var totalsEl=document.getElementById('se-totals-row');
   if(!body) return;
-  if(!rows.length){ body.innerHTML='<div class="table-empty"><div class="table-empty-icon">💰</div>No entries yet.</div>'; return; }
+  if(!rows.length){
+    body.innerHTML='<div class="table-empty"><div class="table-empty-icon">💰</div>No entries yet.</div>';
+    if(totalsEl) totalsEl.innerHTML='';
+    return;
+  }
   body.innerHTML=rows.map(function(e){
-    var p=pmap[e.page_id]||{name:'Unknown'};
+    var p=pmap[e.page_id]||{name:'Unknown',currency:'PHP'};
     return '<div class="table-row" style="grid-template-columns:1fr 1.6fr 1fr 1fr 0.8fr 0.9fr 70px">'
       +'<div class="row-meta" style="font-size:11px">'+ctEsc(e.entry_date)+'</div>'
       +'<div class="row-name">'+ctEsc(p.name)+'</div>'
-      +'<div class="row-meta" style="color:var(--green)">'+ctPeso(e.order_value)+'</div>'
-      +'<div class="row-meta" style="color:var(--amber)">'+ctPeso(e.adspent)+'</div>'
+      +'<div class="row-meta" style="color:var(--green)">'+stMoney(e.order_value,p.currency)+'</div>'
+      +'<div class="row-meta" style="color:var(--amber)">'+stMoney(e.adspent,p.currency)+'</div>'
       +'<div class="row-meta">'+stRoas(e.order_value,e.adspent)+'</div>'
       +'<div class="row-meta">'+(e.order_qty||0)+'</div>'
       +'<div><button onclick="deleteSalesEntry(\''+e.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Del</button></div>'
       +'</div>';
   }).join('');
+
+  // Totals footer — grouped by currency (kasi iba-iba ang currency per page)
+  if(totalsEl){
+    var salesSums=stSumByCurrency(rows,pmap,'order_value');
+    var adspentSums=stSumByCurrency(rows,pmap,'adspent');
+    var totalOrders=rows.reduce(function(s,e){return s+(Number(e.order_qty)||0);},0);
+    totalsEl.innerHTML='<div class="table-row" style="grid-template-columns:1fr 1.6fr 1fr 1fr 0.8fr 0.9fr 70px;background:var(--bg4);font-weight:700;border-top:1px solid var(--border2)">'
+      +'<div class="row-meta" style="font-size:11px;color:var(--text2)">TOTAL</div>'
+      +'<div></div>'
+      +'<div class="row-meta" style="color:var(--green);font-size:11px">'+stFmtCurrencyTotals(salesSums)+'</div>'
+      +'<div class="row-meta" style="color:var(--amber);font-size:11px">'+stFmtCurrencyTotals(adspentSums)+'</div>'
+      +'<div class="row-meta" style="font-size:11px">'+stRoasMulti(salesSums,adspentSums)+'</div>'
+      +'<div class="row-meta">'+totalOrders+'</div>'
+      +'<div></div>'
+      +'</div>';
+  }
 }
 
 async function deleteSalesEntry(id){
@@ -9262,8 +9322,13 @@ function renderGenderEntries(){
     return true;
   });
   var body=document.getElementById('ge-body');
+  var totalsEl=document.getElementById('ge-totals-row');
   if(!body) return;
-  if(!rows.length){ body.innerHTML='<div class="table-empty"><div class="table-empty-icon">👥</div>No entries yet.</div>'; return; }
+  if(!rows.length){
+    body.innerHTML='<div class="table-empty"><div class="table-empty-icon">👥</div>No entries yet.</div>';
+    if(totalsEl) totalsEl.innerHTML='';
+    return;
+  }
   body.innerHTML=rows.map(function(e){
     var p=pmap[e.page_id]||{name:'Unknown'};
     var total=(Number(e.female_count)||0)+(Number(e.male_count)||0);
@@ -9279,6 +9344,23 @@ function renderGenderEntries(){
       +'<div><button onclick="deleteGenderEntry(\''+e.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Del</button></div>'
       +'</div>';
   }).join('');
+
+  if(totalsEl){
+    var totalFemale=rows.reduce(function(s,e){return s+(Number(e.female_count)||0);},0);
+    var totalMale=rows.reduce(function(s,e){return s+(Number(e.male_count)||0);},0);
+    var grandTotal=totalFemale+totalMale;
+    var tfp=grandTotal?Math.round(totalFemale/grandTotal*100):0;
+    var tmp=grandTotal?100-tfp:0;
+    totalsEl.innerHTML='<div class="table-row" style="grid-template-columns:1fr 1.6fr 1fr 1fr 1fr 0.9fr 70px;background:var(--bg4);font-weight:700;border-top:1px solid var(--border2)">'
+      +'<div class="row-meta" style="font-size:11px;color:var(--text2)">TOTAL</div>'
+      +'<div></div>'
+      +'<div class="row-meta">'+totalFemale+'</div>'
+      +'<div class="row-meta">'+totalMale+'</div>'
+      +'<div class="row-meta" style="font-size:11px">'+tfp+'% / '+tmp+'%</div>'
+      +'<div class="row-meta">'+grandTotal+'</div>'
+      +'<div></div>'
+      +'</div>';
+  }
 }
 
 async function deleteGenderEntry(id){
@@ -9298,6 +9380,7 @@ async function saveSalesPage(){
     category:document.getElementById('pg-category')?.value?.trim()||null,
     assigned_name:document.getElementById('pg-assigned')?.value?.trim()||null,
     client_user_id:document.getElementById('pg-client')?.value||null,
+    currency:document.getElementById('pg-currency')?.value||'PHP',
     created_by:currentUser?.id
   };
   var btn=document.getElementById('pg-save-btn');
@@ -9316,10 +9399,11 @@ function renderSalesPagesTable(){
   if(!body) return;
   if(!stPagesCache.length){ body.innerHTML='<div class="table-empty"><div class="table-empty-icon">⚙️</div>No pages yet.</div>'; return; }
   body.innerHTML=stPagesCache.map(function(p){
-    return '<div class="table-row" style="grid-template-columns:1.6fr 1.1fr 1fr 1.2fr 70px">'
+    return '<div class="table-row" style="grid-template-columns:1.5fr 1fr 0.9fr 0.7fr 1.1fr 70px">'
       +'<div class="row-name">'+ctEsc(p.name)+'</div>'
       +'<div class="row-meta" style="font-size:11px">'+ctEsc(p.category||'—')+'</div>'
       +'<div class="row-meta" style="font-size:11px">'+ctEsc(p.assigned_name||'—')+'</div>'
+      +'<div class="row-meta" style="font-size:11px">'+ctEsc(p.currency||'PHP')+'</div>'
       +'<div class="row-meta" style="font-size:11px">'+(p.client_user_id?'✅ Meron':'—')+'</div>'
       +'<div><button onclick="deleteSalesPage(\''+p.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Del</button></div>'
       +'</div>';
