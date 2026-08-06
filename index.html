@@ -1411,6 +1411,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         Advertiser Tasks
       </div>
+      <div class="nav-item" onclick="showPage('sales-tracker')" id="nav-sales-tracker">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Sales &amp; Ads Tracker
+      </div>
     </nav>
     <div class="sidebar-footer">
       <div class="user-card">
@@ -2671,6 +2675,226 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <span>Done at</span>
               </div>
               <div id="at-history-body"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SALES & ADS TRACKER PAGE -->
+      <div class="page" id="page-sales-tracker">
+        <div style="max-width:1200px">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+            <div class="sp-tabs">
+              <button type="button" class="sp-tab active" id="st-tab-dashboard" onclick="stSwitchView('dashboard')">📊 Dashboard</button>
+              <button type="button" class="sp-tab" id="st-tab-sales" onclick="stSwitchView('sales')">💰 Sales Entry</button>
+              <button type="button" class="sp-tab" id="st-tab-gender" onclick="stSwitchView('gender')">👥 Gender Entry</button>
+              <button type="button" class="sp-tab admin-only" id="st-tab-pages" onclick="stSwitchView('pages')">⚙️ Manage Pages</button>
+            </div>
+          </div>
+
+          <!-- ═══ DASHBOARD VIEW ═══ -->
+          <div id="st-view-dashboard">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
+              <select class="form-select" id="st-dash-category" style="max-width:180px" onchange="renderSalesDashboard()">
+                <option value="">All categories</option>
+              </select>
+              <select class="form-select" id="st-dash-page" style="max-width:200px" onchange="renderSalesDashboard()">
+                <option value="">All pages</option>
+              </select>
+            </div>
+            <div class="proj-date-presets" id="st-date-presets" style="margin-bottom:14px">
+              <button type="button" class="proj-preset-pill" onclick="stDatePreset('today',this)">Today</button>
+              <button type="button" class="proj-preset-pill" onclick="stDatePreset('yesterday',this)">Yesterday</button>
+              <button type="button" class="proj-preset-pill" onclick="stDatePreset('7d',this)">7D</button>
+              <button type="button" class="proj-preset-pill active" onclick="stDatePreset('30d',this)">30D</button>
+              <button type="button" class="proj-preset-pill" onclick="stDatePreset('90d',this)">90D</button>
+              <button type="button" class="proj-preset-pill" onclick="stDatePreset('month',this)">This Month</button>
+              <button type="button" class="proj-preset-pill" onclick="stDatePreset('lastmonth',this)">Last Month</button>
+              <button type="button" class="proj-preset-pill" onclick="stDatePreset('all',this)">All time</button>
+              <button type="button" class="proj-preset-pill" id="st-preset-custom" onclick="openDateRangeModal('sales-tracker')">Custom</button>
+              <button type="button" class="proj-range-btn" onclick="openDateRangeModal('sales-tracker')">📅 <span id="st-range-label">Last 30 days</span></button>
+              <input type="hidden" id="st-date-from"/>
+              <input type="hidden" id="st-date-to"/>
+            </div>
+
+            <!-- Summary stats -->
+            <div class="stats-grid" id="st-stats" style="margin-bottom:14px"></div>
+
+            <!-- Gender summary -->
+            <div id="st-gender-summary" style="margin-bottom:14px"></div>
+
+            <!-- Per-category breakdown -->
+            <div class="form-card-title" style="margin-bottom:8px"><span>📁</span> Per category</div>
+            <div class="data-table" style="margin-bottom:16px">
+              <div class="table-head" style="grid-template-columns:1.6fr 1fr 1fr 1fr 1fr">
+                <span>Category</span>
+                <span>Sales</span>
+                <span>Ad Spend</span>
+                <span>ROAS</span>
+                <span>Orders</span>
+              </div>
+              <div id="st-category-body"></div>
+            </div>
+
+            <!-- Per-page breakdown -->
+            <div class="form-card-title" style="margin-bottom:8px"><span>📄</span> Per page</div>
+            <div class="data-table">
+              <div class="table-head" style="grid-template-columns:1.6fr 1.1fr 1fr 1fr 0.8fr 0.9fr">
+                <span>Page</span>
+                <span>Category</span>
+                <span>Sales</span>
+                <span>Ad Spend</span>
+                <span>ROAS</span>
+                <span>Orders</span>
+              </div>
+              <div id="st-page-body"></div>
+            </div>
+          </div>
+
+          <!-- ═══ SALES ENTRY VIEW ═══ -->
+          <div id="st-view-sales" style="display:none">
+            <div class="form-card" style="margin-bottom:14px">
+              <div class="form-card-title"><span>💰</span> Log sales / ad spend</div>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label">Page *</label>
+                  <select class="form-select" id="se-page"><option value="">Select page...</option></select>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Date *</label>
+                  <input class="form-input" id="se-date" type="date">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Sales / Order Value (₱)</label>
+                  <input class="form-input" id="se-value" type="number" min="0" step="0.01" placeholder="0" oninput="sePreviewRoas()">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Order Qty</label>
+                  <input class="form-input" id="se-qty" type="number" min="0" step="1" placeholder="0">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Ad Spend (₱)</label>
+                  <input class="form-input" id="se-adspent" type="number" min="0" step="0.01" placeholder="0" oninput="sePreviewRoas()">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">ROAS (auto)</label>
+                  <input class="form-input" id="se-roas-preview" disabled placeholder="0.00" style="opacity:0.7">
+                </div>
+              </div>
+              <div style="margin-top:12px">
+                <button class="yellow-btn" id="se-save-btn" onclick="saveSalesEntry()">Save entry</button>
+                <span style="font-size:10.5px;color:var(--text3);margin-left:8px">Isang entry lang per page kada araw — mao-overwrite kung existing na.</span>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+              <select class="form-select" id="se-filter-page" style="max-width:220px" onchange="renderSalesEntries()">
+                <option value="">All pages</option>
+              </select>
+            </div>
+            <div class="data-table">
+              <div class="table-head" style="grid-template-columns:1fr 1.6fr 1fr 1fr 0.8fr 0.9fr 70px">
+                <span>Date</span>
+                <span>Page</span>
+                <span>Sales</span>
+                <span>Ad Spend</span>
+                <span>ROAS</span>
+                <span>Orders</span>
+                <span></span>
+              </div>
+              <div id="se-body"></div>
+            </div>
+          </div>
+
+          <!-- ═══ GENDER ENTRY VIEW ═══ -->
+          <div id="st-view-gender" style="display:none">
+            <div class="form-card" style="margin-bottom:14px">
+              <div class="form-card-title"><span>👥</span> Log gender monitoring</div>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label">Page *</label>
+                  <select class="form-select" id="ge-page"><option value="">Select page...</option></select>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Date *</label>
+                  <input class="form-input" id="ge-date" type="date">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Female count</label>
+                  <input class="form-input" id="ge-female" type="number" min="0" step="1" placeholder="0" oninput="gePreviewPct()">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Male count</label>
+                  <input class="form-input" id="ge-male" type="number" min="0" step="1" placeholder="0" oninput="gePreviewPct()">
+                </div>
+                <div class="form-field full" id="ge-pct-preview" style="font-size:11.5px;color:var(--text3)"></div>
+              </div>
+              <div style="margin-top:12px">
+                <button class="yellow-btn" id="ge-save-btn" onclick="saveGenderEntry()">Save entry</button>
+                <span style="font-size:10.5px;color:var(--text3);margin-left:8px">Isang entry lang per page kada araw — mao-overwrite kung existing na.</span>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+              <select class="form-select" id="ge-filter-page" style="max-width:220px" onchange="renderGenderEntries()">
+                <option value="">All pages</option>
+              </select>
+            </div>
+            <div class="data-table">
+              <div class="table-head" style="grid-template-columns:1fr 1.6fr 1fr 1fr 1fr 0.9fr 70px">
+                <span>Date</span>
+                <span>Page</span>
+                <span>Female</span>
+                <span>Male</span>
+                <span>% F / M</span>
+                <span>Total</span>
+                <span></span>
+              </div>
+              <div id="ge-body"></div>
+            </div>
+          </div>
+
+          <!-- ═══ MANAGE PAGES VIEW (admin only) ═══ -->
+          <div id="st-view-pages" style="display:none">
+            <div class="form-card" style="margin-bottom:14px">
+              <div class="form-card-title"><span>⚙️</span> Add page</div>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label">Page name *</label>
+                  <input class="form-input" id="pg-name" placeholder="e.g. Skin Solutions UAE">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Category</label>
+                  <input class="form-input" id="pg-category" list="pg-category-list" placeholder="e.g. UAE - VAS">
+                  <datalist id="pg-category-list"></datalist>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Assigned staff (optional)</label>
+                  <input class="form-input" id="pg-assigned" placeholder="e.g. Khryz">
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Client access (optional)</label>
+                  <select class="form-select" id="pg-client">
+                    <option value="">— Walang client access —</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-top:12px">
+                <button class="yellow-btn" id="pg-save-btn" onclick="saveSalesPage()">Add page</button>
+              </div>
+            </div>
+
+            <div class="data-table">
+              <div class="table-head" style="grid-template-columns:1.6fr 1.1fr 1fr 1.2fr 70px">
+                <span>Page</span>
+                <span>Category</span>
+                <span>Assigned</span>
+                <span>Client access</span>
+                <span></span>
+              </div>
+              <div id="pg-body"></div>
             </div>
           </div>
 
