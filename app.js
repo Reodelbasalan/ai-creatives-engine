@@ -289,7 +289,7 @@ function initSecurityListeners(){
 // ROLE-BASED PAGE PROTECTION
 var ADMIN_PAGES=['dashboard','new-project','all-projects','users','clients','analytics','submission','settings','chat','activity','attendance'];
 var EDITOR_PAGES=['editor-portal','all-projects','chat','profile','worklog','automation','clients','activity','attendance','for-upload'];
-var CLIENT_PAGES=['client-dashboard','profile'];
+var CLIENT_PAGES=['client-dashboard','profile','sales-tracker'];
 
 function canAccessPage(page){
   if(currentUserRole==='admin')return true;
@@ -408,7 +408,7 @@ function applyRoleUI(){
     // Hide admin-only elements first
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
     // Show editor-allowed nav items — force show even if admin-only class
-    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance','nav-for-upload','nav-extensions','nav-social','nav-brand'];
+    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance','nav-for-upload','nav-extensions','nav-social','nav-brand','nav-sales-tracker'];
     if(canAccessFinance()) editorNavs.push('nav-finance');
     editorNavs.forEach(function(id){
       var el=document.getElementById(id);
@@ -420,7 +420,7 @@ function applyRoleUI(){
     // Client — most restricted
     document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
-    var clientNavs=['nav-profile','nav-extensions'];
+    var clientNavs=['nav-profile','nav-extensions','nav-sales-tracker'];
     clientNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el)el.style.display='flex';
@@ -488,7 +488,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
@@ -512,6 +512,7 @@ function showPage(page){
   if(page==='brand'){loadBrandCreatives();}
   if(page==='call-tracker'){loadCallTracker();}
   if(page==='advertiser-tasks'){loadAdvertiserTasks();}
+  if(page==='sales-tracker'){loadSalesTracker();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
@@ -1536,7 +1537,8 @@ var DR_TARGETS={
   outputs:{from:'outputs-date-from',to:'outputs-date-to',label:'outputs-range-label',customPill:'outputs-preset-custom',presetSelector:'#outputs-date-presets .proj-preset-pill',reload:function(){loadOutputsTable();}},
   dashboard:{from:'dash-date-from',to:'dash-date-to',label:'dash-range-label',customPill:'dash-preset-custom',presetSelector:'#dash-date-presets .proj-preset-pill',reload:function(){loadDashboard();}},
   finance:{from:'fin-date-from',to:'fin-date-to',label:'fin-range-label',customPill:'fin-preset-custom',presetSelector:'#fin-date-presets .proj-preset-pill',reload:function(){loadFinancePage();}},
-  'call-tracker':{from:'ct-date-from',to:'ct-date-to',label:'ct-range-label',customPill:'ct-preset-custom',presetSelector:'#ct-date-presets .proj-preset-pill',reload:function(){renderCallLogs();}}
+  'call-tracker':{from:'ct-date-from',to:'ct-date-to',label:'ct-range-label',customPill:'ct-preset-custom',presetSelector:'#ct-date-presets .proj-preset-pill',reload:function(){renderCallLogs();}},
+  'sales-tracker':{from:'st-date-from',to:'st-date-to',label:'st-range-label',customPill:'st-preset-custom',presetSelector:'#st-date-presets .proj-preset-pill',reload:function(){renderSalesDashboard();}}
 };
 
 function openDateRangeModal(target){
@@ -8824,4 +8826,406 @@ async function deleteAdvertiserTask(id){
   if(error){ showNotif('Error: '+error.message,'error'); return; }
   showNotif('Task deleted','success');
   loadAdvertiserTasks();
+}
+
+
+// ============================================================
+// SALES & ADS TRACKER
+// ============================================================
+var stPagesCache=[];
+var stSalesCache=[];
+var stGenderCache=[];
+
+function stRoas(sales,adspent){
+  sales=Number(sales)||0; adspent=Number(adspent)||0;
+  if(!adspent) return sales>0?'—':'0.00';
+  return (sales/adspent).toFixed(2);
+}
+
+async function loadSalesTracker(){
+  var isAdmin=currentUserRole==='admin';
+  var isClient=currentUserRole==='client';
+
+  // Scope pages: client sees only their own; admin/team sees all
+  var pq=sb.from('sales_pages').select('*').order('name');
+  if(isClient && currentUser?.id){ pq=pq.eq('client_user_id',currentUser.id); }
+  var{data:pages,error:perr}=await pq;
+  if(perr){ showNotif('Error loading pages: '+perr.message,'error'); stPagesCache=[]; }
+  else { stPagesCache=pages||[]; }
+
+  var pageIds=stPagesCache.map(function(p){return p.id;});
+
+  // Load entries scoped to visible pages
+  if(pageIds.length){
+    var{data:sales}=await sb.from('sales_entries').select('*').in('page_id',pageIds).order('entry_date',{ascending:false});
+    stSalesCache=sales||[];
+    var{data:gender}=await sb.from('gender_entries').select('*').in('page_id',pageIds).order('entry_date',{ascending:false});
+    stGenderCache=gender||[];
+  } else { stSalesCache=[]; stGenderCache=[]; }
+
+  // Admin-only bits scoped to this page
+  document.querySelectorAll('#page-sales-tracker .admin-only').forEach(function(el){el.style.display=isAdmin?'':'none';});
+
+  // Populate page dropdowns
+  var pageOptsHtml='<option value="">Select page...</option>'+stPagesCache.map(function(p){
+    return '<option value="'+p.id+'">'+ctEsc(p.name)+(p.category?' — '+ctEsc(p.category):'')+'</option>';
+  }).join('');
+  var pageOptsAllHtml='<option value="">All pages</option>'+stPagesCache.map(function(p){
+    return '<option value="'+p.id+'">'+ctEsc(p.name)+'</option>';
+  }).join('');
+  ['se-page','ge-page'].forEach(function(id){ var el=document.getElementById(id); if(el){var cur=el.value; el.innerHTML=pageOptsHtml; el.value=cur;} });
+  ['se-filter-page','ge-filter-page','st-dash-page'].forEach(function(id){ var el=document.getElementById(id); if(el){var cur=el.value; el.innerHTML=pageOptsAllHtml.replace('All pages','All pages'); el.value=cur;} });
+
+  // Category dropdown + datalist
+  var cats=Array.from(new Set(stPagesCache.map(function(p){return p.category;}).filter(Boolean))).sort();
+  var catSel=document.getElementById('st-dash-category');
+  if(catSel){ var curC=catSel.value; catSel.innerHTML='<option value="">All categories</option>'+cats.map(function(c){return '<option value="'+ctEsc(c)+'">'+ctEsc(c)+'</option>';}).join(''); catSel.value=curC; }
+  var catList=document.getElementById('pg-category-list');
+  if(catList){ catList.innerHTML=cats.map(function(c){return '<option value="'+ctEsc(c)+'"></option>';}).join(''); }
+
+  // Default dates for entry forms = today
+  var todayStr=projFmtDate(new Date());
+  var seDate=document.getElementById('se-date'); if(seDate&&!seDate.value) seDate.value=todayStr;
+  var geDate=document.getElementById('ge-date'); if(geDate&&!geDate.value) geDate.value=todayStr;
+
+  // Admin: populate client dropdown for page assignment
+  if(isAdmin){
+    var{data:profs}=await sb.from('profiles').select('id,name,email,role').eq('role','client').order('name');
+    var clientSel=document.getElementById('pg-client');
+    if(clientSel){
+      var curCl=clientSel.value;
+      clientSel.innerHTML='<option value="">— Walang client access —</option>'+(profs||[]).map(function(p){
+        return '<option value="'+p.id+'">'+ctEsc(p.name||p.email)+'</option>';
+      }).join('');
+      clientSel.value=curCl;
+    }
+    renderSalesPagesTable();
+  }
+
+  // Default date range = last 30 days (kung wala pang naka-set)
+  if(!document.getElementById('st-date-from').value){
+    var range=(typeof computeDatePresetRange==='function')?computeDatePresetRange('30d'):{from:'',to:''};
+    document.getElementById('st-date-from').value=range.from||'';
+    document.getElementById('st-date-to').value=range.to||'';
+  }
+
+  renderSalesDashboard();
+  renderSalesEntries();
+  renderGenderEntries();
+}
+
+function stSwitchView(view){
+  var views=['dashboard','sales','gender','pages'];
+  views.forEach(function(v){
+    var el=document.getElementById('st-view-'+v);
+    var tab=document.getElementById('st-tab-'+v);
+    if(el) el.style.display=(v===view)?'':'none';
+    if(tab) tab.classList.toggle('active',v===view);
+  });
+  if(view==='dashboard') renderSalesDashboard();
+}
+
+function stDatePreset(kind,btnEl){
+  var df=document.getElementById('st-date-from');
+  var dt=document.getElementById('st-date-to');
+  if(!df||!dt) return;
+  var range=(typeof computeDatePresetRange==='function')?computeDatePresetRange(kind):{from:'',to:''};
+  df.value=range.from||''; dt.value=range.to||'';
+  document.querySelectorAll('#st-date-presets .proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
+  if(btnEl) btnEl.classList.add('active');
+  if(typeof updateRangeLabel==='function') updateRangeLabel('st-date-from','st-date-to','st-range-label');
+  renderSalesDashboard();
+}
+
+function stPageMap(){
+  var m={};
+  stPagesCache.forEach(function(p){ m[p.id]=p; });
+  return m;
+}
+
+function renderSalesDashboard(){
+  var from=document.getElementById('st-date-from')?.value||'';
+  var to=document.getElementById('st-date-to')?.value||'';
+  var catFilter=document.getElementById('st-dash-category')?.value||'';
+  var pageFilter=document.getElementById('st-dash-page')?.value||'';
+  var pmap=stPageMap();
+
+  function inScope(pageId){
+    var p=pmap[pageId];
+    if(!p) return false;
+    if(pageFilter && pageId!==pageFilter) return false;
+    if(catFilter && (p.category||'')!==catFilter) return false;
+    return true;
+  }
+  function inRange(d){
+    if(!d) return false;
+    if(from && d<from) return false;
+    if(to && d>to) return false;
+    return true;
+  }
+
+  var salesRows=stSalesCache.filter(function(e){ return inScope(e.page_id)&&inRange(e.entry_date); });
+  var genderRows=stGenderCache.filter(function(e){ return inScope(e.page_id)&&inRange(e.entry_date); });
+
+  var totalSales=salesRows.reduce(function(s,e){return s+(Number(e.order_value)||0);},0);
+  var totalAdspent=salesRows.reduce(function(s,e){return s+(Number(e.adspent)||0);},0);
+  var totalOrders=salesRows.reduce(function(s,e){return s+(Number(e.order_qty)||0);},0);
+  var roas=stRoas(totalSales,totalAdspent);
+
+  var statsEl=document.getElementById('st-stats');
+  if(statsEl){
+    statsEl.innerHTML=''
+      +'<div class="stat-card c-green"><div class="stat-label">Total Sales</div><div class="stat-val" style="color:var(--green)">'+ctPeso(totalSales)+'</div></div>'
+      +'<div class="stat-card c-amber"><div class="stat-label">Total Ad Spend</div><div class="stat-val" style="color:var(--amber)">'+ctPeso(totalAdspent)+'</div></div>'
+      +'<div class="stat-card c-purple"><div class="stat-label">Total ROAS</div><div class="stat-val">'+roas+'</div></div>'
+      +'<div class="stat-card c-yellow"><div class="stat-label">Total Orders</div><div class="stat-val">'+totalOrders+'</div></div>';
+  }
+
+  var totalFemale=genderRows.reduce(function(s,e){return s+(Number(e.female_count)||0);},0);
+  var totalMale=genderRows.reduce(function(s,e){return s+(Number(e.male_count)||0);},0);
+  var totalGenderCount=totalFemale+totalMale;
+  var fPct=totalGenderCount?Math.round(totalFemale/totalGenderCount*100):0;
+  var mPct=totalGenderCount?100-fPct:0;
+  var genderEl=document.getElementById('st-gender-summary');
+  if(genderEl){
+    if(!totalGenderCount){ genderEl.innerHTML=''; }
+    else {
+      genderEl.innerHTML='<div class="form-card" style="padding:12px 14px">'
+        +'<div class="form-card-title" style="margin-bottom:8px"><span>👥</span> Gender monitoring summary</div>'
+        +'<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">'
+        +'<div><span style="font-size:20px;font-weight:800;color:#f472b6">'+fPct+'%</span> <span style="font-size:11px;color:var(--text3)">Female ('+totalFemale+')</span></div>'
+        +'<div><span style="font-size:20px;font-weight:800;color:#60a5fa">'+mPct+'%</span> <span style="font-size:11px;color:var(--text3)">Male ('+totalMale+')</span></div>'
+        +'<div><span style="font-size:20px;font-weight:800;color:var(--text)">'+totalGenderCount+'</span> <span style="font-size:11px;color:var(--text3)">Total Inquiries</span></div>'
+        +'</div></div>';
+    }
+  }
+
+  // Per-category breakdown
+  var byCat={};
+  salesRows.forEach(function(e){
+    var p=pmap[e.page_id]; var cat=(p&&p.category)||'(Uncategorized)';
+    if(!byCat[cat]) byCat[cat]={sales:0,adspent:0,orders:0};
+    byCat[cat].sales+=(Number(e.order_value)||0);
+    byCat[cat].adspent+=(Number(e.adspent)||0);
+    byCat[cat].orders+=(Number(e.order_qty)||0);
+  });
+  var catBody=document.getElementById('st-category-body');
+  if(catBody){
+    var catKeys=Object.keys(byCat);
+    if(!catKeys.length){ catBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">📁</div>No data for this range.</div>'; }
+    else {
+      catBody.innerHTML=catKeys.map(function(cat){
+        var c=byCat[cat];
+        return '<div class="table-row" style="grid-template-columns:1.6fr 1fr 1fr 1fr 1fr">'
+          +'<div class="row-name">'+ctEsc(cat)+'</div>'
+          +'<div class="row-meta" style="color:var(--green)">'+ctPeso(c.sales)+'</div>'
+          +'<div class="row-meta" style="color:var(--amber)">'+ctPeso(c.adspent)+'</div>'
+          +'<div class="row-meta">'+stRoas(c.sales,c.adspent)+'</div>'
+          +'<div class="row-meta">'+c.orders+'</div>'
+          +'</div>';
+      }).join('');
+    }
+  }
+
+  // Per-page breakdown
+  var byPage={};
+  salesRows.forEach(function(e){
+    var k=e.page_id;
+    if(!byPage[k]) byPage[k]={sales:0,adspent:0,orders:0};
+    byPage[k].sales+=(Number(e.order_value)||0);
+    byPage[k].adspent+=(Number(e.adspent)||0);
+    byPage[k].orders+=(Number(e.order_qty)||0);
+  });
+  var pageBody=document.getElementById('st-page-body');
+  if(pageBody){
+    var pageKeys=Object.keys(byPage);
+    if(!pageKeys.length){ pageBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">📄</div>No data for this range.</div>'; }
+    else {
+      pageBody.innerHTML=pageKeys.map(function(pid){
+        var p=pmap[pid]||{name:'Unknown',category:''};
+        var c=byPage[pid];
+        return '<div class="table-row" style="grid-template-columns:1.6fr 1.1fr 1fr 1fr 0.8fr 0.9fr">'
+          +'<div class="row-name">'+ctEsc(p.name)+'</div>'
+          +'<div class="row-meta" style="font-size:11px">'+ctEsc(p.category||'—')+'</div>'
+          +'<div class="row-meta" style="color:var(--green)">'+ctPeso(c.sales)+'</div>'
+          +'<div class="row-meta" style="color:var(--amber)">'+ctPeso(c.adspent)+'</div>'
+          +'<div class="row-meta">'+stRoas(c.sales,c.adspent)+'</div>'
+          +'<div class="row-meta">'+c.orders+'</div>'
+          +'</div>';
+      }).join('');
+    }
+  }
+}
+
+// ── SALES ENTRY ──
+function sePreviewRoas(){
+  var v=Number(document.getElementById('se-value')?.value)||0;
+  var a=Number(document.getElementById('se-adspent')?.value)||0;
+  var el=document.getElementById('se-roas-preview');
+  if(el) el.value=stRoas(v,a);
+}
+
+async function saveSalesEntry(){
+  var pageId=document.getElementById('se-page')?.value;
+  var date=document.getElementById('se-date')?.value;
+  if(!pageId||!date){ showNotif('Page at Date ay required','error'); return; }
+  var payload={
+    page_id:pageId,
+    entry_date:date,
+    order_value:Number(document.getElementById('se-value')?.value)||0,
+    order_qty:Number(document.getElementById('se-qty')?.value)||0,
+    adspent:Number(document.getElementById('se-adspent')?.value)||0,
+    created_by:currentUser?.id,
+    created_by_name:document.getElementById('user-name-display')?.textContent||currentUser?.email||''
+  };
+  var btn=document.getElementById('se-save-btn');
+  if(btn){btn.disabled=true;btn.textContent='Saving...';}
+  var{error}=await sb.from('sales_entries').upsert(payload,{onConflict:'page_id,entry_date'});
+  if(btn){btn.disabled=false;btn.textContent='Save entry';}
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Entry saved! ✓','success');
+  ['se-value','se-qty','se-adspent'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var rp=document.getElementById('se-roas-preview'); if(rp)rp.value='';
+  loadSalesTracker();
+}
+
+function renderSalesEntries(){
+  var filterPage=document.getElementById('se-filter-page')?.value||'';
+  var pmap=stPageMap();
+  var rows=stSalesCache.filter(function(e){ return !filterPage||e.page_id===filterPage; });
+  var body=document.getElementById('se-body');
+  if(!body) return;
+  if(!rows.length){ body.innerHTML='<div class="table-empty"><div class="table-empty-icon">💰</div>No entries yet.</div>'; return; }
+  body.innerHTML=rows.map(function(e){
+    var p=pmap[e.page_id]||{name:'Unknown'};
+    return '<div class="table-row" style="grid-template-columns:1fr 1.6fr 1fr 1fr 0.8fr 0.9fr 70px">'
+      +'<div class="row-meta" style="font-size:11px">'+ctEsc(e.entry_date)+'</div>'
+      +'<div class="row-name">'+ctEsc(p.name)+'</div>'
+      +'<div class="row-meta" style="color:var(--green)">'+ctPeso(e.order_value)+'</div>'
+      +'<div class="row-meta" style="color:var(--amber)">'+ctPeso(e.adspent)+'</div>'
+      +'<div class="row-meta">'+stRoas(e.order_value,e.adspent)+'</div>'
+      +'<div class="row-meta">'+(e.order_qty||0)+'</div>'
+      +'<div><button onclick="deleteSalesEntry(\''+e.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Del</button></div>'
+      +'</div>';
+  }).join('');
+}
+
+async function deleteSalesEntry(id){
+  if(!confirm('Delete this entry?'))return;
+  var{error}=await sb.from('sales_entries').delete().eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Entry deleted','success');
+  loadSalesTracker();
+}
+
+// ── GENDER ENTRY ──
+function gePreviewPct(){
+  var f=Number(document.getElementById('ge-female')?.value)||0;
+  var m=Number(document.getElementById('ge-male')?.value)||0;
+  var total=f+m;
+  var el=document.getElementById('ge-pct-preview');
+  if(!el) return;
+  if(!total){ el.textContent=''; return; }
+  var fp=Math.round(f/total*100), mp=100-fp;
+  el.innerHTML='Preview: <b style="color:#f472b6">'+fp+'% Female</b> · <b style="color:#60a5fa">'+mp+'% Male</b> · Total: '+total;
+}
+
+async function saveGenderEntry(){
+  var pageId=document.getElementById('ge-page')?.value;
+  var date=document.getElementById('ge-date')?.value;
+  if(!pageId||!date){ showNotif('Page at Date ay required','error'); return; }
+  var payload={
+    page_id:pageId,
+    entry_date:date,
+    female_count:Number(document.getElementById('ge-female')?.value)||0,
+    male_count:Number(document.getElementById('ge-male')?.value)||0,
+    created_by:currentUser?.id,
+    created_by_name:document.getElementById('user-name-display')?.textContent||currentUser?.email||''
+  };
+  var btn=document.getElementById('ge-save-btn');
+  if(btn){btn.disabled=true;btn.textContent='Saving...';}
+  var{error}=await sb.from('gender_entries').upsert(payload,{onConflict:'page_id,entry_date'});
+  if(btn){btn.disabled=false;btn.textContent='Save entry';}
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Entry saved! ✓','success');
+  ['ge-female','ge-male'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var pp=document.getElementById('ge-pct-preview'); if(pp)pp.innerHTML='';
+  loadSalesTracker();
+}
+
+function renderGenderEntries(){
+  var filterPage=document.getElementById('ge-filter-page')?.value||'';
+  var pmap=stPageMap();
+  var rows=stGenderCache.filter(function(e){ return !filterPage||e.page_id===filterPage; });
+  var body=document.getElementById('ge-body');
+  if(!body) return;
+  if(!rows.length){ body.innerHTML='<div class="table-empty"><div class="table-empty-icon">👥</div>No entries yet.</div>'; return; }
+  body.innerHTML=rows.map(function(e){
+    var p=pmap[e.page_id]||{name:'Unknown'};
+    var total=(Number(e.female_count)||0)+(Number(e.male_count)||0);
+    var fp=total?Math.round((Number(e.female_count)||0)/total*100):0;
+    var mp=total?100-fp:0;
+    return '<div class="table-row" style="grid-template-columns:1fr 1.6fr 1fr 1fr 1fr 0.9fr 70px">'
+      +'<div class="row-meta" style="font-size:11px">'+ctEsc(e.entry_date)+'</div>'
+      +'<div class="row-name">'+ctEsc(p.name)+'</div>'
+      +'<div class="row-meta">'+(e.female_count||0)+'</div>'
+      +'<div class="row-meta">'+(e.male_count||0)+'</div>'
+      +'<div class="row-meta" style="font-size:11px">'+fp+'% / '+mp+'%</div>'
+      +'<div class="row-meta">'+total+'</div>'
+      +'<div><button onclick="deleteGenderEntry(\''+e.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Del</button></div>'
+      +'</div>';
+  }).join('');
+}
+
+async function deleteGenderEntry(id){
+  if(!confirm('Delete this entry?'))return;
+  var{error}=await sb.from('gender_entries').delete().eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Entry deleted','success');
+  loadSalesTracker();
+}
+
+// ── MANAGE PAGES (admin only) ──
+async function saveSalesPage(){
+  var name=document.getElementById('pg-name')?.value?.trim();
+  if(!name){ showNotif('Page name is required','error'); return; }
+  var payload={
+    name:name,
+    category:document.getElementById('pg-category')?.value?.trim()||null,
+    assigned_name:document.getElementById('pg-assigned')?.value?.trim()||null,
+    client_user_id:document.getElementById('pg-client')?.value||null,
+    created_by:currentUser?.id
+  };
+  var btn=document.getElementById('pg-save-btn');
+  if(btn){btn.disabled=true;btn.textContent='Adding...';}
+  var{error}=await sb.from('sales_pages').insert(payload);
+  if(btn){btn.disabled=false;btn.textContent='Add page';}
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Page added! ✓','success');
+  ['pg-name','pg-category','pg-assigned'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var pc=document.getElementById('pg-client'); if(pc)pc.value='';
+  loadSalesTracker();
+}
+
+function renderSalesPagesTable(){
+  var body=document.getElementById('pg-body');
+  if(!body) return;
+  if(!stPagesCache.length){ body.innerHTML='<div class="table-empty"><div class="table-empty-icon">⚙️</div>No pages yet.</div>'; return; }
+  body.innerHTML=stPagesCache.map(function(p){
+    return '<div class="table-row" style="grid-template-columns:1.6fr 1.1fr 1fr 1.2fr 70px">'
+      +'<div class="row-name">'+ctEsc(p.name)+'</div>'
+      +'<div class="row-meta" style="font-size:11px">'+ctEsc(p.category||'—')+'</div>'
+      +'<div class="row-meta" style="font-size:11px">'+ctEsc(p.assigned_name||'—')+'</div>'
+      +'<div class="row-meta" style="font-size:11px">'+(p.client_user_id?'✅ Meron':'—')+'</div>'
+      +'<div><button onclick="deleteSalesPage(\''+p.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Del</button></div>'
+      +'</div>';
+  }).join('');
+}
+
+async function deleteSalesPage(id){
+  if(!confirm('Delete this page? Madedelete din lahat ng entries nito.'))return;
+  var{error}=await sb.from('sales_pages').delete().eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Page deleted','success');
+  loadSalesTracker();
 }
