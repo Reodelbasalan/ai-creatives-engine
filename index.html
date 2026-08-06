@@ -2788,6 +2788,15 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                   <input class="form-input" id="se-category" list="pg-category-list" placeholder="e.g. UAE - VAS">
                 </div>
                 <div class="form-field">
+                  <label class="form-label">Currency <span class="opt">(kung bagong page)</span></label>
+                  <select class="form-select" id="se-currency">
+                    <option value="PHP" selected>₱ PHP</option>
+                    <option value="AED">AED</option>
+                    <option value="SAR">SAR</option>
+                    <option value="USD">$ USD</option>
+                  </select>
+                </div>
+                <div class="form-field">
                   <label class="form-label">Date *</label>
                   <input class="form-input" id="se-date" type="date">
                 </div>
@@ -2834,6 +2843,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <span></span>
               </div>
               <div id="se-body"></div>
+              <div id="se-totals-row"></div>
             </div>
           </div>
 
@@ -2887,6 +2897,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <span></span>
               </div>
               <div id="ge-body"></div>
+              <div id="ge-totals-row"></div>
             </div>
           </div>
 
@@ -2914,6 +2925,15 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                     <option value="">— Walang client access —</option>
                   </select>
                 </div>
+                <div class="form-field">
+                  <label class="form-label">Currency</label>
+                  <select class="form-select" id="pg-currency">
+                    <option value="PHP" selected>₱ PHP — Philippine Peso</option>
+                    <option value="AED">AED — UAE Dirham</option>
+                    <option value="SAR">SAR — Saudi Riyal</option>
+                    <option value="USD">$ USD — US Dollar</option>
+                  </select>
+                </div>
               </div>
               <div style="margin-top:12px">
                 <button class="yellow-btn" id="pg-save-btn" onclick="saveSalesPage()">Add page</button>
@@ -2921,10 +2941,11 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
 
             <div class="data-table">
-              <div class="table-head" style="grid-template-columns:1.6fr 1.1fr 1fr 1.2fr 70px">
+              <div class="table-head" style="grid-template-columns:1.5fr 1fr 0.9fr 0.7fr 1.1fr 70px">
                 <span>Page</span>
                 <span>Category</span>
                 <span>Assigned</span>
+                <span>Currency</span>
                 <span>Client access</span>
                 <span></span>
               </div>
