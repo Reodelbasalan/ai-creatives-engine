@@ -3542,7 +3542,17 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <!-- SALES TAB -->
         <div id="fin-sales-tab">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap">
-            <input class="form-input" id="fin-sales-search" placeholder="🔍 Search client..." oninput="finFilterSales()" style="max-width:220px"/>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <input class="form-input" id="fin-sales-search" placeholder="🔍 Search client..." oninput="finFilterSales()" style="max-width:220px"/>
+              <select class="form-select" id="fin-sales-status-filter" style="max-width:150px" onchange="finFilterSales()">
+                <option value="">All statuses</option>
+                <option value="Balance">Balance</option>
+                <option value="Paid">Paid</option>
+                <option value="Pending">Pending</option>
+                <option value="Refunded">Refunded</option>
+              </select>
+              <button type="button" id="fin-balance-chip" onclick="finQuickFilterBalance()" style="display:none;font-size:11px;font-weight:650;padding:6px 12px;border-radius:20px;background:rgba(250,204,21,0.12);color:var(--yellow);border:0.5px solid rgba(250,204,21,0.35);cursor:pointer"></button>
+            </div>
             <button class="yellow-btn" id="fin-sales-toggle-btn" onclick="finToggleSalesForm()" style="font-size:12px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add sale</button>
           </div>
           <div id="fin-sales-form-wrap" style="max-height:0;opacity:0;overflow:hidden;transition:all .3s ease;margin-bottom:0">
