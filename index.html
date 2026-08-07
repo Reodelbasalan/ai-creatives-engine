@@ -2477,7 +2477,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
           <!-- Log a call -->
           <div class="form-card" style="margin-bottom:14px">
-            <div class="form-card-title"><span>📞</span> Log a call</div>
+            <div class="form-card-title"><span>📞</span> <span id="ct-form-title">Log a call</span></div>
+            <input type="hidden" id="ct-edit-id" value="">
             <div class="form-grid">
               <div class="form-field">
                 <label class="form-label">Client / Company *</label>
@@ -2548,6 +2549,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
             <div style="margin-top:12px">
               <button class="yellow-btn" id="ct-save-btn" onclick="saveCallLog()">Log call</button>
+              <button class="ghost-btn" id="ct-cancel-edit-btn" onclick="cancelCallLogEdit()" style="display:none;margin-left:8px">Cancel edit</button>
             </div>
           </div>
 
@@ -2585,7 +2587,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
           <!-- Main table -->
           <div class="data-table" style="margin-bottom:16px">
-            <div class="table-head" style="grid-template-columns:1.6fr 1.3fr 1.1fr 1fr 0.9fr 80px">
+            <div class="table-head" style="grid-template-columns:1.6fr 1.3fr 1.1fr 1fr 0.9fr 130px">
               <span>Client / Contact</span>
               <span>Phone / Package</span>
               <span>Call Date/Time</span>
@@ -3558,6 +3560,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div id="fin-sales-form-wrap" style="max-height:0;opacity:0;overflow:hidden;transition:all .3s ease;margin-bottom:0">
             <div class="form-card" style="margin-bottom:16px;position:relative">
               <button onclick="finToggleSalesForm(true)" class="modal-close" style="position:absolute;top:14px;right:14px" title="Close">✕</button>
+              <input type="hidden" id="fin-sale-edit-id" value="">
+              <div id="fin-sale-form-title" style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:8px;display:none"></div>
               <div class="form-grid">
                 <div class="form-field"><label class="form-label">Date</label><input type="date" class="form-input" id="fin-sale-date"/></div>
                 <div class="form-field">
@@ -3584,6 +3588,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <div class="form-field full"><label class="form-label">Notes <span class="opt">(optional)</span></label><input class="form-input" id="fin-sale-notes" placeholder="Any extra remarks about this sale..."/></div>
               </div>
               <button class="yellow-btn" id="fin-sale-submit-btn" onclick="submitSale()" style="margin-top:14px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Save sale</button>
+              <button class="ghost-btn" id="fin-sale-cancel-edit-btn" onclick="cancelSaleEdit()" style="display:none;margin-top:14px;margin-left:8px">Cancel edit</button>
             </div>
           </div>
           <div class="data-table">
