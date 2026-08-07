@@ -392,15 +392,30 @@ function canAccessFinance(){
   return currentUserRole==='admin' || FINANCE_ALLOWED_EMAILS.indexOf((currentUser?.email||'').toLowerCase())>=0;
 }
 
+function navIdsToPages(navIds){
+  return navIds.map(function(n){ return n.replace(/^nav-/,''); });
+}
+
+function goLastPageOrDefault(allowedPages,defaultPage){
+  var last=null;
+  try{ last=localStorage.getItem('ace_last_page'); }catch(e){}
+  if(last && (allowedPages===null || allowedPages.indexOf(last)>=0) && document.getElementById('page-'+last)){
+    showPage(last);
+  } else {
+    showPage(defaultPage);
+  }
+}
+
 function applyRoleUI(){
   var isAdmin=currentUserRole==='admin';
   var isEditor=currentUserRole==='editor';
   var isClient=currentUserRole==='client';
 
   if(isAdmin){
-    // Admin sees everything
+    // Admin sees everything — pwedeng mag-land kahit saang page huling binisita
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='';});
     document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='flex';});
+    goLastPageOrDefault(null,'dashboard');
 
   } else if(isEditor){
     // Editor — limited nav only
@@ -414,7 +429,7 @@ function applyRoleUI(){
       var el=document.getElementById(id);
       if(el){el.style.display='flex';el.style.setProperty('display','flex','important');}
     });
-    showPage('editor-portal');
+    goLastPageOrDefault(navIdsToPages(editorNavs),'editor-portal');
 
   } else if(isClient){
     // Client — most restricted
@@ -425,7 +440,7 @@ function applyRoleUI(){
       var el=document.getElementById(id);
       if(el)el.style.display='flex';
     });
-    showPage('client-dashboard');
+    goLastPageOrDefault(navIdsToPages(clientNavs),'client-dashboard');
     loadClientDashboard();
 
   } else if(currentUserRole==='brand_intern'){
@@ -437,18 +452,19 @@ function applyRoleUI(){
       var el=document.getElementById(id);
       if(el)el.style.display='flex';
     });
-    showPage('brand');
+    goLastPageOrDefault(navIdsToPages(internNavs),'brand');
 
   } else if(currentUserRole==='caller'){
-    // Caller (VA) — Call Tracker only (own calls), same pattern ng Brand Intern
+    // Caller (VA) — Call Tracker (own calls) + Sales & Expenses kung naka-whitelist
     document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
     var callerNavs=['nav-call-tracker','nav-profile'];
+    if(canAccessFinance()) callerNavs.push('nav-finance');
     callerNavs.forEach(function(id){
       var el=document.getElementById(id);
-      if(el)el.style.display='flex';
+      if(el){el.style.display='flex';el.style.setProperty('display','flex','important');}
     });
-    showPage('call-tracker');
+    goLastPageOrDefault(navIdsToPages(callerNavs),'call-tracker');
 
   } else if(currentUserRole==='advertiser'){
     // Advertiser — Advertiser Tasks only (sarili + admin pwede mag-assign)
@@ -459,7 +475,7 @@ function applyRoleUI(){
       var el=document.getElementById(id);
       if(el)el.style.display='flex';
     });
-    showPage('advertiser-tasks');
+    goLastPageOrDefault(navIdsToPages(advNavs),'advertiser-tasks');
   }
 }
 
@@ -488,6 +504,7 @@ function showPage(page){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
+  try{ localStorage.setItem('ace_last_page',page); }catch(e){}
   const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
@@ -5778,7 +5795,7 @@ function renderFinSalesTable(sales){
     var statusColors={Paid:'#4ade80',Balance:'#facc15',Pending:'#fb923c',Refunded:'#f87171'};
     var sc=statusColors[o.paid_status]||'#9a9aa5';
     var subParts=[o.business||o.contact,o.notes].filter(Boolean);
-    return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.6fr 1fr 1fr 1fr 1fr 32px 32px">'
+    return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.6fr 1fr 1fr 1fr 1fr 32px 32px 32px">'
       +'<div style="color:var(--text3);font-size:11px">'+(sales.length-i)+'</div>'
       +'<div class="row-date">'+fmtDate(o.order_date)+'</div>'
       +'<div><div class="row-name">'+(o.client_name||'—')+'</div><div class="row-sub">'+subParts.join(' · ')+'</div></div>'
@@ -5786,6 +5803,7 @@ function renderFinSalesTable(sales){
       +'<div style="font-weight:650;color:var(--green)">'+finPHP(o.sales_amount)+'</div>'
       +'<div style="font-size:11px;color:var(--text2)">'+(o.va_name||'—')+'</div>'
       +'<div>'+finStatusSelect(o,sc)+'</div>'
+      +'<div class="proj-row-del" title="Edit" onclick="editSale(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>'
       +'<div class="proj-row-del" title="Generate Invoice" onclick="openInvoiceModal(\''+o.id+'\')" style="color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>'
       +'<div class="proj-row-del" title="Delete" onclick="deleteSale(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>'
       +'</div>';
@@ -5931,23 +5949,69 @@ async function submitSale(){
     sales_amount:parseFloat(document.getElementById('fin-sale-amount')?.value)||0,
     va_name:document.getElementById('fin-sale-va')?.value?.trim()||null,
     paid_status:document.getElementById('fin-sale-paid')?.value||'Balance',
-    notes:document.getElementById('fin-sale-notes')?.value?.trim()||null,
-    created_by:currentUser.id
+    notes:document.getElementById('fin-sale-notes')?.value?.trim()||null
   };
   if(!payload.client_name){ showNotif('Client name is required','error'); return; }
+  var editId=document.getElementById('fin-sale-edit-id')?.value||'';
   var origHtml=btn?btn.innerHTML:'';
   if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Saving...'; }
   try{
-    var{error}=await sb.from('sales_orders').insert(payload);
+    var error;
+    if(editId){
+      ({error}=await sb.from('sales_orders').update(payload).eq('id',editId));
+    } else {
+      payload.created_by=currentUser.id;
+      ({error}=await sb.from('sales_orders').insert(payload));
+    }
     if(error){ showNotif('Error: '+error.message,'error'); return; }
-    showNotif('Sale saved! ✓','success');
+    showNotif(editId?'Sale updated! ✓':'Sale saved! ✓','success');
     ['fin-sale-client','fin-sale-contact','fin-sale-business','fin-sale-email','fin-sale-videotype','fin-sale-amount','fin-sale-va','fin-sale-notes'].forEach(function(id){
       var el=document.getElementById(id); if(el)el.value='';
     });
+    cancelSaleEdit();
     finToggleSalesForm(true);
     loadFinancePage();
   }catch(err){ showNotif('Error: '+(err?.message||err),'error'); }
   finally{ if(btn){ btn.disabled=false; btn.innerHTML=origHtml; } }
+}
+
+function editSale(id){
+  var sale=(window._finSalesCache||[]).find(function(o){ return o.id===id; });
+  if(!sale){ showNotif('Sale not found','error'); return; }
+  finToggleSalesForm(); // buksan yung form kung sarado pa
+  var wrap=document.getElementById('fin-sales-form-wrap');
+  if(wrap && (!wrap.style.maxHeight || wrap.style.maxHeight==='0px' || wrap.style.maxHeight==='0')){
+    wrap.style.maxHeight='900px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
+  }
+  document.getElementById('fin-sale-edit-id').value=id;
+  document.getElementById('fin-sale-date').value=sale.order_date?String(sale.order_date).slice(0,10):'';
+  document.getElementById('fin-sale-client').value=sale.client_name||'';
+  document.getElementById('fin-sale-contact').value=sale.contact||'';
+  document.getElementById('fin-sale-business').value=sale.business||'';
+  document.getElementById('fin-sale-email').value=sale.email||'';
+  document.getElementById('fin-sale-package').value=sale.order_package||'Pro';
+  document.getElementById('fin-sale-videotype').value=sale.video_type||'';
+  document.getElementById('fin-sale-amount').value=sale.sales_amount||0;
+  document.getElementById('fin-sale-va').value=sale.va_name||'';
+  document.getElementById('fin-sale-paid').value=sale.paid_status||'Balance';
+  document.getElementById('fin-sale-notes').value=sale.notes||'';
+  var titleEl=document.getElementById('fin-sale-form-title');
+  if(titleEl){ titleEl.textContent='✏️ Editing sale — '+(sale.client_name||''); titleEl.style.display=''; }
+  var submitBtn=document.getElementById('fin-sale-submit-btn');
+  if(submitBtn) submitBtn.innerHTML='Update sale';
+  var cancelBtn=document.getElementById('fin-sale-cancel-edit-btn');
+  if(cancelBtn) cancelBtn.style.display='';
+  document.getElementById('fin-sale-client')?.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function cancelSaleEdit(){
+  document.getElementById('fin-sale-edit-id').value='';
+  var titleEl=document.getElementById('fin-sale-form-title');
+  if(titleEl){ titleEl.textContent=''; titleEl.style.display='none'; }
+  var submitBtn=document.getElementById('fin-sale-submit-btn');
+  if(submitBtn) submitBtn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Save sale';
+  var cancelBtn=document.getElementById('fin-sale-cancel-edit-btn');
+  if(cancelBtn) cancelBtn.style.display='none';
 }
 
 async function submitExpense(){
@@ -6212,6 +6276,20 @@ var BIZ_INFO={
   tinLine:'NONVAT Reg. TIN: 375-724-693-00000',
   address:'42 C. Vizcara St., Purok 1 New Lower Bicutan, City of Taguig NCR, Second District Philippines'
 };
+// Printer accreditation footer — best-effort reading from the physical
+// invoice booklet photo (some fields were blurry). Confirm/correct with
+// Del kung may mali, then i-update dito.
+var PRINTER_INFO={
+  name:'R.A Delos Santos Printing Press-Non VAT Reg. TIN: 164-782-188-000',
+  prop:'ROWENA A. DELOS SANTOS - Prop.',
+  address:'5235 Demetillo St., Brgy. G.T.D.I, Valenzuela City',
+  accredNo:'024MP2024000000004',
+  accredDate:'02/22/2024',
+  validUntil:'02/21/2029',
+  atpNo:'_Au2026_',
+  dateIssued:'__/__/2026',
+  series:'0001 - 0500 10Booklets (50x2)'
+};
 var _invCurrentSale=null;
 
 async function openInvoiceModal(saleId){
@@ -6241,8 +6319,9 @@ function closeInvoiceModal(){
 function generateInvoicePDF(){
   if(typeof window.jspdf==='undefined'){ showNotif('PDF library failed to load — check your connection and try again.','error'); return; }
   var{jsPDF}=window.jspdf;
-  var doc=new jsPDF({unit:'pt',format:'a5'});
+  var doc=new jsPDF({unit:'pt',format:[420,720]});
   var pw=doc.internal.pageSize.getWidth();
+  var ph=doc.internal.pageSize.getHeight();
   var margin=28;
   var y=margin;
 
@@ -6262,9 +6341,19 @@ function generateInvoicePDF(){
   var dateStr=_invCurrentSale?new Date(_invCurrentSale.order_date).toLocaleDateString('en-PH',{month:'2-digit',day:'2-digit',year:'2-digit'}):'';
   var peso=function(n){ return 'P '+Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}); };
 
+  function checkbox(x,yy,checked){
+    doc.setDrawColor(0); doc.setLineWidth(0.8);
+    doc.rect(x,yy,9,9);
+    if(checked){
+      doc.setLineWidth(1.2);
+      doc.line(x+1.5,yy+4.8,x+3.6,yy+7.3);
+      doc.line(x+3.6,yy+7.3,x+7.6,yy+1.6);
+    }
+  }
+
   // Outer border
   doc.setDrawColor(0); doc.setLineWidth(1.2);
-  doc.rect(margin-10,margin-10,pw-2*(margin-10),doc.internal.pageSize.getHeight()-2*(margin-10));
+  doc.rect(margin-10,margin-10,pw-2*(margin-10),ph-2*(margin-10));
 
   // Header
   doc.setFont('helvetica','bold'); doc.setFontSize(15);
@@ -6275,7 +6364,7 @@ function generateInvoicePDF(){
   var addrMaxWidth=pw-2*margin-90;
   var addrLines=doc.splitTextToSize(BIZ_INFO.address,addrMaxWidth);
   doc.text(addrLines,margin,y+46);
-  var addrBlockH=addrLines.length*10; // ~10pt line height at this font size
+  var addrBlockH=addrLines.length*10;
 
   doc.setFont('helvetica','bold'); doc.setFontSize(10);
   doc.text('SERVICE',pw-margin,y+10,{align:'right'});
@@ -6288,45 +6377,52 @@ function generateInvoicePDF(){
 
   y+=48+addrBlockH;
   doc.setFontSize(8.5);
-  doc.text((saleType==='Cash Sales'?'☑':'☐')+' CASH SALES',margin,y);
-  doc.text((saleType==='Charge Sales'?'☑':'☐')+' CHARGE SALES',margin,y+11);
+  checkbox(margin,y-8,saleType==='Cash Sales');
+  doc.text('CASH SALES',margin+14,y);
+  checkbox(margin,y+3,saleType==='Charge Sales');
+  doc.text('CHARGE SALES',margin+14,y+11);
   doc.rect(pw-margin-95,y-9,95,12);
   doc.text('DATE: '+dateStr,pw-margin-90,y);
 
   y+=26;
-  doc.setLineWidth(0.7); doc.line(margin,y,pw-margin,y);
-  y+=13;
+
+  // SOLD TO box — bordered kagaya ng physical invoice
+  var soldToTop=y;
   doc.setFont('helvetica','bold'); doc.setFontSize(9);
-  doc.text('SOLD TO:',margin,y);
+  y+=13;
+  doc.text('SOLD TO:',margin+4,y);
   y+=13;
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-  doc.text('Registered Name:',margin,y);
+  doc.text('Registered Name:',margin+4,y);
   doc.setFont('helvetica','bold');
-  doc.text(clientName,margin+90,y);
+  doc.text(clientName,margin+94,y);
   y+=14;
   doc.setFont('helvetica','normal');
-  doc.text('TIN:',margin,y);
-  doc.text(tin,margin+30,y);
+  doc.text('TIN:',margin+4,y);
+  doc.text(tin,margin+34,y);
   y+=14;
-  doc.text('Business Address:',margin,y);
-  var bizAddrMaxWidth=pw-2*margin-95;
+  doc.text('Business Address:',margin+4,y);
+  var bizAddrMaxWidth=pw-2*margin-100;
   var bizAddrLines=doc.splitTextToSize(address,bizAddrMaxWidth);
-  doc.text(bizAddrLines,margin+95,y);
-  y+=8+Math.max(10,bizAddrLines.length*10);
-  doc.line(margin,y,pw-margin,y);
+  doc.text(bizAddrLines,margin+99,y);
+  y+=6+Math.max(10,bizAddrLines.length*10);
+  var soldToBottom=y;
+  doc.setLineWidth(0.8);
+  doc.rect(margin,soldToTop,pw-2*margin,soldToBottom-soldToTop);
 
   // Item table
   y+=4;
   var col1=margin,col2=margin+180,col3=margin+240,col4=pw-margin;
+  doc.setFillColor(225,225,225);
+  doc.rect(margin,y,pw-2*margin,16,'FD');
   doc.setFont('helvetica','bold'); doc.setFontSize(8);
   doc.text('Item Description/Nature of Service',col1+2,y+10);
-  doc.text('Qty',col2+2,y+10);
-  doc.text('Unit Price',col3+2,y+10);
+  doc.text('Quantity',col2+2,y+10);
+  doc.text('Unit Cost/Price',col3+2,y+10);
   doc.text('Amount',col4-2,y+10,{align:'right'});
-  doc.rect(margin,y,pw-2*margin,16);
   doc.line(col2,y,col2,y+16); doc.line(col3,y,col3,y+16);
   y+=16;
-  var rowH=16, tableTop=y;
+  var rowH=16;
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
   doc.rect(margin,y,pw-2*margin,rowH);
   doc.line(col2,y,col2,y+rowH); doc.line(col3,y,col3,y+rowH);
@@ -6335,35 +6431,59 @@ function generateInvoicePDF(){
   doc.text(peso(unitPrice),col3+2,y+11);
   doc.text(peso(amount),col4-2,y+11,{align:'right'});
   y+=rowH;
-  // a few empty rows for the physical-invoice look
-  for(var r=0;r<4;r++){
+  for(var r=0;r<6;r++){
     doc.rect(margin,y,pw-2*margin,rowH);
     doc.line(col2,y,col2,y+rowH); doc.line(col3,y,col3,y+rowH);
     y+=rowH;
   }
 
   // Totals box
-  var totBoxW=170, totBoxX=pw-margin-totBoxW;
+  var totBoxW=180, totBoxX=pw-margin-totBoxW;
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-  function totRow(label,val,bold){
-    doc.rect(totBoxX,y,totBoxW-60,16); doc.rect(totBoxX+totBoxW-60,y,60,16);
+  function totRow(label,val,bold,sublabel){
+    var rh=sublabel?22:16;
+    doc.rect(totBoxX,y,totBoxW-62,rh); doc.rect(totBoxX+totBoxW-62,y,62,rh);
     doc.setFont('helvetica',bold?'bold':'normal');
-    doc.text(label,totBoxX+4,y+11);
-    doc.text(peso(val),totBoxX+totBoxW-4,y+11,{align:'right'});
-    y+=16;
+    if(sublabel){
+      doc.text(label,totBoxX+4,y+10);
+      doc.setFontSize(6.3);
+      doc.text(sublabel,totBoxX+4,y+19);
+      doc.setFontSize(8.5);
+    } else {
+      doc.text(label,totBoxX+4,y+11);
+    }
+    doc.text(peso(val),totBoxX+totBoxW-4,y+(sublabel?14:11),{align:'right'});
+    y+=rh;
   }
   totRow('Total Sales',totalSales,false);
-  totRow('Less: Discount',discount,false);
+  totRow('Less: Discount',discount,false,'(SC/PWD/NAAC/MOV/SP)');
   totRow('Less: Withholding Tax',wtax,false);
   totRow('TOTAL AMOUNT DUE',totalDue,true);
 
-  y+=26;
+  y+=24;
+  var receivedY=y;
   doc.setFont('helvetica','normal'); doc.setFontSize(8);
-  doc.rect(margin,y-10,10,10);
+  checkbox(margin,y-9,false);
   doc.text('Received the amount of',margin+14,y-2);
   y+=14;
   doc.line(margin,y+8,margin+120,y+8);
   doc.setFont('helvetica','bold'); doc.text(peso(totalDue),margin,y+6);
+
+  // SC/PWD/NAAC/MOV — Solo Parent ID No. / Signature boxes (right side)
+  var scLabelW=98, scBoxW=76, scRowH=18;
+  var scLabelX=pw-margin-scBoxW-4;
+  var scBoxX=pw-margin-scBoxW;
+  var scY=receivedY-14;
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.3);
+  doc.text('SC/PWD/NAAC/MOV/',scLabelX,scY+6,{align:'right'});
+  doc.text('Solo Parent ID No.:',scLabelX,scY+13,{align:'right'});
+  doc.rect(scBoxX,scY,scBoxW,scRowH);
+  scY+=scRowH+3;
+  doc.text('SC/PWD/NAAC/MOV/',scLabelX,scY+6,{align:'right'});
+  doc.setFont('helvetica','bold');
+  doc.text('Signature:',scLabelX,scY+13,{align:'right'});
+  doc.setFont('helvetica','normal');
+  doc.rect(scBoxX,scY,scBoxW,scRowH);
 
   y+=30;
   doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
@@ -6374,6 +6494,27 @@ function generateInvoicePDF(){
   doc.line(pw-margin-140,y+20,pw-margin,y+20);
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
   doc.text('Signature',pw-margin-140,y+29);
+
+  // ── Printer accreditation footer (kagaya ng physical booklet) ──
+  y+=48;
+  doc.setLineWidth(0.6);
+  doc.line(margin,y,pw-margin,y);
+  y+=10;
+  var footBoxW=210, footBoxH=44;
+  doc.rect(margin,y,footBoxW,footBoxH);
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.3);
+  doc.text(PRINTER_INFO.name,margin+3,y+8);
+  doc.setFont('helvetica','normal');
+  doc.text(PRINTER_INFO.prop,margin+3,y+15);
+  doc.text(PRINTER_INFO.address,margin+3,y+22,{maxWidth:footBoxW-6});
+  doc.text('Printer\'s Accreditation: '+PRINTER_INFO.accredNo,margin+3,y+31);
+  doc.text('Date of Accreditation: '+PRINTER_INFO.accredDate,margin+3,y+37);
+  doc.text('Valid Until: '+PRINTER_INFO.validUntil,margin+3,y+43);
+
+  doc.setFontSize(7.5);
+  doc.text('BIR AUTHORITY TO PRINT NO. OCN '+PRINTER_INFO.atpNo,margin+footBoxW+10,y+10,{maxWidth:pw-margin-(margin+footBoxW+10)});
+  doc.text('Date Issued '+PRINTER_INFO.dateIssued,margin+footBoxW+10,y+22);
+  doc.text('Approved Series: '+PRINTER_INFO.series,margin+footBoxW+10,y+34,{maxWidth:pw-margin-(margin+footBoxW+10)});
 
   doc.save('Invoice-'+invNo+'-'+clientName.replace(/[^a-z0-9]/gi,'')+'.pdf');
   closeInvoiceModal();
@@ -8579,13 +8720,13 @@ function renderCallLogs(){
       callTime=d.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',hour12:true});
     }
     var vaLine=isAdmin&&c.agent_name?'<div class="row-sub" style="font-size:10px">👤 '+ctEsc(c.agent_name)+'</div>':'';
-    return '<div class="table-row" style="grid-template-columns:1.6fr 1.3fr 1.1fr 1fr 0.9fr 80px">'
+    return '<div class="table-row" style="grid-template-columns:1.6fr 1.3fr 1.1fr 1fr 0.9fr 130px">'
       +'<div><div class="row-name">'+ctEsc(c.client||'—')+'</div><div class="row-sub">'+ctEsc(c.contact||'')+'</div>'+vaLine+'</div>'
       +'<div><div class="row-meta" style="font-size:11px">'+ctEsc(c.phone||'—')+'</div><div class="row-sub">'+ctEsc(c.package||'')+'</div></div>'
       +'<div><div class="row-meta" style="font-size:11px">'+callDate+'</div><div class="row-sub">'+callTime+'</div><div class="row-sub" style="font-size:10px">'+ctEsc(c.call_status||'')+'</div></div>'
       +'<div><span style="font-size:10px;color:'+dealColor+';font-weight:700">'+ctEsc(c.deal_status||'Prospect')+'</span></div>'
       +'<div class="row-meta" style="font-size:11px;color:'+(Number(c.est_value)>0?'var(--amber)':'var(--text3)')+'">'+ctPeso(c.est_value)+'</div>'
-      +'<div><button onclick="deleteCallLog(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button></div>'
+      +'<div style="display:flex;gap:4px"><button onclick="editCallLog(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px">Edit</button><button onclick="deleteCallLog(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Del</button></div>'
       +'</div>';
   }).join('');
 }
@@ -8622,7 +8763,9 @@ async function saveCallLog(){
   var callTime=document.getElementById('ct-calltime')?.value||''; // HH:MM
   var callAt=null;
   if(callDate){
-    callAt=new Date((callTime?callDate+'T'+callTime:callDate+'T00:00')).toISOString();
+    var dObj=new Date((callTime?callDate+'T'+callTime:callDate+'T00:00'));
+    if(dObj.getFullYear()<100){ dObj.setFullYear(dObj.getFullYear()+2000); } // auto-fix kung na-type na 2-digit year (e.g. "26" -> 0026)
+    callAt=dObj.toISOString();
   } else {
     callAt=new Date().toISOString();
   }
@@ -8647,16 +8790,55 @@ async function saveCallLog(){
     deal_status:document.getElementById('ct-dealstatus')?.value||'Prospect',
     est_value:Number(document.getElementById('ct-value')?.value)||0
   };
+  var editId=document.getElementById('ct-edit-id')?.value||'';
   var btn=document.getElementById('ct-save-btn');
-  if(btn){btn.disabled=true;btn.textContent='Saving...';}
-  var{error}=await sb.from('call_logs').insert(payload);
+  if(btn){btn.disabled=true;btn.textContent=editId?'Updating...':'Saving...';}
+  var error;
+  if(editId){
+    ({error}=await sb.from('call_logs').update(payload).eq('id',editId));
+  } else {
+    ({error}=await sb.from('call_logs').insert(payload));
+  }
   if(btn){btn.disabled=false;btn.textContent='Log call';}
   if(error){ showNotif('Error: '+error.message,'error'); return; }
-  showNotif('Call logged! ✓','success');
+  showNotif(editId?'Call updated! ✓':'Call logged! ✓','success');
   ['ct-client','ct-contact','ct-phone','ct-package','ct-calldate','ct-calltime','ct-value'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var ds=document.getElementById('ct-dealstatus'); if(ds)ds.value='Prospect';
   var cs=document.getElementById('ct-callstatus'); if(cs)cs.value='Completed';
+  cancelCallLogEdit();
   loadCallTracker();
+}
+
+function editCallLog(id){
+  var c=callLogsCache.find(function(x){ return x.id===id; });
+  if(!c){ showNotif('Call not found','error'); return; }
+  document.getElementById('ct-edit-id').value=id;
+  document.getElementById('ct-client').value=c.client||'';
+  document.getElementById('ct-contact').value=c.contact||'';
+  document.getElementById('ct-phone').value=c.phone||'';
+  document.getElementById('ct-package').value=c.package||'';
+  if(c.call_at){
+    var d=new Date(c.call_at);
+    var pad=function(n){return String(n).padStart(2,'0');};
+    document.getElementById('ct-calldate').value=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+    document.getElementById('ct-calltime').value=pad(d.getHours())+':'+pad(d.getMinutes());
+  }
+  document.getElementById('ct-callstatus').value=c.call_status||'Completed';
+  document.getElementById('ct-dealstatus').value=c.deal_status||'Prospect';
+  document.getElementById('ct-value').value=c.est_value||0;
+  var agentSel=document.getElementById('ct-agent');
+  if(agentSel && currentUserRole==='admin'){ agentSel.value=c.agent_id||''; }
+  var titleEl=document.getElementById('ct-form-title'); if(titleEl) titleEl.textContent='Edit call — '+(c.client||'');
+  var saveBtn=document.getElementById('ct-save-btn'); if(saveBtn) saveBtn.textContent='Update call';
+  var cancelBtn=document.getElementById('ct-cancel-edit-btn'); if(cancelBtn) cancelBtn.style.display='';
+  document.getElementById('ct-client')?.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function cancelCallLogEdit(){
+  document.getElementById('ct-edit-id').value='';
+  var titleEl=document.getElementById('ct-form-title'); if(titleEl) titleEl.textContent='Log a call';
+  var saveBtn=document.getElementById('ct-save-btn'); if(saveBtn) saveBtn.textContent='Log call';
+  var cancelBtn=document.getElementById('ct-cancel-edit-btn'); if(cancelBtn) cancelBtn.style.display='none';
 }
 
 async function deleteCallLog(id){
