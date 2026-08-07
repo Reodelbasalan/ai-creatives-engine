@@ -5704,17 +5704,49 @@ var finPHP=function(n){ return '₱'+Number(n||0).toLocaleString('en-PH',{maximu
 
 function finApplySalesSearch(salesArr){
   var q=(document.getElementById('fin-sales-search')?.value||'').trim().toLowerCase();
-  if(!q) return salesArr;
-  return salesArr.filter(function(o){
-    return (o.client_name||'').toLowerCase().includes(q)
-      || (o.business||'').toLowerCase().includes(q)
-      || (o.contact||'').toLowerCase().includes(q)
-      || (o.email||'').toLowerCase().includes(q);
-  });
+  var statusFilter=document.getElementById('fin-sales-status-filter')?.value||'';
+  var out=salesArr;
+  if(statusFilter){ out=out.filter(function(o){ return (o.paid_status||'Balance')===statusFilter; }); }
+  if(q){
+    out=out.filter(function(o){
+      return (o.client_name||'').toLowerCase().includes(q)
+        || (o.business||'').toLowerCase().includes(q)
+        || (o.contact||'').toLowerCase().includes(q)
+        || (o.email||'').toLowerCase().includes(q);
+    });
+  }
+  return out;
+}
+
+function finQuickFilterBalance(){
+  var sel=document.getElementById('fin-sales-status-filter');
+  if(sel){ sel.value=sel.value==='Balance'?'':'Balance'; }
+  finFilterSales();
+}
+
+function renderFinBalanceChip(sales){
+  var chip=document.getElementById('fin-balance-chip');
+  if(!chip) return;
+  var balanceRows=(sales||[]).filter(function(o){ return (o.paid_status||'Balance')==='Balance'; });
+  if(!balanceRows.length){ chip.style.display='none'; return; }
+  var totalBalance=balanceRows.reduce(function(s,o){ return s+(Number(o.sales_amount)||0); },0);
+  chip.textContent='⚠️ '+balanceRows.length+' may balance — '+finPHP(totalBalance);
+  chip.style.display='';
 }
 
 function finFilterSales(){
   renderFinSalesTable(finApplySalesSearch(window._finSalesCache||[]));
+}
+
+async function updateSaleStatus(id,newStatus){
+  var{error}=await sb.from('sales_orders').update({paid_status:newStatus}).eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  var cache=window._finSalesCache||[];
+  var row=cache.find(function(o){ return o.id===id; });
+  if(row) row.paid_status=newStatus;
+  renderFinSalesTable(finApplySalesSearch(cache));
+  renderFinBalanceChip(cache);
+  showNotif('Status updated','success');
 }
 
 function renderFinAdsTable(adsLog){
@@ -5732,6 +5764,13 @@ function renderFinAdsTable(adsLog){
   }).join(''):'<div class="table-empty"><div class="table-empty-icon">📈</div>No ads spend logged in this period yet.</div>';
 }
 
+function finStatusSelect(o,sc){
+  var statuses=['Balance','Paid','Pending','Refunded'];
+  return '<select onchange="updateSaleStatus(\''+o.id+'\',this.value)" style="font-size:10px;font-weight:650;padding:3px 22px 3px 9px;border-radius:20px;background:'+sc+'22;color:'+sc+';border:0.5px solid '+sc+'55;cursor:pointer;appearance:auto">'
+    +statuses.map(function(s){ return '<option value="'+s+'"'+((o.paid_status||'Balance')===s?' selected':'')+'>'+s+'</option>'; }).join('')
+    +'</select>';
+}
+
 function renderFinSalesTable(sales){
   var salesBody=document.getElementById('fin-sales-body');
   if(!salesBody) return;
@@ -5746,7 +5785,7 @@ function renderFinSalesTable(sales){
       +'<div style="font-size:11px;color:var(--text2)">'+(o.order_package||'—')+'</div>'
       +'<div style="font-weight:650;color:var(--green)">'+finPHP(o.sales_amount)+'</div>'
       +'<div style="font-size:11px;color:var(--text2)">'+(o.va_name||'—')+'</div>'
-      +'<div><span style="font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px;background:'+sc+'22;color:'+sc+'">'+(o.paid_status||'—')+'</span></div>'
+      +'<div>'+finStatusSelect(o,sc)+'</div>'
       +'<div class="proj-row-del" title="Generate Invoice" onclick="openInvoiceModal(\''+o.id+'\')" style="color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>'
       +'<div class="proj-row-del" title="Delete" onclick="deleteSale(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>'
       +'</div>';
@@ -6105,6 +6144,7 @@ async function loadFinancePage(){
   window._finSalesCache=sales;
   if(!salesErr){
     renderFinSalesTable(finApplySalesSearch(sales));
+    renderFinBalanceChip(sales);
   }
 
   // ── Expenses table ──
@@ -6232,7 +6272,10 @@ function generateInvoicePDF(){
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
   doc.text(BIZ_INFO.prop,margin,y+24);
   doc.text(BIZ_INFO.tinLine,margin,y+35);
-  doc.text(BIZ_INFO.address,margin,y+46,{maxWidth:pw-2*margin-90});
+  var addrMaxWidth=pw-2*margin-90;
+  var addrLines=doc.splitTextToSize(BIZ_INFO.address,addrMaxWidth);
+  doc.text(addrLines,margin,y+46);
+  var addrBlockH=addrLines.length*10; // ~10pt line height at this font size
 
   doc.setFont('helvetica','bold'); doc.setFontSize(10);
   doc.text('SERVICE',pw-margin,y+10,{align:'right'});
@@ -6243,7 +6286,7 @@ function generateInvoicePDF(){
   doc.text(invNo,pw-margin,y+38,{align:'right'});
   doc.setTextColor(0,0,0);
 
-  y+=58;
+  y+=48+addrBlockH;
   doc.setFontSize(8.5);
   doc.text((saleType==='Cash Sales'?'☑':'☐')+' CASH SALES',margin,y);
   doc.text((saleType==='Charge Sales'?'☑':'☐')+' CHARGE SALES',margin,y+11);
@@ -6266,8 +6309,10 @@ function generateInvoicePDF(){
   doc.text(tin,margin+30,y);
   y+=14;
   doc.text('Business Address:',margin,y);
-  doc.text(address,margin+95,y,{maxWidth:pw-2*margin-95});
-  y+=18;
+  var bizAddrMaxWidth=pw-2*margin-95;
+  var bizAddrLines=doc.splitTextToSize(address,bizAddrMaxWidth);
+  doc.text(bizAddrLines,margin+95,y);
+  y+=8+Math.max(10,bizAddrLines.length*10);
   doc.line(margin,y,pw-margin,y);
 
   // Item table
