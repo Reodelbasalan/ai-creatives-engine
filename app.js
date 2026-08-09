@@ -6,12 +6,42 @@ let currentUser=null,currentUserRole='editor',selectedToneVal='',currentProjectI
 let adminNotes=[],clientNotes=[],uploadedImages=[];
 
 // AUTH
+function toggleLoginPasswordVisibility(){
+  var pw=document.getElementById('login-password');
+  var btn=document.getElementById('login-pw-toggle');
+  if(!pw||!btn) return;
+  var showing=pw.type==='text';
+  pw.type=showing?'password':'text';
+  btn.innerHTML=showing
+    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.8 21.8 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a21.8 21.8 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+}
+
+// I-load ang naka-save na email (kung "Remember my email" ang na-check dati)
+(function(){
+  try{
+    var savedEmail=localStorage.getItem('ace_remember_email');
+    if(savedEmail){
+      var emailEl=document.getElementById('login-email');
+      var rememberEl=document.getElementById('login-remember');
+      if(emailEl) emailEl.value=savedEmail;
+      if(rememberEl) rememberEl.checked=true;
+    }
+  }catch(e){}
+})();
+
 async function doLogin(){
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-password').value;
   const err=document.getElementById('auth-err');
   const btn=document.getElementById('login-btn');
   err.style.display='none';btn.textContent='Signing in...';btn.disabled=true;
+  // I-save o i-clear ang naka-remember na email base sa checkbox
+  try{
+    var rememberEl=document.getElementById('login-remember');
+    if(rememberEl && rememberEl.checked){ localStorage.setItem('ace_remember_email',email); }
+    else { localStorage.removeItem('ace_remember_email'); }
+  }catch(e){}
   
   // Step 1: Try to sign in
   let signInError=null;
@@ -5722,8 +5752,10 @@ var finPHP=function(n){ return '₱'+Number(n||0).toLocaleString('en-PH',{maximu
 function finApplySalesSearch(salesArr){
   var q=(document.getElementById('fin-sales-search')?.value||'').trim().toLowerCase();
   var statusFilter=document.getElementById('fin-sales-status-filter')?.value||'';
+  var sourceFilter=document.getElementById('fin-sales-source-filter')?.value||'';
   var out=salesArr;
   if(statusFilter){ out=out.filter(function(o){ return (o.paid_status||'Balance')===statusFilter; }); }
+  if(sourceFilter){ out=out.filter(function(o){ return (o.sale_source||'VA Sale')===sourceFilter; }); }
   if(q){
     out=out.filter(function(o){
       return (o.client_name||'').toLowerCase().includes(q)
@@ -5766,6 +5798,40 @@ async function updateSaleStatus(id,newStatus){
   showNotif('Status updated','success');
 }
 
+function renderAdsSpendChart(adsLog){
+  var wrap=document.getElementById('fin-ads-chart-wrap');
+  if(!wrap) return;
+  if(!adsLog.length){ wrap.innerHTML=''; return; }
+  var sorted=adsLog.slice().sort(function(a,b){ return a.spend_date<b.spend_date?-1:1; });
+  var maxVal=Math.max.apply(null,sorted.map(function(a){return Number(a.total_ads_spent)||0;}));
+  if(maxVal<=0) maxVal=1;
+  var h=140, padBottom=22, padTop=10;
+  var slotW=Math.max(30,Math.min(48,900/sorted.length));
+  var w=Math.max(300,sorted.length*slotW+20);
+  var barW=Math.max(6,slotW-10);
+  var bars=sorted.map(function(a,i){
+    var val=Number(a.total_ads_spent)||0;
+    var barH=Math.max(2,(val/maxVal)*(h-padBottom-padTop));
+    var x=10+i*slotW;
+    var y=h-padBottom-barH;
+    var isMax=val===maxVal;
+    var dayLabel=String(a.spend_date||'').slice(8,10);
+    return '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+barH+'" rx="3" fill="'+(isMax?'#facc15':'#a78bfa')+'" fill-opacity="'+(isMax?'1':'0.75')+'"><title>'+fmtDate(a.spend_date)+': '+finPHP(val)+'</title></rect>'
+      +'<text x="'+(x+barW/2)+'" y="'+(h-8)+'" font-size="8" fill="#8a8a95" text-anchor="middle">'+dayLabel+'</text>';
+  }).join('');
+
+  var maxEntry=sorted.reduce(function(m,a){ return (Number(a.total_ads_spent)||0)>(Number(m.total_ads_spent)||0)?a:m; },sorted[0]);
+  var cpmEntries=sorted.filter(function(a){return Number(a.cost_per_message)>0;});
+  var bestCpm=cpmEntries.length?cpmEntries.reduce(function(m,a){return Number(a.cost_per_message)<Number(m.cost_per_message)?a:m;}):null;
+
+  wrap.innerHTML='<div class="form-card-title" style="margin-bottom:8px"><span>📊</span> Daily ad spend trend</div>'
+    +'<div style="overflow-x:auto;margin-bottom:10px;background:var(--bg4);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px"><svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block">'+bars+'</svg></div>'
+    +'<div style="display:flex;gap:18px;flex-wrap:wrap;font-size:11px;color:var(--text3);margin-bottom:16px">'
+    +'<div>🔺 Highest spend: <b style="color:var(--text)">'+fmtDate(maxEntry.spend_date)+'</b> — <b style="color:var(--purple)">'+finPHP(maxEntry.total_ads_spent)+'</b></div>'
+    +(bestCpm?'<div>✅ Best cost/msg: <b style="color:var(--text)">'+fmtDate(bestCpm.spend_date)+'</b> — <b style="color:var(--green)">'+finPHP(bestCpm.cost_per_message)+'</b></div>':'')
+    +'</div>';
+}
+
 function renderFinAdsTable(adsLog){
   var body=document.getElementById('fin-ads-body');
   if(!body) return;
@@ -5801,7 +5867,7 @@ function renderFinSalesTable(sales){
       +'<div><div class="row-name">'+(o.client_name||'—')+'</div><div class="row-sub">'+subParts.join(' · ')+'</div></div>'
       +'<div style="font-size:11px;color:var(--text2)">'+(o.order_package||'—')+'</div>'
       +'<div style="font-weight:650;color:var(--green)">'+finPHP(o.sales_amount)+'</div>'
-      +'<div style="font-size:11px;color:var(--text2)">'+(o.va_name||'—')+'</div>'
+      +'<div style="font-size:11px;color:var(--text2)">'+(o.va_name||'—')+(o.sale_source==='Organic'?' <span style="font-size:9px;font-weight:700;color:#4ade80;border:1px solid rgba(74,222,128,0.35);border-radius:8px;padding:1px 6px;margin-left:3px">🌱 Organic</span>':'')+'</div>'
       +'<div onclick="event.stopPropagation()">'+finStatusSelect(o,sc)+'</div>'
       +'<div class="proj-row-del" title="Edit" onclick="event.stopPropagation();editSale(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>'
       +'<div class="proj-row-del" title="Generate Invoice" onclick="event.stopPropagation();openInvoiceModal(\''+o.id+'\')" style="color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>'
@@ -5948,6 +6014,7 @@ async function submitSale(){
     video_type:document.getElementById('fin-sale-videotype')?.value?.trim()||null,
     sales_amount:parseFloat(document.getElementById('fin-sale-amount')?.value)||0,
     va_name:document.getElementById('fin-sale-va')?.value?.trim()||null,
+    sale_source:document.getElementById('fin-sale-source')?.value||'VA Sale',
     paid_status:document.getElementById('fin-sale-paid')?.value||'Balance',
     notes:document.getElementById('fin-sale-notes')?.value?.trim()||null
   };
@@ -5968,6 +6035,7 @@ async function submitSale(){
     ['fin-sale-client','fin-sale-contact','fin-sale-business','fin-sale-email','fin-sale-videotype','fin-sale-amount','fin-sale-va','fin-sale-notes'].forEach(function(id){
       var el=document.getElementById(id); if(el)el.value='';
     });
+    var srcSel=document.getElementById('fin-sale-source'); if(srcSel)srcSel.value='VA Sale';
     cancelSaleEdit();
     finToggleSalesForm(true);
     loadFinancePage();
@@ -5993,6 +6061,7 @@ function editSale(id){
   document.getElementById('fin-sale-videotype').value=sale.video_type||'';
   document.getElementById('fin-sale-amount').value=sale.sales_amount||0;
   document.getElementById('fin-sale-va').value=sale.va_name||'';
+  document.getElementById('fin-sale-source').value=sale.sale_source||'VA Sale';
   document.getElementById('fin-sale-paid').value=sale.paid_status||'Balance';
   document.getElementById('fin-sale-notes').value=sale.notes||'';
   var titleEl=document.getElementById('fin-sale-form-title');
@@ -6118,10 +6187,15 @@ async function loadFinancePage(){
   var elCpm=document.getElementById('fin-stat-cpm'); if(elCpm)elCpm.textContent=finPHP(avgCpm);
   var elMsgs=document.getElementById('fin-stat-msgs'); if(elMsgs)elMsgs.textContent=totalMsgs;
   var elO=document.getElementById('fin-stat-orders'); if(elO)elO.textContent=sales.length;
+  var adRoas=totalAds>0?(totalSales/totalAds):0;
+  var elRoas=document.getElementById('fin-stat-roas'); if(elRoas){ elRoas.textContent=adRoas.toFixed(2)+'x'; elRoas.style.color=adRoas>=1?'var(--green)':'#f87171'; }
+  var avgDaily=adsLog.length?(totalAds/adsLog.length):0;
+  var elAvgDaily=document.getElementById('fin-stat-avgdaily'); if(elAvgDaily)elAvgDaily.textContent=finPHP(avgDaily);
 
-  // ── Ads Spend table ──
+  // ── Ads Spend table + trend chart ──
   if(!adsErr){
     renderFinAdsTable(adsLog);
+    renderAdsSpendChart(adsLog);
   }
 
 
@@ -6137,12 +6211,13 @@ async function loadFinancePage(){
       if(gapValEl){
         gapValEl.textContent=gap>0?finPHP(gap)+' to go':'Target hit! +'+finPHP(-gap);
         gapValEl.style.color=gap>0?'#facc15':'#4ade80';
-        gapValEl.style.fontSize='16px';
+        gapValEl.style.fontSize='22px';
+        gapValEl.style.letterSpacing='-0.3px';
         gapValEl.style.textDecoration='none';
       }
     } else {
       if(gapLabelEl) gapLabelEl.textContent='';
-      if(gapValEl){ gapValEl.textContent='+ Set target'; gapValEl.style.color='var(--yellow)'; gapValEl.style.fontSize='13px'; gapValEl.style.textDecoration='underline'; gapValEl.style.textDecorationStyle='dotted'; }
+      if(gapValEl){ gapValEl.textContent='+ Set target'; gapValEl.style.color='var(--yellow)'; gapValEl.style.fontSize='20px'; gapValEl.style.letterSpacing='normal'; gapValEl.style.textDecoration='underline'; gapValEl.style.textDecorationStyle='dotted'; }
     }
   }catch(e){}
 
