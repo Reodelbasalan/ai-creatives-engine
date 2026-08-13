@@ -10056,6 +10056,7 @@ function openClientOnbModal(id){
     obTmpSteps=JSON.parse(JSON.stringify(c.steps||[]));
     obTmpFiles=JSON.parse(JSON.stringify(c.files||[]));
     delBtn.style.display='';
+    obRenderAccessControls(c);
   } else {
     editId.value='';
     title.textContent='\ud83e\udd1d New client';
@@ -10063,6 +10064,9 @@ function openClientOnbModal(id){
     obTmpSteps=OB_DEFAULT_STEPS.map(function(s){return {label:s,done:false};});
     obTmpFiles=[];
     delBtn.style.display='none';
+    var pf=document.getElementById('ob-password'); if(pf) pf.value='';
+    var ac=document.getElementById('ob-access-controls'); if(ac){ ac.style.display='none'; ac.innerHTML=''; }
+    var pfield=document.getElementById('ob-pass-field'); if(pfield) pfield.style.display='';
   }
   obRenderStepsEdit(); obRenderFilesEdit();
   document.getElementById('client-onb-modal').classList.add('open');
@@ -10175,11 +10179,88 @@ async function saveClientOnb(){
     payload.created_by=currentUser?.id;
     var r2=await sb.from('clients_onboarding').insert(payload); error=r2.error;
   }
+  if(error){ if(btn){btn.disabled=false;btn.textContent='Save client';} showNotif('Error: '+error.message,'error'); return; }
+
+  // Bagong client + may password? Gumawa ng login account.
+  var pwd=(document.getElementById('ob-password')?.value||'').trim();
+  if(!editId && pwd){
+    if(btn) btn.textContent='Creating account...';
+    var acc=await obCallClientAdmin('create',{email:email,password:pwd,name:name});
+    if(acc && acc.ok){
+      showNotif('Client + login account created! \u2713','success');
+    } else {
+      showNotif('Onboarding saved, pero account error: '+((acc&&acc.error)||'unknown')+'. Pwede mo i-retry sa edit.','error');
+    }
+  } else {
+    showNotif('Saved! \u2713','success');
+  }
   if(btn){btn.disabled=false;btn.textContent='Save client';}
-  if(error){ showNotif('Error: '+error.message,'error'); return; }
-  showNotif('Saved! \u2713','success');
   closeClientOnbModal();
   loadClientOnb();
+}
+
+// ---- endpoint caller (attaches admin's access token) ----
+async function obCallClientAdmin(action, extra){
+  try{
+    var sess=await sb.auth.getSession();
+    var token=sess?.data?.session?.access_token;
+    if(!token){ return {error:'No admin session'}; }
+    var res=await fetch('/api/client-admin',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify(Object.assign({action:action},extra||{}))
+    });
+    var d=await res.json();
+    if(!res.ok){ return {error:d.error||('HTTP '+res.status)}; }
+    return Object.assign({ok:true},d);
+  }catch(e){ return {error:e.message||String(e)}; }
+}
+
+function obGenPassword(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  var p=''; for(var i=0;i<10;i++){ p+=chars.charAt(Math.floor(Math.random()*chars.length)); }
+  var el=document.getElementById('ob-password'); if(el){ el.value=p; el.focus(); }
+}
+
+// ---- access controls (existing client) ----
+function obRenderAccessControls(c){
+  var pfield=document.getElementById('ob-pass-field');
+  var ac=document.getElementById('ob-access-controls');
+  if(!ac) return;
+  // relabel password field for reset
+  if(pfield){
+    var lbl=pfield.querySelector('.form-label');
+    if(lbl) lbl.innerHTML='Reset password <span class="opt">(type new + click Reset)</span>';
+  }
+  var email=(c.email||'').replace(/'/g,"\\'");
+  ac.style.display='flex';
+  ac.innerHTML=
+     '<button type="button" class="ghost-btn" style="font-size:11px" onclick="obResetPassword(\''+email+'\')">\U0001F511 Reset password</button>'
+    +'<button type="button" class="ghost-btn" style="font-size:11px" onclick="obSetAccess(\''+email+'\',false)">\U0001F6AB Disable access</button>'
+    +'<button type="button" class="ghost-btn" style="font-size:11px" onclick="obSetAccess(\''+email+'\',true)">\u2705 Enable access</button>'
+    +'<button type="button" class="ghost-btn" style="font-size:11px;color:var(--red);border-color:rgba(239,68,68,0.2)" onclick="obDeleteAccount(\''+email+'\')">\U0001F5D1 Delete login</button>';
+}
+
+async function obResetPassword(email){
+  var pwd=(document.getElementById('ob-password')?.value||'').trim();
+  if(pwd.length<6){ showNotif('Type a new password (min 6 chars) sa password field muna','error'); return; }
+  var r=await obCallClientAdmin('reset-password',{email:email,password:pwd});
+  if(r&&r.ok){ showNotif('Password reset! Ibigay mo na sa client.','success'); }
+  else { showNotif('Reset failed: '+((r&&r.error)||'unknown'),'error'); }
+}
+
+async function obSetAccess(email,enabled){
+  if(!confirm((enabled?'Enable':'Disable')+' login access for '+email+'?')) return;
+  var r=await obCallClientAdmin('set-access',{email:email,enabled:enabled});
+  if(r&&r.ok){ showNotif(enabled?'Access enabled':'Access disabled','success'); }
+  else { showNotif('Failed: '+((r&&r.error)||'unknown'),'error'); }
+}
+
+async function obDeleteAccount(email){
+  if(!confirm('Delete the LOGIN account for '+email+'? (Hindi kasama ang onboarding record — hiwalay yun.)')) return;
+  var r=await obCallClientAdmin('delete',{email:email});
+  if(r&&r.ok){ showNotif('Login account deleted','success'); }
+  else { showNotif('Delete failed: '+((r&&r.error)||'unknown'),'error'); }
 }
 
 async function deleteClientOnb(){
