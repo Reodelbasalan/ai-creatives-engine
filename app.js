@@ -10181,15 +10181,18 @@ async function saveClientOnb(){
   }
   if(error){ if(btn){btn.disabled=false;btn.textContent='Save client';} showNotif('Error: '+error.message,'error'); return; }
 
-  // Bagong client + may password? Gumawa ng login account.
+  // Bagong client + may password? Gumawa ng login account (client-side, walang endpoint).
   var pwd=(document.getElementById('ob-password')?.value||'').trim();
   if(!editId && pwd){
-    if(btn) btn.textContent='Creating account...';
-    var acc=await obCallClientAdmin('create',{email:email,password:pwd,name:name});
-    if(acc && acc.ok){
-      showNotif('Client + login account created! \u2713','success');
-    } else {
-      showNotif('Onboarding saved, pero account error: '+((acc&&acc.error)||'unknown')+'. Pwede mo i-retry sa edit.','error');
+    if(pwd.length<6){ showNotif('Onboarding saved, pero password kulang (min 6). Wala pang account.','error'); }
+    else{
+      if(btn) btn.textContent='Creating account...';
+      var acc=await obCreateClientAccount(email,pwd,name);
+      if(acc && acc.ok){
+        showNotif('Client + login account created! Ibigay mo email+password sa client. \u2713','success');
+      } else {
+        showNotif('Onboarding saved, pero account error: '+((acc&&acc.error)||'unknown'),'error');
+      }
     }
   } else {
     showNotif('Saved! \u2713','success');
@@ -10199,20 +10202,34 @@ async function saveClientOnb(){
   loadClientOnb();
 }
 
-// ---- endpoint caller (attaches admin's access token) ----
-async function obCallClientAdmin(action, extra){
-  try{
-    var sess=await sb.auth.getSession();
-    var token=sess?.data?.session?.access_token;
-    if(!token){ return {error:'No admin session'}; }
-    var res=await fetch('/api/client-admin',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify(Object.assign({action:action},extra||{}))
+// ---- CLIENT-SIDE account creation (no endpoint, zero cost) ----
+// Gumagamit ng HIWALAY na Supabase client instance para HINDI masira ang admin session.
+var _obAuthClient=null;
+function obGetAuthClient(){
+  if(!_obAuthClient){
+    _obAuthClient=createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth:{ persistSession:false, autoRefreshToken:false, storageKey:'ob-temp-auth' }
     });
-    var d=await res.json();
-    if(!res.ok){ return {error:d.error||('HTTP '+res.status)}; }
-    return Object.assign({ok:true},d);
+  }
+  return _obAuthClient;
+}
+
+async function obCreateClientAccount(email, password, name){
+  try{
+    var tmp=obGetAuthClient();
+    var{data,error}=await tmp.auth.signUp({
+      email:email, password:password,
+      options:{ data:{ name:name||'', role:'client' } }
+    });
+    // ID out immediately para di makaapekto sa kahit ano
+    try{ await tmp.auth.signOut(); }catch(e){}
+    if(error){ return {error:error.message}; }
+    var newId=data?.user?.id||null;
+    // set role=client sa profiles (best-effort — gamit main sb na admin)
+    if(newId){
+      try{ await sb.from('profiles').upsert({ id:newId, email:email, name:name||email, role:'client' }, { onConflict:'id' }); }catch(e){}
+    }
+    return {ok:true, user_id:newId};
   }catch(e){ return {error:e.message||String(e)}; }
 }
 
@@ -10227,40 +10244,24 @@ function obRenderAccessControls(c){
   var pfield=document.getElementById('ob-pass-field');
   var ac=document.getElementById('ob-access-controls');
   if(!ac) return;
-  // relabel password field for reset
   if(pfield){
     var lbl=pfield.querySelector('.form-label');
-    if(lbl) lbl.innerHTML='Reset password <span class="opt">(type new + click Reset)</span>';
+    if(lbl) lbl.innerHTML='Password <span class="opt">(existing na \u2014 gamitin ang reset sa baba)</span>';
   }
   var email=(c.email||'').replace(/'/g,"\\'");
   ac.style.display='flex';
   ac.innerHTML=
-     '<button type="button" class="ghost-btn" style="font-size:11px" onclick="obResetPassword(\''+email+'\')">\U0001F511 Reset password</button>'
-    +'<button type="button" class="ghost-btn" style="font-size:11px" onclick="obSetAccess(\''+email+'\',false)">\U0001F6AB Disable access</button>'
-    +'<button type="button" class="ghost-btn" style="font-size:11px" onclick="obSetAccess(\''+email+'\',true)">\u2705 Enable access</button>'
-    +'<button type="button" class="ghost-btn" style="font-size:11px;color:var(--red);border-color:rgba(239,68,68,0.2)" onclick="obDeleteAccount(\''+email+'\')">\U0001F5D1 Delete login</button>';
+     '<button type="button" class="ghost-btn" style="font-size:11px" onclick="obSendReset(\''+email+'\')">\U0001F4E7 Send password reset email</button>'
+    +'<span style="font-size:10.5px;color:var(--text3);align-self:center">Ii-email si client ng reset link para makapag-set ng bagong password.</span>';
 }
 
-async function obResetPassword(email){
-  var pwd=(document.getElementById('ob-password')?.value||'').trim();
-  if(pwd.length<6){ showNotif('Type a new password (min 6 chars) sa password field muna','error'); return; }
-  var r=await obCallClientAdmin('reset-password',{email:email,password:pwd});
-  if(r&&r.ok){ showNotif('Password reset! Ibigay mo na sa client.','success'); }
-  else { showNotif('Reset failed: '+((r&&r.error)||'unknown'),'error'); }
-}
-
-async function obSetAccess(email,enabled){
-  if(!confirm((enabled?'Enable':'Disable')+' login access for '+email+'?')) return;
-  var r=await obCallClientAdmin('set-access',{email:email,enabled:enabled});
-  if(r&&r.ok){ showNotif(enabled?'Access enabled':'Access disabled','success'); }
-  else { showNotif('Failed: '+((r&&r.error)||'unknown'),'error'); }
-}
-
-async function obDeleteAccount(email){
-  if(!confirm('Delete the LOGIN account for '+email+'? (Hindi kasama ang onboarding record — hiwalay yun.)')) return;
-  var r=await obCallClientAdmin('delete',{email:email});
-  if(r&&r.ok){ showNotif('Login account deleted','success'); }
-  else { showNotif('Delete failed: '+((r&&r.error)||'unknown'),'error'); }
+async function obSendReset(email){
+  if(!confirm('Send password reset email to '+email+'?')) return;
+  try{
+    var{error}=await sb.auth.resetPasswordForEmail(email);
+    if(error){ showNotif('Reset failed: '+error.message,'error'); return; }
+    showNotif('Reset email sent sa '+email,'success');
+  }catch(e){ showNotif('Error: '+(e.message||e),'error'); }
 }
 
 async function deleteClientOnb(){
