@@ -535,7 +535,7 @@ function showPage(page){
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
   try{ localStorage.setItem('ace_last_page',page); }catch(e){}
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker','creatives-tracking':'Creatives Tracking'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
@@ -560,6 +560,7 @@ function showPage(page){
   if(page==='call-tracker'){loadCallTracker();}
   if(page==='advertiser-tasks'){loadAdvertiserTasks();}
   if(page==='sales-tracker'){loadSalesTracker();}
+  if(page==='creatives-tracking'){loadCreativeTrack();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
@@ -9732,4 +9733,199 @@ async function deleteSalesPage(id){
   if(error){ showNotif('Error: '+error.message,'error'); return; }
   showNotif('Page deleted','success');
   loadSalesTracker();
+}
+
+
+// ============================================================
+// CREATIVES TRACKING (multi-brand, per-page status)
+// ============================================================
+var ctTrackCache=[];
+var ctPendingTags=[];
+var CT_STATUSES=['To Do','In Progress','Done','Published'];
+
+function ctTrackStatusColor(s){
+  return s==='Published'?'#34d399':s==='Done'?'var(--green)':s==='In Progress'?'var(--amber)':'var(--text3)';
+}
+
+// ---- chip input (add form) ----
+function ctChipKey(e){
+  var inp=e.target;
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();
+    var v=inp.value.trim();
+    if(v && ctPendingTags.indexOf(v)===-1){ ctPendingTags.push(v); inp.value=''; ctRenderPending(); }
+  } else if(e.key==='Backspace' && !inp.value && ctPendingTags.length){
+    ctPendingTags.pop(); ctRenderPending();
+  }
+}
+function ctRenderPending(){
+  var wrap=document.getElementById('ct-chipwrap');
+  var inp=document.getElementById('ct-chipinput');
+  if(!wrap||!inp) return;
+  wrap.querySelectorAll('.ct-pending-chip').forEach(function(el){ el.remove(); });
+  ctPendingTags.forEach(function(p,i){
+    var s=document.createElement('span');
+    s.className='ct-chip ct-pending-chip';
+    s.innerHTML=ctEsc(p)+'<span class="ct-chip-x" onclick="ctDelPending('+i+')">\u00d7</span>';
+    wrap.insertBefore(s,inp);
+  });
+}
+function ctDelPending(i){ ctPendingTags.splice(i,1); ctRenderPending(); }
+
+async function loadCreativeTrack(){
+  if(currentUserRole!=='admin'){ showNotif('Admin only!','error'); showPage('dashboard'); return; }
+
+  var{data,error}=await sb.from('creatives_tracking').select('*').order('created_at',{ascending:false});
+  if(error){ showNotif('Error loading creatives: '+error.message,'error'); ctTrackCache=[]; }
+  else { ctTrackCache=(data||[]).map(function(r){ if(!Array.isArray(r.tags)) r.tags=[]; return r; }); }
+
+  // datalist source: sales_pages + existing tags
+  var pageNames={};
+  (stPagesCache||[]).forEach(function(p){ if(p.name) pageNames[p.name]=1; });
+  if(!(stPagesCache||[]).length){
+    try{ var{data:sp}=await sb.from('sales_pages').select('name'); (sp||[]).forEach(function(p){ if(p.name) pageNames[p.name]=1; }); }catch(e){}
+  }
+  ctTrackCache.forEach(function(r){ (r.tags||[]).forEach(function(t){ if(t.page) pageNames[t.page]=1; }); });
+  var names=Object.keys(pageNames).sort();
+
+  var dl=document.getElementById('ct-track-page-list');
+  if(dl){ dl.innerHTML=names.map(function(n){ return '<option value="'+ctEsc(n)+'"></option>'; }).join(''); }
+
+  var fp=document.getElementById('ct-track-filter-page');
+  if(fp){ var cur=fp.value; fp.innerHTML='<option value="">All pages</option>'+names.map(function(n){ return '<option value="'+ctEsc(n)+'">'+ctEsc(n)+'</option>'; }).join(''); fp.value=cur; }
+
+  renderCreativeTrack();
+}
+
+function ctTrackFiltered(){
+  var q=(document.getElementById('ct-track-search')?.value||'').toLowerCase().trim();
+  var fpage=document.getElementById('ct-track-filter-page')?.value||'';
+  var fstat=document.getElementById('ct-track-filter-status')?.value||'';
+  return ctTrackCache.filter(function(r){
+    var tags=r.tags||[];
+    if(fpage && !tags.some(function(t){ return t.page===fpage; })) return false;
+    if(fstat && !tags.some(function(t){ return (t.status||'To Do')===fstat; })) return false;
+    if(q){
+      var hay=((r.title||'')+' '+(r.notes||'')+' '+tags.map(function(t){return t.page;}).join(' ')).toLowerCase();
+      if(hay.indexOf(q)===-1) return false;
+    }
+    return true;
+  });
+}
+
+function ctTagStatusSelect(cid,ti,cur){
+  return '<select class="form-select" style="font-size:10px;padding:4px 6px;width:auto" onchange="updateCtTagStatus(\''+cid+'\','+ti+',this.value)">'
+    +CT_STATUSES.map(function(s){ return '<option value="'+s+'"'+((cur||'To Do')===s?' selected':'')+'>'+s+'</option>'; }).join('')
+    +'</select>';
+}
+
+function renderCreativeTrack(){
+  var rows=ctTrackFiltered();
+  var body=document.getElementById('ct-track-body');
+  var badge=document.getElementById('ct-track-badge');
+  // badge = creatives na may at least 1 page na hindi pa Published
+  var activeCount=ctTrackCache.filter(function(r){ return (r.tags||[]).some(function(t){ return (t.status||'To Do')!=='Published'; }); }).length;
+  if(badge){ badge.textContent=activeCount; badge.style.display=activeCount>0?'':'none'; }
+
+  if(!body) return;
+  if(!rows.length){ body.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">\U0001F3AC</div>Wala pang creative dito.</div></div>'; return; }
+
+  body.innerHTML=rows.map(function(r){
+    var link=r.link
+      ? '<a href="'+ctEsc(r.link)+'" target="_blank" rel="noopener" style="color:var(--accent,#378ADD);font-size:11px;text-decoration:none">\U0001F517 Open link</a>'
+      : '<span style="color:var(--text3);font-size:11px">no link</span>';
+    var tags=r.tags||[];
+    var tagRows=tags.length
+      ? tags.map(function(t,ti){
+          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:0.5px solid var(--border)">'
+            +'<span style="width:6px;height:6px;border-radius:50%;background:'+ctTrackStatusColor(t.status)+';flex-shrink:0"></span>'
+            +'<span style="flex:1;font-size:12px">'+ctEsc(t.page)+'</span>'
+            +ctTagStatusSelect(r.id,ti,t.status)
+            +'<button onclick="deleteCtTag(\''+r.id+'\','+ti+')" class="ghost-btn" style="font-size:10px;padding:2px 6px;color:var(--red);border-color:rgba(239,68,68,0.2)">\u2715</button>'
+            +'</div>';
+        }).join('')
+      : '<div style="font-size:11px;color:var(--text3);padding:6px 0;border-top:0.5px solid var(--border)">Walang page na naka-tag pa.</div>';
+
+    return '<div class="form-card" style="padding:14px;margin-bottom:10px">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px">'
+      +'<div><div class="row-name" style="font-size:13px;font-weight:600">'+ctEsc(r.title||'\u2014')+'</div>'
+      +(r.notes?'<div class="row-sub" style="margin-top:2px">'+ctEsc(r.notes)+'</div>':'')
+      +'<div style="margin-top:5px">'+link+'</div></div>'
+      +'<button onclick="deleteCreativeTrack(\''+r.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2);flex-shrink:0">Delete</button>'
+      +'</div>'
+      +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-top:6px;margin-bottom:2px">Pages ('+tags.length+') \u2014 per-page status</div>'
+      +tagRows
+      +'<div style="margin-top:8px"><input class="form-input" style="font-size:11px;padding:6px 8px" list="ct-track-page-list" placeholder="+ add page (Enter)" onkeydown="ctAddTagKey(event,\''+r.id+'\')"></div>'
+      +'</div>';
+  }).join('');
+}
+
+async function saveCreativeTrack(){
+  var title=document.getElementById('ct-track-title')?.value?.trim();
+  if(!title){ showNotif('Creative title is required','error'); return; }
+  // may naiwan bang na-type na hindi na-enter? isama na rin
+  var leftover=document.getElementById('ct-chipinput')?.value?.trim();
+  if(leftover && ctPendingTags.indexOf(leftover)===-1){ ctPendingTags.push(leftover); }
+  var tags=ctPendingTags.map(function(p){ return {page:p,status:'To Do'}; });
+  var payload={
+    title:title,
+    link:document.getElementById('ct-track-link')?.value?.trim()||null,
+    notes:document.getElementById('ct-track-notes')?.value?.trim()||null,
+    tags:tags,
+    created_by:currentUser?.id,
+    created_by_name:document.getElementById('user-name-display')?.textContent||currentUser?.email||''
+  };
+  var btn=document.getElementById('ct-track-save-btn');
+  if(btn){btn.disabled=true;btn.textContent='Adding...';}
+  var{error}=await sb.from('creatives_tracking').insert(payload);
+  if(btn){btn.disabled=false;btn.textContent='Add creative';}
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Creative added! \u2713','success');
+  ['ct-track-title','ct-track-link','ct-track-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var ci=document.getElementById('ct-chipinput'); if(ci)ci.value='';
+  ctPendingTags=[]; ctRenderPending();
+  loadCreativeTrack();
+}
+
+// add page-tag sa existing creative
+async function ctAddTagKey(e,cid){
+  if(e.key!=='Enter') return;
+  e.preventDefault();
+  var v=e.target.value.trim();
+  if(!v) return;
+  var r=ctTrackCache.find(function(x){ return x.id===cid; });
+  if(!r) return;
+  if(!Array.isArray(r.tags)) r.tags=[];
+  if(r.tags.some(function(t){ return t.page===v; })){ showNotif('Naka-tag na yang page','error'); return; }
+  r.tags.push({page:v,status:'To Do'});
+  var{error}=await sb.from('creatives_tracking').update({tags:r.tags,updated_at:new Date().toISOString()}).eq('id',cid);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  loadCreativeTrack();
+}
+
+async function updateCtTagStatus(cid,ti,status){
+  var r=ctTrackCache.find(function(x){ return x.id===cid; });
+  if(!r||!r.tags[ti]) return;
+  r.tags[ti].status=status;
+  var{error}=await sb.from('creatives_tracking').update({tags:r.tags,updated_at:new Date().toISOString()}).eq('id',cid);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Status updated','success');
+  loadCreativeTrack();
+}
+
+async function deleteCtTag(cid,ti){
+  var r=ctTrackCache.find(function(x){ return x.id===cid; });
+  if(!r) return;
+  r.tags.splice(ti,1);
+  var{error}=await sb.from('creatives_tracking').update({tags:r.tags,updated_at:new Date().toISOString()}).eq('id',cid);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  loadCreativeTrack();
+}
+
+async function deleteCreativeTrack(id){
+  if(!confirm('Delete this creative?'))return;
+  var{error}=await sb.from('creatives_tracking').delete().eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Deleted','success');
+  loadCreativeTrack();
 }
