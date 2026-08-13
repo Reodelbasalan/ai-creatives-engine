@@ -5361,6 +5361,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <label class="form-label">Login email * <span class="opt">(dashboard access)</span></label>
           <input class="form-input" id="ob-email" placeholder="client@email.com">
         </div>
+        <div class="form-field" id="ob-pass-field">
+          <label class="form-label">Password <span class="opt">(bagong client lang)</span></label>
+          <div style="display:flex;gap:6px">
+            <input class="form-input" id="ob-password" placeholder="min 6 chars" style="flex:1">
+            <button type="button" class="ghost-btn" onclick="obGenPassword()" style="font-size:11px;white-space:nowrap">🎲 Auto</button>
+          </div>
+          <div id="ob-access-controls" style="display:none;margin-top:8px;gap:6px;flex-wrap:wrap"></div>
+        </div>
         <div class="form-field">
           <label class="form-label">Contact person</label>
           <input class="form-input" id="ob-contact" placeholder="Name">
