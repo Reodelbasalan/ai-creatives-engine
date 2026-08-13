@@ -1086,6 +1086,16 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 #nav-call-tracker:hover{color:#e879f9;background:rgba(232,121,249,0.07)}
 #nav-call-tracker.active{color:#e879f9;background:rgba(232,121,249,0.1);border:0.5px solid rgba(232,121,249,0.35);font-weight:600}
 #nav-call-tracker.active::before{background:#e879f9;box-shadow:0 0 8px #e879f9}
+#nav-creatives-tracking svg{color:#34d399}
+#nav-creatives-tracking{color:rgba(52,211,153,0.78)}
+#nav-creatives-tracking:hover{color:#34d399;background:rgba(52,211,153,0.07)}
+#nav-creatives-tracking.active{color:#34d399;background:rgba(52,211,153,0.1);border:0.5px solid rgba(52,211,153,0.35);font-weight:600}
+#nav-creatives-tracking.active::before{background:#34d399;box-shadow:0 0 8px #34d399}
+.ct-chipwrap{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:7px 8px;min-height:20px;transition:all 0.2s}
+.ct-chipwrap:focus-within{border-color:var(--yellow);background:var(--bg4);box-shadow:0 0 0 3px var(--yellow-glow)}
+.ct-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(52,211,153,0.12);color:#34d399;border:0.5px solid rgba(52,211,153,0.3)}
+.ct-chip-x{cursor:pointer;opacity:0.7;font-weight:700;font-size:12px;line-height:1}
+.ct-chip-x:hover{opacity:1}
 #nav-advertiser-tasks svg{color:#14b8a6}
 #nav-advertiser-tasks{color:rgba(20,184,166,0.78)}
 #nav-advertiser-tasks:hover{color:#14b8a6;background:rgba(20,184,166,0.07)}
@@ -1422,6 +1432,11 @@ body {
       <div class="nav-item" onclick="showPage('sales-tracker')" id="nav-sales-tracker">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         Sales &amp; Ads Tracker
+      </div>
+      <div class="nav-item admin-only" onclick="showPage('creatives-tracking')" id="nav-creatives-tracking">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2.5"/><path d="M2 8h20"/><path d="M7 14l3-3 4 4 2-2 2 2"/></svg>
+        Creatives Tracking
+        <span class="nav-badge" id="ct-track-badge" style="display:none">0</span>
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -2687,6 +2702,60 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <div id="at-history-body"></div>
             </div>
           </div>
+
+        </div>
+      </div>
+
+      <!-- CREATIVES TRACKING PAGE -->
+      <div class="page" id="page-creatives-tracking">
+        <div style="max-width:1000px">
+
+          <!-- Add creative -->
+          <div class="form-card" style="margin-bottom:14px">
+            <div class="form-card-title"><span>🎬</span> Add creative</div>
+            <div class="form-grid">
+              <div class="form-field full">
+                <label class="form-label">Creative title *</label>
+                <input class="form-input" id="ct-track-title" placeholder="e.g. VitaSupremo UGC v3 — hook A">
+              </div>
+              <div class="form-field full">
+                <label class="form-label">Link</label>
+                <input class="form-input" id="ct-track-link" placeholder="https://drive.google.com/... or FB post link">
+              </div>
+              <div class="form-field full">
+                <label class="form-label">Pages / Brands — type tapos Enter <span class="opt">(pwede madami)</span></label>
+                <div class="ct-chipwrap" id="ct-chipwrap" onclick="document.getElementById('ct-chipinput').focus()">
+                  <input id="ct-chipinput" list="ct-track-page-list" placeholder="Type page name + Enter..." style="flex:1;min-width:140px;background:transparent;border:none;color:var(--text);font-size:12.5px;outline:none;font-family:'Inter',sans-serif;padding:2px" onkeydown="ctChipKey(event)">
+                  <datalist id="ct-track-page-list"></datalist>
+                </div>
+              </div>
+              <div class="form-field full">
+                <label class="form-label">Notes (optional)</label>
+                <textarea class="form-textarea" id="ct-track-notes" rows="2" placeholder="Angle, result, remarks..."></textarea>
+              </div>
+            </div>
+            <div style="margin-top:12px">
+              <button class="yellow-btn" id="ct-track-save-btn" onclick="saveCreativeTrack()">Add creative</button>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+            <input class="form-input" id="ct-track-search" placeholder="Search title, page, notes..." style="max-width:260px" oninput="renderCreativeTrack()">
+            <select class="form-select" id="ct-track-filter-page" style="max-width:180px" onchange="renderCreativeTrack()">
+              <option value="">All pages</option>
+            </select>
+            <select class="form-select" id="ct-track-filter-status" style="max-width:150px" onchange="renderCreativeTrack()">
+              <option value="">All status</option>
+              <option value="To Do">To Do</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Done">Done</option>
+              <option value="Published">Published</option>
+            </select>
+          </div>
+
+          <!-- Cards -->
+          <div id="ct-track-body"></div>
 
         </div>
       </div>
