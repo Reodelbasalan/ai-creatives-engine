@@ -1101,6 +1101,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 #nav-client-materials:hover{color:#60a5fa;background:rgba(96,165,250,0.07)}
 #nav-client-materials.active{color:#60a5fa;background:rgba(96,165,250,0.1);border:0.5px solid rgba(96,165,250,0.35);font-weight:600}
 #nav-client-materials.active::before{background:#60a5fa;box-shadow:0 0 8px #60a5fa}
+#nav-client-dashboard svg{color:#FACC15}
+#nav-client-dashboard{color:rgba(250,204,21,0.8)}
+#nav-client-dashboard:hover{color:#FACC15;background:rgba(250,204,21,0.07)}
+#nav-client-dashboard.active{color:#FACC15;background:rgba(250,204,21,0.1);border:0.5px solid rgba(250,204,21,0.35);font-weight:600}
+#nav-client-dashboard.active::before{background:#FACC15;box-shadow:0 0 8px #FACC15}
 #nav-client-onboarding svg{color:#60a5fa}
 #nav-client-onboarding{color:rgba(96,165,250,0.78)}
 #nav-client-onboarding:hover{color:#60a5fa;background:rgba(96,165,250,0.07)}
@@ -1415,6 +1420,10 @@ body {
       <div class="nav-item" onclick="showPage('worklog')" id="nav-worklog">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
         Work log
+      </div>
+      <div class="nav-item" onclick="showPage('client-dashboard')" id="nav-client-dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        My Dashboard
       </div>
       <div class="nav-item" onclick="showPage('profile')" id="nav-profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
