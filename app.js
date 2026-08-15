@@ -9974,6 +9974,7 @@ async function deleteCreativeTrack(id){
 // CLIENT ONBOARDING
 // ============================================================
 var clientOnbCache=[];
+var clientLoginEmails=[];
 var obTmpSteps=[];   // [{label, done}]
 var obTmpFiles=[];   // [{label, url}]
 var OB_DEFAULT_STEPS=['Contract signed','Down payment received','Assets / materials received','Kickoff call done','Campaign live'];
@@ -9990,6 +9991,11 @@ function obCatMeta(k){ for(var i=0;i<OB_CATEGORIES.length;i++){ if(OB_CATEGORIES
 // ---------- ADMIN ----------
 async function loadClientOnb(){
   if(currentUserRole!=='admin'){ showNotif('Admin only!','error'); showPage('dashboard'); return; }
+  // Load client login accounts (para sa email matching helper)
+  try{
+    var{data:profs}=await sb.from('profiles').select('email,role').eq('role','client');
+    clientLoginEmails=(profs||[]).map(function(p){return (p.email||'').toLowerCase().trim();}).filter(Boolean);
+  }catch(e){ clientLoginEmails=[]; }
   var{data,error}=await sb.from('clients_onboarding').select('*').order('created_at',{ascending:false});
   if(error){ showNotif('Error loading clients: '+error.message,'error'); clientOnbCache=[]; }
   else { clientOnbCache=(data||[]).map(function(c){ if(!Array.isArray(c.steps))c.steps=[]; if(!Array.isArray(c.files))c.files=[]; return c; }); }
@@ -10036,6 +10042,32 @@ function renderClientOnb(){
 }
 
 // ---- modal (add/edit) ----
+function obCheckEmailMatch(){
+  var box=document.getElementById('ob-email-match');
+  if(!box) return;
+  var email=(document.getElementById('ob-email')?.value||'').toLowerCase().trim();
+  if(!email){
+    // walang laman: ipakita available login emails para makapili
+    if(clientLoginEmails.length){
+      box.innerHTML='<span style="color:var(--text3)">Client login accounts: </span>'+clientLoginEmails.map(function(e){
+        return '<button type="button" onclick="obPickEmail(\''+e.replace(/'/g,"")+'\')" class="ghost-btn" style="font-size:10px;padding:2px 7px;margin:2px 3px 0 0">'+ctEsc(e)+'</button>';
+      }).join('');
+    } else { box.innerHTML=''; }
+    return;
+  }
+  if(clientLoginEmails.indexOf(email)>=0){
+    box.innerHTML='<span style="color:#22c55e">\u2713 May katugmang login account. Makikita ni client ang dashboard.</span>';
+  } else {
+    box.innerHTML='<span style="color:#f59e0b">\u26a0 Walang login account na tugma sa email na ito.</span>'
+      +(clientLoginEmails.length?'<br><span style="color:var(--text3)">Available: </span>'+clientLoginEmails.map(function(e){
+        return '<button type="button" onclick="obPickEmail(\''+e.replace(/'/g,"")+'\')" class="ghost-btn" style="font-size:10px;padding:2px 7px;margin:2px 3px 0 0">'+ctEsc(e)+'</button>';
+      }).join(''):'');
+  }
+}
+function obPickEmail(e){
+  var el=document.getElementById('ob-email'); if(el){ el.value=e; obCheckEmailMatch(); }
+}
+
 function openClientOnbModal(id){
   obTmpSteps=[]; obTmpFiles=[];
   var editId=document.getElementById('ob-edit-id');
@@ -10070,6 +10102,7 @@ function openClientOnbModal(id){
   }
   obRenderStepsEdit(); obRenderFilesEdit();
   document.getElementById('client-onb-modal').classList.add('open');
+  obCheckEmailMatch();
 }
 function closeClientOnbModal(){ document.getElementById('client-onb-modal').classList.remove('open'); }
 
@@ -10318,7 +10351,7 @@ async function renderClientOnbView(){
   var{data:allC}=await sb.from('clients_onboarding').select('*');
   var data=(allC||[]).find(function(x){ return (x.email||'').toLowerCase().trim()===email; });
   if(!data){
-    el.innerHTML='<div class="form-card" style="padding:16px;text-align:center;color:var(--text3);font-size:12.5px">Wala pang onboarding record para sa account na ito. I-contact ang admin.</div>';
+    el.innerHTML='<div class="form-card" style="padding:16px;text-align:center;color:var(--text3);font-size:12.5px">Wala pang onboarding record na naka-link sa <b style="color:var(--text)">'+ctEsc(currentUser.email||'')+'</b>.<br><span style="font-size:11px">I-contact ang admin — kailangan pareho ang email sa onboarding record at sa login na ito.</span></div>';
     return;
   }
   var c=data;
