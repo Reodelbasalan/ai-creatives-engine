@@ -10189,9 +10189,15 @@ async function saveClientOnb(){
       if(btn) btn.textContent='Creating account...';
       var acc=await obCreateClientAccount(email,pwd,name);
       if(acc && acc.ok){
-        showNotif('Client + login account created! Ibigay mo email+password sa client. \u2713','success');
+        if(acc.needConfirm){
+          showNotif('Account created! PERO kailangan mag-confirm ng email muna si client bago makapasok. I-off ang "Confirm email" sa Supabase para diretso na.','success');
+        } else if(acc.warn){
+          showNotif(acc.warn,'error');
+        } else {
+          showNotif('Client + login account created! Ibigay mo email+password sa client. \u2713','success');
+        }
       } else {
-        showNotif('Onboarding saved, pero account error: '+((acc&&acc.error)||'unknown'),'error');
+        showNotif('Account error: '+((acc&&acc.error)||'unknown'),'error');
       }
     }
   } else {
@@ -10221,15 +10227,29 @@ async function obCreateClientAccount(email, password, name){
       email:email, password:password,
       options:{ data:{ name:name||'', role:'client' } }
     });
-    // ID out immediately para di makaapekto sa kahit ano
-    try{ await tmp.auth.signOut(); }catch(e){}
-    if(error){ return {error:error.message}; }
-    var newId=data?.user?.id||null;
-    // set role=client sa profiles (best-effort — gamit main sb na admin)
-    if(newId){
-      try{ await sb.from('profiles').upsert({ id:newId, email:email, name:name||email, role:'client' }, { onConflict:'id' }); }catch(e){}
+    if(error){
+      try{ await tmp.auth.signOut(); }catch(e){}
+      return {error:error.message};
     }
-    return {ok:true, user_id:newId};
+    var newId=data?.user?.id||null;
+    // Kung na-signup pero walang session at may identities na 0 = existing na yung email
+    if(data && data.user && Array.isArray(data.user.identities) && data.user.identities.length===0){
+      try{ await tmp.auth.signOut(); }catch(e){}
+      return {error:'May account na ang email na ito. Gumamit ng ibang email o i-check sa Supabase.'};
+    }
+    try{ await tmp.auth.signOut(); }catch(e){}
+    // set role=client sa profiles
+    if(newId){
+      var upErr=null;
+      try{
+        var r=await sb.from('profiles').upsert({ id:newId, email:email, name:name||email, role:'client' }, { onConflict:'id' });
+        upErr=r.error;
+      }catch(e){ upErr=e; }
+      if(upErr){ return {ok:true, user_id:newId, warn:'Account created pero role setup failed: '+(upErr.message||upErr)}; }
+    }
+    // Check kung kailangan pa ng email confirmation
+    var needConfirm = data && data.user && !data.session && !data.user.confirmed_at && !data.user.email_confirmed_at;
+    return {ok:true, user_id:newId, needConfirm:needConfirm};
   }catch(e){ return {error:e.message||String(e)}; }
 }
 
