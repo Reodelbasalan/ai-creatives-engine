@@ -5361,7 +5361,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         </div>
         <div class="form-field">
           <label class="form-label">Login email * <span class="opt">(dashboard access)</span></label>
-          <input class="form-input" id="ob-email" placeholder="client@email.com">
+          <input class="form-input" id="ob-email" placeholder="client@email.com" oninput="obCheckEmailMatch()">
+          <div id="ob-email-match" style="font-size:11px;margin-top:5px"></div>
         </div>
         <div class="form-field" id="ob-pass-field">
           <label class="form-label">Password <span class="opt">(bagong client lang)</span></label>
