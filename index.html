@@ -1096,6 +1096,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 #nav-client-creatives:hover{color:#34d399;background:rgba(52,211,153,0.07)}
 #nav-client-creatives.active{color:#34d399;background:rgba(52,211,153,0.1);border:0.5px solid rgba(52,211,153,0.35);font-weight:600}
 #nav-client-creatives.active::before{background:#34d399;box-shadow:0 0 8px #34d399}
+#nav-client-materials svg{color:#60a5fa}
+#nav-client-materials{color:rgba(96,165,250,0.78)}
+#nav-client-materials:hover{color:#60a5fa;background:rgba(96,165,250,0.07)}
+#nav-client-materials.active{color:#60a5fa;background:rgba(96,165,250,0.1);border:0.5px solid rgba(96,165,250,0.35);font-weight:600}
+#nav-client-materials.active::before{background:#60a5fa;box-shadow:0 0 8px #60a5fa}
 #nav-client-onboarding svg{color:#60a5fa}
 #nav-client-onboarding{color:rgba(96,165,250,0.78)}
 #nav-client-onboarding:hover{color:#60a5fa;background:rgba(96,165,250,0.07)}
@@ -1418,6 +1423,10 @@ body {
       <div class="nav-item" onclick="showPage('client-creatives')" id="nav-client-creatives">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2.5"/><path d="M2 8h20"/><path d="M7 14l3-3 4 4 2-2 2 2"/></svg>
         My Creatives
+      </div>
+      <div class="nav-item" onclick="showPage('client-materials')" id="nav-client-materials">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h6l2 2h8a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+        My Materials
       </div>
       <div class="nav-item" onclick="showPage('chat')" id="nav-chat">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
@@ -3572,6 +3581,17 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       </div>
 
       <!-- CLIENT DASHBOARD (for client role) -->
+      <!-- CLIENT: MY MATERIALS PAGE -->
+      <div class="page" id="page-client-materials">
+        <div style="max-width:1000px">
+          <div style="margin-bottom:1.5rem">
+            <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px">My Materials 📁</div>
+            <div style="font-size:12px;color:var(--text3)">Lahat ng documents, files, at links para sa inyong account.</div>
+          </div>
+          <div id="client-materials-body"></div>
+        </div>
+      </div>
+
       <!-- CLIENT: MY CREATIVES PAGE -->
       <div class="page" id="page-client-creatives">
         <div style="max-width:1000px">
