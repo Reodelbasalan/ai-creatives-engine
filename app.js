@@ -319,7 +319,7 @@ function initSecurityListeners(){
 // ROLE-BASED PAGE PROTECTION
 var ADMIN_PAGES=['dashboard','new-project','all-projects','users','clients','analytics','submission','settings','chat','activity','attendance'];
 var EDITOR_PAGES=['editor-portal','all-projects','chat','profile','worklog','automation','clients','activity','attendance','for-upload'];
-var CLIENT_PAGES=['client-dashboard','profile','sales-tracker','client-creatives'];
+var CLIENT_PAGES=['client-dashboard','profile','sales-tracker','client-creatives','client-materials'];
 
 function canAccessPage(page){
   if(currentUserRole==='admin')return true;
@@ -465,7 +465,7 @@ function applyRoleUI(){
     // Client — most restricted
     document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
-    var clientNavs=['nav-profile','nav-client-creatives','nav-sales-tracker'];
+    var clientNavs=['nav-profile','nav-client-creatives','nav-client-materials','nav-sales-tracker'];
     clientNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el)el.style.display='flex';
@@ -535,7 +535,7 @@ function showPage(page){
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
   try{ localStorage.setItem('ace_last_page',page); }catch(e){}
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker','creatives-tracking':'Creatives Tracking','client-onboarding':'Client Onboarding','client-creatives':'My Creatives'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker','creatives-tracking':'Creatives Tracking','client-onboarding':'Client Onboarding','client-creatives':'My Creatives','client-materials':'My Materials'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
@@ -563,6 +563,7 @@ function showPage(page){
   if(page==='creatives-tracking'){loadCreativeTrack();}
   if(page==='client-onboarding'){loadClientOnb();}
   if(page==='client-creatives'){loadClientCreatives();}
+  if(page==='client-materials'){loadClientMaterials();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
@@ -10330,6 +10331,39 @@ async function deleteClientOnb(){
 }
 
 // ---------- CLIENT SIDE (read-only, email-matched) ----------
+async function loadClientMaterials(){
+  var el=document.getElementById('client-materials-body');
+  if(!el || !currentUser) return;
+  var email=(currentUser.email||'').toLowerCase().trim();
+  var{data:allC}=await sb.from('clients_onboarding').select('*');
+  var c=(allC||[]).find(function(x){ return (x.email||'').toLowerCase().trim()===email; });
+  if(!c){
+    el.innerHTML='<div class="form-card" style="padding:16px;text-align:center;color:var(--text3);font-size:12.5px">Walang naka-link na account. I-contact ang admin.</div>';
+    return;
+  }
+  var files=Array.isArray(c.files)?c.files:[];
+  if(!files.length){
+    el.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">\U0001F4C1</div>Wala pang materials dito. Babalik ka mamaya!</div></div>';
+    return;
+  }
+  var groups={};
+  files.forEach(function(f){ var k=f.cat||'other'; (groups[k]=groups[k]||[]).push(f); });
+  var html='';
+  OB_CATEGORIES.forEach(function(cat){
+    var items=groups[cat.key]; if(!items||!items.length) return;
+    html+='<div class="form-card" style="padding:14px;margin-bottom:12px">';
+    html+='<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">'+cat.icon+' '+cat.label+' <span style="color:var(--text3);font-weight:400">('+items.length+')</span></div>';
+    html+=items.map(function(f){
+      var safeUrl=ctEsc(f.url);
+      return '<div class="ob-step"><span style="flex:1;font-size:12.5px">\U0001F4C4 '+ctEsc(f.label||f.url)+'</span>'
+        +'<a href="'+safeUrl+'" target="_blank" rel="noopener" class="ghost-btn" style="font-size:10px;padding:3px 8px;text-decoration:none;color:var(--accent,#378ADD)">Open</a>'
+        +'<button onclick="obCopyLink(\''+safeUrl+'\',this)" class="ghost-btn" style="font-size:10px;padding:3px 8px">\U0001F4CB Copy</button></div>';
+    }).join('');
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
 async function loadClientCreatives(){
   var el=document.getElementById('client-creatives-body');
   if(!el || !currentUser) return;
