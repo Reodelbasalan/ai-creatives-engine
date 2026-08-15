@@ -319,7 +319,7 @@ function initSecurityListeners(){
 // ROLE-BASED PAGE PROTECTION
 var ADMIN_PAGES=['dashboard','new-project','all-projects','users','clients','analytics','submission','settings','chat','activity','attendance'];
 var EDITOR_PAGES=['editor-portal','all-projects','chat','profile','worklog','automation','clients','activity','attendance','for-upload'];
-var CLIENT_PAGES=['client-dashboard','profile'];
+var CLIENT_PAGES=['client-dashboard','profile','sales-tracker','client-creatives'];
 
 function canAccessPage(page){
   if(currentUserRole==='admin')return true;
@@ -465,7 +465,7 @@ function applyRoleUI(){
     // Client — most restricted
     document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
-    var clientNavs=['nav-profile'];
+    var clientNavs=['nav-profile','nav-client-creatives','nav-sales-tracker'];
     clientNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el)el.style.display='flex';
@@ -535,7 +535,7 @@ function showPage(page){
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
   try{ localStorage.setItem('ace_last_page',page); }catch(e){}
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker','creatives-tracking':'Creatives Tracking','client-onboarding':'Client Onboarding'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker','creatives-tracking':'Creatives Tracking','client-onboarding':'Client Onboarding','client-creatives':'My Creatives'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
@@ -562,6 +562,7 @@ function showPage(page){
   if(page==='sales-tracker'){loadSalesTracker();}
   if(page==='creatives-tracking'){loadCreativeTrack();}
   if(page==='client-onboarding'){loadClientOnb();}
+  if(page==='client-creatives'){loadClientCreatives();}
   if(page==='chat'){loadChat();}
   if(page==='profile'){loadProfile();}
 }
@@ -10329,6 +10330,42 @@ async function deleteClientOnb(){
 }
 
 // ---------- CLIENT SIDE (read-only, email-matched) ----------
+async function loadClientCreatives(){
+  var el=document.getElementById('client-creatives-body');
+  if(!el || !currentUser) return;
+  var email=(currentUser.email||'').toLowerCase().trim();
+  // hanapin client record para makuha ang name
+  var{data:allC}=await sb.from('clients_onboarding').select('*');
+  var mine=(allC||[]).find(function(x){ return (x.email||'').toLowerCase().trim()===email; });
+  var clientName=mine?(mine.name||''):'';
+  if(!clientName){
+    el.innerHTML='<div class="form-card" style="padding:16px;text-align:center;color:var(--text3);font-size:12.5px">Walang naka-link na account. I-contact ang admin.</div>';
+    return;
+  }
+  var{data:crv}=await sb.from('creatives_tracking').select('*').order('created_at',{ascending:false});
+  var rows=(crv||[]).filter(function(r){
+    var tags=Array.isArray(r.tags)?r.tags:[];
+    return tags.some(function(t){ return (t.page||'').toLowerCase().trim()===clientName.toLowerCase().trim(); });
+  });
+  if(!rows.length){
+    el.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">\U0001F3AC</div>Wala pang creatives dito. Babalik ka mamaya!</div></div>';
+    return;
+  }
+  el.innerHTML='<div class="data-table"><div class="table-head" style="grid-template-columns:2fr 1fr 1.1fr"><span>Creative</span><span>Link</span><span>Status</span></div>'
+    +rows.map(function(r){
+      var tag=(Array.isArray(r.tags)?r.tags:[]).find(function(t){ return (t.page||'').toLowerCase().trim()===clientName.toLowerCase().trim(); })||{};
+      var st=tag.status||'To Do';
+      var col=st==='Published'?'#34d399':st==='Done'?'var(--green)':st==='In Progress'?'var(--amber)':'var(--text3)';
+      var link=r.link?'<a href="'+ctEsc(r.link)+'" target="_blank" rel="noopener" style="color:var(--accent,#378ADD);font-size:11px;text-decoration:none">\U0001F517 Open</a>':'<span style="color:var(--text3);font-size:11px">\u2014</span>';
+      return '<div class="table-row" style="grid-template-columns:2fr 1fr 1.1fr">'
+        +'<div><div class="row-name">'+ctEsc(r.title||'\u2014')+'</div>'+(r.notes?'<div class="row-sub">'+ctEsc(r.notes)+'</div>':'')+'</div>'
+        +'<div>'+link+'</div>'
+        +'<div><span style="font-size:10px;font-weight:700;color:'+col+'">'+ctEsc(st)+'</span></div>'
+        +'</div>';
+    }).join('')
+    +'</div>';
+}
+
 function obCopyLink(url, btn){
   try{
     navigator.clipboard.writeText(url).then(function(){
