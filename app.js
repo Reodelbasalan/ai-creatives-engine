@@ -8777,6 +8777,8 @@ function ctFilteredLogs(){
   return callLogsCache.filter(function(c){
     if(va && c.agent_id!==va) return false;
     if(deal && (c.deal_status||'')!==deal) return false;
+    var actF=document.getElementById('ct-filter-action')?.value||'';
+    if(actF && (c.next_action||'')!==actF) return false;
     if(from||to){
       // Local date (hindi UTC) — para tugma sa "Today"/"This Week" na local time din ang basehan
       var d=c.call_at?projFmtDate(new Date(c.call_at)):'';
@@ -8836,15 +8838,83 @@ function renderCallLogs(){
       callTime=d.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',hour12:true});
     }
     var vaLine=isAdmin&&c.agent_name?'<div class="row-sub" style="font-size:10px">👤 '+ctEsc(c.agent_name)+'</div>':'';
-    return '<div class="table-row" style="grid-template-columns:1.6fr 1.3fr 1.1fr 1fr 0.9fr 130px;cursor:pointer" onclick="editCallLog(\''+c.id+'\')" title="Click to view / edit">'
+    return '<div class="table-row" style="grid-template-columns:1.5fr 1.2fr 1fr 0.9fr 1fr 0.8fr 120px;cursor:pointer" onclick="editCallLog(\''+c.id+'\')" title="Click to view / edit">'
       +'<div><div class="row-name">'+ctEsc(c.client||'—')+'</div><div class="row-sub">'+ctEsc(c.contact||'')+'</div>'+vaLine+'</div>'
       +'<div><div class="row-meta" style="font-size:11px">'+ctEsc(c.phone||'—')+'</div><div class="row-sub">'+ctEsc(c.package||'')+'</div></div>'
       +'<div><div class="row-meta" style="font-size:11px">'+callDate+'</div><div class="row-sub">'+callTime+'</div><div class="row-sub" style="font-size:10px">'+ctEsc(c.call_status||'')+'</div></div>'
       +'<div><span style="font-size:10px;color:'+dealColor+';font-weight:700">'+ctEsc(c.deal_status||'Prospect')+'</span></div>'
+      +'<div>'+ctActionBadge(c)+'</div>'
       +'<div class="row-meta" style="font-size:11px;color:'+(Number(c.est_value)>0?'var(--amber)':'var(--text3)')+'">'+ctPeso(c.est_value)+'</div>'
       +'<div style="display:flex;gap:4px" onclick="event.stopPropagation()"><button onclick="editCallLog(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px">Edit</button><button onclick="deleteCallLog(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Del</button></div>'
       +'</div>';
   }).join('');
+  renderFollowupView();
+}
+
+function ctActionColor(a){
+  return a==='Call back'?'#f59e0b':a==='Follow up'?'#60a5fa':a==='Waiting'?'#a78bfa':a==='No answer'?'#ef4444':a==='Done'?'#22c55e':'var(--text3)';
+}
+function ctActionBadge(c){
+  var a=c.next_action||'';
+  if(!a) return '<span style="color:var(--text3);font-size:11px">—</span>';
+  var col=ctActionColor(a);
+  var due='';
+  if(c.followup_date){
+    var today=projFmtDate(new Date());
+    var od=c.followup_date<today;
+    var isToday=c.followup_date===today;
+    due='<div class="row-sub" style="font-size:9.5px;color:'+(od?'#ef4444':isToday?'#f59e0b':'var(--text3)')+'">'+(od?'⚠ ':isToday?'📅 ':'')+ctFmtShort(c.followup_date)+'</div>';
+  }
+  return '<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:'+col+'22;color:'+col+';border:0.5px solid '+col+'55">'+ctEsc(a)+'</span>'+due;
+}
+function ctFmtShort(ymd){
+  try{ var p=ymd.split('-'); var d=new Date(p[0],p[1]-1,p[2]); return d.toLocaleDateString('en-PH',{month:'short',day:'numeric'}); }catch(e){ return ymd; }
+}
+
+var ctFollowupMode=false;
+function ctToggleFollowupView(){
+  ctFollowupMode=!ctFollowupMode;
+  var fv=document.getElementById('ct-followup-view');
+  var mt=document.getElementById('ct-main-table');
+  var btn=document.getElementById('ct-followup-toggle');
+  if(fv) fv.style.display=ctFollowupMode?'':'none';
+  if(mt) mt.style.display=ctFollowupMode?'none':'';
+  if(btn){ btn.style.color=ctFollowupMode?'#f59e0b':''; btn.textContent=ctFollowupMode?'📋 Back to all calls':'🔔 Needs follow-up'; }
+  if(ctFollowupMode) renderFollowupView();
+}
+
+function renderFollowupView(){
+  var body=document.getElementById('ct-followup-body');
+  if(!body) return;
+  var rows=callLogsCache.filter(function(c){
+    return c.next_action && c.next_action!=='Done' && c.followup_date;
+  }).sort(function(a,b){ return (a.followup_date||'')<(b.followup_date||'')?-1:1; });
+
+  var cnt=document.getElementById('ct-followup-count');
+  if(cnt) cnt.textContent='('+rows.length+')';
+
+  if(!rows.length){ body.innerHTML='<div class="table-empty"><div class="table-empty-icon">✅</div>Walang pending follow-up. All clear!</div>'; return; }
+  var today=projFmtDate(new Date());
+  body.innerHTML=rows.map(function(c){
+    var od=c.followup_date<today;
+    var isToday=c.followup_date===today;
+    var dcol=od?'#ef4444':isToday?'#f59e0b':'var(--text2)';
+    var dlabel=(od?'⚠ Overdue · ':isToday?'📅 Today · ':'')+ctFmtShort(c.followup_date);
+    return '<div class="table-row" style="grid-template-columns:1.6fr 1.2fr 1fr 1fr 110px;cursor:pointer" onclick="editCallLog(\''+c.id+'\')">'
+      +'<div><div class="row-name">'+ctEsc(c.client||'—')+'</div><div class="row-sub">'+ctEsc(c.contact||'')+'</div></div>'
+      +'<div class="row-meta" style="font-size:11px">'+ctEsc(c.phone||'—')+'</div>'
+      +'<div><span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:'+ctActionColor(c.next_action)+'22;color:'+ctActionColor(c.next_action)+';border:0.5px solid '+ctActionColor(c.next_action)+'55">'+ctEsc(c.next_action)+'</span></div>'
+      +'<div class="row-meta" style="font-size:11px;color:'+dcol+';font-weight:600">'+dlabel+'</div>'
+      +'<div style="display:flex;gap:4px" onclick="event.stopPropagation()"><button onclick="ctMarkDone(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:#22c55e;border-color:rgba(34,197,94,0.3)">✓ Done</button></div>'
+      +'</div>';
+  }).join('');
+}
+
+async function ctMarkDone(id){
+  var{error}=await sb.from('call_logs').update({next_action:'Done'}).eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Marked done ✓','success');
+  loadCallTracker();
 }
 
 function renderVAPerformance(){
@@ -8904,7 +8974,9 @@ async function saveCallLog(){
     call_at:callAt,
     call_status:document.getElementById('ct-callstatus')?.value||null,
     deal_status:document.getElementById('ct-dealstatus')?.value||'Prospect',
-    est_value:Number(document.getElementById('ct-value')?.value)||0
+    est_value:Number(document.getElementById('ct-value')?.value)||0,
+    next_action:document.getElementById('ct-nextaction')?.value||null,
+    followup_date:document.getElementById('ct-followup')?.value||null
   };
   var editId=document.getElementById('ct-edit-id')?.value||'';
   var btn=document.getElementById('ct-save-btn');
@@ -8918,7 +8990,8 @@ async function saveCallLog(){
   if(btn){btn.disabled=false;btn.textContent='Log call';}
   if(error){ showNotif('Error: '+error.message,'error'); return; }
   showNotif(editId?'Call updated! ✓':'Call logged! ✓','success');
-  ['ct-client','ct-contact','ct-phone','ct-package','ct-calldate','ct-calltime','ct-value'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['ct-client','ct-contact','ct-phone','ct-package','ct-calldate','ct-calltime','ct-value','ct-followup'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var naEl=document.getElementById('ct-nextaction'); if(naEl)naEl.value='';
   var ds=document.getElementById('ct-dealstatus'); if(ds)ds.value='Prospect';
   var cs=document.getElementById('ct-callstatus'); if(cs)cs.value='Completed';
   cancelCallLogEdit();
@@ -8942,6 +9015,8 @@ function editCallLog(id){
   document.getElementById('ct-callstatus').value=c.call_status||'Completed';
   document.getElementById('ct-dealstatus').value=c.deal_status||'Prospect';
   document.getElementById('ct-value').value=c.est_value||0;
+  var naE=document.getElementById('ct-nextaction'); if(naE)naE.value=c.next_action||'';
+  var fuE=document.getElementById('ct-followup'); if(fuE)fuE.value=c.followup_date||'';
   var agentSel=document.getElementById('ct-agent');
   if(agentSel && currentUserRole==='admin'){ agentSel.value=c.agent_id||''; }
   var titleEl=document.getElementById('ct-form-title'); if(titleEl) titleEl.textContent='Edit call — '+(c.client||'');
@@ -8966,7 +9041,7 @@ async function deleteCallLog(id){
 }
 
 function clearCallFilters(){
-  ['ct-search','ct-filter-va','ct-filter-deal','ct-date-from','ct-date-to'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['ct-search','ct-filter-va','ct-filter-deal','ct-filter-action','ct-date-from','ct-date-to'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   // reset preset pills to All time
   document.querySelectorAll('#ct-date-presets .proj-preset-pill').forEach(function(p){ p.classList.remove('active'); });
   var allBtn=document.querySelector('#ct-date-presets .proj-preset-pill[onclick*="\'all\'"]');
