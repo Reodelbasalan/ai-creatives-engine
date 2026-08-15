@@ -465,7 +465,7 @@ function applyRoleUI(){
     // Client — most restricted
     document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
-    var clientNavs=['nav-profile','nav-client-creatives','nav-client-materials','nav-sales-tracker'];
+    var clientNavs=['nav-client-dashboard','nav-profile','nav-client-creatives','nav-client-materials','nav-sales-tracker'];
     clientNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el)el.style.display='flex';
