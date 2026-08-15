@@ -10276,12 +10276,31 @@ async function deleteClientOnb(){
 }
 
 // ---------- CLIENT SIDE (read-only, email-matched) ----------
+function obCopyLink(url, btn){
+  try{
+    navigator.clipboard.writeText(url).then(function(){
+      var orig=btn.textContent; btn.textContent='\u2713 Copied'; btn.style.color='#22c55e';
+      setTimeout(function(){ btn.textContent=orig; btn.style.color=''; },1500);
+    }).catch(function(){
+      // fallback
+      var ta=document.createElement('textarea'); ta.value=url; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); showNotif('Link copied','success'); }catch(e){ showNotif('Copy failed','error'); }
+      document.body.removeChild(ta);
+    });
+  }catch(e){ showNotif('Copy failed','error'); }
+}
+
 async function renderClientOnbView(){
   var el=document.getElementById('client-onb-view');
   if(!el || !currentUser) return;
-  var email=(currentUser.email||'').toLowerCase();
-  var{data}=await sb.from('clients_onboarding').select('*').eq('email',email).maybeSingle();
-  if(!data){ el.innerHTML=''; return; }
+  var email=(currentUser.email||'').toLowerCase().trim();
+  // Case-insensitive match: kunin lahat tapos i-match sa JS (para tugma kahit may malaking letra sa DB)
+  var{data:allC}=await sb.from('clients_onboarding').select('*');
+  var data=(allC||[]).find(function(x){ return (x.email||'').toLowerCase().trim()===email; });
+  if(!data){
+    el.innerHTML='<div class="form-card" style="padding:16px;text-align:center;color:var(--text3);font-size:12.5px">Wala pang onboarding record para sa account na ito. I-contact ang admin.</div>';
+    return;
+  }
   var c=data;
   if(!Array.isArray(c.steps))c.steps=[];
   if(!Array.isArray(c.files))c.files=[];
@@ -10305,7 +10324,10 @@ async function renderClientOnbView(){
       var items=groups[cat.key]; if(!items||!items.length) return;
       filesHtml+='<div style="margin-top:8px"><div style="font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">'+cat.icon+' '+cat.label+'</div>';
       filesHtml+=items.map(function(f){
-        return '<div class="ob-step"><span style="flex:1;font-size:12px"><a href="'+ctEsc(f.url)+'" target="_blank" rel="noopener" style="color:var(--accent,#378ADD);text-decoration:none">\U0001F4C4 '+ctEsc(f.label||f.url)+'</a></span></div>';
+        var safeUrl=ctEsc(f.url);
+        return '<div class="ob-step"><span style="flex:1;font-size:12px">\U0001F4C4 '+ctEsc(f.label||f.url)+'</span>'
+          +'<a href="'+safeUrl+'" target="_blank" rel="noopener" class="ghost-btn" style="font-size:10px;padding:3px 8px;text-decoration:none;color:var(--accent,#378ADD)">Open</a>'
+          +'<button onclick="obCopyLink(\''+safeUrl+'\',this)" class="ghost-btn" style="font-size:10px;padding:3px 8px">\U0001F4CB Copy link</button></div>';
       }).join('');
       filesHtml+='</div>';
     });
