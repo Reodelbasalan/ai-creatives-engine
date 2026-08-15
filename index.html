@@ -2577,21 +2577,6 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <label class="form-label">Est. Value (₱)</label>
                 <input class="form-input" id="ct-value" type="number" min="0" step="1" placeholder="0">
               </div>
-              <div class="form-field">
-                <label class="form-label">Next action</label>
-                <select class="form-select" id="ct-nextaction">
-                  <option value="">— None —</option>
-                  <option value="Call back">Call back</option>
-                  <option value="Follow up">Follow up</option>
-                  <option value="Waiting">Waiting</option>
-                  <option value="No answer">No answer</option>
-                  <option value="Done">Done</option>
-                </select>
-              </div>
-              <div class="form-field">
-                <label class="form-label">Follow-up date <span class="opt">(kailan)</span></label>
-                <input class="form-input" id="ct-followup" type="date">
-              </div>
               <div class="form-field admin-only" id="ct-agent-field">
                 <label class="form-label">Agent (VA)</label>
                 <select class="form-select" id="ct-agent">
@@ -2619,16 +2604,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <option value="Lost">Lost</option>
               <option value="Cold Lead">Cold Lead</option>
             </select>
-            <select class="form-select" id="ct-filter-action" style="max-width:150px" onchange="renderCallLogs()">
-              <option value="">All actions</option>
-              <option value="Call back">Call back</option>
-              <option value="Follow up">Follow up</option>
-              <option value="Waiting">Waiting</option>
-              <option value="No answer">No answer</option>
-              <option value="Done">Done</option>
-            </select>
             <button class="ghost-btn" onclick="clearCallFilters()" style="font-size:11px">Clear</button>
-            <button class="ghost-btn" id="ct-followup-toggle" onclick="ctToggleFollowupView()" style="font-size:11px;margin-left:auto">🔔 Needs follow-up</button>
           </div>
           <!-- Date preset pills -->
           <div class="proj-date-presets" id="ct-date-presets" style="margin-bottom:12px">
@@ -2646,29 +2622,13 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <input type="hidden" id="ct-date-to"/>
           </div>
 
-          <!-- Needs follow-up view (hidden by default) -->
-          <div id="ct-followup-view" style="display:none;margin-bottom:16px">
-            <div class="form-card-title" style="margin-bottom:8px"><span>🔔</span> Needs follow-up <span class="opt" id="ct-followup-count"></span></div>
-            <div class="data-table">
-              <div class="table-head" style="grid-template-columns:1.6fr 1.2fr 1fr 1fr 110px">
-                <span>Client / Contact</span>
-                <span>Phone</span>
-                <span>Action</span>
-                <span>Follow-up date</span>
-                <span></span>
-              </div>
-              <div id="ct-followup-body"></div>
-            </div>
-          </div>
-
           <!-- Main table -->
-          <div class="data-table" id="ct-main-table" style="margin-bottom:16px">
-            <div class="table-head" style="grid-template-columns:1.5fr 1.2fr 1fr 0.9fr 1fr 0.8fr 120px">
+          <div class="data-table" style="margin-bottom:16px">
+            <div class="table-head" style="grid-template-columns:1.6fr 1.3fr 1.1fr 1fr 0.9fr 130px">
               <span>Client / Contact</span>
               <span>Phone / Package</span>
               <span>Call Date/Time</span>
               <span>Deal</span>
-              <span>Next action</span>
               <span>Value</span>
               <span></span>
             </div>
@@ -3606,7 +3566,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <div class="page" id="page-client-dashboard">
         <div style="margin-bottom:1.5rem">
           <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px">Welcome back! 👋</div>
-          <div style="font-size:12px;color:var(--text3)">Here are your projects and their current status.</div>
+          <div style="font-size:12px;color:var(--text3)">Your onboarding progress, materials, and creatives — all in one place.</div>
         </div>
         <!-- CLIENT ONBOARDING VIEW (read-only, email-matched) -->
         <div id="client-onb-view" style="margin-bottom:1.5rem"></div>
