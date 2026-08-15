@@ -10111,15 +10111,69 @@ function closeClientOnbModal(){ document.getElementById('client-onb-modal').clas
 function obRenderStepsEdit(){
   var el=document.getElementById('ob-steps-edit'); if(!el) return;
   el.innerHTML=obTmpSteps.map(function(s,i){
-    return '<div class="ob-step">'
+    if(!Array.isArray(s.files)) s.files=[];
+    var attachList=s.files.map(function(f,fi){
+      return '<div style="display:flex;align-items:center;gap:6px;padding:3px 0 3px 30px">'
+        +'<span style="flex:1;font-size:11px;color:var(--text2)">\U0001F4CE '+ctEsc(f.label||f.url)+'</span>'
+        +'<button class="ghost-btn" onclick="obDelStepFile('+i+','+fi+')" style="font-size:9px;padding:1px 5px;color:var(--red);border-color:rgba(239,68,68,0.2)">\u2715</button>'
+        +'</div>';
+    }).join('');
+    return '<div style="border-bottom:0.5px solid var(--border);padding:4px 0">'
+      +'<div class="ob-step" style="border:0;padding:6px 0">'
       +'<div class="ob-check'+(s.done?' done':'')+'" onclick="obToggleStep('+i+')">'+(s.done?'\u2713':'')+'</div>'
       +'<span style="flex:1;font-size:12.5px'+(s.done?';color:var(--text3);text-decoration:line-through':'')+'">'+ctEsc(s.label)+'</span>'
+      +'<button class="ghost-btn" onclick="obAddStepFilePrompt('+i+')" style="font-size:10px;padding:2px 6px">\U0001F4CE Attach</button>'
       +'<button class="ghost-btn" onclick="obDelStep('+i+')" style="font-size:10px;padding:2px 6px;color:var(--red);border-color:rgba(239,68,68,0.2)">\u2715</button>'
+      +'</div>'
+      +attachList
       +'</div>';
   }).join('')||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Walang step pa.</div>';
 }
 function obToggleStep(i){ obTmpSteps[i].done=!obTmpSteps[i].done; obRenderStepsEdit(); }
 function obDelStep(i){ obTmpSteps.splice(i,1); obRenderStepsEdit(); }
+function obDelStepFile(i,fi){ if(obTmpSteps[i]&&obTmpSteps[i].files){ obTmpSteps[i].files.splice(fi,1); obRenderStepsEdit(); } }
+
+// Attach to a step: link or file upload
+function obAddStepFilePrompt(i){
+  obStepAttachIndex=i;
+  document.getElementById('ob-steplink-modal').classList.add('open');
+}
+var obStepAttachIndex=null;
+
+async function obHandleStepFileUpload(input){
+  var file=input.files && input.files[0];
+  var i=obStepAttachIndex;
+  input.value='';
+  if(!file || i===null || !obTmpSteps[i]) return;
+  if(!Array.isArray(obTmpSteps[i].files)) obTmpSteps[i].files=[];
+  showNotif('Uploading '+file.name+'...','success');
+  try{
+    var ext=(file.name.split('.').pop()||'bin').toLowerCase();
+    var path='client-onboarding/steps/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+    var upl=await sb.storage.from(STORAGE_BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:true});
+    if(upl.error) throw upl.error;
+    var urlData=sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+    var publicUrl=urlData?.data?.publicUrl;
+    if(!publicUrl) throw new Error('No public URL');
+    obTmpSteps[i].files.push({label:file.name,url:publicUrl,uploaded:true});
+    obRenderStepsEdit();
+    showNotif('Attached! \u2713','success');
+  }catch(e){ showNotif('Upload error: '+(e.message||e),'error'); }
+}
+
+function obAddStepLink(){
+  var i=obStepAttachIndex;
+  var url=(document.getElementById('ob-steplink-url')?.value||'').trim();
+  var label=(document.getElementById('ob-steplink-label')?.value||'').trim();
+  if(i===null || !obTmpSteps[i]){ showNotif('Pumili muna ng step','error'); return; }
+  if(!url){ showNotif('Link required','error'); return; }
+  if(!Array.isArray(obTmpSteps[i].files)) obTmpSteps[i].files=[];
+  obTmpSteps[i].files.push({label:label||url,url:url});
+  document.getElementById('ob-steplink-url').value='';
+  document.getElementById('ob-steplink-label').value='';
+  document.getElementById('ob-steplink-modal').classList.remove('open');
+  obRenderStepsEdit();
+}
 function obAddStep(){
   var inp=document.getElementById('ob-newstep');
   var v=inp.value.trim(); if(!v) return;
@@ -10356,6 +10410,7 @@ async function loadClientMaterials(){
     html+=items.map(function(f){
       var safeUrl=ctEsc(f.url);
       return '<div class="ob-step"><span style="flex:1;font-size:12.5px">\U0001F4C4 '+ctEsc(f.label||f.url)+'</span>'
+        +'<button onclick="obPreviewFile(\''+safeUrl+'\',\''+ctEsc((f.label||'file')).replace(/'/g,"")+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--accent,#378ADD)">\U0001F441 View</button>'
         +'<a href="'+safeUrl+'" target="_blank" rel="noopener" class="ghost-btn" style="font-size:10px;padding:3px 8px;text-decoration:none;color:var(--accent,#378ADD)">Open</a>'
         +'<button onclick="obCopyLink(\''+safeUrl+'\',this)" class="ghost-btn" style="font-size:10px;padding:3px 8px">\U0001F4CB Copy</button></div>';
     }).join('');
@@ -10400,6 +10455,36 @@ async function loadClientCreatives(){
     +'</div>';
 }
 
+function obPreviewFile(url, label){
+  var titleEl=document.getElementById('ob-preview-title');
+  var bodyEl=document.getElementById('ob-preview-body');
+  var openEl=document.getElementById('ob-preview-open');
+  if(!bodyEl) return;
+  if(titleEl) titleEl.textContent=label||'Preview';
+  if(openEl) openEl.href=url;
+  var low=url.toLowerCase().split('?')[0];
+  var isImg=/\.(png|jpe?g|gif|webp|bmp|svg)$/.test(low);
+  var isPdf=/\.pdf$/.test(low);
+  if(isImg){
+    bodyEl.innerHTML='<img src="'+ctEsc(url)+'" style="max-width:100%;display:block;margin:0 auto;border-radius:8px">';
+  } else if(isPdf){
+    bodyEl.innerHTML='<iframe src="'+ctEsc(url)+'" style="width:100%;height:70vh;border:0;border-radius:8px"></iframe>';
+  } else {
+    bodyEl.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--text3)">'
+      +'<div style="font-size:32px;margin-bottom:10px">\U0001F4C4</div>'
+      +'<div style="font-size:13px;margin-bottom:6px">Hindi ma-preview ang file type na ito dito.</div>'
+      +'<a href="'+ctEsc(url)+'" target="_blank" rel="noopener" class="yellow-btn" style="text-decoration:none;display:inline-block;margin-top:8px">\u2B07 Download / Open</a>'
+      +'</div>';
+  }
+  document.getElementById('ob-preview-modal').classList.add('open');
+}
+function obClosePreview(){
+  var m=document.getElementById('ob-preview-modal');
+  if(m) m.classList.remove('open');
+  var b=document.getElementById('ob-preview-body');
+  if(b) b.innerHTML=''; // stop iframe/video
+}
+
 function obCopyLink(url, btn){
   try{
     navigator.clipboard.writeText(url).then(function(){
@@ -10431,10 +10516,18 @@ async function renderClientOnbView(){
   var p=obProgress(c);
 
   var stepsHtml=(c.steps||[]).map(function(s){
-    return '<div class="ob-step">'
+    var atts=Array.isArray(s.files)?s.files:[];
+    var attHtml=atts.length?'<div style="padding:2px 0 6px 30px;display:flex;flex-wrap:wrap;gap:6px">'+atts.map(function(f){
+      var safeUrl=ctEsc(f.url);
+      return '<button onclick="obPreviewFile(\''+safeUrl+'\',\''+ctEsc((f.label||'file')).replace(/'/g,"")+'\')" class="ghost-btn" style="font-size:10px;padding:2px 8px;color:var(--accent,#378ADD)">\U0001F441 '+ctEsc(f.label||'View')+'</button>';
+    }).join('')+'</div>':'';
+    return '<div style="border-bottom:0.5px solid var(--border)">'
+      +'<div class="ob-step" style="border:0">'
       +'<div class="ob-check'+(s.done?' done':'')+'" style="cursor:default">'+(s.done?'\u2713':'')+'</div>'
       +'<span style="flex:1;font-size:12.5px'+(s.done?';color:var(--text3)':'')+'">'+ctEsc(s.label)+'</span>'
       +(s.done?'<span style="font-size:10px;color:#22c55e">Done</span>':'<span style="font-size:10px;color:var(--text3)">Pending</span>')
+      +'</div>'
+      +attHtml
       +'</div>';
   }).join('')||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Setting up your onboarding...</div>';
 
@@ -10450,7 +10543,8 @@ async function renderClientOnbView(){
       filesHtml+=items.map(function(f){
         var safeUrl=ctEsc(f.url);
         return '<div class="ob-step"><span style="flex:1;font-size:12px">\U0001F4C4 '+ctEsc(f.label||f.url)+'</span>'
-          +'<a href="'+safeUrl+'" target="_blank" rel="noopener" class="ghost-btn" style="font-size:10px;padding:3px 8px;text-decoration:none;color:var(--accent,#378ADD)">Open</a>'
+          +'<button onclick="obPreviewFile(\''+safeUrl+'\',\''+ctEsc((f.label||'file')).replace(/'/g,"")+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--accent,#378ADD)">\U0001F441 View</button>'
+        +'<a href="'+safeUrl+'" target="_blank" rel="noopener" class="ghost-btn" style="font-size:10px;padding:3px 8px;text-decoration:none;color:var(--accent,#378ADD)">Open</a>'
           +'<button onclick="obCopyLink(\''+safeUrl+'\',this)" class="ghost-btn" style="font-size:10px;padding:3px 8px">\U0001F4CB Copy link</button></div>';
       }).join('');
       filesHtml+='</div>';
