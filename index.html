@@ -5395,6 +5395,35 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
   </div>
 </div>
 
+<div class="modal-overlay" id="ob-preview-modal">
+  <div class="modal" style="max-width:860px;width:92%">
+    <div class="modal-head">
+      <div class="modal-title" id="ob-preview-title">Preview</div>
+      <button class="modal-close" onclick="obClosePreview()">✕</button>
+    </div>
+    <div id="ob-preview-body" style="min-height:200px;max-height:75vh;overflow:auto;background:var(--bg2,#0a0a0a);border-radius:8px"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+      <a id="ob-preview-open" href="#" target="_blank" rel="noopener" class="ghost-btn" style="text-decoration:none">Open in new tab</a>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="ob-steplink-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head">
+      <div class="modal-title">📎 Attach to step</div>
+      <button class="modal-close" onclick="document.getElementById('ob-steplink-modal').classList.remove('open')">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="ghost-btn" onclick="document.getElementById('ob-steplink-modal').classList.remove('open');document.getElementById('ob-stepfile-input').click()" style="justify-content:center">📁 Upload file</button>
+      <div style="text-align:center;font-size:11px;color:var(--text3)">or paste link</div>
+      <input class="form-input" id="ob-steplink-label" placeholder="Label (e.g. Signed contract)" style="font-size:12px">
+      <input class="form-input" id="ob-steplink-url" placeholder="https://..." style="font-size:12px">
+      <button class="yellow-btn" onclick="obAddStepLink()">Add link</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="client-onb-modal">
   <div class="modal" style="max-width:620px">
     <div class="modal-head">
@@ -5445,6 +5474,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
       <div class="section-label" style="margin-top:16px">Onboarding checklist</div>
       <div id="ob-steps-edit"></div>
+      <input type="file" id="ob-stepfile-input" style="display:none" onchange="obHandleStepFileUpload(this)">
       <div style="display:flex;gap:6px;margin-top:8px">
         <input class="form-input" id="ob-newstep" placeholder="+ add step (Enter)" style="font-size:12px;padding:7px 10px" onkeydown="if(event.key==='Enter'){event.preventDefault();obAddStep();}">
       </div>
