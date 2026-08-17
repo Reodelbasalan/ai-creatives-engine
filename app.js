@@ -318,7 +318,7 @@ function initSecurityListeners(){
 
 // ROLE-BASED PAGE PROTECTION
 var ADMIN_PAGES=['dashboard','new-project','all-projects','users','clients','analytics','submission','settings','chat','activity','attendance'];
-var EDITOR_PAGES=['editor-portal','all-projects','chat','profile','worklog','automation','clients','activity','attendance','for-upload'];
+var EDITOR_PAGES=['editor-portal','all-projects','chat','profile','worklog','automation','clients','activity','attendance','for-upload','advertiser-tasks'];
 var CLIENT_PAGES=['client-dashboard','profile','sales-tracker','client-creatives','client-materials'];
 
 function canAccessPage(page){
@@ -453,7 +453,7 @@ function applyRoleUI(){
     // Hide admin-only elements first
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
     // Show editor-allowed nav items — force show even if admin-only class
-    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance','nav-for-upload','nav-extensions','nav-social','nav-brand','nav-sales-tracker'];
+    var editorNavs=['nav-editor-portal','nav-all-projects','nav-chat','nav-profile','nav-worklog','nav-automation','nav-clients','nav-activity','nav-attendance','nav-for-upload','nav-extensions','nav-social','nav-brand','nav-sales-tracker','nav-advertiser-tasks'];
     if(canAccessFinance()) editorNavs.push('nav-finance');
     editorNavs.forEach(function(id){
       var el=document.getElementById(id);
@@ -477,7 +477,7 @@ function applyRoleUI(){
     // Brand Intern — Own Brand Creatives only
     document.querySelectorAll('.nav-item').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
-    var internNavs=['nav-brand','nav-profile'];
+    var internNavs=['nav-brand','nav-profile','nav-advertiser-tasks'];
     internNavs.forEach(function(id){
       var el=document.getElementById(id);
       if(el)el.style.display='flex';
@@ -8996,7 +8996,7 @@ async function loadAdvertiserTasks(){
 
   if(isAdmin){
     var{data:profs}=await sb.from('profiles').select('id,name,email,role').order('name');
-    var advs=(profs||[]).filter(function(p){ return p.role==='advertiser'||p.role==='admin'; });
+    var advs=(profs||[]).filter(function(p){ return p.role!=='client'; });
     var assigneeSel=document.getElementById('at-assignee');
     if(assigneeSel){
       var curA=assigneeSel.value;
@@ -9047,8 +9047,10 @@ function renderAdvertiserTasks(){
     else {
       activeBody.innerHTML=active.map(function(t){
         var assigneeLine=isAdmin?ctEsc(t.assignee_name||'—'):'';
+        var tagsHtml=atTagBadges(t.tags);
+        var linkHtml=t.result_link?' <a href="'+ctEsc(t.result_link)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--accent,#378ADD);font-size:10px;text-decoration:none">🔗</a>':'';
         return '<div class="table-row" style="grid-template-columns:2.2fr 1.1fr 1fr 90px;cursor:pointer" onclick="openAtDetailModal(\''+t.id+'\')">'
-          +'<div><div class="row-name">'+ctEsc(t.title||'—')+'</div>'+(t.details?'<div class="row-sub">'+ctEsc(t.details)+'</div>':'')+'</div>'
+          +'<div><div class="row-name">'+ctEsc(t.title||'—')+linkHtml+'</div>'+(t.details?'<div class="row-sub">'+ctEsc(t.details)+'</div>':'')+(tagsHtml?'<div style="margin-top:3px">'+tagsHtml+'</div>':'')+'</div>'
           +'<div class="row-meta" style="font-size:11px">'+assigneeLine+'</div>'
           +'<div onclick="event.stopPropagation()">'+atStatusSelect(t)+'</div>'
           +'<div onclick="event.stopPropagation()"><button onclick="deleteAdvertiserTask(\''+t.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button></div>'
@@ -9064,8 +9066,10 @@ function renderAdvertiserTasks(){
       historyBody.innerHTML=history.map(function(t){
         var assigneeLine=isAdmin?ctEsc(t.assignee_name||'—'):'';
         var doneAt=t.done_at?String(t.done_at).slice(0,16).replace('T',' '):'—';
+        var tagsHtml=atTagBadges(t.tags);
+        var linkHtml=t.result_link?' <a href="'+ctEsc(t.result_link)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--accent,#378ADD);font-size:10px;text-decoration:none">🔗</a>':'';
         return '<div class="table-row" style="grid-template-columns:2.2fr 1.1fr 1fr 1.1fr;cursor:pointer" onclick="openAtDetailModal(\''+t.id+'\')" title="Click to view detail">'
-          +'<div><div class="row-name">'+ctEsc(t.title||'—')+'</div>'+(t.details?'<div class="row-sub">'+ctEsc(t.details)+'</div>':'')+'</div>'
+          +'<div><div class="row-name">'+ctEsc(t.title||'—')+linkHtml+'</div>'+(t.details?'<div class="row-sub">'+ctEsc(t.details)+'</div>':'')+(tagsHtml?'<div style="margin-top:3px">'+tagsHtml+'</div>':'')+'</div>'
           +'<div class="row-meta" style="font-size:11px">'+assigneeLine+'</div>'
           +'<div><span style="font-size:10px;color:'+atStatusColor(t.status)+';font-weight:700">'+ctEsc(t.status||'')+'</span></div>'
           +'<div class="row-meta" style="font-size:11px">'+doneAt+'</div>'
@@ -9085,12 +9089,15 @@ function openAtDetailModal(id){
 
   var body='<div class="form-field" style="margin-bottom:10px"><label class="form-label">Task</label><input class="form-input" id="at-detail-title-input" value="'+ctEsc(t.title||'')+'" style="font-weight:700"></div>';
   body+='<div class="form-field" style="margin-bottom:12px"><label class="form-label">Details</label><textarea class="form-textarea" id="at-detail-details-input" rows="3" placeholder="Notes about the task...">'+ctEsc(t.details||'')+'</textarea></div>';
+  body+='<div class="form-field" style="margin-bottom:10px"><label class="form-label">Tags <span class="opt">(comma-separated)</span></label><input class="form-input" id="at-detail-tags-input" value="'+ctEsc((Array.isArray(t.tags)?t.tags:[]).join(', '))+'" placeholder="Retargeting, Winner..."></div>';
+  body+='<div class="form-field" style="margin-bottom:12px"><label class="form-label">\🔗 Result link <span class="opt">(Ads Manager URL)</span></label><input class="form-input" id="at-detail-link-input" value="'+ctEsc(t.result_link||'')+'" placeholder="https://business.facebook.com/..."></div>';
   body+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:11.5px;margin-bottom:6px">'
     +'<div><span style="color:var(--text3)">Status:</span> <span style="color:'+atStatusColor(t.status)+';font-weight:700">'+ctEsc(t.status||'')+'</span></div>'
     +(isAdmin?'<div><span style="color:var(--text3)">Assigned to:</span> '+ctEsc(t.assignee_name||'—')+'</div>':'')
     +'<div><span style="color:var(--text3)">Created:</span> '+createdAt+(t.created_by_name?' by '+ctEsc(t.created_by_name):'')+'</div>'
     +(isHistory?'<div><span style="color:var(--text3)">Done at:</span> '+doneAt+'</div>':'')
     +'</div>';
+  if(t.result_link){ body+='<div style="margin-top:8px"><a href="'+ctEsc(t.result_link)+'" target="_blank" rel="noopener" class="ghost-btn" style="text-decoration:none;font-size:11px;color:var(--accent,#378ADD)">\🔗 Open Ads Manager link</a></div>'; }
 
   document.getElementById('at-detail-body').innerHTML=body;
 
@@ -9111,7 +9118,10 @@ async function saveAtDetailEdits(id){
   var detailsEl=document.getElementById('at-detail-details-input');
   var newTitle=titleEl?titleEl.value.trim():'';
   if(!newTitle){ showNotif('Task title is required','error'); return; }
-  var payload={ title:newTitle, details:detailsEl?detailsEl.value.trim()||null:null };
+  var tagsEl=document.getElementById('at-detail-tags-input');
+  var linkEl=document.getElementById('at-detail-link-input');
+  var tags=tagsEl?tagsEl.value.split(',').map(function(x){return x.trim();}).filter(Boolean):[];
+  var payload={ title:newTitle, details:detailsEl?detailsEl.value.trim()||null:null, tags:tags, result_link:linkEl?linkEl.value.trim()||null:null };
   var{error}=await sb.from('advertiser_tasks').update(payload).eq('id',id);
   if(error){ showNotif('Error: '+error.message,'error'); return; }
   showNotif('Task updated! ✓','success');
@@ -9148,6 +9158,37 @@ async function atReopenTask(id){
   loadAdvertiserTasks();
 }
 
+var atPendingTags=[];
+function atChipKey(e){
+  var inp=e.target;
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();
+    var v=inp.value.trim();
+    if(v && atPendingTags.indexOf(v)===-1){ atPendingTags.push(v); inp.value=''; atRenderPendingTags(); }
+  } else if(e.key==='Backspace' && !inp.value && atPendingTags.length){
+    atPendingTags.pop(); atRenderPendingTags();
+  }
+}
+function atRenderPendingTags(){
+  var wrap=document.getElementById('at-chipwrap');
+  var inp=document.getElementById('at-chipinput');
+  if(!wrap||!inp) return;
+  wrap.querySelectorAll('.at-pending-chip').forEach(function(el){ el.remove(); });
+  atPendingTags.forEach(function(p,i){
+    var s=document.createElement('span');
+    s.className='ct-chip at-pending-chip';
+    s.innerHTML=ctEsc(p)+'<span class="ct-chip-x" onclick="atDelPendingTag('+i+')">\u00d7</span>';
+    wrap.insertBefore(s,inp);
+  });
+}
+function atDelPendingTag(i){ atPendingTags.splice(i,1); atRenderPendingTags(); }
+function atTagBadges(tags){
+  if(!Array.isArray(tags)||!tags.length) return '';
+  return tags.map(function(t){
+    return '<span style="display:inline-block;font-size:9.5px;font-weight:600;padding:1px 7px;border-radius:999px;background:rgba(168,139,250,0.14);color:#a78bfa;border:0.5px solid rgba(168,139,250,0.3);margin-right:4px;margin-top:2px">'+ctEsc(t)+'</span>';
+  }).join('');
+}
+
 async function saveAdvertiserTask(){
   var title=document.getElementById('at-title')?.value?.trim();
   if(!title){ showNotif('Task is required','error'); return; }
@@ -9159,12 +9200,15 @@ async function saveAdvertiserTask(){
     var opt=assigneeSel.options[assigneeSel.selectedIndex];
     assigneeName=opt?.getAttribute('data-name')||opt?.textContent||assigneeName;
   }
+  var leftover=document.getElementById('at-chipinput')?.value?.trim();
+  if(leftover && atPendingTags.indexOf(leftover)===-1){ atPendingTags.push(leftover); }
   var payload={
     title:title,
     details:document.getElementById('at-details')?.value?.trim()||null,
     assignee_id:assigneeId,
     assignee_name:assigneeName,
     status:'In Progress',
+    tags:atPendingTags.slice(),
     created_by:currentUser?.id,
     created_by_name:document.getElementById('user-name-display')?.textContent||currentUser?.email||''
   };
@@ -9173,9 +9217,11 @@ async function saveAdvertiserTask(){
   var{error}=await sb.from('advertiser_tasks').insert(payload);
   if(btn){btn.disabled=false;btn.textContent='Add task';}
   if(error){ showNotif('Error: '+error.message,'error'); return; }
-  showNotif('Task added! ✓','success');
+  showNotif('Task added! \u2713','success');
   ['at-title','at-details'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var asel=document.getElementById('at-assignee'); if(asel)asel.value='';
+  var ci=document.getElementById('at-chipinput'); if(ci)ci.value='';
+  atPendingTags=[]; atRenderPendingTags();
   loadAdvertiserTasks();
 }
 
@@ -9869,11 +9915,11 @@ function renderCreativeTrack(){
   if(badge){ badge.textContent=activeCount; badge.style.display=activeCount>0?'':'none'; }
 
   if(!body) return;
-  if(!rows.length){ body.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">\U0001F3AC</div>Wala pang creative dito.</div></div>'; return; }
+  if(!rows.length){ body.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">🎬</div>Wala pang creative dito.</div></div>'; return; }
 
   body.innerHTML=rows.map(function(r){
     var link=r.link
-      ? '<a href="'+ctEsc(r.link)+'" target="_blank" rel="noopener" style="color:var(--accent,#378ADD);font-size:11px;text-decoration:none">\U0001F517 Open link</a>'
+      ? '<a href="'+ctEsc(r.link)+'" target="_blank" rel="noopener" style="color:var(--accent,#378ADD);font-size:11px;text-decoration:none">🔗 Open link</a>'
       : '<span style="color:var(--text3);font-size:11px">no link</span>';
     var tags=r.tags||[];
     var tagRows=tags.length
@@ -9981,14 +10027,14 @@ var obTmpSteps=[];   // [{label, done}]
 var obTmpFiles=[];   // [{label, url}]
 var OB_DEFAULT_STEPS=['Contract signed','Down payment received','Assets / materials received','Kickoff call done','Campaign live'];
 var OB_CATEGORIES=[
-  {key:'contract', label:'Contract / Agreement', icon:'\U0001F4C4'},
-  {key:'invoice',  label:'Invoice / Payment', icon:'\U0001F4B0'},
-  {key:'brief',    label:'Brand Guidelines / Brief', icon:'\U0001F4CB'},
-  {key:'assets',   label:'Brand Assets (logo, photos)', icon:'\U0001F3A8'},
-  {key:'meeting',  label:'Meeting Notes / Recordings', icon:'\U0001F4DE'},
-  {key:'other',    label:'Other', icon:'\U0001F4CE'}
+  {key:'contract', label:'Contract / Agreement', icon:'📄'},
+  {key:'invoice',  label:'Invoice / Payment', icon:'💰'},
+  {key:'brief',    label:'Brand Guidelines / Brief', icon:'📋'},
+  {key:'assets',   label:'Brand Assets (logo, photos)', icon:'🎨'},
+  {key:'meeting',  label:'Meeting Notes / Recordings', icon:'📞'},
+  {key:'other',    label:'Other', icon:'📎'}
 ];
-function obCatMeta(k){ for(var i=0;i<OB_CATEGORIES.length;i++){ if(OB_CATEGORIES[i].key===k) return OB_CATEGORIES[i]; } return {key:k,label:k,icon:'\U0001F4CE'}; }
+function obCatMeta(k){ for(var i=0;i<OB_CATEGORIES.length;i++){ if(OB_CATEGORIES[i].key===k) return OB_CATEGORIES[i]; } return {key:k,label:k,icon:'📎'}; }
 
 // ---------- ADMIN ----------
 async function loadClientOnb(){
@@ -10114,7 +10160,7 @@ function obRenderStepsEdit(){
     if(!Array.isArray(s.files)) s.files=[];
     var attachList=s.files.map(function(f,fi){
       return '<div style="display:flex;align-items:center;gap:6px;padding:3px 0 3px 30px">'
-        +'<span style="flex:1;font-size:11px;color:var(--text2)">\U0001F4CE '+ctEsc(f.label||f.url)+'</span>'
+        +'<span style="flex:1;font-size:11px;color:var(--text2)">📎 '+ctEsc(f.label||f.url)+'</span>'
         +'<button class="ghost-btn" onclick="obDelStepFile('+i+','+fi+')" style="font-size:9px;padding:1px 5px;color:var(--red);border-color:rgba(239,68,68,0.2)">\u2715</button>'
         +'</div>';
     }).join('');
@@ -10122,7 +10168,7 @@ function obRenderStepsEdit(){
       +'<div class="ob-step" style="border:0;padding:6px 0">'
       +'<div class="ob-check'+(s.done?' done':'')+'" onclick="obToggleStep('+i+')">'+(s.done?'\u2713':'')+'</div>'
       +'<span style="flex:1;font-size:12.5px'+(s.done?';color:var(--text3);text-decoration:line-through':'')+'">'+ctEsc(s.label)+'</span>'
-      +'<button class="ghost-btn" onclick="obAddStepFilePrompt('+i+')" style="font-size:10px;padding:2px 6px">\U0001F4CE Attach</button>'
+      +'<button class="ghost-btn" onclick="obAddStepFilePrompt('+i+')" style="font-size:10px;padding:2px 6px">📎 Attach</button>'
       +'<button class="ghost-btn" onclick="obDelStep('+i+')" style="font-size:10px;padding:2px 6px;color:var(--red);border-color:rgba(239,68,68,0.2)">\u2715</button>'
       +'</div>'
       +attachList
@@ -10360,7 +10406,7 @@ function obRenderAccessControls(c){
   var email=(c.email||'').replace(/'/g,"\\'");
   ac.style.display='flex';
   ac.innerHTML=
-     '<button type="button" class="ghost-btn" style="font-size:11px" onclick="obSendReset(\''+email+'\')">\U0001F4E7 Send password reset email</button>'
+     '<button type="button" class="ghost-btn" style="font-size:11px" onclick="obSendReset(\''+email+'\')">📧 Send password reset email</button>'
     +'<span style="font-size:10.5px;color:var(--text3);align-self:center">Ii-email si client ng reset link para makapag-set ng bagong password.</span>';
 }
 
@@ -10397,7 +10443,7 @@ async function loadClientMaterials(){
   }
   var files=Array.isArray(c.files)?c.files:[];
   if(!files.length){
-    el.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">\U0001F4C1</div>Wala pang materials dito. Babalik ka mamaya!</div></div>';
+    el.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">📁</div>Wala pang materials dito. Babalik ka mamaya!</div></div>';
     return;
   }
   var groups={};
@@ -10409,10 +10455,10 @@ async function loadClientMaterials(){
     html+='<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">'+cat.icon+' '+cat.label+' <span style="color:var(--text3);font-weight:400">('+items.length+')</span></div>';
     html+=items.map(function(f){
       var safeUrl=ctEsc(f.url);
-      return '<div class="ob-step"><span style="flex:1;font-size:12.5px">\U0001F4C4 '+ctEsc(f.label||f.url)+'</span>'
-        +'<button onclick="obPreviewFile(\''+safeUrl+'\',\''+ctEsc((f.label||'file')).replace(/'/g,"")+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--accent,#378ADD)">\U0001F441 View</button>'
+      return '<div class="ob-step"><span style="flex:1;font-size:12.5px">📄 '+ctEsc(f.label||f.url)+'</span>'
+        +'<button onclick="obPreviewFile(\''+safeUrl+'\',\''+ctEsc((f.label||'file')).replace(/'/g,"")+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--accent,#378ADD)">👁 View</button>'
         +'<a href="'+safeUrl+'" target="_blank" rel="noopener" class="ghost-btn" style="font-size:10px;padding:3px 8px;text-decoration:none;color:var(--accent,#378ADD)">Open</a>'
-        +'<button onclick="obCopyLink(\''+safeUrl+'\',this)" class="ghost-btn" style="font-size:10px;padding:3px 8px">\U0001F4CB Copy</button></div>';
+        +'<button onclick="obCopyLink(\''+safeUrl+'\',this)" class="ghost-btn" style="font-size:10px;padding:3px 8px">📋 Copy</button></div>';
     }).join('');
     html+='</div>';
   });
@@ -10437,7 +10483,7 @@ async function loadClientCreatives(){
     return tags.some(function(t){ return (t.page||'').toLowerCase().trim()===clientName.toLowerCase().trim(); });
   });
   if(!rows.length){
-    el.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">\U0001F3AC</div>Wala pang creatives dito. Babalik ka mamaya!</div></div>';
+    el.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">🎬</div>Wala pang creatives dito. Babalik ka mamaya!</div></div>';
     return;
   }
   el.innerHTML='<div class="data-table"><div class="table-head" style="grid-template-columns:2fr 1fr 1.1fr"><span>Creative</span><span>Link</span><span>Status</span></div>'
@@ -10445,7 +10491,7 @@ async function loadClientCreatives(){
       var tag=(Array.isArray(r.tags)?r.tags:[]).find(function(t){ return (t.page||'').toLowerCase().trim()===clientName.toLowerCase().trim(); })||{};
       var st=tag.status||'To Do';
       var col=st==='Published'?'#34d399':st==='Done'?'var(--green)':st==='In Progress'?'var(--amber)':'var(--text3)';
-      var link=r.link?'<a href="'+ctEsc(r.link)+'" target="_blank" rel="noopener" style="color:var(--accent,#378ADD);font-size:11px;text-decoration:none">\U0001F517 Open</a>':'<span style="color:var(--text3);font-size:11px">\u2014</span>';
+      var link=r.link?'<a href="'+ctEsc(r.link)+'" target="_blank" rel="noopener" style="color:var(--accent,#378ADD);font-size:11px;text-decoration:none">🔗 Open</a>':'<span style="color:var(--text3);font-size:11px">\u2014</span>';
       return '<div class="table-row" style="grid-template-columns:2fr 1fr 1.1fr">'
         +'<div><div class="row-name">'+ctEsc(r.title||'\u2014')+'</div>'+(r.notes?'<div class="row-sub">'+ctEsc(r.notes)+'</div>':'')+'</div>'
         +'<div>'+link+'</div>'
@@ -10471,7 +10517,7 @@ function obPreviewFile(url, label){
     bodyEl.innerHTML='<iframe src="'+ctEsc(url)+'" style="width:100%;height:70vh;border:0;border-radius:8px"></iframe>';
   } else {
     bodyEl.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--text3)">'
-      +'<div style="font-size:32px;margin-bottom:10px">\U0001F4C4</div>'
+      +'<div style="font-size:32px;margin-bottom:10px">📄</div>'
       +'<div style="font-size:13px;margin-bottom:6px">Hindi ma-preview ang file type na ito dito.</div>'
       +'<a href="'+ctEsc(url)+'" target="_blank" rel="noopener" class="yellow-btn" style="text-decoration:none;display:inline-block;margin-top:8px">\u2B07 Download / Open</a>'
       +'</div>';
@@ -10519,7 +10565,7 @@ async function renderClientOnbView(){
     var atts=Array.isArray(s.files)?s.files:[];
     var attHtml=atts.length?'<div style="padding:2px 0 6px 30px;display:flex;flex-wrap:wrap;gap:6px">'+atts.map(function(f){
       var safeUrl=ctEsc(f.url);
-      return '<button onclick="obPreviewFile(\''+safeUrl+'\',\''+ctEsc((f.label||'file')).replace(/'/g,"")+'\')" class="ghost-btn" style="font-size:10px;padding:2px 8px;color:var(--accent,#378ADD)">\U0001F441 '+ctEsc(f.label||'View')+'</button>';
+      return '<button onclick="obPreviewFile(\''+safeUrl+'\',\''+ctEsc((f.label||'file')).replace(/'/g,"")+'\')" class="ghost-btn" style="font-size:10px;padding:2px 8px;color:var(--accent,#378ADD)">👁 '+ctEsc(f.label||'View')+'</button>';
     }).join('')+'</div>':'';
     return '<div style="border-bottom:0.5px solid var(--border)">'
       +'<div class="ob-step" style="border:0">'
@@ -10536,16 +10582,16 @@ async function renderClientOnbView(){
   if((c.files||[]).length){
     var groups={};
     (c.files||[]).forEach(function(f){ var k=f.cat||'other'; (groups[k]=groups[k]||[]).push(f); });
-    filesHtml='<div class="section-label" style="margin-top:16px">\U0001F4C1 Your materials</div>';
+    filesHtml='<div class="section-label" style="margin-top:16px">📁 Your materials</div>';
     OB_CATEGORIES.forEach(function(cat){
       var items=groups[cat.key]; if(!items||!items.length) return;
       filesHtml+='<div style="margin-top:8px"><div style="font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">'+cat.icon+' '+cat.label+'</div>';
       filesHtml+=items.map(function(f){
         var safeUrl=ctEsc(f.url);
-        return '<div class="ob-step"><span style="flex:1;font-size:12px">\U0001F4C4 '+ctEsc(f.label||f.url)+'</span>'
-          +'<button onclick="obPreviewFile(\''+safeUrl+'\',\''+ctEsc((f.label||'file')).replace(/'/g,"")+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--accent,#378ADD)">\U0001F441 View</button>'
+        return '<div class="ob-step"><span style="flex:1;font-size:12px">📄 '+ctEsc(f.label||f.url)+'</span>'
+          +'<button onclick="obPreviewFile(\''+safeUrl+'\',\''+ctEsc((f.label||'file')).replace(/'/g,"")+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--accent,#378ADD)">👁 View</button>'
         +'<a href="'+safeUrl+'" target="_blank" rel="noopener" class="ghost-btn" style="font-size:10px;padding:3px 8px;text-decoration:none;color:var(--accent,#378ADD)">Open</a>'
-          +'<button onclick="obCopyLink(\''+safeUrl+'\',this)" class="ghost-btn" style="font-size:10px;padding:3px 8px">\U0001F4CB Copy link</button></div>';
+          +'<button onclick="obCopyLink(\''+safeUrl+'\',this)" class="ghost-btn" style="font-size:10px;padding:3px 8px">📋 Copy link</button></div>';
       }).join('');
       filesHtml+='</div>';
     });
@@ -10560,12 +10606,12 @@ async function renderClientOnbView(){
       return tags.some(function(t){ return (t.page||'').toLowerCase()===(c.name||'').toLowerCase(); });
     });
     if(mine.length){
-      creativesHtml='<div class="section-label" style="margin-top:16px">\U0001F3AC Your creatives</div>';
+      creativesHtml='<div class="section-label" style="margin-top:16px">🎬 Your creatives</div>';
       creativesHtml+=mine.map(function(r){
         var tag=(Array.isArray(r.tags)?r.tags:[]).find(function(t){ return (t.page||'').toLowerCase()===(c.name||'').toLowerCase(); })||{};
         var st=tag.status||'To Do';
         var col=st==='Published'?'#34d399':st==='Done'?'var(--green)':st==='In Progress'?'var(--amber)':'var(--text3)';
-        var link=r.link?' <a href="'+ctEsc(r.link)+'" target="_blank" rel="noopener" style="color:var(--accent,#378ADD);text-decoration:none;font-size:11px">\U0001F517</a>':'';
+        var link=r.link?' <a href="'+ctEsc(r.link)+'" target="_blank" rel="noopener" style="color:var(--accent,#378ADD);text-decoration:none;font-size:11px">🔗</a>':'';
         return '<div class="ob-step"><span style="width:6px;height:6px;border-radius:50%;background:'+col+';flex-shrink:0"></span>'
           +'<span style="flex:1;font-size:12px">'+ctEsc(r.title||'\u2014')+link+'</span>'
           +'<span style="font-size:10px;color:'+col+';font-weight:600">'+ctEsc(st)+'</span></div>';
@@ -10580,7 +10626,7 @@ async function renderClientOnbView(){
     +'<div style="text-align:right"><div style="font-size:20px;font-weight:700;color:'+(p>=100?'#22c55e':'var(--amber)')+'">'+p+'%</div><div style="font-size:10px;color:var(--text3)">onboarded</div></div>'
     +'</div>'
     +'<div class="ob-progress-bar" style="margin-bottom:14px"><div class="ob-progress-fill" style="width:'+p+'%"></div></div>'
-    +'<div class="section-label">\U0001F4CB Onboarding checklist</div>'
+    +'<div class="section-label">📋 Onboarding checklist</div>'
     +stepsHtml
     +filesHtml
     +creativesHtml
