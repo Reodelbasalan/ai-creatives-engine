@@ -2696,11 +2696,9 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <label class="form-label">Details (optional)</label>
                 <textarea class="form-textarea" id="at-details" rows="2" placeholder="Notes about the task..."></textarea>
               </div>
-              <div class="form-field admin-only" id="at-assignee-field">
-                <label class="form-label">Assign to</label>
-                <select class="form-select" id="at-assignee">
-                  <option value="">— Ako (admin) —</option>
-                </select>
+              <div class="form-field admin-only full" id="at-assignee-field">
+                <label class="form-label">Assign to <span class="opt">(tik lahat ng dapat)</span></label>
+                <div id="at-assignee-checks" style="display:flex;flex-wrap:wrap;gap:8px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px;max-height:130px;overflow-y:auto"></div>
               </div>
               <div class="form-field full">
                 <label class="form-label">Tags <span class="opt">(pili o type + Enter)</span></label>
