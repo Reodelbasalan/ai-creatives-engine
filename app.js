@@ -8984,33 +8984,52 @@ function clearCallFilters(){
 var advTasksCache=[];
 var advHistoryMode=false;
 
+var atTeamCache=[];
+function atTaskAssignedTo(t,userId){
+  if(Array.isArray(t.assignees) && t.assignees.length){
+    return t.assignees.some(function(a){ return a.id===userId; });
+  }
+  return t.assignee_id===userId;
+}
+function atTaskAssigneeNames(t){
+  if(Array.isArray(t.assignees) && t.assignees.length){
+    return t.assignees.map(function(a){ return a.name; }).join(', ');
+  }
+  return t.assignee_name||'—';
+}
+
 async function loadAdvertiserTasks(){
   var isAdmin=currentUserRole==='admin';
   var q=sb.from('advertiser_tasks').select('*').order('created_at',{ascending:false});
-  if(!isAdmin && currentUser?.id){ q=q.eq('assignee_id',currentUser.id); }
   var{data,error}=await q;
   if(error){ showNotif('Error loading tasks: '+error.message,'error'); advTasksCache=[]; }
   else { advTasksCache=data||[]; }
+  // non-admin: client-side filter para sa tasks na assigned sa kanila (old or new format)
+  if(!isAdmin && currentUser?.id){
+    advTasksCache=advTasksCache.filter(function(t){ return atTaskAssignedTo(t,currentUser.id); });
+  }
 
   document.querySelectorAll('#page-advertiser-tasks .admin-only').forEach(function(el){el.style.display=isAdmin?'':'none';});
 
   if(isAdmin){
     var{data:profs}=await sb.from('profiles').select('id,name,email,role').order('name');
     var advs=(profs||[]).filter(function(p){ return p.role!=='client'; });
-    var assigneeSel=document.getElementById('at-assignee');
-    if(assigneeSel){
-      var curA=assigneeSel.value;
-      assigneeSel.innerHTML='<option value="">— Ako (admin) —</option>'+advs.map(function(p){
-        return '<option value="'+p.id+'" data-name="'+ctEsc(p.name||p.email)+'">'+ctEsc(p.name||p.email)+'</option>';
-      }).join('');
-      assigneeSel.value=curA;
+    atTeamCache=advs.map(function(p){ return {id:p.id, name:p.name||p.email}; });
+    var checksEl=document.getElementById('at-assignee-checks');
+    if(checksEl){
+      checksEl.innerHTML=atTeamCache.map(function(p){
+        return '<label style="display:flex;align-items:center;gap:5px;font-size:11.5px;cursor:pointer;color:var(--text2)"><input type="checkbox" class="at-assignee-cb" value="'+p.id+'" data-name="'+ctEsc(p.name)+'" style="accent-color:var(--yellow)">'+ctEsc(p.name)+'</label>';
+      }).join('')||'<span style="font-size:11px;color:var(--text3)">Walang team members pa.</span>';
     }
     var filterSel=document.getElementById('at-filter-assignee');
     if(filterSel){
       var curF=filterSel.value;
       var names={};
       advs.forEach(function(p){ names[p.id]=p.name||p.email; });
-      advTasksCache.forEach(function(t){ if(t.assignee_id&&!names[t.assignee_id]) names[t.assignee_id]=t.assignee_name||'Unknown'; });
+      advTasksCache.forEach(function(t){
+        if(Array.isArray(t.assignees)){ t.assignees.forEach(function(a){ if(a.id&&!names[a.id]) names[a.id]=a.name||'Unknown'; }); }
+        else if(t.assignee_id&&!names[t.assignee_id]){ names[t.assignee_id]=t.assignee_name||'Unknown'; }
+      });
       filterSel.innerHTML='<option value="">All advertisers</option>'+Object.keys(names).map(function(id){
         return '<option value="'+id+'">'+ctEsc(names[id])+'</option>';
       }).join('');
@@ -9025,7 +9044,7 @@ function atFilteredTasks(){
   var q=(document.getElementById('at-search')?.value||'').toLowerCase().trim();
   var assignee=document.getElementById('at-filter-assignee')?.value||'';
   return advTasksCache.filter(function(t){
-    if(assignee && t.assignee_id!==assignee) return false;
+    if(assignee && !atTaskAssignedTo(t,assignee)) return false;
     if(q && (t.title||'').toLowerCase().indexOf(q)===-1 && (t.details||'').toLowerCase().indexOf(q)===-1) return false;
     return true;
   });
@@ -9046,7 +9065,7 @@ function renderAdvertiserTasks(){
     if(!active.length){ activeBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">📋</div>No active tasks.</div>'; }
     else {
       activeBody.innerHTML=active.map(function(t){
-        var assigneeLine=isAdmin?ctEsc(t.assignee_name||'—'):'';
+        var assigneeLine=isAdmin?ctEsc(atTaskAssigneeNames(t)):'';
         var tagsHtml=atTagBadges(t.tags);
         var linkHtml=t.result_link?' <a href="'+ctEsc(t.result_link)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--accent,#378ADD);font-size:10px;text-decoration:none">🔗</a>':'';
         return '<div class="table-row" style="grid-template-columns:2.2fr 1.1fr 1fr 90px;cursor:pointer" onclick="openAtDetailModal(\''+t.id+'\')">'
@@ -9064,7 +9083,7 @@ function renderAdvertiserTasks(){
     if(!history.length){ historyBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">📜</div>No completed tasks yet.</div>'; }
     else {
       historyBody.innerHTML=history.map(function(t){
-        var assigneeLine=isAdmin?ctEsc(t.assignee_name||'—'):'';
+        var assigneeLine=isAdmin?ctEsc(atTaskAssigneeNames(t)):'';
         var doneAt=t.done_at?String(t.done_at).slice(0,16).replace('T',' '):'—';
         var tagsHtml=atTagBadges(t.tags);
         var linkHtml=t.result_link?' <a href="'+ctEsc(t.result_link)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--accent,#378ADD);font-size:10px;text-decoration:none">🔗</a>':'';
@@ -9090,14 +9109,24 @@ function openAtDetailModal(id){
   var body='<div class="form-field" style="margin-bottom:10px"><label class="form-label">Task</label><input class="form-input" id="at-detail-title-input" value="'+ctEsc(t.title||'')+'" style="font-weight:700"></div>';
   body+='<div class="form-field" style="margin-bottom:12px"><label class="form-label">Details</label><textarea class="form-textarea" id="at-detail-details-input" rows="3" placeholder="Notes about the task...">'+ctEsc(t.details||'')+'</textarea></div>';
   body+='<div class="form-field" style="margin-bottom:10px"><label class="form-label">Tags <span class="opt">(comma-separated)</span></label><input class="form-input" id="at-detail-tags-input" value="'+ctEsc((Array.isArray(t.tags)?t.tags:[]).join(', '))+'" placeholder="Retargeting, Winner..."></div>';
-  body+='<div class="form-field" style="margin-bottom:12px"><label class="form-label">\🔗 Result link <span class="opt">(Ads Manager URL)</span></label><input class="form-input" id="at-detail-link-input" value="'+ctEsc(t.result_link||'')+'" placeholder="https://business.facebook.com/..."></div>';
+  body+='<div class="form-field" style="margin-bottom:12px"><label class="form-label">🔗 Result link <span class="opt">(Ads Manager URL)</span></label><input class="form-input" id="at-detail-link-input" value="'+ctEsc(t.result_link||'')+'" placeholder="https://business.facebook.com/..."></div>';
+  if(isAdmin){
+    var curAssignees=Array.isArray(t.assignees)&&t.assignees.length?t.assignees:(t.assignee_id?[{id:t.assignee_id,name:t.assignee_name}]:[]);
+    var curIds=curAssignees.map(function(a){return a.id;});
+    body+='<div class="form-field" style="margin-bottom:12px"><label class="form-label">Assign to <span class="opt">(tik lahat)</span></label>'
+      +'<div id="at-detail-assignee-checks" style="display:flex;flex-wrap:wrap;gap:8px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px;max-height:120px;overflow-y:auto">'
+      +(atTeamCache.length?atTeamCache.map(function(p){
+        return '<label style="display:flex;align-items:center;gap:5px;font-size:11.5px;cursor:pointer;color:var(--text2)"><input type="checkbox" class="at-detail-cb" value="'+p.id+'" data-name="'+ctEsc(p.name)+'"'+(curIds.indexOf(p.id)>=0?' checked':'')+' style="accent-color:var(--yellow)">'+ctEsc(p.name)+'</label>';
+      }).join(''):'<span style="font-size:11px;color:var(--text3)">Loading team...</span>')
+      +'</div></div>';
+  }
   body+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:11.5px;margin-bottom:6px">'
     +'<div><span style="color:var(--text3)">Status:</span> <span style="color:'+atStatusColor(t.status)+';font-weight:700">'+ctEsc(t.status||'')+'</span></div>'
-    +(isAdmin?'<div><span style="color:var(--text3)">Assigned to:</span> '+ctEsc(t.assignee_name||'—')+'</div>':'')
+    +(isAdmin?'<div><span style="color:var(--text3)">Assigned to:</span> '+ctEsc(atTaskAssigneeNames(t))+'</div>':'')
     +'<div><span style="color:var(--text3)">Created:</span> '+createdAt+(t.created_by_name?' by '+ctEsc(t.created_by_name):'')+'</div>'
     +(isHistory?'<div><span style="color:var(--text3)">Done at:</span> '+doneAt+'</div>':'')
     +'</div>';
-  if(t.result_link){ body+='<div style="margin-top:8px"><a href="'+ctEsc(t.result_link)+'" target="_blank" rel="noopener" class="ghost-btn" style="text-decoration:none;font-size:11px;color:var(--accent,#378ADD)">\🔗 Open Ads Manager link</a></div>'; }
+  if(t.result_link){ body+='<div style="margin-top:8px"><a href="'+ctEsc(t.result_link)+'" target="_blank" rel="noopener" class="ghost-btn" style="text-decoration:none;font-size:11px;color:var(--accent,#378ADD)">🔗 Open Ads Manager link</a></div>'; }
 
   document.getElementById('at-detail-body').innerHTML=body;
 
@@ -9122,6 +9151,17 @@ async function saveAtDetailEdits(id){
   var linkEl=document.getElementById('at-detail-link-input');
   var tags=tagsEl?tagsEl.value.split(',').map(function(x){return x.trim();}).filter(Boolean):[];
   var payload={ title:newTitle, details:detailsEl?detailsEl.value.trim()||null:null, tags:tags, result_link:linkEl?linkEl.value.trim()||null:null };
+  // update assignees (admin only)
+  if(currentUserRole==='admin'){
+    var checks=document.querySelectorAll('.at-detail-cb:checked');
+    if(checks.length){
+      var assignees=[];
+      checks.forEach(function(cb){ assignees.push({id:cb.value, name:cb.getAttribute('data-name')||''}); });
+      payload.assignees=assignees;
+      payload.assignee_id=assignees[0].id;
+      payload.assignee_name=assignees[0].name;
+    }
+  }
   var{error}=await sb.from('advertiser_tasks').update(payload).eq('id',id);
   if(error){ showNotif('Error: '+error.message,'error'); return; }
   showNotif('Task updated! ✓','success');
@@ -9192,21 +9232,24 @@ function atTagBadges(tags){
 async function saveAdvertiserTask(){
   var title=document.getElementById('at-title')?.value?.trim();
   if(!title){ showNotif('Task is required','error'); return; }
-  var assigneeId=currentUser?.id;
-  var assigneeName=document.getElementById('user-name-display')?.textContent||currentUser?.email||'';
-  var assigneeSel=document.getElementById('at-assignee');
-  if(currentUserRole==='admin' && assigneeSel && assigneeSel.value){
-    assigneeId=assigneeSel.value;
-    var opt=assigneeSel.options[assigneeSel.selectedIndex];
-    assigneeName=opt?.getAttribute('data-name')||opt?.textContent||assigneeName;
+  var assignees=[];
+  if(currentUserRole==='admin'){
+    document.querySelectorAll('.at-assignee-cb:checked').forEach(function(cb){
+      assignees.push({id:cb.value, name:cb.getAttribute('data-name')||''});
+    });
+  }
+  // kung walang tik, i-assign sa gumawa (admin sa sarili)
+  if(!assignees.length){
+    assignees.push({id:currentUser?.id, name:document.getElementById('user-name-display')?.textContent||currentUser?.email||''});
   }
   var leftover=document.getElementById('at-chipinput')?.value?.trim();
   if(leftover && atPendingTags.indexOf(leftover)===-1){ atPendingTags.push(leftover); }
   var payload={
     title:title,
     details:document.getElementById('at-details')?.value?.trim()||null,
-    assignee_id:assigneeId,
-    assignee_name:assigneeName,
+    assignee_id:assignees[0].id,
+    assignee_name:assignees[0].name,
+    assignees:assignees,
     status:'In Progress',
     tags:atPendingTags.slice(),
     created_by:currentUser?.id,
@@ -9219,7 +9262,7 @@ async function saveAdvertiserTask(){
   if(error){ showNotif('Error: '+error.message,'error'); return; }
   showNotif('Task added! \u2713','success');
   ['at-title','at-details'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-  var asel=document.getElementById('at-assignee'); if(asel)asel.value='';
+  document.querySelectorAll('.at-assignee-cb:checked').forEach(function(cb){ cb.checked=false; });
   var ci=document.getElementById('at-chipinput'); if(ci)ci.value='';
   atPendingTags=[]; atRenderPendingTags();
   loadAdvertiserTasks();
