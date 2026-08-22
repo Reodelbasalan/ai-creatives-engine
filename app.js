@@ -17,15 +17,20 @@ function toggleLoginPasswordVisibility(){
     : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.8 21.8 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a21.8 21.8 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 }
 
-// I-load ang naka-save na email (kung "Remember my email" ang na-check dati)
+// I-load ang naka-save na email + password (kung "Remember my email" ang na-check dati)
 (function(){
   try{
     var savedEmail=localStorage.getItem('ace_remember_email');
+    var savedPass=localStorage.getItem('ace_remember_pass');
     if(savedEmail){
       var emailEl=document.getElementById('login-email');
       var rememberEl=document.getElementById('login-remember');
       if(emailEl) emailEl.value=savedEmail;
       if(rememberEl) rememberEl.checked=true;
+      if(savedPass){
+        var passEl=document.getElementById('login-password');
+        if(passEl) passEl.value=deobfuscate(savedPass);
+      }
     }
   }catch(e){}
 })();
@@ -36,11 +41,16 @@ async function doLogin(){
   const err=document.getElementById('auth-err');
   const btn=document.getElementById('login-btn');
   err.style.display='none';btn.textContent='Signing in...';btn.disabled=true;
-  // I-save o i-clear ang naka-remember na email base sa checkbox
+  // I-save o i-clear ang naka-remember na email + password base sa checkbox
   try{
     var rememberEl=document.getElementById('login-remember');
-    if(rememberEl && rememberEl.checked){ localStorage.setItem('ace_remember_email',email); }
-    else { localStorage.removeItem('ace_remember_email'); }
+    if(rememberEl && rememberEl.checked){
+      localStorage.setItem('ace_remember_email',email);
+      localStorage.setItem('ace_remember_pass',obfuscate(pass));
+    } else {
+      localStorage.removeItem('ace_remember_email');
+      localStorage.removeItem('ace_remember_pass');
+    }
   }catch(e){}
   
   // Step 1: Try to sign in
