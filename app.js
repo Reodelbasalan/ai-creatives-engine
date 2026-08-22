@@ -8474,6 +8474,20 @@ function obRenderRows(){
       'Published':{bg:'rgba(94,234,212,0.14)',c:'#5eead4'}
     };
     var sc=stColors[st]||stColors['Pending approval'];
+    var winStatus=c.winner_status||'Testing';
+    var winMeta={'Winner':{c:'#22c55e',bg:'rgba(34,197,94,0.14)',ic:'🏆'},'Testing':{c:'#f59e0b',bg:'rgba(245,158,11,0.14)',ic:'🧪'},'Killed':{c:'#ef4444',bg:'rgba(239,68,68,0.14)',ic:'❌'}};
+    var wm=winMeta[winStatus]||winMeta['Testing'];
+    var winnerBadge='<div class="ob-status-dd" id="ob-wdd-'+c.id+'" style="position:relative">'
+      +'<button onclick="obWinnerToggle(\''+c.id+'\')" style="background:'+wm.bg+';color:'+wm.c+';border:0.5px solid '+wm.c+'44;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:20px;font-size:10px;font-weight:650;cursor:pointer">'
+      +wm.ic+' '+winStatus
+      +'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>'
+      +'</button>'
+      +'<div class="ob-status-menu" style="display:none;position:absolute;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:50;min-width:110px">'
+      +'<div onclick="obWinnerPick(\''+c.id+'\',\'Winner\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">🏆 Winner</div>'
+      +'<div onclick="obWinnerPick(\''+c.id+'\',\'Testing\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">🧪 Testing</div>'
+      +'<div onclick="obWinnerPick(\''+c.id+'\',\'Killed\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">❌ Killed</div>'
+      +'</div></div>';
+    var detailsBtn='<button onclick="openObBrandDetailModal(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:4px 9px;white-space:nowrap">📝 Details</button>';
     var approveBtn = (isAdmin && st==='Pending approval')
       ? '<button class="ob-approve-btn" onclick="obApprove(\''+c.id+'\')" title="Approve">'
         + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg>'
@@ -8508,6 +8522,8 @@ function obRenderRows(){
       + '</div>'
       + approveBtn
       + publishBtn
+      + winnerBadge
+      + detailsBtn
       + '<button class="ob-del-btn" onclick="obDeleteCreative(\''+c.id+'\')" title="Burahin">'
       +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>'
       + '</button>'
@@ -8569,21 +8585,6 @@ async function obUnpublish(id){
 }
 
 var obHistoryItems=[];
-
-function obSwitchView(view){
-  var listV=document.getElementById('ob-view-list');
-  var histV=document.getElementById('ob-view-history');
-  var tabL=document.getElementById('ob-tab-list');
-  var tabH=document.getElementById('ob-tab-history');
-  if(view==='history'){
-    listV.style.display='none'; histV.style.display='';
-    tabL.classList.remove('active'); tabH.classList.add('active');
-    loadObHistory();
-  } else {
-    histV.style.display='none'; listV.style.display='';
-    tabH.classList.remove('active'); tabL.classList.add('active');
-  }
-}
 
 async function loadObHistory(){
   var box=document.getElementById('ob-history-body');
@@ -8648,6 +8649,173 @@ async function obStatusPick(id, status){
   }catch(e){ showNotif('Hindi na-update ang status','error'); }
 }
 
+function obWinnerToggle(id){
+  var menu=document.querySelector('#ob-wdd-'+id+' .ob-status-menu');
+  document.querySelectorAll('.ob-status-menu').forEach(function(m){ if(m!==menu) m.style.display='none'; });
+  if(menu) menu.style.display = (menu.style.display==='none'||!menu.style.display) ? 'block' : 'none';
+}
+
+async function obWinnerPick(id, winnerStatus){
+  try{
+    await sb.from('brand_creatives').update({winner_status:winnerStatus}).eq('id',id);
+    showNotif(winnerStatus==='Winner'?'Marked as Winner! 🏆':'Updated','success');
+    await loadBrandCreatives();
+  }catch(e){ showNotif('Hindi na-update','error'); }
+}
+
+// ---- Detail modal (script/concept/angle/format + winner) ----
+var OB_WINNER_STATES=[
+  {key:'Winner', ic:'🏆', c:'#22c55e'},
+  {key:'Testing', ic:'🧪', c:'#f59e0b'},
+  {key:'Killed', ic:'❌', c:'#ef4444'}
+];
+function openObBrandDetailModal(id){
+  var c=obItems.find(function(x){ return x.id===id; });
+  if(!c){ showNotif('Not found','error'); return; }
+  document.getElementById('obd-id').value=id;
+  document.getElementById('ob-brand-detail-title').textContent='🎬 '+(c.page_name||'Creative details');
+  document.getElementById('obd-angle').value=c.angle_hook||'';
+  document.getElementById('obd-format').value=c.format||'';
+  document.getElementById('obd-concept').value=c.concept||'';
+  document.getElementById('obd-script').value=c.script||'';
+  var cur=c.winner_status||'Testing';
+  var picker=document.getElementById('obd-winner-picker');
+  picker.setAttribute('data-current',cur);
+  picker.innerHTML=OB_WINNER_STATES.map(function(w){
+    var active=w.key===cur;
+    return '<button type="button" onclick="obdSetWinner(\''+w.key+'\')" data-winner="'+w.key+'" style="font-size:11px;font-weight:650;padding:5px 11px;border-radius:20px;cursor:pointer;background:'+(active?w.c+'22':'transparent')+';color:'+(active?w.c:'var(--text3)')+';border:0.5px solid '+(active?w.c+'55':'var(--border2)')+'">'+w.ic+' '+w.key+'</button>';
+  }).join('');
+  document.getElementById('ob-brand-detail-modal').classList.add('open');
+}
+function obdSetWinner(key){
+  document.querySelectorAll('#obd-winner-picker button').forEach(function(btn){
+    var w=OB_WINNER_STATES.find(function(x){return x.key===btn.getAttribute('data-winner');});
+    var active=btn.getAttribute('data-winner')===key;
+    btn.style.background=active?w.c+'22':'transparent';
+    btn.style.color=active?w.c:'var(--text3)';
+    btn.style.border='0.5px solid '+(active?w.c+'55':'var(--border2)');
+  });
+  document.getElementById('obd-winner-picker').setAttribute('data-current',key);
+}
+function closeObBrandDetailModal(){
+  document.getElementById('ob-brand-detail-modal').classList.remove('open');
+}
+async function saveObBrandDetails(){
+  var id=document.getElementById('obd-id').value;
+  if(!id) return;
+  var picker=document.getElementById('obd-winner-picker');
+  var winnerStatus=picker.getAttribute('data-current')||'Testing';
+  var payload={
+    angle_hook:(document.getElementById('obd-angle').value||'').trim()||null,
+    format:(document.getElementById('obd-format').value||'').trim()||null,
+    concept:(document.getElementById('obd-concept').value||'').trim()||null,
+    script:(document.getElementById('obd-script').value||'').trim()||null,
+    winner_status:winnerStatus
+  };
+  try{
+    var{error}=await sb.from('brand_creatives').update(payload).eq('id',id);
+    if(error) throw error;
+    showNotif('Details saved! ✓','success');
+    closeObBrandDetailModal();
+    await loadBrandCreatives();
+  }catch(e){ showNotif('Error: '+(e.message||e),'error'); }
+}
+
+// ---- Analytics ----
+async function loadObAnalytics(){
+  var box=document.getElementById('ob-analytics-body');
+  if(!box) return;
+  if(!obItems.length){ await loadBrandCreatives(); }
+  var items=obItems||[];
+  var total=items.length;
+  var winners=items.filter(function(c){ return c.winner_status==='Winner'; });
+  var testing=items.filter(function(c){ return (c.winner_status||'Testing')==='Testing'; });
+  var killed=items.filter(function(c){ return c.winner_status==='Killed'; });
+  var decided=winners.length+killed.length;
+  var winRate=decided?Math.round(winners.length/decided*100):0;
+
+  if(!total){
+    box.innerHTML=emptyState(ICO_MEGAPHONE,'Walang data pa','Mag-add ng creatives para makita ang analytics.');
+    return;
+  }
+
+  function groupBy(list, keyFn){
+    var g={};
+    list.forEach(function(c){
+      var k=keyFn(c)||'(walang laman)';
+      if(!g[k]) g[k]={total:0,winners:0};
+      g[k].total++;
+      if(c.winner_status==='Winner') g[k].winners++;
+    });
+    return g;
+  }
+  var byFormat=groupBy(items, function(c){return c.format;});
+  var byAngle=groupBy(items, function(c){return c.angle_hook;});
+
+  function renderGroupTable(g){
+    var keys=Object.keys(g).sort(function(a,b){ return g[b].winners-g[a].winners || g[b].total-g[a].total; });
+    if(!keys.length) return '<div style="font-size:11px;color:var(--text3);padding:8px 0">Walang data.</div>';
+    return keys.map(function(k){
+      var d=g[k];
+      var pct=d.total?Math.round(d.winners/d.total*100):0;
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:0.5px solid var(--border)">'
+        +'<span style="flex:1;font-size:12px;color:var(--text2)">'+escapeHtml(k)+'</span>'
+        +'<span style="font-size:11px;color:var(--text3)">'+d.winners+'/'+d.total+' winners</span>'
+        +'<span style="font-size:11px;font-weight:700;color:'+(pct>=50?'#22c55e':pct>0?'#f59e0b':'var(--text3)')+';min-width:38px;text-align:right">'+pct+'%</span>'
+        +'</div>';
+    }).join('');
+  }
+
+  var winnersListHtml=winners.length?winners.map(function(c){
+    return '<div class="ob-row" style="cursor:pointer" onclick="openObBrandDetailModal(\''+c.id+'\')">'
+      +'<div class="ob-name" style="flex:1.3">🏆 '+escapeHtml(c.page_name||'—')+'</div>'
+      +'<div style="flex:1;font-size:11px;color:var(--text3)">'+escapeHtml(c.format||'—')+'</div>'
+      +'<div style="flex:1.4;font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(c.angle_hook||'—')+'</div>'
+      +'</div>';
+  }).join(''):'<div style="font-size:11px;color:var(--text3);padding:12px 0;text-align:center">Wala pang winner. I-mark yung mga panalong creative para makita dito.</div>';
+
+  box.innerHTML=
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px">'
+    +statCard('Total creatives',total,'var(--text)')
+    +statCard('🏆 Winners',winners.length,'#22c55e')
+    +statCard('🧪 Testing',testing.length,'#f59e0b')
+    +statCard('❌ Killed',killed.length,'#ef4444')
+    +statCard('Win rate',winRate+'%','#a78bfa')
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">'
+    +'<div class="form-card"><div class="form-card-title" style="margin-bottom:4px">By Format</div>'+renderGroupTable(byFormat)+'</div>'
+    +'<div class="form-card"><div class="form-card-title" style="margin-bottom:4px">By Angle / Hook</div>'+renderGroupTable(byAngle)+'</div>'
+    +'</div>'
+    +'<div class="form-card-title" style="margin-bottom:8px">🏆 Winning Creatives</div>'
+    +'<div class="data-table" style="padding:4px 8px">'+winnersListHtml+'</div>';
+}
+function statCard(label,value,color){
+  return '<div class="form-card" style="padding:14px;text-align:center">'
+    +'<div style="font-size:22px;font-weight:700;color:'+color+'">'+value+'</div>'
+    +'<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px">'+label+'</div>'
+    +'</div>';
+}
+
+function obSwitchView(view){
+  var listV=document.getElementById('ob-view-list');
+  var histV=document.getElementById('ob-view-history');
+  var anaV=document.getElementById('ob-view-analytics');
+  var tabL=document.getElementById('ob-tab-list');
+  var tabH=document.getElementById('ob-tab-history');
+  var tabA=document.getElementById('ob-tab-analytics');
+  listV.style.display='none'; histV.style.display='none'; anaV.style.display='none';
+  tabL.classList.remove('active'); tabH.classList.remove('active'); tabA.classList.remove('active');
+  if(view==='history'){
+    histV.style.display=''; tabH.classList.add('active');
+    loadObHistory();
+  } else if(view==='analytics'){
+    anaV.style.display=''; tabA.classList.add('active');
+    loadObAnalytics();
+  } else {
+    listV.style.display=''; tabL.classList.add('active');
+  }
+}
+
 async function obHandleFile(input){
   var file=input.files&&input.files[0];
   if(!file) return;
@@ -8704,13 +8872,21 @@ async function obAddCreative(){
   if(!page){ showNotif('Enter a page name','error'); return; }
   try{
     var tag=(document.getElementById('ob-tag')?.value||'').trim()||null;
-    var r=await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, tag:tag, status:'Pending approval'});
+    var angle=(document.getElementById('ob-angle')?.value||'').trim()||null;
+    var format=(document.getElementById('ob-format')?.value||'').trim()||null;
+    var concept=(document.getElementById('ob-concept')?.value||'').trim()||null;
+    var script=(document.getElementById('ob-script')?.value||'').trim()||null;
+    var r=await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, tag:tag, status:'Pending approval', angle_hook:angle, format:format, concept:concept, script:script, winner_status:'Testing'});
     if(r.error) throw r.error;
     showNotif('Brand creative added!','success');
     document.getElementById('ob-page').value='';
     document.getElementById('ob-adcopy').value='';
     document.getElementById('ob-link').value='';
     document.getElementById('ob-tag').value='';
+    var aEl=document.getElementById('ob-angle'); if(aEl)aEl.value='';
+    var fEl=document.getElementById('ob-format'); if(fEl)fEl.value='';
+    var cEl=document.getElementById('ob-concept'); if(cEl)cEl.value='';
+    var sEl=document.getElementById('ob-script'); if(sEl)sEl.value='';
     obRemoveFile();
     obToggleForm();
     await loadBrandCreatives();
