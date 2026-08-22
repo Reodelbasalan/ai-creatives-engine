@@ -8476,14 +8476,33 @@ function obSetWinnerFilter(v){
   obRenderRows();
 }
 
+function obPopulateFormatFilter(){
+  var sel=document.getElementById('ob-format-filter');
+  if(!sel) return;
+  var cur=sel.value;
+  var formats=Array.from(new Set((obItems||[]).map(function(c){return c.format;}).filter(Boolean))).sort();
+  sel.innerHTML='<option value="">All formats</option>'+formats.map(function(f){ return '<option value="'+escapeHtml(f)+'">'+escapeHtml(f)+'</option>'; }).join('');
+  sel.value=cur;
+}
+
 function obRenderRows(){
   var box=document.getElementById('ob-rows');
   if(!box) return;
   obRenderWinnerFilter();
+  obPopulateFormatFilter();
   // Auto-hide: Published na lagpas 48hrs -> History na lang, wala na sa list
   var visible=obItems.filter(function(c){ return !obIsArchived(c); });
   if(obWinnerFilterVal){ visible=visible.filter(function(c){ return (c.winner_status||'Testing')===obWinnerFilterVal; }); }
-  if(!visible.length){ box.innerHTML=emptyState(ICO_MEGAPHONE, obWinnerFilterVal?'Walang '+obWinnerFilterVal.toLowerCase()+' na creative':'No active brand creatives', obWinnerFilterVal?'Baguhin ang filter para makita ang iba.':'Published items auto-move to History after 48 hours. Click "Add creative" to log a new one.'); return; }
+  var fmtVal=document.getElementById('ob-format-filter')?.value||'';
+  if(fmtVal){ visible=visible.filter(function(c){ return (c.format||'')===fmtVal; }); }
+  var q=(document.getElementById('ob-brand-search')?.value||'').toLowerCase().trim();
+  if(q){
+    visible=visible.filter(function(c){
+      var hay=[c.page_name,c.angle_hook,c.concept,c.script,c.format].filter(Boolean).join(' ').toLowerCase();
+      return hay.indexOf(q)>=0;
+    });
+  }
+  if(!visible.length){ box.innerHTML=emptyState(ICO_MEGAPHONE, (obWinnerFilterVal||fmtVal||q)?'Walang tugmang creative':'No active brand creatives', (obWinnerFilterVal||fmtVal||q)?'Baguhin ang filter/search para makita ang iba.':'Published items auto-move to History after 48 hours. Click "Add creative" to log a new one.'); return; }
   var isAdmin=currentUserRole==='admin';
   box.innerHTML=visible.map(function(c){
     var link=c.link_url?('<a href="'+c.link_url+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px">Open<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></a>'):'<span style="color:#7a7a85">—</span>';
@@ -8748,8 +8767,9 @@ async function saveObBrandDetails(){
 
 // ---- Analytics ----
 async function loadObAnalytics(){
-  var box=document.getElementById('ob-analytics-body');
-  if(!box) return;
+  var statsBox=document.getElementById('ob-analytics-stats');
+  var breakBox=document.getElementById('ob-analytics-breakdown');
+  if(!statsBox) return;
   if(!obItems.length){ await loadBrandCreatives(); }
   var items=obItems||[];
   var total=items.length;
@@ -8760,7 +8780,9 @@ async function loadObAnalytics(){
   var winRate=decided?Math.round(winners.length/decided*100):0;
 
   if(!total){
-    box.innerHTML=emptyState(ICO_MEGAPHONE,'Walang data pa','Mag-add ng creatives para makita ang analytics.');
+    statsBox.innerHTML=emptyState(ICO_MEGAPHONE,'Walang data pa','Mag-add ng creatives para makita ang analytics.');
+    breakBox.innerHTML='';
+    document.getElementById('ob-analytics-winners-body').innerHTML='';
     return;
   }
 
@@ -8791,6 +8813,46 @@ async function loadObAnalytics(){
     }).join('');
   }
 
+  statsBox.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px">'
+    +statCard('Total creatives',total,'var(--text)')
+    +statCard('🏆 Winners',winners.length,'#22c55e')
+    +statCard('🧪 Testing',testing.length,'#f59e0b')
+    +statCard('❌ Killed',killed.length,'#ef4444')
+    +statCard('Win rate',winRate+'%','#a78bfa')
+    +'</div>';
+
+  breakBox.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px">'
+    +'<div class="form-card"><div class="form-card-title" style="margin-bottom:4px">By Format</div>'+renderGroupTable(byFormat)+'</div>'
+    +'<div class="form-card"><div class="form-card-title" style="margin-bottom:4px">By Angle / Hook</div>'+renderGroupTable(byAngle)+'</div>'
+    +'</div>';
+
+  // populate format filter (base sa formats ng mga WINNER, para relevant sa review na ito)
+  var fmtSel=document.getElementById('ob-ana-format-filter');
+  if(fmtSel){
+    var curFmt=fmtSel.value;
+    var formats=Array.from(new Set(winners.map(function(c){return c.format;}).filter(Boolean))).sort();
+    fmtSel.innerHTML='<option value="">All formats</option>'+formats.map(function(f){ return '<option value="'+escapeHtml(f)+'">'+escapeHtml(f)+'</option>'; }).join('');
+    fmtSel.value=curFmt;
+  }
+
+  obRenderWinnersList();
+}
+
+function obRenderWinnersList(){
+  var box=document.getElementById('ob-analytics-winners-body');
+  if(!box) return;
+  var winners=(obItems||[]).filter(function(c){ return c.winner_status==='Winner'; });
+
+  var fmtVal=document.getElementById('ob-ana-format-filter')?.value||'';
+  if(fmtVal){ winners=winners.filter(function(c){ return (c.format||'')===fmtVal; }); }
+  var q=(document.getElementById('ob-ana-search')?.value||'').toLowerCase().trim();
+  if(q){
+    winners=winners.filter(function(c){
+      var hay=[c.page_name,c.angle_hook,c.concept,c.script,c.format].filter(Boolean).join(' ').toLowerCase();
+      return hay.indexOf(q)>=0;
+    });
+  }
+
   var winnersListHtml=winners.length?winners.map(function(c){
     var meta=[c.format,c.angle_hook].filter(Boolean).join(' · ');
     return '<div class="form-card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer" onclick="openObBrandDetailModal(\''+c.id+'\')">'
@@ -8803,23 +8865,11 @@ async function loadObAnalytics(){
       +(c.script?'<div style="font-size:11.5px;color:var(--text3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"><b style="color:var(--text3);font-weight:600">Script:</b> '+escapeHtml(c.script)+'</div>':'')
       +(!c.concept&&!c.script?'<div style="font-size:11px;color:var(--text3);font-style:italic">Wala pang script/concept. Click para dagdagan.</div>':'')
       +'</div>';
-  }).join(''):'<div style="font-size:11px;color:var(--text3);padding:12px 0;text-align:center">Wala pang winner. I-mark yung mga panalong creative para makita dito.</div>';
+  }).join(''):'<div style="font-size:11px;color:var(--text3);padding:12px 0;text-align:center">'+((fmtVal||q)?'Walang winner na tugma sa filter/search.':'Wala pang winner. I-mark yung mga panalong creative para makita dito.')+'</div>';
 
-  box.innerHTML=
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px">'
-    +statCard('Total creatives',total,'var(--text)')
-    +statCard('🏆 Winners',winners.length,'#22c55e')
-    +statCard('🧪 Testing',testing.length,'#f59e0b')
-    +statCard('❌ Killed',killed.length,'#ef4444')
-    +statCard('Win rate',winRate+'%','#a78bfa')
-    +'</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">'
-    +'<div class="form-card"><div class="form-card-title" style="margin-bottom:4px">By Format</div>'+renderGroupTable(byFormat)+'</div>'
-    +'<div class="form-card"><div class="form-card-title" style="margin-bottom:4px">By Angle / Hook</div>'+renderGroupTable(byAngle)+'</div>'
-    +'</div>'
-    +'<div class="form-card-title" style="margin-bottom:8px">🏆 Winning Creatives</div>'
-    +winnersListHtml;
+  box.innerHTML=winnersListHtml;
 }
+
 function statCard(label,value,color){
   return '<div class="form-card" style="padding:14px;text-align:center">'
     +'<div style="font-size:22px;font-weight:700;color:'+color+'">'+value+'</div>'
