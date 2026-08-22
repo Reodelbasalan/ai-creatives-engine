@@ -2392,6 +2392,12 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <button class="yellow-btn" onclick="obAddCreative()" style="width:100%;margin-top:16px;font-weight:700">Add creative</button>
           </div>
 
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+            <input type="text" class="form-input" id="ob-brand-search" placeholder="🔍 Search script, concept, angle, page..." style="max-width:280px" oninput="obRenderRows()">
+            <select class="form-select" id="ob-format-filter" style="max-width:170px" onchange="obRenderRows()">
+              <option value="">All formats</option>
+            </select>
+          </div>
           <div id="ob-winner-filter" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap"></div>
 
           <div class="form-card" style="padding:0;overflow:hidden">
@@ -2411,7 +2417,16 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
           <!-- ANALYTICS VIEW -->
           <div id="ob-view-analytics" style="display:none">
-            <div id="ob-analytics-body"></div>
+            <div id="ob-analytics-stats"></div>
+            <div id="ob-analytics-breakdown"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 10px;align-items:center">
+              <input type="text" class="form-input" id="ob-ana-search" placeholder="🔍 Search script, concept, angle..." style="max-width:280px" oninput="obRenderWinnersList()">
+              <select class="form-select" id="ob-ana-format-filter" style="max-width:170px" onchange="obRenderWinnersList()">
+                <option value="">All formats</option>
+              </select>
+            </div>
+            <div class="form-card-title" style="margin-bottom:8px">🏆 Winning Creatives</div>
+            <div id="ob-analytics-winners-body"></div>
           </div>
 
         </div>
