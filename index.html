@@ -2397,6 +2397,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <select class="form-select" id="ob-format-filter" style="max-width:170px" onchange="obRenderRows()">
               <option value="">All formats</option>
             </select>
+            <select class="form-select" id="ob-angle-filter" style="max-width:190px" onchange="obRenderRows()">
+              <option value="">All angles/hooks</option>
+            </select>
+            <button class="ghost-btn" onclick="obClearFilters()" style="font-size:11px">Clear</button>
           </div>
           <div id="ob-winner-filter" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap"></div>
 
@@ -2423,6 +2427,9 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <input type="text" class="form-input" id="ob-ana-search" placeholder="🔍 Search script, concept, angle..." style="max-width:280px" oninput="obRenderWinnersList()">
               <select class="form-select" id="ob-ana-format-filter" style="max-width:170px" onchange="obRenderWinnersList()">
                 <option value="">All formats</option>
+              </select>
+              <select class="form-select" id="ob-ana-angle-filter" style="max-width:190px" onchange="obRenderWinnersList()">
+                <option value="">All angles/hooks</option>
               </select>
             </div>
             <div class="form-card-title" style="margin-bottom:8px">🏆 Winning Creatives</div>
