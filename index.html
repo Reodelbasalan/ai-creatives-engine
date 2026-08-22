@@ -2301,6 +2301,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
                 History
               </button>
+              <button type="button" class="ob-tab" id="ob-tab-analytics" onclick="obSwitchView('analytics')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                Analytics
+              </button>
             </div>
           </div>
 
@@ -2337,6 +2341,31 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
             <label class="form-label">Ad copy</label>
             <textarea class="form-input" id="ob-adcopy" rows="3" placeholder="Caption or ad copy for the post..." style="resize:vertical;margin-bottom:14px"></textarea>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px">
+              <div>
+                <label class="form-label">Angle / Hook</label>
+                <input type="text" class="form-input" id="ob-angle" placeholder="e.g. Problem-agitate-solve, curiosity hook..."/>
+              </div>
+              <div>
+                <label class="form-label">Format</label>
+                <input type="text" class="form-input" id="ob-format" list="ob-format-suggestions" placeholder="e.g. UGC, Static, Talking head..."/>
+                <datalist id="ob-format-suggestions">
+                  <option value="UGC">
+                  <option value="Static">
+                  <option value="Talking head">
+                  <option value="Carousel">
+                  <option value="Meme/Text overlay">
+                  <option value="Voiceover + B-roll">
+                </datalist>
+              </div>
+            </div>
+
+            <label class="form-label">Concept</label>
+            <textarea class="form-input" id="ob-concept" rows="2" placeholder="Ano ang overall idea/concept ng creative na ito..." style="resize:vertical;margin-bottom:14px"></textarea>
+
+            <label class="form-label">Script</label>
+            <textarea class="form-input" id="ob-script" rows="4" placeholder="Buong script o outline..." style="resize:vertical;margin-bottom:14px"></textarea>
 
             <label class="form-label">Creative file (optional)</label>
             <div class="ob-upload" id="ob-upload" onclick="document.getElementById('ob-file').click()">
@@ -2376,6 +2405,11 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <span>Page name</span><span>Action</span><span>Tag</span><span>Link</span><span>By</span><span>Date</span>
             </div>
             <div id="ob-history-body"></div>
+          </div>
+
+          <!-- ANALYTICS VIEW -->
+          <div id="ob-view-analytics" style="display:none">
+            <div id="ob-analytics-body"></div>
           </div>
 
         </div>
@@ -5404,6 +5438,41 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     <div class="data-table" style="margin-bottom:1.25rem" id="us-monthly-table"></div>
     <div class="section-label">Recent submissions</div>
     <div id="us-recent-list"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="ob-brand-detail-modal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-head">
+      <div class="modal-title" id="ob-brand-detail-title">🎬 Creative details</div>
+      <button class="modal-close" onclick="closeObBrandDetailModal()">✕</button>
+    </div>
+    <div style="max-height:70vh;overflow-y:auto;padding-right:4px">
+      <input type="hidden" id="obd-id">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="font-size:11px;color:var(--text3)">Winner status:</span>
+        <div id="obd-winner-picker" style="display:flex;gap:6px"></div>
+      </div>
+      <div class="form-field" style="margin-bottom:10px">
+        <label class="form-label">Angle / Hook</label>
+        <input class="form-input" id="obd-angle" placeholder="e.g. Curiosity hook, problem-agitate-solve...">
+      </div>
+      <div class="form-field" style="margin-bottom:10px">
+        <label class="form-label">Format</label>
+        <input class="form-input" id="obd-format" list="ob-format-suggestions" placeholder="e.g. UGC, Static, Talking head...">
+      </div>
+      <div class="form-field" style="margin-bottom:10px">
+        <label class="form-label">Concept</label>
+        <textarea class="form-textarea" id="obd-concept" rows="2" placeholder="Overall idea/concept..."></textarea>
+      </div>
+      <div class="form-field" style="margin-bottom:10px">
+        <label class="form-label">Script</label>
+        <textarea class="form-textarea" id="obd-script" rows="6" placeholder="Buong script o outline..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="yellow-btn" onclick="saveObBrandDetails()" style="flex:1">Save details</button>
+    </div>
   </div>
 </div>
 
