@@ -8455,12 +8455,35 @@ function obIsArchived(c){
   return (Date.now()-pub) >= OB_ARCHIVE_MS;
 }
 
+var obWinnerFilterVal='';
+function obRenderWinnerFilter(){
+  var el=document.getElementById('ob-winner-filter');
+  if(!el) return;
+  var opts=[
+    {v:'',label:'All',ic:'',c:'var(--text2)'},
+    {v:'Winner',label:'Winner',ic:'🏆',c:'#22c55e'},
+    {v:'Testing',label:'Testing',ic:'🧪',c:'#f59e0b'},
+    {v:'Killed',label:'Killed',ic:'❌',c:'#ef4444'}
+  ];
+  el.innerHTML=opts.map(function(o){
+    var active=obWinnerFilterVal===o.v;
+    return '<button type="button" onclick="obSetWinnerFilter(\''+o.v+'\')" style="font-size:11px;font-weight:650;padding:5px 12px;border-radius:20px;cursor:pointer;background:'+(active?o.c+'22':'transparent')+';color:'+(active?o.c:'var(--text3)')+';border:0.5px solid '+(active?o.c+'55':'var(--border2)')+'">'+(o.ic?o.ic+' ':'')+o.label+'</button>';
+  }).join('');
+}
+function obSetWinnerFilter(v){
+  obWinnerFilterVal=v;
+  obRenderWinnerFilter();
+  obRenderRows();
+}
+
 function obRenderRows(){
   var box=document.getElementById('ob-rows');
   if(!box) return;
+  obRenderWinnerFilter();
   // Auto-hide: Published na lagpas 48hrs -> History na lang, wala na sa list
   var visible=obItems.filter(function(c){ return !obIsArchived(c); });
-  if(!visible.length){ box.innerHTML=emptyState(ICO_MEGAPHONE,'No active brand creatives','Published items auto-move to History after 48 hours. Click "Add creative" to log a new one.'); return; }
+  if(obWinnerFilterVal){ visible=visible.filter(function(c){ return (c.winner_status||'Testing')===obWinnerFilterVal; }); }
+  if(!visible.length){ box.innerHTML=emptyState(ICO_MEGAPHONE, obWinnerFilterVal?'Walang '+obWinnerFilterVal.toLowerCase()+' na creative':'No active brand creatives', obWinnerFilterVal?'Baguhin ang filter para makita ang iba.':'Published items auto-move to History after 48 hours. Click "Add creative" to log a new one.'); return; }
   var isAdmin=currentUserRole==='admin';
   box.innerHTML=visible.map(function(c){
     var link=c.link_url?('<a href="'+c.link_url+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px">Open<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></a>'):'<span style="color:#7a7a85">—</span>';
@@ -8503,7 +8526,7 @@ function obRenderRows(){
         + 'Unpublish</button>'
       : '';
     return '<div class="ob-row">'
-      + '<div class="ob-name">'+escapeHtml(c.page_name||'—')+'</div>'
+      + '<div><div class="ob-name">'+escapeHtml(c.page_name||'—')+'</div>'+((c.format||c.angle_hook)?'<div style="font-size:10px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+escapeHtml((c.format?c.format+' — ':'')+(c.angle_hook||''))+'">'+(c.format?'<span style="color:var(--text2)">'+escapeHtml(c.format)+'</span>':'')+(c.format&&c.angle_hook?' · ':'')+escapeHtml(c.angle_hook||'')+'</div>':'')+'</div>'
       + '<div class="ob-copy" title="'+escapeHtml(c.ad_copy||'')+'">'+escapeHtml(c.ad_copy||'—')+'</div>'
       + '<div>'+obTagBadge(c.tag)+'</div>'
       + '<div>'+link+'</div>'
@@ -8520,13 +8543,15 @@ function obRenderRows(){
       +     '<div onclick="obStatusPick(\''+c.id+'\',\'Published\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Published</div>'
       +   '</div>'
       + '</div>'
-      + approveBtn
-      + publishBtn
-      + winnerBadge
-      + detailsBtn
-      + '<button class="ob-del-btn" onclick="obDeleteCreative(\''+c.id+'\')" title="Burahin">'
-      +   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>'
-      + '</button>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;align-items:center">'
+      +   approveBtn
+      +   publishBtn
+      +   winnerBadge
+      +   detailsBtn
+      +   '<button class="ob-del-btn" onclick="obDeleteCreative(\''+c.id+'\')" title="Burahin">'
+      +     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>'
+      +   '</button>'
+      + '</div>'
       + '</div>';
   }).join('');
 }
@@ -8767,10 +8792,16 @@ async function loadObAnalytics(){
   }
 
   var winnersListHtml=winners.length?winners.map(function(c){
-    return '<div class="ob-row" style="cursor:pointer" onclick="openObBrandDetailModal(\''+c.id+'\')">'
-      +'<div class="ob-name" style="flex:1.3">🏆 '+escapeHtml(c.page_name||'—')+'</div>'
-      +'<div style="flex:1;font-size:11px;color:var(--text3)">'+escapeHtml(c.format||'—')+'</div>'
-      +'<div style="flex:1.4;font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(c.angle_hook||'—')+'</div>'
+    var meta=[c.format,c.angle_hook].filter(Boolean).join(' · ');
+    return '<div class="form-card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer" onclick="openObBrandDetailModal(\''+c.id+'\')">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px">'
+      +'<div style="font-size:13px;font-weight:700">🏆 '+escapeHtml(c.page_name||'—')+'</div>'
+      +'<span style="font-size:10px;color:var(--text3)">📝 View full details →</span>'
+      +'</div>'
+      +(meta?'<div style="font-size:11px;color:#22c55e;margin-bottom:6px">'+escapeHtml(meta)+'</div>':'')
+      +(c.concept?'<div style="font-size:11.5px;color:var(--text2);margin-bottom:4px"><b style="color:var(--text3);font-weight:600">Concept:</b> '+escapeHtml(c.concept)+'</div>':'')
+      +(c.script?'<div style="font-size:11.5px;color:var(--text3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"><b style="color:var(--text3);font-weight:600">Script:</b> '+escapeHtml(c.script)+'</div>':'')
+      +(!c.concept&&!c.script?'<div style="font-size:11px;color:var(--text3);font-style:italic">Wala pang script/concept. Click para dagdagan.</div>':'')
       +'</div>';
   }).join(''):'<div style="font-size:11px;color:var(--text3);padding:12px 0;text-align:center">Wala pang winner. I-mark yung mga panalong creative para makita dito.</div>';
 
@@ -8787,7 +8818,7 @@ async function loadObAnalytics(){
     +'<div class="form-card"><div class="form-card-title" style="margin-bottom:4px">By Angle / Hook</div>'+renderGroupTable(byAngle)+'</div>'
     +'</div>'
     +'<div class="form-card-title" style="margin-bottom:8px">🏆 Winning Creatives</div>'
-    +'<div class="data-table" style="padding:4px 8px">'+winnersListHtml+'</div>';
+    +winnersListHtml;
 }
 function statCard(label,value,color){
   return '<div class="form-card" style="padding:14px;text-align:center">'
