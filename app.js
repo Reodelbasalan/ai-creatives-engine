@@ -8414,7 +8414,7 @@ function obToggleForm(){
     if(btn) btn.style.opacity='1';
     if(lbl) lbl.textContent='Add creative';
   } else {
-    wrap.style.maxHeight='560px'; wrap.style.opacity='1'; wrap.style.marginBottom='20px';
+    wrap.style.maxHeight=wrap.scrollHeight+'px'; wrap.style.opacity='1'; wrap.style.marginBottom='20px';
     if(btn) btn.style.opacity='0.55';
     if(lbl) lbl.textContent='Close form';
   }
@@ -8966,6 +8966,7 @@ async function obHandleFile(input){
     if(nm) nm.textContent=file.name;
     if(isVideo){ if(vid){ vid.src=localUrl; vid.style.display='block'; vid.setAttribute('controls','controls'); } if(img) img.style.display='none'; }
     else { if(img){ img.src=localUrl; img.style.display='block'; } if(vid) vid.style.display='none'; }
+    var _w=document.getElementById('ob-form'); if(_w && _w.style.maxHeight && _w.style.maxHeight!=='0px'){ _w.style.maxHeight=_w.scrollHeight+'px'; }
   }catch(err){
     if(prog) prog.style.display='none';
     if(empty) empty.style.display='flex';
