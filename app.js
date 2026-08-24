@@ -545,7 +545,7 @@ function showPage(page){
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
   try{ localStorage.setItem('ace_last_page',page); }catch(e){}
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker','creatives-tracking':'Creatives Tracking','client-onboarding':'Client Onboarding','client-creatives':'My Creatives','client-materials':'My Materials'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker','creatives-tracking':'Creatives Tracking','client-onboarding':'Client Onboarding','client-creatives':'My Creatives','client-materials':'My Materials','proposal-builder':'Proposal Builder'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
@@ -572,6 +572,7 @@ function showPage(page){
   if(page==='sales-tracker'){loadSalesTracker();}
   if(page==='creatives-tracking'){loadCreativeTrack();}
   if(page==='client-onboarding'){loadClientOnb();}
+  if(page==='proposal-builder'){loadProposals();}
   if(page==='client-creatives'){loadClientCreatives();}
   if(page==='client-materials'){loadClientMaterials();}
   if(page==='chat'){loadChat();}
@@ -807,11 +808,10 @@ async function loadDashboard(){
   (editorsList||[]).forEach(function(e){editorsMap[e.id]=e.name||e.email;});
   const ready=allProjects.filter(p=>p.status==='Ready for Editor').length;
   document.getElementById('stat-total').textContent=allProjects.length;
-  document.getElementById('stat-ai').textContent=allProjects.filter(p=>p.status==='Generating AI').length;
-  document.getElementById('stat-ready').textContent=ready;
-  document.getElementById('stat-done').textContent=allProjects.filter(p=>p.status==='Approved / Done').length;
   const tb=document.getElementById('tasks-badge');
-  tb.textContent=ready;tb.style.display=ready>0?'':'none';
+  if(tb){tb.textContent=ready;tb.style.display=ready>0?'':'none';}
+  // NEW dashboard widgets (sales, proposals, winners, clients, attention)
+  loadDashWidgets();
   const pipes=[['pipe-new','New Input','count-new'],['pipe-ai','Generating AI','count-ai'],['pipe-ready','Ready for Editor','count-ready'],['pipe-prod','In Production','count-prod'],['pipe-done','Approved / Done','count-done']];
   pipes.forEach(([id,status,cid])=>{
     const items=allProjects.filter(p=>p.status===status);
@@ -846,6 +846,169 @@ async function loadDashboard(){
     </div>`).join('')||'<div class="table-empty"><div class="table-empty-icon">📋</div><div>No projects yet</div><div style="font-size:11px;margin-top:6px;color:var(--text3)">Click + New project to get started</div></div>';
 }
 
+// ══════════════════════════════════════════════
+// DASHBOARD WIDGETS (greeting, sales, proposals, winners, attention)
+// ══════════════════════════════════════════════
+function dashPeso(n){ return '₱'+Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+
+async function loadDashWidgets(){
+  // ---- Greeting ----
+  var hr=new Date().getHours();
+  var greet=hr<12?'Good morning':hr<18?'Good afternoon':'Good evening';
+  var rawName=(document.getElementById('user-name-display')?.textContent||'').trim();
+  if(!rawName || rawName==='—'){ rawName=(document.getElementById('user-email-label')?.textContent||'').split('@')[0]||'boss'; }
+  var myName=rawName.split(' ')[0]||'boss';
+  var gEl=document.getElementById('dash-greet-text');
+  if(gEl) gEl.textContent=greet+', '+myName+' 👋';
+  var todayStr=new Date().toLocaleDateString('en-PH',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  // ---- Parallel fetch all data ----
+  var results=await Promise.allSettled([
+    sb.from('sales_orders').select('sales_amount,order_date,paid_status').order('order_date',{ascending:false}).limit(1000),
+    sb.from('proposals').select('*').order('created_at',{ascending:false}).limit(50),
+    sb.from('brand_creatives').select('*').eq('winner_status','Winner').limit(50),
+    sb.from('clients_onboarding').select('id,name,steps').limit(200),
+    sb.from('call_logs').select('client_name,call_status,call_at').order('call_at',{ascending:false}).limit(200)
+  ]);
+  var sales=results[0].status==='fulfilled'?(results[0].value.data||[]):[];
+  var proposals=results[1].status==='fulfilled'?(results[1].value.data||[]):[];
+  var winners=results[2].status==='fulfilled'?(results[2].value.data||[]):[];
+  var clients=results[3].status==='fulfilled'?(results[3].value.data||[]):[];
+  var calls=results[4].status==='fulfilled'?(results[4].value.data||[]):[];
+
+  // ---- Stat cards ----
+  var now=new Date();
+  var thisMonthSales=sales.filter(function(s){
+    if(!s.order_date) return false;
+    var d=new Date(s.order_date);
+    return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+  }).reduce(function(sum,s){ return sum+(Number(s.sales_amount)||0); },0);
+  var pendingProps=proposals.filter(function(p){ return (p.status||'Draft')==='Draft'||(p.status||'')==='Sent'; }).length;
+
+  var setTxt=function(id,val){ var el=document.getElementById(id); if(el)el.textContent=val; };
+  setTxt('stat-sales',dashPeso(thisMonthSales));
+  setTxt('stat-proposals',pendingProps);
+  setTxt('stat-winners',winners.length);
+  setTxt('stat-clients',clients.length);
+
+  var subEl=document.getElementById('dash-greet-sub');
+  if(subEl) subEl.textContent=todayStr+'  ·  '+dashPeso(thisMonthSales)+' sales this month  ·  '+winners.length+' winning creatives';
+
+  // ---- Needs Attention ----
+  renderDashAttention(proposals, calls, clients);
+
+  // ---- Sales chart ----
+  renderDashSalesChart(sales);
+
+  // ---- Top winners ----
+  renderDashWinners(winners);
+
+  // ---- Recent proposals ----
+  renderDashProposals(proposals);
+}
+
+function renderDashAttention(proposals, calls, clients){
+  var box=document.getElementById('dash-attention'); if(!box) return;
+  var items=[];
+  // Sent proposals waiting for response
+  proposals.filter(function(p){ return (p.status||'')==='Sent'; }).slice(0,4).forEach(function(p){
+    items.push({icon:'📄',color:'#e879f9',text:ctEsc(p.client_name||'—')+' — proposal sent, awaiting reply',action:function(){return "showPage('proposal-builder')";}});
+  });
+  // Call follow-ups needed
+  var followStatuses=['Callback','Follow up','Follow-up','For follow up','Interested'];
+  calls.filter(function(c){ return c.call_status && followStatuses.some(function(s){return c.call_status.toLowerCase().indexOf(s.toLowerCase())>=0;}); }).slice(0,4).forEach(function(c){
+    items.push({icon:'📞',color:'#f59e0b',text:ctEsc(c.client_name||'—')+' — '+ctEsc(c.call_status),action:function(){return "showPage('call-tracker')";}});
+  });
+  // Onboarding not complete
+  clients.filter(function(cl){
+    var steps=Array.isArray(cl.steps)?cl.steps:[];
+    if(!steps.length) return false;
+    var done=steps.filter(function(s){return s&&s.done;}).length;
+    return done<steps.length;
+  }).slice(0,3).forEach(function(cl){
+    var steps=Array.isArray(cl.steps)?cl.steps:[];
+    var done=steps.filter(function(s){return s&&s.done;}).length;
+    var pct=steps.length?Math.round(done/steps.length*100):0;
+    items.push({icon:'👥',color:'#7F77DD',text:ctEsc(cl.name||'—')+' — onboarding '+pct+'% complete',action:function(){return "showPage('client-onboarding')";}});
+  });
+
+  if(!items.length){
+    box.innerHTML='<div style="text-align:center;padding:24px 0;color:var(--text3)"><div style="font-size:28px;margin-bottom:6px">✅</div><div style="font-size:12.5px">All clear! Walang kailangang aksyunan ngayon.</div></div>';
+    return;
+  }
+  box.innerHTML=items.map(function(it){
+    return '<div onclick="'+it.action()+'" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background 0.15s;margin-bottom:4px" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'transparent\'">'
+      +'<div style="width:28px;height:28px;border-radius:8px;background:'+it.color+'22;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+it.icon+'</div>'
+      +'<div style="flex:1;font-size:12.5px;color:var(--text2)">'+it.text+'</div>'
+      +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>'
+      +'</div>';
+  }).join('');
+}
+
+function renderDashSalesChart(sales){
+  var box=document.getElementById('dash-sales-chart'); if(!box) return;
+  // Group by last 6 months
+  var months=[];
+  var now=new Date();
+  for(var i=5;i>=0;i--){
+    var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push({key:d.getFullYear()+'-'+d.getMonth(),label:d.toLocaleDateString('en-PH',{month:'short'}),total:0});
+  }
+  sales.forEach(function(s){
+    if(!s.order_date) return;
+    var d=new Date(s.order_date);
+    var key=d.getFullYear()+'-'+d.getMonth();
+    var m=months.find(function(x){return x.key===key;});
+    if(m) m.total+=(Number(s.sales_amount)||0);
+  });
+  var max=Math.max.apply(null,months.map(function(m){return m.total;}).concat([1]));
+  var maxMonth=months.reduce(function(a,b){return b.total>a.total?b:a;},months[0]);
+  box.innerHTML='<div style="display:flex;align-items:flex-end;gap:8px;height:120px;padding:0 2px">'
+    +months.map(function(m){
+      var h=max>0?Math.round(m.total/max*100):0;
+      var isMax=m.total===maxMonth.total&&m.total>0;
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">'
+        +'<div style="font-size:9px;color:var(--text3);white-space:nowrap">'+(m.total>0?dashPeso(m.total):'')+'</div>'
+        +'<div style="width:100%;height:'+Math.max(h,2)+'%;background:'+(isMax?'linear-gradient(180deg,var(--yellow2),var(--yellow))':'var(--bg4)')+';border-radius:6px 6px 0 0;transition:height 0.4s;min-height:3px'+(isMax?';box-shadow:0 0 12px rgba(250,204,21,0.3)':'')+'"></div>'
+        +'<div style="font-size:10px;color:var(--text3);font-weight:600">'+m.label+'</div>'
+        +'</div>';
+    }).join('')
+    +'</div>';
+}
+
+function renderDashWinners(winners){
+  var box=document.getElementById('dash-winners'); if(!box) return;
+  if(!winners.length){
+    box.innerHTML='<div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px">Wala pang winner. Mark creatives as 🏆 Winner sa Own Brand Creatives.</div>';
+    return;
+  }
+  box.innerHTML=winners.slice(0,4).map(function(c){
+    var meta=[c.format,c.angle_hook].filter(Boolean).join(' · ');
+    return '<div onclick="showPage(\'brand\')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'transparent\'">'
+      +'<div style="font-size:16px">🏆</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">'+ctEsc(c.page_name||'—')+'</div>'+(meta?'<div style="font-size:10.5px;color:#22c55e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+ctEsc(meta)+'</div>':'')+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function renderDashProposals(proposals){
+  var box=document.getElementById('dash-proposals'); if(!box) return;
+  if(!proposals.length){
+    box.innerHTML='<div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px">Wala pang proposal. Gumawa sa Proposal Builder.</div>';
+    return;
+  }
+  var statusMeta={'Draft':{c:'var(--text3)'},'Sent':{c:'#60a5fa'},'Accepted':{c:'#22c55e'},'Rejected':{c:'#ef4444'}};
+  box.innerHTML=proposals.slice(0,4).map(function(p){
+    var total=(p.pricing_items||[]).reduce(function(s,it){return s+(Number(it.amount)||0);},0);
+    var st=p.status||'Draft';
+    var sm=statusMeta[st]||statusMeta['Draft'];
+    return '<div onclick="showPage(\'proposal-builder\')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'transparent\'">'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">'+ctEsc(p.client_name||'—')+'</div><div style="font-size:10.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+ctEsc(p.proposal_title||'Untitled')+'</div></div>'
+      +'<div style="font-size:12.5px;font-weight:700;color:var(--yellow)">'+dashPeso(total)+'</div>'
+      +'<div style="font-size:10px;font-weight:650;color:'+sm.c+';padding:2px 8px;border-radius:20px;background:'+sm.c+'18">'+st+'</div>'
+      +'</div>';
+  }).join('');
+}
 
 // ══════════════════════════════════════════════
 // SKELETON LOADERS + EMPTY STATE ILLUSTRATIONS
@@ -8414,7 +8577,7 @@ function obToggleForm(){
     if(btn) btn.style.opacity='1';
     if(lbl) lbl.textContent='Add creative';
   } else {
-    wrap.style.maxHeight=wrap.scrollHeight+'px'; wrap.style.opacity='1'; wrap.style.marginBottom='20px';
+    wrap.style.maxHeight='560px'; wrap.style.opacity='1'; wrap.style.marginBottom='20px';
     if(btn) btn.style.opacity='0.55';
     if(lbl) lbl.textContent='Close form';
   }
@@ -8966,7 +9129,6 @@ async function obHandleFile(input){
     if(nm) nm.textContent=file.name;
     if(isVideo){ if(vid){ vid.src=localUrl; vid.style.display='block'; vid.setAttribute('controls','controls'); } if(img) img.style.display='none'; }
     else { if(img){ img.src=localUrl; img.style.display='block'; } if(vid) vid.style.display='none'; }
-    var _w=document.getElementById('ob-form'); if(_w && _w.style.maxHeight && _w.style.maxHeight!=='0px'){ _w.style.maxHeight=_w.scrollHeight+'px'; }
   }catch(err){
     if(prog) prog.style.display='none';
     if(empty) empty.style.display='flex';
@@ -10970,4 +11132,267 @@ async function renderClientOnbView(){
     +filesHtml
     +creativesHtml
     +'</div>';
+}
+
+
+// ============================================================
+// PROPOSAL BUILDER
+// ============================================================
+var proposalsCache=[];
+var propTmpScope=[];
+var propTmpPricing=[];
+
+async function loadProposals(){
+  if(currentUserRole!=='admin'){ showNotif('Admin only!','error'); showPage('dashboard'); return; }
+  var{data,error}=await sb.from('proposals').select('*').order('created_at',{ascending:false});
+  if(error){ showNotif('Error loading proposals: '+error.message,'error'); proposalsCache=[]; }
+  else { proposalsCache=(data||[]).map(function(p){ if(!Array.isArray(p.scope_items))p.scope_items=[]; if(!Array.isArray(p.pricing_items))p.pricing_items=[]; return p; }); }
+  renderProposals();
+}
+
+function propTotal(p){
+  return (p.pricing_items||[]).reduce(function(sum,it){ return sum+(Number(it.amount)||0); },0);
+}
+function propPeso(n){ return '₱'+Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+
+function renderProposals(){
+  var q=(document.getElementById('prop-search')?.value||'').toLowerCase().trim();
+  var fstat=document.getElementById('prop-filter-status')?.value||'';
+  var rows=proposalsCache.filter(function(p){
+    if(fstat && (p.status||'Draft')!==fstat) return false;
+    if(q){ var hay=((p.client_name||'')+' '+(p.proposal_title||'')+' '+(p.contact_person||'')).toLowerCase(); if(hay.indexOf(q)===-1) return false; }
+    return true;
+  });
+  var box=document.getElementById('prop-body');
+  if(!box) return;
+  if(!rows.length){ box.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">📄</div>Wala pang proposal. Click "+ New proposal".</div></div>'; return; }
+
+  var statusMeta={
+    'Draft':{c:'var(--text3)',bg:'rgba(110,110,120,0.12)'},
+    'Sent':{c:'#60a5fa',bg:'rgba(96,165,250,0.12)'},
+    'Accepted':{c:'#22c55e',bg:'rgba(34,197,94,0.12)'},
+    'Rejected':{c:'#ef4444',bg:'rgba(239,68,68,0.12)'}
+  };
+
+  box.innerHTML=rows.map(function(p){
+    var total=propTotal(p);
+    var st=p.status||'Draft';
+    var sm=statusMeta[st]||statusMeta['Draft'];
+    var date=p.created_at?new Date(p.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'—';
+    return '<div class="form-card" style="padding:14px;margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+      +'<div style="cursor:pointer;flex:1;min-width:180px" onclick="openProposalModal(\''+p.id+'\')">'
+      +'<div class="row-name" style="font-size:14px">'+ctEsc(p.client_name||'—')+'</div>'
+      +'<div class="row-sub">'+ctEsc(p.proposal_title||'Untitled proposal')+' · '+date+'</div>'
+      +'</div>'
+      +'<div style="font-size:15px;font-weight:700;color:var(--yellow)">'+propPeso(total)+'</div>'
+      +'<select class="form-select" style="font-size:11px;padding:5px 8px;width:auto" onchange="updateProposalStatus(\''+p.id+'\',this.value)">'
+      +['Draft','Sent','Accepted','Rejected'].map(function(s){ return '<option value="'+s+'"'+(st===s?' selected':'')+'>'+s+'</option>'; }).join('')
+      +'</select>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">'
+      +'<button class="ghost-btn" onclick="generateProposalDoc(\''+p.id+'\')" style="font-size:11px">🖨 Preview / Print</button>'
+      +'<button class="ghost-btn" onclick="copyProposalText(\''+p.id+'\')" style="font-size:11px">📋 Copy for email</button>'
+      +'<button class="ghost-btn" onclick="openProposalModal(\''+p.id+'\')" style="font-size:11px">Edit</button>'
+      +'<button class="ghost-btn" onclick="deleteProposal(\''+p.id+'\')" style="font-size:11px;color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ---- scope items (dynamic list) ----
+function propRenderScopeEdit(){
+  var el=document.getElementById('prop-scope-edit'); if(!el) return;
+  el.innerHTML=propTmpScope.map(function(s,i){
+    return '<div class="ob-step"><span style="flex:1;font-size:12.5px">'+ctEsc(s)+'</span>'
+      +'<button class="ghost-btn" onclick="propDelScope('+i+')" style="font-size:10px;padding:2px 6px;color:var(--red);border-color:rgba(239,68,68,0.2)">✕</button></div>';
+  }).join('')||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Walang scope item pa.</div>';
+}
+function propAddScope(){
+  var inp=document.getElementById('prop-scope-input');
+  var v=inp.value.trim(); if(!v) return;
+  propTmpScope.push(v); inp.value=''; propRenderScopeEdit();
+}
+function propDelScope(i){ propTmpScope.splice(i,1); propRenderScopeEdit(); }
+
+// ---- pricing items (dynamic list, description + amount) ----
+function propRenderPricingEdit(){
+  var el=document.getElementById('prop-pricing-edit'); if(!el) return;
+  el.innerHTML=propTmpPricing.map(function(it,i){
+    return '<div class="ob-step"><span style="flex:1;font-size:12.5px">'+ctEsc(it.desc)+'</span>'
+      +'<span style="font-size:12px;color:var(--yellow);font-weight:600;margin-right:6px">'+propPeso(it.amount)+'</span>'
+      +'<button class="ghost-btn" onclick="propDelPricing('+i+')" style="font-size:10px;padding:2px 6px;color:var(--red);border-color:rgba(239,68,68,0.2)">✕</button></div>';
+  }).join('')||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Walang pricing item pa.</div>';
+  var total=propTmpPricing.reduce(function(sum,it){ return sum+(Number(it.amount)||0); },0);
+  var totalEl=document.getElementById('prop-total-display');
+  if(totalEl) totalEl.textContent=propTmpPricing.length?'Total: '+propPeso(total):'';
+}
+function propAddPricing(){
+  var descEl=document.getElementById('prop-price-desc');
+  var amtEl=document.getElementById('prop-price-amount');
+  var desc=descEl.value.trim();
+  var amt=Number(amtEl.value)||0;
+  if(!desc){ showNotif('Item description is required','error'); return; }
+  propTmpPricing.push({desc:desc,amount:amt});
+  descEl.value=''; amtEl.value='';
+  propRenderPricingEdit();
+}
+function propDelPricing(i){ propTmpPricing.splice(i,1); propRenderPricingEdit(); }
+
+// ---- modal open/close/save ----
+function openProposalModal(id){
+  propTmpScope=[]; propTmpPricing=[];
+  var editId=document.getElementById('prop-edit-id');
+  var delBtn=document.getElementById('prop-del-btn');
+  var title=document.getElementById('prop-modal-title');
+  if(id){
+    var p=proposalsCache.find(function(x){ return x.id===id; });
+    if(!p){ showNotif('Not found','error'); return; }
+    editId.value=p.id;
+    title.textContent='📄 '+(p.client_name||'Edit proposal');
+    document.getElementById('prop-client').value=p.client_name||'';
+    document.getElementById('prop-contact').value=p.contact_person||'';
+    document.getElementById('prop-title').value=p.proposal_title||'';
+    document.getElementById('prop-intro').value=p.intro_text||'';
+    document.getElementById('prop-terms').value=p.terms_notes||'';
+    propTmpScope=JSON.parse(JSON.stringify(p.scope_items||[]));
+    propTmpPricing=JSON.parse(JSON.stringify(p.pricing_items||[]));
+    delBtn.style.display='';
+  } else {
+    editId.value='';
+    title.textContent='📄 New proposal';
+    ['prop-client','prop-contact','prop-title','prop-intro','prop-terms'].forEach(function(k){var el=document.getElementById(k);if(el)el.value='';});
+    delBtn.style.display='none';
+  }
+  propRenderScopeEdit(); propRenderPricingEdit();
+  document.getElementById('proposal-modal').classList.add('open');
+}
+function closeProposalModal(){ document.getElementById('proposal-modal').classList.remove('open'); }
+
+async function saveProposal(){
+  var client=document.getElementById('prop-client').value.trim();
+  if(!client){ showNotif('Client name required','error'); return; }
+  var payload={
+    client_name:client,
+    contact_person:document.getElementById('prop-contact').value.trim()||null,
+    proposal_title:document.getElementById('prop-title').value.trim()||null,
+    intro_text:document.getElementById('prop-intro').value.trim()||null,
+    terms_notes:document.getElementById('prop-terms').value.trim()||null,
+    scope_items:propTmpScope, pricing_items:propTmpPricing,
+    updated_at:new Date().toISOString()
+  };
+  var editId=document.getElementById('prop-edit-id').value;
+  var btn=document.getElementById('prop-save-btn');
+  if(btn){btn.disabled=true;btn.textContent='Saving...';}
+  var error;
+  if(editId){
+    var r=await sb.from('proposals').update(payload).eq('id',editId); error=r.error;
+  } else {
+    payload.status='Draft';
+    payload.created_by=currentUser?.id;
+    payload.created_by_name=document.getElementById('user-name-display')?.textContent||currentUser?.email||'';
+    var r2=await sb.from('proposals').insert(payload); error=r2.error;
+  }
+  if(btn){btn.disabled=false;btn.textContent='Save proposal';}
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Proposal saved! ✓','success');
+  closeProposalModal();
+  loadProposals();
+}
+
+async function deleteProposalFromModal(){
+  var editId=document.getElementById('prop-edit-id').value;
+  if(!editId) return;
+  closeProposalModal();
+  await deleteProposal(editId);
+}
+async function deleteProposal(id){
+  if(!confirm('Delete this proposal?')) return;
+  var{error}=await sb.from('proposals').delete().eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Deleted','success');
+  loadProposals();
+}
+async function updateProposalStatus(id,status){
+  var{error}=await sb.from('proposals').update({status:status,updated_at:new Date().toISOString()}).eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Status updated','success');
+  loadProposals();
+}
+
+// ---- branded printable proposal (window.print pattern, same style as Weekly Report) ----
+function generateProposalDoc(id){
+  var p=proposalsCache.find(function(x){ return x.id===id; });
+  if(!p){ showNotif('Not found','error'); return; }
+  var date=p.created_at?new Date(p.created_at).toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'}):new Date().toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'});
+  var total=propTotal(p);
+  var scopeHtml=(p.scope_items||[]).length
+    ? '<ul style="margin:0;padding-left:20px;line-height:1.9">'+(p.scope_items||[]).map(function(s){ return '<li>'+ctEsc(s)+'</li>'; }).join('')+'</ul>'
+    : '<p style="color:#888">—</p>';
+  var pricingRows=(p.pricing_items||[]).map(function(it){
+    return '<tr><td style="padding:8px 10px;border-bottom:1px solid #ddd">'+ctEsc(it.desc)+'</td><td style="padding:8px 10px;border-bottom:1px solid #ddd;text-align:right">'+propPeso(it.amount)+'</td></tr>';
+  }).join('');
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Proposal — '+ctEsc(p.client_name||'')+'</title>'
+    +'<style>'
+    +'body{font-family:Georgia,serif;max-width:720px;margin:0 auto;padding:50px 40px;color:#1a1a1a;line-height:1.6}'
+    +'.header{border-bottom:3px solid #FACC15;padding-bottom:20px;margin-bottom:30px}'
+    +'.biz-name{font-size:20px;font-weight:700;letter-spacing:0.5px}'
+    +'.biz-sub{font-size:11px;color:#666;margin-top:4px}'
+    +'h1{font-size:24px;margin:24px 0 4px;color:#111}'
+    +'.meta{font-size:12px;color:#666;margin-bottom:24px}'
+    +'h2{font-size:14px;text-transform:uppercase;letter-spacing:0.08em;color:#333;border-bottom:1px solid #ddd;padding-bottom:6px;margin-top:32px}'
+    +'table{width:100%;border-collapse:collapse;margin-top:12px}'
+    +'th{text-align:left;padding:8px 10px;background:#f5f5f0;font-size:11px;text-transform:uppercase;letter-spacing:0.05em}'
+    +'.total-row td{padding:12px 10px;font-weight:700;font-size:15px;border-top:2px solid #111}'
+    +'.terms{white-space:pre-wrap;font-size:13px;color:#444}'
+    +'.sign{margin-top:60px;display:flex;justify-content:space-between}'
+    +'.sign-block{width:45%;border-top:1px solid #333;padding-top:6px;font-size:12px;color:#555}'
+    +'@media print{body{padding:20px}}'
+    +'</style></head><body>'
+    +'<div class="header"><div class="biz-name">'+ctEsc(BIZ_INFO.name)+'</div><div class="biz-sub">'+ctEsc(BIZ_INFO.address)+'</div></div>'
+    +'<h1>'+ctEsc(p.proposal_title||'Proposal')+'</h1>'
+    +'<div class="meta">Prepared for: <b>'+ctEsc(p.client_name||'')+'</b>'+(p.contact_person?' ('+ctEsc(p.contact_person)+')':'')+'<br>Date: '+date+'</div>'
+    +(p.intro_text?'<p>'+ctEsc(p.intro_text).replace(/\n/g,'<br>')+'</p>':'')
+    +(p.scope_items&&p.scope_items.length?'<h2>Scope of Work</h2>'+scopeHtml:'')
+    +(p.pricing_items&&p.pricing_items.length?'<h2>Pricing</h2><table><tr><th>Item</th><th style="text-align:right">Amount</th></tr>'+pricingRows+'<tr class="total-row"><td>Total</td><td style="text-align:right">'+propPeso(total)+'</td></tr></table>':'')
+    +(p.terms_notes?'<h2>Terms & Notes</h2><div class="terms">'+ctEsc(p.terms_notes)+'</div>':'')
+    +'<div class="sign"><div class="sign-block">Client Signature / Date</div><div class="sign-block">'+ctEsc(BIZ_INFO.prop||'')+'</div></div>'
+    +'<script>window.onload=()=>window.print();<'+'/script></body></html>';
+  var win=window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+}
+
+// ---- copy formatted proposal text for pasting into an email ----
+function copyProposalText(id){
+  var p=proposalsCache.find(function(x){ return x.id===id; });
+  if(!p){ showNotif('Not found','error'); return; }
+  var total=propTotal(p);
+  var lines=[];
+  lines.push((p.proposal_title||'Proposal')+' — '+(p.client_name||''));
+  lines.push('');
+  if(p.intro_text){ lines.push(p.intro_text); lines.push(''); }
+  if(p.scope_items&&p.scope_items.length){
+    lines.push('SCOPE OF WORK');
+    p.scope_items.forEach(function(s){ lines.push('• '+s); });
+    lines.push('');
+  }
+  if(p.pricing_items&&p.pricing_items.length){
+    lines.push('PRICING');
+    p.pricing_items.forEach(function(it){ lines.push('- '+it.desc+': '+propPeso(it.amount)); });
+    lines.push('TOTAL: '+propPeso(total));
+    lines.push('');
+  }
+  if(p.terms_notes){ lines.push('TERMS & NOTES'); lines.push(p.terms_notes); lines.push(''); }
+  lines.push('— '+(BIZ_INFO.name||'AdGenius Marketing Agency'));
+  var text=lines.join('\n');
+  try{
+    navigator.clipboard.writeText(text).then(function(){
+      showNotif('Proposal copied! Paste it sa Gmail/email mo. ✓','success');
+    }).catch(function(){
+      var ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); showNotif('Proposal copied!','success'); }catch(e){ showNotif('Copy failed','error'); }
+      document.body.removeChild(ta);
+    });
+  }catch(e){ showNotif('Copy failed: '+(e.message||e),'error'); }
 }
