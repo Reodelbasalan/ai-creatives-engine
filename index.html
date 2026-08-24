@@ -51,6 +51,8 @@ input[type="month"]::-webkit-calendar-picker-indicator:hover{
   .topbar{padding:0 1rem}
   .content{padding:1rem}
   .projects-cols{grid-template-columns:2fr 1fr!important}
+  #dash-widgets-row{grid-template-columns:1fr!important}
+  #page-dashboard [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
   #icp-step2-grid{grid-template-columns:1fr!important}
   #icp-step1-split{grid-template-columns:1fr!important}
   #icp-gallery-wrap{position:relative!important;top:0!important}
@@ -1115,6 +1117,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 #nav-client-onboarding:hover{color:#60a5fa;background:rgba(96,165,250,0.07)}
 #nav-client-onboarding.active{color:#60a5fa;background:rgba(96,165,250,0.1);border:0.5px solid rgba(96,165,250,0.35);font-weight:600}
 #nav-client-onboarding.active::before{background:#60a5fa;box-shadow:0 0 8px #60a5fa}
+#nav-proposal-builder svg{color:#e879f9}
+#nav-proposal-builder{color:rgba(232,121,249,0.78)}
+#nav-proposal-builder:hover{color:#e879f9;background:rgba(232,121,249,0.07)}
+#nav-proposal-builder.active{color:#e879f9;background:rgba(232,121,249,0.1);border:0.5px solid rgba(232,121,249,0.35);font-weight:600}
+#nav-proposal-builder.active::before{background:#e879f9;box-shadow:0 0 8px #e879f9}
 .ob-step{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:0.5px solid var(--border)}
 .ob-check{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border2);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-size:12px;color:transparent}
 .ob-check.done{background:var(--green,#22c55e);border-color:var(--green,#22c55e);color:#062}
@@ -1485,6 +1492,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8l2 2 3-3"/></svg>
         Client Onboarding
       </div>
+      <div class="nav-item admin-only" onclick="showPage('proposal-builder')" id="nav-proposal-builder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+        Proposal Builder
+      </div>
     </nav>
     <div class="sidebar-footer">
       <div class="user-card">
@@ -1532,28 +1543,61 @@ body {
 
       <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
-        <div class="stats-grid">
+        <div id="dash-greeting" style="margin-bottom:18px">
+          <div style="font-size:22px;font-weight:700;color:var(--text)" id="dash-greet-text">Welcome back 👋</div>
+          <div style="font-size:12.5px;color:var(--text3);margin-top:3px" id="dash-greet-sub">Loading your overview...</div>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns:repeat(5,1fr)">
           <div class="stat-card c-yellow">
             <div class="stat-icon" style="background:var(--yellow-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
             <div class="stat-label">Total projects</div>
             <div class="stat-val" id="stat-total">0</div>
           </div>
-          <div class="stat-card c-purple">
-            <div class="stat-icon" style="background:var(--purple-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
-            <div class="stat-label">Generating AI</div>
-            <div class="stat-val" style="color:var(--purple)" id="stat-ai">0</div>
-          </div>
           <div class="stat-card c-green">
-            <div class="stat-icon" style="background:var(--green-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
-            <div class="stat-label">Ready for editor</div>
-            <div class="stat-val" style="color:var(--green)" id="stat-ready">0</div>
+            <div class="stat-icon" style="background:var(--green-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+            <div class="stat-label">Sales this month</div>
+            <div class="stat-val" style="color:var(--green);font-size:19px" id="stat-sales">₱0</div>
+          </div>
+          <div class="stat-card" style="--accent:#e879f9">
+            <div class="stat-icon" style="background:rgba(232,121,249,0.12)"><svg viewBox="0 0 24 24" fill="none" stroke="#e879f9" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="stat-label">Pending proposals</div>
+            <div class="stat-val" style="color:#e879f9" id="stat-proposals">0</div>
           </div>
           <div class="stat-card c-amber">
             <div class="stat-icon" style="background:var(--amber-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-            <div class="stat-label">Approved / done</div>
-            <div class="stat-val" style="color:var(--amber)" id="stat-done">0</div>
+            <div class="stat-label">Winning creatives</div>
+            <div class="stat-val" style="color:var(--amber)" id="stat-winners">0</div>
+          </div>
+          <div class="stat-card c-purple">
+            <div class="stat-icon" style="background:var(--purple-dim)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+            <div class="stat-label">Active clients</div>
+            <div class="stat-val" style="color:var(--purple)" id="stat-clients">0</div>
           </div>
         </div>
+
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:20px" id="dash-widgets-row">
+          <div class="form-card" style="margin:0">
+            <div class="form-card-title" style="margin-bottom:14px">🔔 Needs Attention</div>
+            <div id="dash-attention"></div>
+          </div>
+          <div class="form-card" style="margin:0">
+            <div class="form-card-title" style="margin-bottom:14px">📊 Sales · last 6 months</div>
+            <div id="dash-sales-chart"></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+          <div class="form-card" style="margin:0">
+            <div class="form-card-title" style="margin-bottom:14px">🏆 Top Winning Creatives</div>
+            <div id="dash-winners"></div>
+          </div>
+          <div class="form-card" style="margin:0">
+            <div class="form-card-title" style="margin-bottom:14px">📄 Recent Proposals</div>
+            <div id="dash-proposals"></div>
+          </div>
+        </div>
+
         <div class="section-label">Pipeline tracker</div>
         <div class="pipeline">
           <div class="pipe-col"><div class="pipe-col-head"><div class="pipe-dot" style="background:#444"></div><span class="pipe-col-label">New input</span><span class="pipe-count" id="count-new">0</span></div><div id="pipe-new"><div class="pipe-empty">—</div></div></div>
@@ -2395,7 +2439,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               </div>
             </div>
 
-            <button class="yellow-btn" onclick="obAddCreative()" style="margin-top:16px;font-weight:700;display:inline-flex;align-items:center;gap:7px">Add creative</button>
+            <button class="yellow-btn" onclick="obAddCreative()" style="width:100%;margin-top:16px;font-weight:700">Add creative</button>
           </div>
 
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
@@ -2820,6 +2864,30 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
           </div>
 
+        </div>
+      </div>
+
+      <!-- PROPOSAL BUILDER PAGE (admin) -->
+      <div class="page" id="page-proposal-builder">
+        <div style="max-width:1050px">
+
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+            <div class="section-label" style="margin:0">📄 Proposal Builder</div>
+            <button class="yellow-btn" onclick="openProposalModal()">+ New proposal</button>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+            <input class="form-input" id="prop-search" placeholder="Search client, title..." style="max-width:240px" oninput="renderProposals()">
+            <select class="form-select" id="prop-filter-status" style="max-width:160px" onchange="renderProposals()">
+              <option value="">All status</option>
+              <option value="Draft">Draft</option>
+              <option value="Sent">Sent</option>
+              <option value="Accepted">Accepted</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+
+          <div id="prop-body"></div>
         </div>
       </div>
 
@@ -5531,6 +5599,61 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <input class="form-input" id="ob-steplink-label" placeholder="Label (e.g. Signed contract)" style="font-size:12px">
       <input class="form-input" id="ob-steplink-url" placeholder="https://..." style="font-size:12px">
       <button class="yellow-btn" onclick="obAddStepLink()">Add link</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="proposal-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-head">
+      <div class="modal-title" id="prop-modal-title">📄 New proposal</div>
+      <button class="modal-close" onclick="closeProposalModal()">✕</button>
+    </div>
+    <div style="max-height:70vh;overflow-y:auto;padding-right:4px">
+      <input type="hidden" id="prop-edit-id">
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="form-label">Client / Brand name *</label>
+          <input class="form-input" id="prop-client" placeholder="e.g. VitaSupremo PH">
+        </div>
+        <div class="form-field">
+          <label class="form-label">Contact person</label>
+          <input class="form-input" id="prop-contact" placeholder="Name">
+        </div>
+        <div class="form-field full">
+          <label class="form-label">Proposal title</label>
+          <input class="form-input" id="prop-title" placeholder="e.g. Social Media Ads Management Proposal">
+        </div>
+        <div class="form-field full">
+          <label class="form-label">Intro / Overview</label>
+          <textarea class="form-textarea" id="prop-intro" rows="3" placeholder="Short intro about your agency and the proposed engagement..."></textarea>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top:16px">Scope of Work</div>
+      <div id="prop-scope-edit"></div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input class="form-input" id="prop-scope-input" placeholder="+ add scope item (Enter)" style="font-size:12px;padding:7px 10px" onkeydown="if(event.key==='Enter'){event.preventDefault();propAddScope();}">
+      </div>
+
+      <div class="section-label" style="margin-top:16px">Pricing</div>
+      <div id="prop-pricing-edit"></div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <input class="form-input" id="prop-price-desc" placeholder="Item description" style="font-size:12px;padding:7px 10px;flex:1;min-width:160px">
+        <input class="form-input" id="prop-price-amount" type="number" min="0" step="1" placeholder="₱ Amount" style="font-size:12px;padding:7px 10px;max-width:130px">
+        <button class="ghost-btn" onclick="propAddPricing()" style="font-size:11px">Add item</button>
+      </div>
+      <div id="prop-total-display" style="text-align:right;font-size:13px;font-weight:700;color:var(--yellow);margin-top:8px"></div>
+
+      <div class="form-field full" style="margin-top:16px">
+        <label class="form-label">Terms / Notes</label>
+        <textarea class="form-textarea" id="prop-terms" rows="3" placeholder="Payment terms, validity period, other notes..."></textarea>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="yellow-btn" id="prop-save-btn" onclick="saveProposal()" style="flex:1">Save proposal</button>
+      <button class="ghost-btn" id="prop-del-btn" onclick="deleteProposalFromModal()" style="color:var(--red);border-color:rgba(239,68,68,0.2);display:none">Delete</button>
     </div>
   </div>
 </div>
