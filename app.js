@@ -8577,7 +8577,7 @@ function obToggleForm(){
     if(btn) btn.style.opacity='1';
     if(lbl) lbl.textContent='Add creative';
   } else {
-    wrap.style.maxHeight='560px'; wrap.style.opacity='1'; wrap.style.marginBottom='20px';
+    wrap.style.maxHeight=wrap.scrollHeight+'px'; wrap.style.opacity='1'; wrap.style.marginBottom='20px';
     if(btn) btn.style.opacity='0.55';
     if(lbl) lbl.textContent='Close form';
   }
