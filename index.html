@@ -1140,6 +1140,16 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .icon-btn2.ok:hover{color:var(--green);border-color:var(--green);background:rgba(34,197,94,0.08)}
 .icon-btn2.danger:hover{color:var(--red);border-color:var(--red);background:rgba(239,68,68,0.08)}
 .ct-pstat{background:var(--bg4);border:0.5px solid var(--border2);border-radius:7px;color:var(--text);cursor:pointer}
+#page-creatives-tracking{position:relative;min-height:100%}
+.ct-aurora{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;min-height:600px}
+.ct-aurora span{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.22;mix-blend-mode:screen}
+.ct-a1{width:480px;height:480px;background:radial-gradient(circle,#FACC15,transparent 70%);top:-120px;left:-60px;animation:ctFloat1 18s ease-in-out infinite}
+.ct-a2{width:440px;height:440px;background:radial-gradient(circle,#34d399,transparent 70%);top:18%;right:-100px;animation:ctFloat2 22s ease-in-out infinite}
+.ct-a3{width:400px;height:400px;background:radial-gradient(circle,#5b9dff,transparent 70%);bottom:5%;left:30%;animation:ctFloat3 20s ease-in-out infinite}
+.ct-a4{width:340px;height:340px;background:radial-gradient(circle,#FACC15,transparent 70%);top:45%;left:5%;animation:ctFloat1 26s ease-in-out infinite}
+@keyframes ctFloat1{0%,100%{transform:translate(0,0)}50%{transform:translate(50px,40px)}}
+@keyframes ctFloat2{0%,100%{transform:translate(0,0)}50%{transform:translate(-45px,55px)}}
+@keyframes ctFloat3{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,-45px)}}
 #nav-advertiser-tasks svg{color:#14b8a6}
 #nav-advertiser-tasks{color:rgba(20,184,166,0.78)}
 #nav-advertiser-tasks:hover{color:#14b8a6;background:rgba(20,184,166,0.07)}
@@ -2923,7 +2933,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
       <!-- CREATIVES TRACKING PAGE -->
       <div class="page" id="page-creatives-tracking">
-        <div style="max-width:1000px">
+        <div class="ct-aurora"><span class="ct-a1"></span><span class="ct-a2"></span><span class="ct-a3"></span><span class="ct-a4"></span></div>
+        <div style="max-width:1000px;position:relative;z-index:1">
 
           <!-- Tabs + Manage -->
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
