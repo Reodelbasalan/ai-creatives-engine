@@ -10352,7 +10352,7 @@ function ctKindTag(name){
   var k=ctPageKind(name);
   return k==='website'
     ? '<span style="font-size:8.5px;font-weight:700;padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:0.04em;background:rgba(91,157,255,0.12);color:#5b9dff">Website</span>'
-    : '<span style="font-size:8.5px;font-weight:700;padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:0.04em;background:rgba(157,123,255,0.12);color:#9d7bff">Messaging</span>';
+    : '<span style="font-size:8.5px;font-weight:700;padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:0.04em;background:rgba(250,204,21,0.14);color:#FACC15">Messaging</span>';
 }
 // creative is "complete" kapag lahat ng pages Done na
 function ctIsComplete(r){
@@ -10401,7 +10401,7 @@ function ctRenderPending(){
   wrap.querySelectorAll('.ct-pending-chip').forEach(function(el){ el.remove(); });
   ctPendingTags.forEach(function(p,i){
     var web=ctPageKind(p)==='website';
-    var dot=web?'#5b9dff':'#9d7bff';
+    var dot=web?'#5b9dff':'#FACC15';
     var s=document.createElement('span');
     s.className='ct-chip ct-pending-chip';
     s.style.background='rgba(255,255,255,0.03)';
@@ -10558,7 +10558,7 @@ function renderCreativeTrack(){
       +'</div>'
       +tagRows
       +'<div style="margin-top:8px"><input class="form-input" style="font-size:11px;padding:8px 10px" list="ct-track-page-list" placeholder="+ add page (Enter)" onkeydown="ctAddTagKey(event,\''+r.id+'\')"></div>'
-      +'<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border);font-size:11px;color:var(--text3)">Auto-archive kapag lahat ng pages Published na.</div>'
+      +'<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border);font-size:11px;color:var(--text3)">Auto-archive kapag lahat ng pages Done na.</div>'
       +'</div>';
   }).join('');
 }
@@ -10599,7 +10599,7 @@ function renderCreativeArchive(){
       +'<div><div style="font-size:14px;font-weight:600">'+ctEsc(r.title||'\u2014')+'</div>'
       +'<div style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px;margin-top:2px">'+tags.length+' pages \u00b7 archived '+dstr
       +' <span style="background:rgba(91,157,255,0.1);color:#5b9dff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">'+web+' web</span>'
-      +' <span style="background:rgba(157,123,255,0.1);color:#9d7bff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">'+msg+' msg</span></div></div>'
+      +' <span style="background:rgba(250,204,21,0.12);color:#FACC15;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">'+msg+' msg</span></div></div>'
       +'</div>'
       +'<div style="display:flex;gap:8px;align-items:center">'
       +'<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(34,197,94,0.1);padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px">'+CTIC.check+'Done</span>'
@@ -10738,11 +10738,11 @@ function ctRenderManage(){
   if(!rows.length){ list.innerHTML='<div style="font-size:12px;color:var(--text3);padding:12px;text-align:center">Wala pang preset page. Mag-add sa baba.</div>'; return; }
   list.innerHTML=rows.map(function(p){
     var web=p.kind==='website';
-    var dot=web?'#5b9dff':'#9d7bff';
+    var dot=web?'#5b9dff':'#FACC15';
     return '<div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:9px;padding:9px 12px;margin-bottom:6px">'
       +'<span style="width:7px;height:7px;border-radius:50%;background:'+dot+'"></span>'
       +'<span style="flex:1;font-size:13px;font-weight:600">'+ctEsc(p.name)+'</span>'
-      +'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;padding:2px 6px;border-radius:4px;background:'+(web?'rgba(91,157,255,0.1)':'rgba(157,123,255,0.1)')+';color:'+dot+'">'+(web?'Website':'Messaging')+'</span>'
+      +'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;padding:2px 6px;border-radius:4px;background:'+(web?'rgba(91,157,255,0.1)':'rgba(250,204,21,0.12)')+';color:'+dot+'">'+(web?'Website':'Messaging')+'</span>'
       +'<button onclick="ctDelPreset(\''+p.id+'\')" class="ghost-btn" style="font-size:10px;padding:4px 7px;color:var(--red);border-color:rgba(239,68,68,0.2)">'+CTIC.x+'</button>'
       +'</div>';
   }).join('');
