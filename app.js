@@ -10327,13 +10327,61 @@ async function deleteSalesPage(id){
 // ============================================================
 // CREATIVES TRACKING (multi-brand, per-page status)
 // ============================================================
-var ctTrackCache=[];
-var ctPendingTags=[];
+// ============================================================
+// CREATIVES TRACKING v2  (preset auto-load + auto-archive + expandable archive)
+// Drop-in replacement — pumapalit sa lumang block (ct-track functions).
+// ============================================================
+var ctTrackCache=[];        // active creatives
+var ctArchiveCache=[];      // archived creatives
+var ctPresetCache=[];       // [{id,name,kind,sort}]
+var ctPendingTags=[];       // pages para sa bagong creative (auto-loaded from preset)
+var ctView='active';        // 'active' | 'archive'
+var ctExpanded={};          // archive card expand state {id:true}
 var CT_STATUSES=['To Do','In Progress','Done','Published'];
 
 function ctTrackStatusColor(s){
   return s==='Published'?'#34d399':s==='Done'?'var(--green)':s==='In Progress'?'var(--amber)':'var(--text3)';
 }
+function ctIsWebsite(name){ return /WEBSITE/i.test(name||''); }
+function ctPageKind(name){
+  var p=ctPresetCache.find(function(x){ return x.name===name; });
+  if(p) return p.kind;
+  return ctIsWebsite(name)?'website':'messaging';
+}
+function ctKindTag(name){
+  var k=ctPageKind(name);
+  return k==='website'
+    ? '<span style="font-size:8.5px;font-weight:700;padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:0.04em;background:rgba(91,157,255,0.12);color:#5b9dff">Website</span>'
+    : '<span style="font-size:8.5px;font-weight:700;padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:0.04em;background:rgba(157,123,255,0.12);color:#9d7bff">Messaging</span>';
+}
+// creative is "complete" kapag lahat ng pages Done na
+function ctIsComplete(r){
+  var t=r.tags||[];
+  return t.length>0 && t.every(function(x){ return (x.status||'To Do')==='Done'; });
+}
+// format: Aug 29, 2026 · 2:30 PM
+function ctFmtDateTime(v){
+  if(!v) return '';
+  var d=new Date(v);
+  if(isNaN(d)) return '';
+  var date=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  var time=d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  return date+' \u00b7 '+time;
+}
+
+// SVG icons (lucide)
+var CTIC={
+  clap:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.296 3.464 3.02 3.956"/><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3z"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="m6.18 5.276 3.1 3.899"/></svg>',
+  plus:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>',
+  link:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+  trash:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  restore:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>',
+  check:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  chev:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  gear:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  archive:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>',
+  x:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
+};
 
 // ---- chip input (add form) ----
 function ctChipKey(e){
@@ -10352,28 +10400,56 @@ function ctRenderPending(){
   if(!wrap||!inp) return;
   wrap.querySelectorAll('.ct-pending-chip').forEach(function(el){ el.remove(); });
   ctPendingTags.forEach(function(p,i){
+    var web=ctPageKind(p)==='website';
+    var dot=web?'#5b9dff':'#9d7bff';
     var s=document.createElement('span');
     s.className='ct-chip ct-pending-chip';
-    s.innerHTML=ctEsc(p)+'<span class="ct-chip-x" onclick="ctDelPending('+i+')">\u00d7</span>';
+    s.style.background='rgba(255,255,255,0.03)';
+    s.style.color='var(--text)';
+    s.style.border='0.5px solid var(--border2)';
+    s.innerHTML='<span style="width:6px;height:6px;border-radius:50%;background:'+dot+'"></span>'+ctEsc(p)+'<span class="ct-chip-x" onclick="ctDelPending('+i+')">\u00d7</span>';
     wrap.insertBefore(s,inp);
   });
+  // counter label
+  var lbl=document.getElementById('ct-preset-count');
+  if(lbl){
+    var web=ctPendingTags.filter(function(p){return ctPageKind(p)==='website';}).length;
+    var msg=ctPendingTags.length-web;
+    lbl.innerHTML=CTIC.check+' '+ctPendingTags.length+' pages loaded <span style="color:var(--text3);font-weight:400">\u00b7 '+web+' website \u00b7 '+msg+' messaging</span>';
+  }
 }
 function ctDelPending(i){ ctPendingTags.splice(i,1); ctRenderPending(); }
+
+// load preset from DB into the add form
+function ctLoadPresetIntoForm(){
+  ctPendingTags=ctPresetCache.slice().sort(function(a,b){return (a.sort||0)-(b.sort||0);}).map(function(p){return p.name;});
+  ctRenderPending();
+}
 
 async function loadCreativeTrack(){
   if(currentUserRole!=='admin'){ showNotif('Admin only!','error'); showPage('dashboard'); return; }
 
-  var{data,error}=await sb.from('creatives_tracking').select('*').order('created_at',{ascending:false});
-  if(error){ showNotif('Error loading creatives: '+error.message,'error'); ctTrackCache=[]; }
-  else { ctTrackCache=(data||[]).map(function(r){ if(!Array.isArray(r.tags)) r.tags=[]; return r; }); }
+  // preset pages
+  try{
+    var pr=await sb.from('ct_preset_pages').select('*').order('sort',{ascending:true});
+    ctPresetCache=pr.data||[];
+  }catch(e){ ctPresetCache=[]; }
 
-  // datalist source: sales_pages + existing tags
+  // creatives (active + archived)
+  var{data,error}=await sb.from('creatives_tracking').select('*').order('created_at',{ascending:false});
+  if(error){ showNotif('Error loading creatives: '+error.message,'error'); data=[]; }
+  var all=(data||[]).map(function(r){ if(!Array.isArray(r.tags)) r.tags=[]; return r; });
+  ctTrackCache=all.filter(function(r){ return !r.archived; });
+  ctArchiveCache=all.filter(function(r){ return r.archived; });
+
+  // datalist source: preset + sales_pages + existing tags
   var pageNames={};
+  ctPresetCache.forEach(function(p){ if(p.name) pageNames[p.name]=1; });
   (stPagesCache||[]).forEach(function(p){ if(p.name) pageNames[p.name]=1; });
   if(!(stPagesCache||[]).length){
-    try{ var{data:sp}=await sb.from('sales_pages').select('name'); (sp||[]).forEach(function(p){ if(p.name) pageNames[p.name]=1; }); }catch(e){}
+    try{ var sp=await sb.from('sales_pages').select('name'); (sp.data||[]).forEach(function(p){ if(p.name) pageNames[p.name]=1; }); }catch(e){}
   }
-  ctTrackCache.forEach(function(r){ (r.tags||[]).forEach(function(t){ if(t.page) pageNames[t.page]=1; }); });
+  all.forEach(function(r){ (r.tags||[]).forEach(function(t){ if(t.page) pageNames[t.page]=1; }); });
   var names=Object.keys(pageNames).sort();
 
   var dl=document.getElementById('ct-track-page-list');
@@ -10381,6 +10457,13 @@ async function loadCreativeTrack(){
 
   var fp=document.getElementById('ct-track-filter-page');
   if(fp){ var cur=fp.value; fp.innerHTML='<option value="">All pages</option>'+names.map(function(n){ return '<option value="'+ctEsc(n)+'">'+ctEsc(n)+'</option>'; }).join(''); fp.value=cur; }
+
+  // if pending is empty (fresh form), auto-load preset
+  if(!ctPendingTags.length) ctLoadPresetIntoForm();
+
+  // archive tab count
+  var at=document.getElementById('ct-archive-count');
+  if(at) at.textContent=ctArchiveCache.length;
 
   renderCreativeTrack();
 }
@@ -10400,58 +10483,143 @@ function ctTrackFiltered(){
     return true;
   });
 }
+function ctArchiveFiltered(){
+  var q=(document.getElementById('ct-arch-search')?.value||'').toLowerCase().trim();
+  return ctArchiveCache.filter(function(r){
+    if(!q) return true;
+    var hay=((r.title||'')+' '+(r.notes||'')+' '+(r.tags||[]).map(function(t){return t.page;}).join(' ')).toLowerCase();
+    return hay.indexOf(q)!==-1;
+  });
+}
 
 function ctTagStatusSelect(cid,ti,cur){
-  return '<select class="form-select" style="font-size:10px;padding:4px 6px;width:auto" onchange="updateCtTagStatus(\''+cid+'\','+ti+',this.value)">'
+  return '<select class="ct-pstat form-select" style="font-size:10px;padding:4px 8px;width:auto;min-width:90px" onchange="updateCtTagStatus(\''+cid+'\','+ti+',this.value)">'
     +CT_STATUSES.map(function(s){ return '<option value="'+s+'"'+((cur||'To Do')===s?' selected':'')+'>'+s+'</option>'; }).join('')
     +'</select>';
+}
+
+// ---- VIEW SWITCH ----
+function ctSetView(v){
+  ctView=v;
+  var ta=document.getElementById('ct-tab-active'), tb=document.getElementById('ct-tab-archive');
+  var pa=document.getElementById('ct-panel-active'), pb=document.getElementById('ct-panel-archive');
+  if(ta) ta.classList.toggle('active',v==='active');
+  if(tb) tb.classList.toggle('active',v==='archive');
+  if(pa) pa.style.display=v==='active'?'':'none';
+  if(pb) pb.style.display=v==='archive'?'':'none';
+  if(v==='archive') renderCreativeArchive();
 }
 
 function renderCreativeTrack(){
   var rows=ctTrackFiltered();
   var body=document.getElementById('ct-track-body');
   var badge=document.getElementById('ct-track-badge');
-  // badge = creatives na may at least 1 page na hindi pa Published
-  var activeCount=ctTrackCache.filter(function(r){ return (r.tags||[]).some(function(t){ return (t.status||'To Do')!=='Published'; }); }).length;
+  var activeCount=ctTrackCache.length;
   if(badge){ badge.textContent=activeCount; badge.style.display=activeCount>0?'':'none'; }
-
   if(!body) return;
-  if(!rows.length){ body.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">🎬</div>Wala pang creative dito.</div></div>'; return; }
+
+  if(!rows.length){ body.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">'+CTIC.clap+'</div>Wala pang creative dito.</div></div>'; return; }
 
   body.innerHTML=rows.map(function(r){
-    var link=r.link
-      ? '<a href="'+ctEsc(r.link)+'" target="_blank" rel="noopener" style="color:var(--accent,#378ADD);font-size:11px;text-decoration:none">🔗 Open link</a>'
-      : '<span style="color:var(--text3);font-size:11px">no link</span>';
     var tags=r.tags||[];
+    var doneN=tags.filter(function(t){ return (t.status||'To Do')==='Done'; }).length;
+    var pct=tags.length?Math.round(doneN/tags.length*100):0;
+    var link=r.link
+      ? '<a href="'+ctEsc(r.link)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;color:#5b9dff;font-size:11px;text-decoration:none">'+CTIC.link+' Open link</a>'
+      : '<span style="color:var(--text3);font-size:11px">no link</span>';
+
     var tagRows=tags.length
       ? tags.map(function(t,ti){
-          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:0.5px solid var(--border)">'
-            +'<span style="width:6px;height:6px;border-radius:50%;background:'+ctTrackStatusColor(t.status)+';flex-shrink:0"></span>'
-            +'<span style="flex:1;font-size:12px">'+ctEsc(t.page)+'</span>'
+          var pub=(t.status||'To Do')==='Done'||(t.status||'To Do')==='Published';
+          return '<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;background:'+(pub?'rgba(34,197,94,0.05)':'var(--bg3)')+';border:0.5px solid '+(pub?'rgba(34,197,94,0.15)':'var(--border)')+';margin-bottom:5px">'
+            +'<span style="width:8px;height:8px;border-radius:50%;background:'+ctTrackStatusColor(t.status)+';flex-shrink:0'+(pub?';box-shadow:0 0 7px rgba(34,197,94,0.5)':'')+'"></span>'
+            +'<span style="flex:1;font-size:12px;font-weight:600">'+ctEsc(t.page)+'</span>'
+            +ctKindTag(t.page)
             +ctTagStatusSelect(r.id,ti,t.status)
-            +'<button onclick="deleteCtTag(\''+r.id+'\','+ti+')" class="ghost-btn" style="font-size:10px;padding:2px 6px;color:var(--red);border-color:rgba(239,68,68,0.2)">\u2715</button>'
+            +'<button onclick="deleteCtTag(\''+r.id+'\','+ti+')" class="ghost-btn" style="font-size:10px;padding:4px 7px;color:var(--red);border-color:rgba(239,68,68,0.2)">'+CTIC.x+'</button>'
             +'</div>';
         }).join('')
-      : '<div style="font-size:11px;color:var(--text3);padding:6px 0;border-top:0.5px solid var(--border)">Walang page na naka-tag pa.</div>';
+      : '<div style="font-size:11px;color:var(--text3);padding:8px 0">Walang page na naka-tag pa.</div>';
 
-    return '<div class="form-card" style="padding:14px;margin-bottom:10px">'
+    return '<div class="form-card ct-active-card" data-id="'+r.id+'" style="padding:16px;margin-bottom:12px;transition:transform 0.7s cubic-bezier(.5,0,.2,1),opacity 0.7s ease,filter 0.5s ease,border-color 0.3s">'
       +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px">'
-      +'<div><div class="row-name" style="font-size:13px;font-weight:600">'+ctEsc(r.title||'\u2014')+'</div>'
+      +'<div><div class="row-name" style="font-size:13.5px;font-weight:700">'+ctEsc(r.title||'\u2014')+'</div>'
       +(r.notes?'<div class="row-sub" style="margin-top:2px">'+ctEsc(r.notes)+'</div>':'')
-      +'<div style="margin-top:5px">'+link+'</div></div>'
-      +'<button onclick="deleteCreativeTrack(\''+r.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2);flex-shrink:0">Delete</button>'
+      +'<div style="margin-top:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+link
+      +(r.created_at?'<span style="font-size:10.5px;color:var(--text3);display:inline-flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Added '+ctFmtDateTime(r.created_at)+'</span>':'')
+      +'</div></div>'
+      +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+      +'<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(250,204,21,0.1);color:var(--yellow)">'+doneN+' / '+tags.length+' done</span>'
+      +'<button onclick="deleteCreativeTrack(\''+r.id+'\')" class="ghost-btn" style="font-size:10px;padding:4px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">'+CTIC.trash+'</button>'
+      +'</div></div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 8px">'
+      +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em">Pages ('+tags.length+') \u2014 per-page status</div>'
+      +'<div style="display:flex;align-items:center;gap:7px"><div style="width:90px;height:6px;border-radius:6px;background:rgba(255,255,255,0.07);overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--yellow),var(--green));border-radius:6px;transition:0.4s"></div></div><span style="font-size:11px;font-weight:600;color:'+(pct===100?'var(--green)':'var(--text3)')+'">'+pct+'%</span></div>'
       +'</div>'
-      +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-top:6px;margin-bottom:2px">Pages ('+tags.length+') \u2014 per-page status</div>'
       +tagRows
-      +'<div style="margin-top:8px"><input class="form-input" style="font-size:11px;padding:6px 8px" list="ct-track-page-list" placeholder="+ add page (Enter)" onkeydown="ctAddTagKey(event,\''+r.id+'\')"></div>'
+      +'<div style="margin-top:8px"><input class="form-input" style="font-size:11px;padding:8px 10px" list="ct-track-page-list" placeholder="+ add page (Enter)" onkeydown="ctAddTagKey(event,\''+r.id+'\')"></div>'
+      +'<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border);font-size:11px;color:var(--text3)">Auto-archive kapag lahat ng pages Published na.</div>'
       +'</div>';
   }).join('');
 }
 
+// ---- ARCHIVE render (expandable) ----
+function renderCreativeArchive(){
+  var body=document.getElementById('ct-archive-body');
+  if(!body) return;
+  var rows=ctArchiveFiltered();
+  var cnt=document.getElementById('ct-archive-count');
+  if(cnt) cnt.textContent=ctArchiveCache.length;
+
+  if(!rows.length){ body.innerHTML='<div class="data-table"><div class="table-empty"><div class="table-empty-icon">'+CTIC.archive+'</div>Wala pang naka-archive.</div></div>'; return; }
+
+  body.innerHTML=rows.map(function(r){
+    var tags=r.tags||[];
+    var web=tags.filter(function(t){return ctPageKind(t.page)==='website';}).length;
+    var msg=tags.length-web;
+    var open=!!ctExpanded[r.id];
+    var dt=r.archived_at?new Date(r.archived_at):(r.created_at?new Date(r.created_at):null);
+    var dstr=dt?dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    var link=r.link?'<button class="icon-btn2" title="Open link" onclick="event.stopPropagation();window.open(\''+ctEsc(r.link)+'\',\'_blank\')">'+CTIC.link+'</button>':'';
+
+    var pageRows=tags.map(function(t){
+      var pub=(t.status||'To Do')==='Done'||(t.status||'To Do')==='Published';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:7px 11px;border-radius:8px;background:var(--bg3);border:0.5px solid var(--border);margin-bottom:5px">'
+        +'<span style="width:7px;height:7px;border-radius:50%;background:'+ctTrackStatusColor(t.status)+(pub?';box-shadow:0 0 6px rgba(34,197,94,0.5)':'')+'"></span>'
+        +'<span style="flex:1;font-size:12px;font-weight:600">'+ctEsc(t.page)+'</span>'
+        +ctKindTag(t.page)
+        +'<span style="font-size:10px;font-weight:700;color:'+ctTrackStatusColor(t.status)+';display:flex;align-items:center;gap:4px">'+(pub?CTIC.check:'')+ctEsc(t.status||'To Do')+'</span>'
+        +'</div>';
+    }).join('');
+
+    return '<div class="ct-arch-card'+(open?' open':'')+'" data-id="'+r.id+'" style="background:var(--bg2);border:0.5px solid '+(open?'var(--border2)':'var(--border)')+';border-radius:12px;margin-bottom:10px;overflow:hidden;transition:border-color 0.2s">'
+      +'<div onclick="ctToggleArch(\''+r.id+'\')" style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer">'
+      +'<div style="display:flex;align-items:center;gap:12px">'
+      +'<span class="ct-arch-chev" style="display:grid;place-items:center;color:'+(open?'var(--yellow)':'var(--text3)')+';transition:transform 0.25s;transform:rotate('+(open?'90':'0')+'deg)">'+CTIC.chev+'</span>'
+      +'<div><div style="font-size:14px;font-weight:600">'+ctEsc(r.title||'\u2014')+'</div>'
+      +'<div style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px;margin-top:2px">'+tags.length+' pages \u00b7 archived '+dstr
+      +' <span style="background:rgba(91,157,255,0.1);color:#5b9dff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">'+web+' web</span>'
+      +' <span style="background:rgba(157,123,255,0.1);color:#9d7bff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">'+msg+' msg</span></div></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;align-items:center">'
+      +'<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(34,197,94,0.1);padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px">'+CTIC.check+'Done</span>'
+      +link
+      +'<button class="icon-btn2 ok" title="Restore to Active" onclick="event.stopPropagation();ctRestore(\''+r.id+'\')">'+CTIC.restore+'</button>'
+      +'<button class="icon-btn2 danger" title="Delete" onclick="event.stopPropagation();deleteCreativeTrack(\''+r.id+'\',true)">'+CTIC.trash+'</button>'
+      +'</div></div>'
+      +'<div class="ct-arch-body" style="max-height:'+(open?'640px':'0')+';overflow:hidden;transition:max-height 0.35s cubic-bezier(.4,0,.2,1)">'
+      +'<div style="padding:4px 16px 16px;border-top:0.5px solid var(--border)">'
+      +'<div style="display:flex;gap:18px;padding:12px 2px;font-size:12px;color:var(--text3);flex-wrap:wrap"><span>Total: <b style="color:var(--text)">'+tags.length+'</b></span><span>Completed: <b style="color:var(--green)">'+tags.length+' / '+tags.length+'</b></span>'+(r.created_at?'<span>Added: <b style="color:var(--text)">'+ctFmtDateTime(r.created_at)+'</b></span>':'')+(r.notes?'<span>Notes: <b style="color:var(--text)">'+ctEsc(r.notes)+'</b></span>':'')+'</div>'
+      +pageRows
+      +'</div></div>'
+      +'</div>';
+  }).join('');
+}
+function ctToggleArch(id){ ctExpanded[id]=!ctExpanded[id]; renderCreativeArchive(); }
+
 async function saveCreativeTrack(){
   var title=document.getElementById('ct-track-title')?.value?.trim();
   if(!title){ showNotif('Creative title is required','error'); return; }
-  // may naiwan bang na-type na hindi na-enter? isama na rin
   var leftover=document.getElementById('ct-chipinput')?.value?.trim();
   if(leftover && ctPendingTags.indexOf(leftover)===-1){ ctPendingTags.push(leftover); }
   var tags=ctPendingTags.map(function(p){ return {page:p,status:'To Do'}; });
@@ -10460,6 +10628,7 @@ async function saveCreativeTrack(){
     link:document.getElementById('ct-track-link')?.value?.trim()||null,
     notes:document.getElementById('ct-track-notes')?.value?.trim()||null,
     tags:tags,
+    archived:false,
     created_by:currentUser?.id,
     created_by_name:document.getElementById('user-name-display')?.textContent||currentUser?.email||''
   };
@@ -10471,11 +10640,10 @@ async function saveCreativeTrack(){
   showNotif('Creative added! \u2713','success');
   ['ct-track-title','ct-track-link','ct-track-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var ci=document.getElementById('ct-chipinput'); if(ci)ci.value='';
-  ctPendingTags=[]; ctRenderPending();
+  ctLoadPresetIntoForm();   // reload preset for the next creative
   loadCreativeTrack();
 }
 
-// add page-tag sa existing creative
 async function ctAddTagKey(e,cid){
   if(e.key!=='Enter') return;
   e.preventDefault();
@@ -10497,7 +10665,40 @@ async function updateCtTagStatus(cid,ti,status){
   r.tags[ti].status=status;
   var{error}=await sb.from('creatives_tracking').update({tags:r.tags,updated_at:new Date().toISOString()}).eq('id',cid);
   if(error){ showNotif('Error: '+error.message,'error'); return; }
+
+  // AUTO-ARCHIVE check: lahat ng pages Published na?
+  if(ctIsComplete(r)){
+    ctAnimateArchive(cid);
+    var{error:e2}=await sb.from('creatives_tracking').update({archived:true,archived_at:new Date().toISOString()}).eq('id',cid);
+    if(e2){ showNotif('Error archiving: '+e2.message,'error'); loadCreativeTrack(); return; }
+    setTimeout(function(){
+      showNotif('Auto-archived: lahat ng pages Published na \u2713','success');
+      loadCreativeTrack();
+    },1400);
+    return;
+  }
   showNotif('Status updated','success');
+  renderCreativeTrack();
+}
+
+// slide-right + fade animation bago mag-reload
+function ctAnimateArchive(cid){
+  var el=document.querySelector('.ct-active-card[data-id="'+cid+'"]');
+  if(!el) return;
+  el.style.borderColor='var(--green)';
+  el.style.boxShadow='0 0 0 1px var(--green),0 0 24px rgba(34,197,94,0.25)';
+  setTimeout(function(){
+    el.style.transform='translateX(120%) scale(0.96)';
+    el.style.opacity='0';
+    el.style.filter='blur(3px)';
+  },400);
+}
+
+async function ctRestore(id){
+  var{error}=await sb.from('creatives_tracking').update({archived:false,archived_at:null,updated_at:new Date().toISOString()}).eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Restored to Active','success');
+  delete ctExpanded[id];
   loadCreativeTrack();
 }
 
@@ -10510,13 +10711,76 @@ async function deleteCtTag(cid,ti){
   loadCreativeTrack();
 }
 
-async function deleteCreativeTrack(id){
+async function deleteCreativeTrack(id,fromArchive){
   if(!confirm('Delete this creative?'))return;
   var{error}=await sb.from('creatives_tracking').delete().eq('id',id);
   if(error){ showNotif('Error: '+error.message,'error'); return; }
   showNotif('Deleted','success');
+  if(fromArchive) delete ctExpanded[id];
   loadCreativeTrack();
 }
+
+// ============================================================
+// MANAGE PRESET PAGES (modal)
+// ============================================================
+function ctOpenManage(){
+  var ov=document.getElementById('ct-manage-overlay');
+  if(ov){ ov.style.display='flex'; ctRenderManage(); }
+}
+function ctCloseManage(){
+  var ov=document.getElementById('ct-manage-overlay');
+  if(ov) ov.style.display='none';
+}
+function ctRenderManage(){
+  var list=document.getElementById('ct-manage-list');
+  if(!list) return;
+  var rows=ctPresetCache.slice().sort(function(a,b){return (a.sort||0)-(b.sort||0);});
+  if(!rows.length){ list.innerHTML='<div style="font-size:12px;color:var(--text3);padding:12px;text-align:center">Wala pang preset page. Mag-add sa baba.</div>'; return; }
+  list.innerHTML=rows.map(function(p){
+    var web=p.kind==='website';
+    var dot=web?'#5b9dff':'#9d7bff';
+    return '<div style="display:flex;align-items:center;gap:10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:9px;padding:9px 12px;margin-bottom:6px">'
+      +'<span style="width:7px;height:7px;border-radius:50%;background:'+dot+'"></span>'
+      +'<span style="flex:1;font-size:13px;font-weight:600">'+ctEsc(p.name)+'</span>'
+      +'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;padding:2px 6px;border-radius:4px;background:'+(web?'rgba(91,157,255,0.1)':'rgba(157,123,255,0.1)')+';color:'+dot+'">'+(web?'Website':'Messaging')+'</span>'
+      +'<button onclick="ctDelPreset(\''+p.id+'\')" class="ghost-btn" style="font-size:10px;padding:4px 7px;color:var(--red);border-color:rgba(239,68,68,0.2)">'+CTIC.x+'</button>'
+      +'</div>';
+  }).join('');
+}
+function ctManageKey(e){
+  if(e.key!=='Enter') return;
+  e.preventDefault();
+  var v=e.target.value.trim();
+  if(!v) return;
+  e.target.value='';
+  ctAddPreset(v);
+}
+async function ctAddPreset(name){
+  if(ctPresetCache.some(function(p){return p.name.toLowerCase()===name.toLowerCase();})){ showNotif('Nasa preset na yan','error'); return; }
+  var kind=ctIsWebsite(name)?'website':'messaging';
+  var sort=(ctPresetCache.reduce(function(m,p){return Math.max(m,p.sort||0);},0))+1;
+  var{data,error}=await sb.from('ct_preset_pages').insert({name:name,kind:kind,sort:sort}).select();
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  if(data&&data[0]) ctPresetCache.push(data[0]);
+  ctRenderManage();
+  showNotif('Added sa preset \u2713','success');
+}
+async function ctDelPreset(id){
+  var{error}=await sb.from('ct_preset_pages').delete().eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  ctPresetCache=ctPresetCache.filter(function(p){return p.id!==id;});
+  ctRenderManage();
+}
+// after closing manage, re-load preset into form kung fresh pa
+function ctSaveManage(){
+  ctCloseManage();
+  // refresh datalist + counter
+  if(ctPendingTags.length===0 || confirm('I-reload ang updated preset pages sa Add Creative form?')){
+    ctLoadPresetIntoForm();
+  }
+  showNotif('Preset saved','success');
+}
+
 
 
 // ============================================================
