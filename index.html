@@ -1140,16 +1140,31 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .icon-btn2.ok:hover{color:var(--green);border-color:var(--green);background:rgba(34,197,94,0.08)}
 .icon-btn2.danger:hover{color:var(--red);border-color:var(--red);background:rgba(239,68,68,0.08)}
 .ct-pstat{background:var(--bg4);border:0.5px solid var(--border2);border-radius:7px;color:var(--text);cursor:pointer}
+.ct-dd{position:relative}
+.ct-dd-btn{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:11px 13px;color:var(--text);font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:all 0.15s}
+.ct-dd-btn:hover{border-color:var(--border3,#333);background:var(--bg4)}
+.ct-dd-chev{color:var(--text3);transition:transform 0.2s;flex-shrink:0}
+.ct-dd.open .ct-dd-btn{border-color:var(--yellow);box-shadow:0 0 0 3px var(--yellow-glow)}
+.ct-dd.open .ct-dd-chev{transform:rotate(180deg)}
+.ct-dd-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;background:rgba(20,20,24,0.97);border:0.5px solid var(--border2);border-radius:var(--radius);padding:5px;backdrop-filter:blur(20px);box-shadow:0 12px 32px rgba(0,0,0,0.5);z-index:50;opacity:0;visibility:hidden;transform:translateY(-4px);transition:all 0.16s;max-height:280px;overflow-y:auto}
+.ct-dd.open .ct-dd-menu{opacity:1;visibility:visible;transform:translateY(0)}
+.ct-dd-item{padding:9px 11px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:9px;transition:0.12s;color:var(--text2)}
+.ct-dd-item:hover{background:rgba(255,255,255,0.05);color:var(--text)}
+.ct-dd-item.sel{color:var(--text)}
+.ct-dd-tick{color:var(--yellow);opacity:0;flex-shrink:0}
+.ct-dd-item.sel .ct-dd-tick{opacity:1}
+.ct-dd-sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 #page-creatives-tracking{position:relative;min-height:100%}
 .ct-aurora{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;min-height:600px}
-.ct-aurora span{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.55;mix-blend-mode:screen}
-.ct-a1{width:620px;height:620px;background:radial-gradient(circle,#FACC15,transparent 68%);top:-200px;left:-80px;animation:ctFloat1 18s ease-in-out infinite}
-.ct-a2{width:520px;height:520px;background:radial-gradient(circle,#34d399,transparent 68%);top:12%;right:-140px;animation:ctFloat2 22s ease-in-out infinite}
-.ct-a3{width:480px;height:480px;background:radial-gradient(circle,#5b9dff,transparent 68%);bottom:2%;left:28%;animation:ctFloat3 20s ease-in-out infinite}
-.ct-a4{width:420px;height:420px;background:radial-gradient(circle,#FACC15,transparent 68%);top:42%;left:0;animation:ctFloat1 26s ease-in-out infinite}
-@keyframes ctFloat1{0%,100%{transform:translate(0,0)}50%{transform:translate(50px,40px)}}
-@keyframes ctFloat2{0%,100%{transform:translate(0,0)}50%{transform:translate(-45px,55px)}}
-@keyframes ctFloat3{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,-45px)}}
+/* flowing gold waves */
+.ct-aurora .ct-wave{position:absolute;inset:0;background:linear-gradient(120deg,#0e0d0a,#1a160d,#100e0a,#221c0f);background-size:400% 400%;animation:ctWaveShift 16s ease infinite}
+.ct-aurora .ct-wave::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 820px 320px at 18% 28%,rgba(250,204,21,0.18),transparent 60%),radial-gradient(ellipse 720px 280px at 82% 72%,rgba(245,158,11,0.14),transparent 60%);animation:ctWaveShift 20s ease infinite reverse}
+@keyframes ctWaveShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+/* gold particles (fast) */
+.ct-aurora .ct-pcl span{position:absolute;border-radius:50%;background:rgba(250,224,140,0.8);box-shadow:0 0 8px rgba(250,204,21,0.5)}
+@keyframes ctP1{0%,100%{transform:translate(0,0);opacity:0.3}50%{transform:translate(35px,-50px);opacity:0.9}}
+@keyframes ctP2{0%,100%{transform:translate(0,0);opacity:0.4}50%{transform:translate(-45px,-35px);opacity:1}}
+@keyframes ctP3{0%,100%{transform:translate(0,0);opacity:0.3}50%{transform:translate(28px,45px);opacity:0.8}}
 #nav-advertiser-tasks svg{color:#14b8a6}
 #nav-advertiser-tasks{color:rgba(20,184,166,0.78)}
 #nav-advertiser-tasks:hover{color:#14b8a6;background:rgba(20,184,166,0.07)}
@@ -2933,7 +2948,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
       <!-- CREATIVES TRACKING PAGE -->
       <div class="page" id="page-creatives-tracking">
-        <div class="ct-aurora"><span class="ct-a1"></span><span class="ct-a2"></span><span class="ct-a3"></span><span class="ct-a4"></span></div>
+        <div class="ct-aurora"><div class="ct-wave"></div><div class="ct-pcl"><span style="width:5px;height:5px;top:46%;left:23%;animation:ctP1 13s ease-in-out infinite"></span><span style="width:2px;height:2px;top:11%;left:13%;animation:ctP2 10s ease-in-out infinite"></span><span style="width:3px;height:3px;top:79%;left:11%;animation:ctP3 8s ease-in-out infinite"></span><span style="width:5px;height:5px;top:16%;left:59%;animation:ctP1 8s ease-in-out infinite"></span><span style="width:5px;height:5px;top:35%;left:15%;animation:ctP2 8s ease-in-out infinite"></span><span style="width:3px;height:3px;top:77%;left:19%;animation:ctP3 13s ease-in-out infinite"></span><span style="width:2px;height:2px;top:85%;left:78%;animation:ctP1 12s ease-in-out infinite"></span><span style="width:2px;height:2px;top:79%;left:54%;animation:ctP2 9s ease-in-out infinite"></span><span style="width:3px;height:3px;top:10%;left:75%;animation:ctP3 10s ease-in-out infinite"></span><span style="width:2px;height:2px;top:58%;left:22%;animation:ctP1 12s ease-in-out infinite"></span><span style="width:3px;height:3px;top:44%;left:75%;animation:ctP2 8s ease-in-out infinite"></span><span style="width:3px;height:3px;top:79%;left:77%;animation:ctP3 10s ease-in-out infinite"></span><span style="width:2px;height:2px;top:17%;left:74%;animation:ctP1 12s ease-in-out infinite"></span><span style="width:3px;height:3px;top:12%;left:83%;animation:ctP2 11s ease-in-out infinite"></span><span style="width:5px;height:5px;top:92%;left:72%;animation:ctP3 10s ease-in-out infinite"></span><span style="width:5px;height:5px;top:64%;left:78%;animation:ctP1 10s ease-in-out infinite"></span><span style="width:3px;height:3px;top:43%;left:35%;animation:ctP2 13s ease-in-out infinite"></span><span style="width:4px;height:4px;top:36%;left:14%;animation:ctP3 12s ease-in-out infinite"></span><span style="width:5px;height:5px;top:68%;left:47%;animation:ctP1 10s ease-in-out infinite"></span><span style="width:2px;height:2px;top:82%;left:13%;animation:ctP2 12s ease-in-out infinite"></span><span style="width:4px;height:4px;top:58%;left:25%;animation:ctP3 9s ease-in-out infinite"></span><span style="width:2px;height:2px;top:67%;left:57%;animation:ctP1 13s ease-in-out infinite"></span></div></div>
         <div style="max-width:1000px;position:relative;z-index:1">
 
           <!-- Tabs + Manage -->
@@ -2996,16 +3011,31 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <!-- Filters -->
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
               <input class="form-input" id="ct-track-search" placeholder="Search title, page, notes..." style="max-width:260px" oninput="renderCreativeTrack()">
-              <select class="form-select" id="ct-track-filter-page" style="max-width:180px" onchange="renderCreativeTrack()">
-                <option value="">All pages</option>
-              </select>
-              <select class="form-select" id="ct-track-filter-status" style="max-width:150px" onchange="renderCreativeTrack()">
-                <option value="">All status</option>
-                <option value="To Do">To Do</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Done">Done</option>
-                <option value="Published">Published</option>
-              </select>
+              <!-- premium page filter -->
+              <div class="ct-dd" id="ct-dd-page" style="min-width:170px" data-value="">
+                <button type="button" class="ct-dd-btn" onclick="ctDdToggle('ct-dd-page',event)">
+                  <span class="ct-dd-label">All pages</span>
+                  <svg class="ct-dd-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="ct-dd-menu" id="ct-dd-page-menu"></div>
+              </div>
+              <!-- premium status filter -->
+              <div class="ct-dd" id="ct-dd-status" style="min-width:150px" data-value="">
+                <button type="button" class="ct-dd-btn" onclick="ctDdToggle('ct-dd-status',event)">
+                  <span class="ct-dd-label">All status</span>
+                  <svg class="ct-dd-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="ct-dd-menu" id="ct-dd-status-menu">
+                  <div class="ct-dd-item sel" onclick="ctDdPick('ct-dd-status','','All status')"><svg class="ct-dd-tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>All status</div>
+                  <div class="ct-dd-item" onclick="ctDdPick('ct-dd-status','To Do','To Do')"><svg class="ct-dd-tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span class="ct-dd-sdot" style="background:#6e6e78"></span>To Do</div>
+                  <div class="ct-dd-item" onclick="ctDdPick('ct-dd-status','In Progress','In Progress')"><svg class="ct-dd-tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span class="ct-dd-sdot" style="background:var(--amber)"></span>In Progress</div>
+                  <div class="ct-dd-item" onclick="ctDdPick('ct-dd-status','Done','Done')"><svg class="ct-dd-tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span class="ct-dd-sdot" style="background:var(--green)"></span>Done</div>
+                  <div class="ct-dd-item" onclick="ctDdPick('ct-dd-status','Published','Published')"><svg class="ct-dd-tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span class="ct-dd-sdot" style="background:#34d399"></span>Published</div>
+                </div>
+              </div>
+              <!-- hidden native selects para di masira existing filter logic -->
+              <select id="ct-track-filter-page" style="display:none" onchange="renderCreativeTrack()"><option value="">All pages</option></select>
+              <select id="ct-track-filter-status" style="display:none" onchange="renderCreativeTrack()"><option value="">All status</option><option value="To Do">To Do</option><option value="In Progress">In Progress</option><option value="Done">Done</option><option value="Published">Published</option></select>
             </div>
 
             <!-- Cards -->
