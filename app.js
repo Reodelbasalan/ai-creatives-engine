@@ -10459,6 +10459,19 @@ async function loadCreativeTrack(){
   var fp=document.getElementById('ct-track-filter-page');
   if(fp){ var cur=fp.value; fp.innerHTML='<option value="">All pages</option>'+names.map(function(n){ return '<option value="'+ctEsc(n)+'">'+ctEsc(n)+'</option>'; }).join(''); fp.value=cur; }
 
+  // populate premium custom page dropdown
+  var pm=document.getElementById('ct-dd-page-menu');
+  if(pm){
+    var curP=(fp&&fp.value)||'';
+    var items='<div class="ct-dd-item'+(curP===''?' sel':'')+'" onclick="ctDdPick(\'ct-dd-page\',\'\',\'All pages\')"><svg class="ct-dd-tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>All pages</div>';
+    items+=names.map(function(n){
+      var web=ctPageKind(n)==='website';
+      var dot=web?'#5b9dff':'#FACC15';
+      return '<div class="ct-dd-item'+(curP===n?' sel':'')+'" onclick="ctDdPick(\'ct-dd-page\',\''+ctEsc(n).replace(/'/g,"\\'")+'\',\''+ctEsc(n).replace(/'/g,"\\'")+'\')"><svg class="ct-dd-tick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span class="ct-dd-sdot" style="background:'+dot+'"></span>'+ctEsc(n)+'</div>';
+    }).join('');
+    pm.innerHTML=items;
+  }
+
   // if pending is empty (fresh form), auto-load preset
   if(!ctPendingTags.length) ctLoadPresetIntoForm();
 
@@ -10632,6 +10645,37 @@ function ctToggleActive(id){
   if(chev){ chev.style.transform='rotate('+(open?'90':'0')+'deg)'; chev.style.color=open?'var(--yellow)':'var(--text3)'; }
   card.classList.toggle('open',open);
 }
+
+// ---- premium filter dropdowns ----
+function ctDdToggle(id,e){
+  if(e) e.stopPropagation();
+  var dd=document.getElementById(id);
+  if(!dd) return;
+  var wasOpen=dd.classList.contains('open');
+  document.querySelectorAll('.ct-dd.open').forEach(function(d){ d.classList.remove('open'); });
+  if(!wasOpen) dd.classList.add('open');
+}
+function ctDdPick(id,value,label){
+  var dd=document.getElementById(id);
+  if(!dd) return;
+  dd.setAttribute('data-value',value);
+  var lbl=dd.querySelector('.ct-dd-label');
+  if(lbl) lbl.textContent=label;
+  dd.classList.remove('open');
+  // sync sa hidden native select para gumana yung existing filter logic
+  var nativeId=id==='ct-dd-page'?'ct-track-filter-page':'ct-track-filter-status';
+  var nat=document.getElementById(nativeId);
+  if(nat){ nat.value=value; }
+  // re-mark selected item (status menu is static; page menu re-renders on load)
+  dd.querySelectorAll('.ct-dd-item').forEach(function(it){
+    it.classList.toggle('sel', it.textContent.trim()===label.trim());
+  });
+  renderCreativeTrack();
+}
+// close on outside click
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.ct-dd')) document.querySelectorAll('.ct-dd.open').forEach(function(d){ d.classList.remove('open'); });
+});
 
 async function saveCreativeTrack(){
   var title=document.getElementById('ct-track-title')?.value?.trim();
