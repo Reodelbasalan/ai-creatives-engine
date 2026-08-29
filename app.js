@@ -10337,6 +10337,7 @@ var ctPresetCache=[];       // [{id,name,kind,sort}]
 var ctPendingTags=[];       // pages para sa bagong creative (auto-loaded from preset)
 var ctView='active';        // 'active' | 'archive'
 var ctExpanded={};          // archive card expand state {id:true}
+var ctActiveExpanded={};    // active card expand state {id:true}
 var CT_STATUSES=['To Do','In Progress','Done','Published'];
 
 function ctTrackStatusColor(s){
@@ -10541,24 +10542,28 @@ function renderCreativeTrack(){
         }).join('')
       : '<div style="font-size:11px;color:var(--text3);padding:8px 0">Walang page na naka-tag pa.</div>';
 
-    return '<div class="form-card ct-active-card" data-id="'+r.id+'" style="padding:16px;margin-bottom:12px;transition:transform 0.7s cubic-bezier(.5,0,.2,1),opacity 0.7s ease,filter 0.5s ease,border-color 0.3s">'
-      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px">'
-      +'<div><div class="row-name" style="font-size:13.5px;font-weight:700">'+ctEsc(r.title||'\u2014')+'</div>'
+    var open=!!ctActiveExpanded[r.id];
+    return '<div class="form-card ct-active-card'+(open?' open':'')+'" data-id="'+r.id+'" style="padding:0;margin-bottom:12px;overflow:hidden;transition:transform 0.7s cubic-bezier(.5,0,.2,1),opacity 0.7s ease,filter 0.5s ease,border-color 0.3s">'
+      +'<div onclick="ctToggleActive(\''+r.id+'\')" style="padding:16px;cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;gap:10px">'
+      +'<div style="display:flex;align-items:flex-start;gap:11px;flex:1;min-width:0">'
+      +'<span class="ct-act-chev" style="display:grid;place-items:center;color:'+(open?'var(--yellow)':'var(--text3)')+';transition:transform 0.25s;transform:rotate('+(open?'90':'0')+'deg);margin-top:1px;flex-shrink:0">'+CTIC.chev+'</span>'
+      +'<div style="min-width:0"><div class="row-name" style="font-size:13.5px;font-weight:700">'+ctEsc(r.title||'\u2014')+'</div>'
       +(r.notes?'<div class="row-sub" style="margin-top:2px">'+ctEsc(r.notes)+'</div>':'')
-      +'<div style="margin-top:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+link
+      +'<div style="margin-top:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap" onclick="event.stopPropagation()">'+link
       +(r.created_at?'<span style="font-size:10.5px;color:var(--text3);display:inline-flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Added '+ctFmtDateTime(r.created_at)+'</span>':'')
-      +'</div></div>'
+      +'</div></div></div>'
       +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
-      +'<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(250,204,21,0.1);color:var(--yellow)">'+doneN+' / '+tags.length+' done</span>'
-      +'<button onclick="deleteCreativeTrack(\''+r.id+'\')" class="ghost-btn" style="font-size:10px;padding:4px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">'+CTIC.trash+'</button>'
+      +'<div style="width:70px;height:6px;border-radius:6px;background:rgba(255,255,255,0.07);overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--yellow),var(--green));border-radius:6px;transition:0.4s"></div></div>'
+      +'<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:'+(pct===100?'rgba(34,197,94,0.12)':'rgba(250,204,21,0.1)')+';color:'+(pct===100?'var(--green)':'var(--yellow)')+'">'+doneN+' / '+tags.length+' done</span>'
+      +'<button onclick="event.stopPropagation();deleteCreativeTrack(\''+r.id+'\')" class="ghost-btn" style="font-size:10px;padding:4px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">'+CTIC.trash+'</button>'
       +'</div></div>'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 8px">'
-      +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em">Pages ('+tags.length+') \u2014 per-page status</div>'
-      +'<div style="display:flex;align-items:center;gap:7px"><div style="width:90px;height:6px;border-radius:6px;background:rgba(255,255,255,0.07);overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--yellow),var(--green));border-radius:6px;transition:0.4s"></div></div><span style="font-size:11px;font-weight:600;color:'+(pct===100?'var(--green)':'var(--text3)')+'">'+pct+'%</span></div>'
-      +'</div>'
+      +'<div class="ct-act-body" style="max-height:'+(open?'2000px':'0')+';overflow:hidden;transition:max-height 0.4s cubic-bezier(.4,0,.2,1)">'
+      +'<div style="padding:0 16px 16px">'
+      +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;padding-top:2px">Pages ('+tags.length+') \u2014 per-page status</div>'
       +tagRows
       +'<div style="margin-top:8px"><input class="form-input" style="font-size:11px;padding:8px 10px" list="ct-track-page-list" placeholder="+ add page (Enter)" onkeydown="ctAddTagKey(event,\''+r.id+'\')"></div>'
       +'<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border);font-size:11px;color:var(--text3)">Auto-archive kapag lahat ng pages Done na.</div>'
+      +'</div></div>'
       +'</div>';
   }).join('');
 }
@@ -10616,6 +10621,17 @@ function renderCreativeArchive(){
   }).join('');
 }
 function ctToggleArch(id){ ctExpanded[id]=!ctExpanded[id]; renderCreativeArchive(); }
+function ctToggleActive(id){
+  ctActiveExpanded[id]=!ctActiveExpanded[id];
+  var card=document.querySelector('.ct-active-card[data-id="'+id+'"]');
+  if(!card) return;
+  var open=ctActiveExpanded[id];
+  var body=card.querySelector('.ct-act-body');
+  var chev=card.querySelector('.ct-act-chev');
+  if(body) body.style.maxHeight=open?'2000px':'0';
+  if(chev){ chev.style.transform='rotate('+(open?'90':'0')+'deg)'; chev.style.color=open?'var(--yellow)':'var(--text3)'; }
+  card.classList.toggle('open',open);
+}
 
 async function saveCreativeTrack(){
   var title=document.getElementById('ct-track-title')?.value?.trim();
