@@ -8625,6 +8625,11 @@ function obBrandColor(name){
 
 async function loadBrandCreatives(){
   obInitParticles();
+  // siguraduhing sarado ang form on load
+  var _f=document.getElementById('ob-form');
+  if(_f){ _f.style.maxHeight='0'; _f.style.opacity='0'; _f.style.marginBottom='0'; }
+  var _lbl=document.getElementById('ob-toggle-label'); if(_lbl) _lbl.textContent='Add creative';
+  var _btn=document.getElementById('ob-toggle-btn'); if(_btn) _btn.style.opacity='1';
   skelRows('ob-rows', 4);
   try{
     var r=await sb.from('brand_creatives').select('*').order('created_at',{ascending:false});
@@ -8658,15 +8663,18 @@ var obWinnerFilterVal='';
 function obRenderWinnerFilter(){
   var el=document.getElementById('ob-winner-filter');
   if(!el) return;
+  var TROPHY='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2"/><path d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2"/><path d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3"/><path d="M4 22h16"/><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"/><path d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3"/></svg>';
+  var FLASK='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>';
+  var XICO='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
   var opts=[
     {v:'',label:'All',ic:'',c:'var(--text2)'},
-    {v:'Winner',label:'Winner',ic:'🏆',c:'#22c55e'},
-    {v:'Testing',label:'Testing',ic:'🧪',c:'#f59e0b'},
-    {v:'Killed',label:'Killed',ic:'❌',c:'#ef4444'}
+    {v:'Winner',label:'Winner',ic:TROPHY,c:'#22c55e'},
+    {v:'Testing',label:'Testing',ic:FLASK,c:'#f59e0b'},
+    {v:'Killed',label:'Killed',ic:XICO,c:'#ef4444'}
   ];
   el.innerHTML=opts.map(function(o){
     var active=obWinnerFilterVal===o.v;
-    return '<button type="button" onclick="obSetWinnerFilter(\''+o.v+'\')" style="font-size:11px;font-weight:650;padding:5px 12px;border-radius:20px;cursor:pointer;background:'+(active?o.c+'22':'transparent')+';color:'+(active?o.c:'var(--text3)')+';border:0.5px solid '+(active?o.c+'55':'var(--border2)')+'">'+(o.ic?o.ic+' ':'')+o.label+'</button>';
+    return '<button type="button" onclick="obSetWinnerFilter(\''+o.v+'\')" style="font-size:11px;font-weight:650;padding:5px 12px;border-radius:20px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;background:'+(active?o.c+'22':'transparent')+';color:'+(active?o.c:'var(--text3)')+';border:0.5px solid '+(active?o.c+'55':'var(--border2)')+'">'+(o.ic?o.ic:'')+o.label+'</button>';
   }).join('');
 }
 function obSetWinnerFilter(v){
@@ -8922,9 +8930,9 @@ async function obWinnerPick(id, winnerStatus){
 
 // ---- Detail modal (script/concept/angle/format + winner) ----
 var OB_WINNER_STATES=[
-  {key:'Winner', ic:'🏆', c:'#22c55e'},
-  {key:'Testing', ic:'🧪', c:'#f59e0b'},
-  {key:'Killed', ic:'❌', c:'#ef4444'}
+  {key:'Winner', ic:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2"/><path d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2"/><path d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3"/><path d="M4 22h16"/><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"/><path d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3"/></svg>', c:'#22c55e'},
+  {key:'Testing', ic:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>', c:'#f59e0b'},
+  {key:'Killed', ic:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>', c:'#ef4444'}
 ];
 function openObBrandDetailModal(id){
   var c=obItems.find(function(x){ return x.id===id; });
