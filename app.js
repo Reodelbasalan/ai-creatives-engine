@@ -8573,11 +8573,12 @@ function obToggleForm(){
   var lbl=document.getElementById('ob-toggle-label');
   var isOpen=wrap.style.maxHeight && wrap.style.maxHeight!=='0px';
   if(isOpen){
-    wrap.style.maxHeight='0'; wrap.style.opacity='0'; wrap.style.marginBottom='0';
+    wrap.style.maxHeight='0'; wrap.style.opacity='0'; wrap.style.marginBottom='0'; wrap.style.paddingTop='0'; wrap.style.paddingBottom='0';
     if(btn) btn.style.opacity='1';
     if(lbl) lbl.textContent='Add creative';
   } else {
-    wrap.style.maxHeight=wrap.scrollHeight+'px'; wrap.style.opacity='1'; wrap.style.marginBottom='20px';
+    wrap.style.paddingTop='22px'; wrap.style.paddingBottom='22px';
+    wrap.style.maxHeight=wrap.scrollHeight+'px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
     if(btn) btn.style.opacity='0.55';
     if(lbl) lbl.textContent='Close form';
   }
@@ -8627,7 +8628,7 @@ async function loadBrandCreatives(){
   obInitParticles();
   // siguraduhing sarado ang form on load
   var _f=document.getElementById('ob-form');
-  if(_f){ _f.style.maxHeight='0'; _f.style.opacity='0'; _f.style.marginBottom='0'; }
+  if(_f){ _f.style.maxHeight='0'; _f.style.opacity='0'; _f.style.marginBottom='0'; _f.style.paddingTop='0'; _f.style.paddingBottom='0'; }
   var _lbl=document.getElementById('ob-toggle-label'); if(_lbl) _lbl.textContent='Add creative';
   var _btn=document.getElementById('ob-toggle-btn'); if(_btn) _btn.style.opacity='1';
   skelRows('ob-rows', 4);
@@ -8755,7 +8756,7 @@ function obRenderRows(){
       +wm.ic+' '+winStatus
       +'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>'
       +'</button>'
-      +'<div class="ob-status-menu" style="display:none;position:absolute;right:0;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:50;min-width:112px">'
+      +'<div class="ob-status-menu" style="display:none;position:absolute;right:0;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:100;min-width:112px">'
       +'<div onclick="obWinnerPick(\''+c.id+'\',\'Winner\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer;display:flex;align-items:center;gap:7px">'+TROPHY+' Winner</div>'
       +'<div onclick="obWinnerPick(\''+c.id+'\',\'Testing\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer;display:flex;align-items:center;gap:7px">'+FLASK+' Testing</div>'
       +'<div onclick="obWinnerPick(\''+c.id+'\',\'Killed\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer;display:flex;align-items:center;gap:7px">'+XICO+' Killed</div>'
@@ -8764,7 +8765,7 @@ function obRenderRows(){
     var statusPill='<div class="ob-status-dd" id="ob-sdd-'+c.id+'" style="position:relative">'
       +'<button class="ob-statuspill" onclick="obStatusToggle(\''+c.id+'\')" style="background:'+sc.bg+';color:'+sc.c+';border-color:'+sc.c+'44">'
       +st+'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>'
-      +'<div class="ob-status-menu" style="display:none;position:absolute;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:50;min-width:150px">'
+      +'<div class="ob-status-menu" style="display:none;position:absolute;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:100;min-width:150px">'
       +'<div onclick="obStatusPick(\''+c.id+'\',\'Pending approval\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Pending approval</div>'
       +'<div onclick="obStatusPick(\''+c.id+'\',\'Approved\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Approved</div>'
       +'<div onclick="obStatusPick(\''+c.id+'\',\'Published\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Published</div>'
@@ -8895,11 +8896,17 @@ async function obDeleteCreative(id){
 function obStatusToggle(id){
   var menu=document.querySelector('#ob-sdd-'+id+' .ob-status-menu');
   document.querySelectorAll('.ob-status-menu').forEach(function(m){ if(m!==menu) m.style.display='none'; });
-  if(menu) menu.style.display = (menu.style.display==='none'||!menu.style.display) ? 'block' : 'none';
+  document.querySelectorAll('.ob-item.dd-open').forEach(function(r){ r.classList.remove('dd-open'); });
+  if(menu){
+    var show=(menu.style.display==='none'||!menu.style.display);
+    menu.style.display = show ? 'block' : 'none';
+    var row=menu.closest('.ob-item'); if(row && show) row.classList.add('dd-open');
+  }
 }
 document.addEventListener('click', function(e){
   if(!e.target.closest || !e.target.closest('.ob-status-dd')){
     document.querySelectorAll('.ob-status-menu').forEach(function(m){ m.style.display='none'; });
+    document.querySelectorAll('.ob-item.dd-open').forEach(function(r){ r.classList.remove('dd-open'); });
   }
 });
 
@@ -8917,7 +8924,12 @@ async function obStatusPick(id, status){
 function obWinnerToggle(id){
   var menu=document.querySelector('#ob-wdd-'+id+' .ob-status-menu');
   document.querySelectorAll('.ob-status-menu').forEach(function(m){ if(m!==menu) m.style.display='none'; });
-  if(menu) menu.style.display = (menu.style.display==='none'||!menu.style.display) ? 'block' : 'none';
+  document.querySelectorAll('.ob-item.dd-open').forEach(function(r){ r.classList.remove('dd-open'); });
+  if(menu){
+    var show=(menu.style.display==='none'||!menu.style.display);
+    menu.style.display = show ? 'block' : 'none';
+    var row=menu.closest('.ob-item'); if(row && show) row.classList.add('dd-open');
+  }
 }
 
 async function obWinnerPick(id, winnerStatus){
