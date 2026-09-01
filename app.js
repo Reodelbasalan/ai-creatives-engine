@@ -8608,7 +8608,23 @@ function obTagBadge(tag){
   return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:'+c+'"><span style="width:6px;height:6px;border-radius:50%;background:'+c+';display:inline-block"></span>'+escapeHtml(tag)+'</span>';
 }
 
+// brand-based accent color para sa color strip (match kahit nasaan sa name)
+function obBrandColor(name){
+  var n=(name||'').toUpperCase();
+  if(n.indexOf('ACU')>=0) return '#FACC15';               // yellow
+  if(n.indexOf('VUP')>=0||n.indexOf('VIRAL')>=0) return '#a78bfa'; // purple
+  if(n.indexOf('GLUTA')>=0) return '#4ade80';             // green
+  if(n.indexOf('FATBURNER')>=0) return '#fb923c';         // orange
+  if(n.indexOf('COLLAGEN')>=0) return '#f472b6';          // pink
+  if(n.indexOf('SLIM')>=0) return '#22d3ee';              // cyan
+  // fallback: consistent auto-color base sa name hash
+  var palette=['#60a5fa','#a78bfa','#4ade80','#f472b6','#fb923c','#22d3ee','#c084fc','#facc15'];
+  var h=0; for(var i=0;i<n.length;i++){ h=(h*31+n.charCodeAt(i))>>>0; }
+  return palette[h%palette.length];
+}
+
 async function loadBrandCreatives(){
+  obInitParticles();
   skelRows('ob-rows', 4);
   try{
     var r=await sb.from('brand_creatives').select('*').order('created_at',{ascending:false});
@@ -8618,14 +8634,24 @@ async function loadBrandCreatives(){
   obRenderRows();
 }
 
+// generate drifting gold particles (once)
+function obInitParticles(){
+  var box=document.getElementById('ob-particles');
+  if(!box || box.childNodes.length) return;
+  var anims=['obP1','obP2','obP3','obP4'], out='';
+  for(var i=0;i<32;i++){
+    var top=Math.floor(Math.random()*92)+4, left=Math.floor(Math.random()*94)+3;
+    var sz=Math.floor(Math.random()*4)+3, dur=Math.floor(Math.random()*8)+9, a=anims[i%4];
+    out+='<span style="width:'+sz+'px;height:'+sz+'px;top:'+top+'%;left:'+left+'%;animation:'+a+' '+dur+'s ease-in-out infinite"></span>';
+  }
+  box.innerHTML=out;
+}
+
 var OB_ARCHIVE_MS=48*60*60*1000; // 48 hours
 
 function obIsArchived(c){
-  if((c.status||'')!=='Published') return false;
-  if(!c.published_at) return false;
-  var pub=new Date(c.published_at).getTime();
-  if(isNaN(pub)) return false;
-  return (Date.now()-pub) >= OB_ARCHIVE_MS;
+  // Published = agad mawala sa list, punta History
+  return (c.status||'')==='Published';
 }
 
 var obWinnerFilterVal='';
@@ -8694,76 +8720,71 @@ function obRenderRows(){
       return hay.indexOf(q)>=0;
     });
   }
-  if(!visible.length){ box.innerHTML=emptyState(ICO_MEGAPHONE, (obWinnerFilterVal||fmtVal||angleVal||q)?'Walang tugmang creative':'No active brand creatives', (obWinnerFilterVal||fmtVal||angleVal||q)?'Baguhin ang filter/search para makita ang iba.':'Published items auto-move to History after 48 hours. Click "Add creative" to log a new one.'); return; }
+  if(!visible.length){ box.innerHTML=emptyState(ICO_MEGAPHONE, (obWinnerFilterVal||fmtVal||angleVal||q)?'Walang tugmang creative':'No active brand creatives', (obWinnerFilterVal||fmtVal||angleVal||q)?'Baguhin ang filter/search para makita ang iba.':'Published items auto-move to History. Click "Add creative" to log a new one.'); return; }
   var isAdmin=currentUserRole==='admin';
   box.innerHTML=visible.map(function(c){
-    var link=c.link_url?('<a href="'+c.link_url+'" target="_blank" style="color:var(--yellow);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px">Open<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></a>'):'<span style="color:#7a7a85">—</span>';
-    var date=c.created_at?new Date(c.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'—';
+    var link=c.link_url?('<a href="'+c.link_url+'" target="_blank" class="ob-openlink">Open<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1-1"/></svg></a>'):'<span class="ob-muted">\u2014</span>';
+    var date=c.created_at?new Date(c.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric'}):'\u2014';
     var st=c.status||'Pending approval';
     var stColors={
       'Pending approval':{bg:'rgba(251,146,60,0.15)',c:'#fb923c'},
       'Draft':{bg:'rgba(138,135,129,0.15)',c:'#a6a39c'},
       'Approved':{bg:'rgba(96,165,250,0.15)',c:'#7db4fb'},
-      'Scheduled':{bg:'rgba(250,204,21,0.14)',c:'#facc15'},
       'Published':{bg:'rgba(94,234,212,0.14)',c:'#5eead4'}
     };
     var sc=stColors[st]||stColors['Pending approval'];
+    var brandColor=obBrandColor(c.page_name);
     var winStatus=c.winner_status||'Testing';
-    var winMeta={'Winner':{c:'#22c55e',bg:'rgba(34,197,94,0.14)',ic:'🏆'},'Testing':{c:'#f59e0b',bg:'rgba(245,158,11,0.14)',ic:'🧪'},'Killed':{c:'#ef4444',bg:'rgba(239,68,68,0.14)',ic:'❌'}};
+    var TROPHY='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2"/><path d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2"/><path d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3"/><path d="M4 22h16"/><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"/><path d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3"/></svg>';
+    var FLASK='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>';
+    var XICO='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+    var winMeta={'Winner':{c:'#22c55e',bg:'rgba(34,197,94,0.14)',ic:TROPHY},'Testing':{c:'#f59e0b',bg:'rgba(245,158,11,0.14)',ic:FLASK},'Killed':{c:'#ef4444',bg:'rgba(239,68,68,0.14)',ic:XICO}};
     var wm=winMeta[winStatus]||winMeta['Testing'];
+    var isAdmin=currentUserRole==='admin';
+
     var winnerBadge='<div class="ob-status-dd" id="ob-wdd-'+c.id+'" style="position:relative">'
-      +'<button onclick="obWinnerToggle(\''+c.id+'\')" style="background:'+wm.bg+';color:'+wm.c+';border:0.5px solid '+wm.c+'44;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:20px;font-size:10px;font-weight:650;cursor:pointer">'
+      +'<button class="ob-winpill" onclick="obWinnerToggle(\''+c.id+'\')" style="background:'+wm.bg+';color:'+wm.c+';border-color:'+wm.c+'44">'
       +wm.ic+' '+winStatus
       +'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>'
       +'</button>'
-      +'<div class="ob-status-menu" style="display:none;position:absolute;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:50;min-width:110px">'
-      +'<div onclick="obWinnerPick(\''+c.id+'\',\'Winner\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">🏆 Winner</div>'
-      +'<div onclick="obWinnerPick(\''+c.id+'\',\'Testing\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">🧪 Testing</div>'
-      +'<div onclick="obWinnerPick(\''+c.id+'\',\'Killed\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">❌ Killed</div>'
+      +'<div class="ob-status-menu" style="display:none;position:absolute;right:0;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:50;min-width:112px">'
+      +'<div onclick="obWinnerPick(\''+c.id+'\',\'Winner\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer;display:flex;align-items:center;gap:7px">'+TROPHY+' Winner</div>'
+      +'<div onclick="obWinnerPick(\''+c.id+'\',\'Testing\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer;display:flex;align-items:center;gap:7px">'+FLASK+' Testing</div>'
+      +'<div onclick="obWinnerPick(\''+c.id+'\',\'Killed\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer;display:flex;align-items:center;gap:7px">'+XICO+' Killed</div>'
       +'</div></div>';
-    var detailsBtn='<button onclick="openObBrandDetailModal(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:4px 9px;white-space:nowrap">📝 Details</button>';
-    var approveBtn = (isAdmin && st==='Pending approval')
-      ? '<button class="ob-approve-btn" onclick="obApprove(\''+c.id+'\')" title="Approve">'
-        + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg>'
-        + 'Approve</button>'
+
+    var statusPill='<div class="ob-status-dd" id="ob-sdd-'+c.id+'" style="position:relative">'
+      +'<button class="ob-statuspill" onclick="obStatusToggle(\''+c.id+'\')" style="background:'+sc.bg+';color:'+sc.c+';border-color:'+sc.c+'44">'
+      +st+'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>'
+      +'<div class="ob-status-menu" style="display:none;position:absolute;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:50;min-width:150px">'
+      +'<div onclick="obStatusPick(\''+c.id+'\',\'Pending approval\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Pending approval</div>'
+      +'<div onclick="obStatusPick(\''+c.id+'\',\'Approved\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Approved</div>'
+      +'<div onclick="obStatusPick(\''+c.id+'\',\'Published\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Published</div>'
+      +'</div></div>';
+
+    var approveBtn=(isAdmin && st==='Pending approval')
+      ? '<button class="ob-lbtn approve" onclick="obApprove(\''+c.id+'\')" title="Approve"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg>Approve</button>'
       : '';
-    var publishBtn = (st==='Approved')
-      ? '<button class="ob-publish-btn" onclick="obPublish(\''+c.id+'\')" title="Mark as published">'
-        + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'
-        + 'Publish</button>'
-      : (st==='Published')
-      ? '<button class="ob-unpublish-btn" onclick="obUnpublish(\''+c.id+'\')" title="Mark as unpublished">'
-        + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg>'
-        + 'Unpublish</button>'
+    var publishBtn=(st==='Approved')
+      ? '<button class="ob-lbtn pub" onclick="obPublish(\''+c.id+'\')" title="Mark as published"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Publish</button>'
       : '';
-    return '<div class="ob-row">'
-      + '<div><div class="ob-name">'+escapeHtml(c.page_name||'—')+'</div>'+((c.format||c.angle_hook)?'<div style="font-size:10px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+escapeHtml((c.format?c.format+' — ':'')+(c.angle_hook||''))+'">'+(c.format?'<span style="color:var(--text2)">'+escapeHtml(c.format)+'</span>':'')+(c.format&&c.angle_hook?' · ':'')+escapeHtml(c.angle_hook||'')+'</div>':'')+'</div>'
-      + '<div class="ob-copy" title="'+escapeHtml(c.ad_copy||'')+'">'+escapeHtml(c.ad_copy||'—')+'</div>'
-      + '<div>'+obTagBadge(c.tag)+'</div>'
-      + '<div>'+link+'</div>'
-      + '<div style="color:#8a8781">'+date+'</div>'
-      + '<div class="ob-status-dd" id="ob-sdd-'+c.id+'">'
-      +   '<button class="ob-status-pill" onclick="obStatusToggle(\''+c.id+'\')" style="background:'+sc.bg+';color:'+sc.c+';border:0.5px solid '+sc.c+'44;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10.5px;font-weight:650;cursor:pointer">'
-      +     st
-      +     '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>'
-      +   '</button>'
-      +   '<div class="ob-status-menu" style="display:none;position:absolute;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:50;min-width:140px">'
-      +     '<div onclick="obStatusPick(\''+c.id+'\',\'Pending approval\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Pending approval</div>'
-      +     '<div onclick="obStatusPick(\''+c.id+'\',\'Approved\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Approved</div>'
-      +     '<div onclick="obStatusPick(\''+c.id+'\',\'Scheduled\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Scheduled</div>'
-      +     '<div onclick="obStatusPick(\''+c.id+'\',\'Published\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Published</div>'
-      +   '</div>'
-      + '</div>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;align-items:center">'
-      +   approveBtn
-      +   publishBtn
-      +   winnerBadge
-      +   detailsBtn
-      +   '<button class="ob-del-btn" onclick="obDeleteCreative(\''+c.id+'\')" title="Burahin">'
-      +     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>'
-      +   '</button>'
-      + '</div>'
-      + '</div>';
+    var detailsBtn='<button class="ob-lbtn icon" onclick="openObBrandDetailModal(\''+c.id+'\')" title="Details"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>';
+    var delBtn='<button class="ob-lbtn icon del" onclick="obDeleteCreative(\''+c.id+'\')" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>';
+
+    var sub='';
+    if(c.format||c.angle_hook){
+      sub='<div class="ob-lsub">'+(c.format?'<span class="ob-lfmt">'+escapeHtml(c.format)+'</span>':'')+(c.format&&c.angle_hook?' \u00b7 ':'')+escapeHtml(c.angle_hook||'')+'</div>';
+    }
+    var tagCell=c.tag?('<span class="ob-tagchip"><span class="ob-tagdot" style="background:'+obTagColor(c.tag)+'"></span>'+escapeHtml(c.tag)+'</span>'):'<span class="ob-muted">\u2014</span>';
+
+    return '<div class="ob-item" style="--ac:'+brandColor+'">'
+      +'<div class="ob-lmain"><div class="ob-lname">'+escapeHtml(c.page_name||'\u2014')+'</div>'+sub+'</div>'
+      +'<div class="ob-ltag">'+tagCell+'</div>'
+      +'<div class="ob-ldate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+date+'</div>'
+      +'<div class="ob-llink">'+link+'</div>'
+      +'<div class="ob-lwin">'+winnerBadge+'</div>'
+      +'<div class="ob-lactions">'+statusPill+approveBtn+publishBtn+detailsBtn+delBtn+'</div>'
+      +'</div>';
   }).join('');
 }
 
