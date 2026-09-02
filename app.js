@@ -8645,7 +8645,7 @@ function obInitParticles(){
   var box=document.getElementById('ob-particles');
   if(!box || box.childNodes.length) return;
   var anims=['obP1','obP2','obP3','obP4'], out='';
-  for(var i=0;i<32;i++){
+  for(var i=0;i<14;i++){
     var top=Math.floor(Math.random()*92)+4, left=Math.floor(Math.random()*94)+3;
     var sz=Math.floor(Math.random()*4)+3, dur=Math.floor(Math.random()*8)+9, a=anims[i%4];
     out+='<span style="width:'+sz+'px;height:'+sz+'px;top:'+top+'%;left:'+left+'%;animation:'+a+' '+dur+'s ease-in-out infinite"></span>';
