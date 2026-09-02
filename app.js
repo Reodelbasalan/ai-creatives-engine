@@ -8705,6 +8705,7 @@ function obClearFilters(){
   var s=document.getElementById('ob-brand-search'); if(s)s.value='';
   var f=document.getElementById('ob-format-filter'); if(f)f.value='';
   var a=document.getElementById('ob-angle-filter'); if(a)a.value='';
+  var b=document.getElementById('ob-brand-filter'); if(b)b.value='';
   obWinnerFilterVal='';
   obRenderWinnerFilter();
   obRenderRows();
@@ -8722,6 +8723,9 @@ function obRenderRows(){
   if(fmtVal){ visible=visible.filter(function(c){ return (c.format||'')===fmtVal; }); }
   var angleVal=document.getElementById('ob-angle-filter')?.value||'';
   if(angleVal){ visible=visible.filter(function(c){ return (c.angle_hook||'')===angleVal; }); }
+  var brandVal=document.getElementById('ob-brand-filter')?.value||'';
+  if(brandVal==='VUP'){ visible=visible.filter(function(c){ var n=(c.page_name||'').toUpperCase(); return n.indexOf('VUP')>=0||n.indexOf('VIRAL')>=0; }); }
+  else if(brandVal){ visible=visible.filter(function(c){ return (c.page_name||'').toUpperCase().indexOf(brandVal)>=0; }); }
   var q=(document.getElementById('ob-brand-search')?.value||'').toLowerCase().trim();
   if(q){
     visible=visible.filter(function(c){
@@ -8731,7 +8735,10 @@ function obRenderRows(){
   }
   if(!visible.length){ box.innerHTML=emptyState(ICO_MEGAPHONE, (obWinnerFilterVal||fmtVal||angleVal||q)?'Walang tugmang creative':'No active brand creatives', (obWinnerFilterVal||fmtVal||angleVal||q)?'Baguhin ang filter/search para makita ang iba.':'Published items auto-move to History. Click "Add creative" to log a new one.'); return; }
   var isAdmin=currentUserRole==='admin';
-  box.innerHTML=visible.map(function(c){
+  box.innerHTML=visible.map(function(c){ return obBuildRowHtml(c,isAdmin); }).join('');
+}
+
+function obBuildRowHtml(c,isAdmin){
     var link=c.link_url?('<a href="'+c.link_url+'" target="_blank" class="ob-openlink">Open<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1-1"/></svg></a>'):'<span class="ob-muted">\u2014</span>';
     var date=c.created_at?new Date(c.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric'}):'\u2014';
     var st=c.status||'Pending approval';
@@ -8786,7 +8793,7 @@ function obRenderRows(){
     }
     var tagCell=c.tag?('<span class="ob-tagchip"><span class="ob-tagdot" style="background:'+obTagColor(c.tag)+'"></span>'+escapeHtml(c.tag)+'</span>'):'<span class="ob-muted">\u2014</span>';
 
-    return '<div class="ob-item" style="--ac:'+brandColor+'">'
+    return '<div class="ob-item" data-id="'+c.id+'" style="--ac:'+brandColor+'">'
       +'<div class="ob-lmain"><div class="ob-lname">'+escapeHtml(c.page_name||'\u2014')+'</div>'+sub+'</div>'
       +'<div class="ob-ltag">'+tagCell+'</div>'
       +'<div class="ob-ldate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+date+'</div>'
@@ -8794,8 +8801,8 @@ function obRenderRows(){
       +'<div class="ob-lwin">'+winnerBadge+'</div>'
       +'<div class="ob-lactions">'+statusPill+approveBtn+publishBtn+detailsBtn+delBtn+'</div>'
       +'</div>';
-  }).join('');
 }
+
 
 async function obApprove(id){
   try{
@@ -8911,14 +8918,28 @@ document.addEventListener('click', function(e){
 });
 
 async function obStatusPick(id, status){
+  var item=obItems.find(function(x){ return x.id===id; });
+  var prev=item?item.status:null;
   try{
-    var item=obItems.find(function(x){ return x.id===id; });
+    if(item) item.status=status;
     var upd={status:status};
-    if(status==='Published'){ upd.published_at=new Date().toISOString(); }
+    if(status==='Published'){ upd.published_at=new Date().toISOString(); if(item) item.published_at=upd.published_at; }
+    if(status==='Published'){
+      // Published = mawawala sa list — fade out yung row bago mag-reload
+      var row=document.querySelector('.ob-item[data-id="'+id+'"]');
+      if(row){ row.style.transition='opacity .3s,transform .3s'; row.style.opacity='0'; row.style.transform='translateX(20px)'; }
+    } else {
+      obUpdateRow(id);  // in-place update, walang blink
+    }
     await sb.from('brand_creatives').update(upd).eq('id',id);
-    if(status==='Published'){ await obLogHistory(id, item?item.page_name:'', 'published', item); }
-    await loadBrandCreatives();
-  }catch(e){ showNotif('Hindi na-update ang status','error'); }
+    if(status==='Published'){
+      await obLogHistory(id, item?item.page_name:'', 'published', item);
+      setTimeout(function(){ loadBrandCreatives(); }, 320);
+    }
+  }catch(e){
+    if(item) item.status=prev; obUpdateRow(id);
+    showNotif('Hindi na-update ang status','error');
+  }
 }
 
 function obWinnerToggle(id){
@@ -8933,11 +8954,37 @@ function obWinnerToggle(id){
 }
 
 async function obWinnerPick(id, winnerStatus){
+  var item=obItems.find(function(x){ return x.id===id; });
+  var prev=item?item.winner_status:null;
   try{
+    if(item) item.winner_status=winnerStatus;
+    obUpdateRow(id);  // in-place, walang blink
     await sb.from('brand_creatives').update({winner_status:winnerStatus}).eq('id',id);
-    showNotif(winnerStatus==='Winner'?'Marked as Winner! 🏆':'Updated','success');
-    await loadBrandCreatives();
-  }catch(e){ showNotif('Hindi na-update','error'); }
+    showNotif(winnerStatus==='Winner'?'Marked as Winner!':'Updated','success');
+  }catch(e){
+    if(item) item.winner_status=prev; obUpdateRow(id);
+    showNotif('Hindi na-update','error');
+  }
+}
+
+
+// build row html for a single id (para sa in-place update)
+function obRowHtml(id){
+  var c=obItems.find(function(x){ return x.id===id; });
+  if(!c) return '';
+  return obBuildRowHtml(c, currentUserRole==='admin');
+}
+
+// update ONE row in place (walang full re-render = walang blink)
+function obUpdateRow(id){
+  var oldRow=document.querySelector('.ob-item[data-id="'+id+'"]');
+  if(!oldRow){ obRenderRows(); return; }
+  var html=obRowHtml(id);
+  if(!html){ obRenderRows(); return; }
+  var tmp=document.createElement('div');
+  tmp.innerHTML=html;
+  var newRow=tmp.firstElementChild;
+  oldRow.replaceWith(newRow);
 }
 
 // ---- Detail modal (script/concept/angle/format + winner) ----
