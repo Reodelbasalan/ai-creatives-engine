@@ -1500,6 +1500,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
         Own Brand Creatives
       </div>
+      <div class="nav-item" onclick="showPage('brand-strategy')" id="nav-brand-strategy">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="19" r="1"/><path d="M12 13v6M12 11V5M6.5 17.5 11 13M13 11l5.5-5.5"/></svg>
+        Creative Tracker
+      </div>
       <div class="nav-item" onclick="showPage('social')" id="nav-social">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Social Posting
@@ -2553,6 +2557,145 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       </div>
 
       <!-- SOCIAL POSTING PAGE -->
+      <div class="page" id="page-brand-strategy">
+        <style>
+          .bs-tabs{display:inline-flex;background:#0e0e11;border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:3px;}
+          .bs-tab{background:transparent;border:none;color:var(--text2);font-size:13px;font-weight:600;padding:7px 16px;border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s ease;}
+          .bs-tab.active{background:var(--yellow);color:#111;}
+          .bs-view{display:none;}
+          .bs-view.active{display:block;}
+          .bs-wiz-header{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;padding:4px 0 14px;}
+          .bs-wiz-step{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:0 8px;}
+          .bs-wiz-step.locked{cursor:not-allowed;opacity:.4;}
+          .bs-wiz-circle{width:30px;height:30px;border-radius:50%;border:2px solid var(--border3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;color:var(--text2);background:var(--bg3);transition:all .15s ease;}
+          .bs-wiz-step.active .bs-wiz-circle{border-color:var(--yellow);color:var(--yellow);box-shadow:0 0 0 3px var(--yellow-glow);}
+          .bs-wiz-step.done .bs-wiz-circle{border-color:var(--yellow);background:var(--yellow);color:#111;}
+          .bs-wiz-label{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;}
+          .bs-wiz-step.active .bs-wiz-label{color:var(--text);}
+          .bs-wiz-line{width:34px;height:2px;background:var(--border3);margin:0 2px 18px;flex-shrink:0;}
+          .bs-wiz-line.done{background:var(--yellow);}
+          .bs-wiz-panel{display:none;}
+          .bs-wiz-panel.active{display:block;}
+          .bs-kicker{font-size:10.5px;font-weight:700;letter-spacing:.05em;color:var(--yellow);text-transform:uppercase;margin-bottom:4px;}
+          .bs-title{font-size:19px;font-weight:700;margin:0 0 4px;}
+          .bs-nav{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:14px;border-top:0.5px solid var(--border);}
+          .bs-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:10px 12px;border:0.5px solid var(--border2);border-radius:10px;margin-bottom:8px;background:var(--bg3);}
+          .bs-row.sel{border-color:var(--yellow);background:var(--yellow-dim);}
+          .bs-row .name{font-weight:600;font-size:13px;color:var(--text);}
+          .bs-row .sub{font-size:11.5px;color:var(--text3);margin-top:2px;}
+          .bs-row .acts{display:flex;gap:6px;flex-shrink:0;}
+          .bs-link{background:none;border:none;color:var(--yellow);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+          .bs-danger{background:none;border:none;color:var(--red);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+          .bs-ghost-btn{background:var(--bg4);border:0.5px solid var(--border2);color:var(--text);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;}
+          .bs-top3{display:flex;justify-content:space-between;padding:8px 10px;border-radius:8px;background:var(--yellow-dim);margin-bottom:6px;font-size:12.5px;color:var(--yellow2);}
+          .bs-top3 .rank{font-weight:700;margin-right:6px;}
+          .bs-status{font-size:12px;margin-left:8px;}
+          .bs-status.ok{color:var(--green);}
+          .bs-status.err{color:var(--red);}
+        </style>
+
+        <div class="ob-hero">
+          <div class="ob-hero-icon">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="19" r="1"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="ob-hero-title">Creative Tracker</div>
+            <div class="ob-hero-sub">Brand → Product → Persona → Problem strategy, then log and track every creative against it</div>
+          </div>
+          <div class="bs-tabs">
+            <button type="button" class="bs-tab active" id="bs-tab-log" onclick="bsSwitchView('log')">Log Creative</button>
+            <button type="button" class="bs-tab" id="bs-tab-strategy" onclick="bsSwitchView('strategy')">Strategy</button>
+            <button type="button" class="bs-tab" id="bs-tab-tracker" onclick="bsSwitchView('tracker')">Tracker</button>
+          </div>
+        </div>
+
+        <!-- LOG CREATIVE VIEW (built in a follow-up pass) -->
+        <div class="bs-view active" id="bs-view-log">
+          <div class="form-card">Log Creative form — coming in the next step.</div>
+        </div>
+
+        <!-- STRATEGY VIEW -->
+        <div class="bs-view" id="bs-view-strategy">
+          <div class="form-card">
+            <div class="bs-wiz-header" id="bs-wiz-header"></div>
+          </div>
+
+          <div class="form-card bs-wiz-panel active" data-bs-panel="1">
+            <div class="bs-kicker">STEP 1 OF 4 · BRAND</div>
+            <div class="bs-title">Set up your brand</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px;">
+              <div class="ob-field" style="flex:1;min-width:200px;margin-bottom:0;">
+                <label class="ob-flabel">Brand</label>
+                <select class="form-select" id="bs-brand-select"></select>
+              </div>
+              <button type="button" class="bs-ghost-btn" id="bs-brand-add-toggle">+ Add brand</button>
+            </div>
+            <div id="bs-brand-add-block" style="display:none;margin-top:10px;display:flex;gap:8px;">
+              <input type="text" class="form-input" id="bs-new-brand-name" placeholder="Brand name" />
+              <input type="text" class="form-input" id="bs-new-brand-site" placeholder="Website (optional)" />
+              <button type="button" class="bs-ghost-btn" id="bs-save-brand">Save</button>
+            </div>
+            <span class="bs-status" id="bs-brand-status"></span>
+            <div class="ob-field" style="margin-top:14px;">
+              <label class="ob-flabel">Brand context (shared — what the brand sells, who it's for)</label>
+              <textarea class="form-textarea" id="bs-brand-desc" rows="3" placeholder="What does the brand sell, who is it for, what should the team know before suggesting creative ideas?"></textarea>
+              <div style="margin-top:6px;"><button type="button" class="bs-ghost-btn" id="bs-save-brand-desc">Save description</button><span class="bs-status" id="bs-brand-desc-status"></span></div>
+            </div>
+            <div class="bs-nav"><span></span><button type="button" class="yellow-btn" id="bs-wiz-to-2">Continue to Products →</button></div>
+          </div>
+
+          <div class="form-card bs-wiz-panel" data-bs-panel="2">
+            <div class="bs-kicker">STEP 2 OF 4 · PRODUCTS &amp; POSITIONING</div>
+            <div class="bs-title">Define what the brand is selling</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+              <div class="ob-field"><label class="ob-flabel">Product name</label><input type="text" class="form-input" id="bs-p-name" placeholder="e.g. Hair Loss Treatment" /></div>
+              <div class="ob-field"><label class="ob-flabel">Details (optional)</label><input type="text" class="form-input" id="bs-p-details" placeholder="Key facts the team should know" /></div>
+            </div>
+            <div class="ob-field"><label class="ob-flabel">Positioning</label><textarea class="form-textarea" id="bs-p-positioning" rows="3" placeholder="What are we promising + why is our solution different/believable?"></textarea></div>
+            <div><button type="button" class="yellow-btn" id="bs-p-save">+ Add product</button><span class="bs-status" id="bs-p-status"></span></div>
+            <div style="margin-top:14px;"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">SAVED PRODUCTS</div><div id="bs-products-list"></div></div>
+            <div class="bs-nav"><button type="button" class="bs-link" id="bs-wiz-to-1-b">← Back to Brand</button><button type="button" class="yellow-btn" id="bs-wiz-to-3">Continue to Audience →</button></div>
+          </div>
+
+          <div class="form-card bs-wiz-panel" data-bs-panel="3">
+            <div class="bs-kicker">STEP 3 OF 4 · AUDIENCE</div>
+            <div class="bs-title">Define who you are creating for</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;">
+              <div class="ob-field"><label class="ob-flabel">Persona name</label><input type="text" class="form-input" id="bs-per-name" placeholder="e.g. Kevin — dandruff" /></div>
+              <div class="ob-field"><label class="ob-flabel">Core Desire</label><select class="form-select" id="bs-per-desire"></select></div>
+              <div class="ob-field"><label class="ob-flabel">Market Awareness</label><select class="form-select" id="bs-per-awareness"></select></div>
+            </div>
+            <div class="ob-field"><label class="ob-flabel">Description (optional)</label><textarea class="form-textarea" id="bs-per-desc" rows="2" placeholder="Demographics, situation, priorities, buying context"></textarea></div>
+            <div><button type="button" class="yellow-btn" id="bs-per-save">+ Add persona</button><span class="bs-status" id="bs-per-status"></span></div>
+            <div style="margin-top:14px;"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">PERSONAS</div><div id="bs-personas-list"></div></div>
+            <div class="bs-nav"><button type="button" class="bs-link" id="bs-wiz-to-2-b">← Back to Products</button><button type="button" class="yellow-btn" id="bs-wiz-to-4">Continue to Problems →</button></div>
+          </div>
+
+          <div class="form-card bs-wiz-panel" data-bs-panel="4">
+            <div class="bs-kicker">STEP 4 OF 4 · PROBLEM WORKSPACE</div>
+            <div class="bs-title">Score each persona's problems</div>
+            <div class="ob-field" style="max-width:320px;"><label class="ob-flabel">Editing problems for</label><select class="form-select" id="bs-prob-persona-select"></select></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;">
+              <div class="ob-field" style="grid-column:1/-1;"><label class="ob-flabel">Problem</label><input type="text" class="form-input" id="bs-prob-text" placeholder="Describe the problem…" /></div>
+              <div class="ob-field"><label class="ob-flabel">Intensity</label><select class="form-select" id="bs-prob-intensity"></select></div>
+              <div class="ob-field"><label class="ob-flabel">Repeatability</label><select class="form-select" id="bs-prob-repeatability"></select></div>
+              <div class="ob-field"><label class="ob-flabel">Scale</label><select class="form-select" id="bs-prob-scale"></select></div>
+            </div>
+            <div><button type="button" class="yellow-btn" id="bs-prob-save">+ Add problem</button><span class="bs-status" id="bs-prob-status"></span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px;">
+              <div><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">ALL PROBLEMS</div><div id="bs-problems-list"></div></div>
+              <div><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">🏆 TOP 3 PROBLEMS</div><div id="bs-top3-list"></div></div>
+            </div>
+            <div class="bs-nav"><button type="button" class="bs-link" id="bs-wiz-to-3-b">← Back to Audience</button><span></span></div>
+          </div>
+        </div>
+
+        <!-- TRACKER VIEW (built in a follow-up pass) -->
+        <div class="bs-view" id="bs-view-tracker">
+          <div class="form-card">Tracker table — coming in the next step.</div>
+        </div>
+      </div>
+
       <div class="page" id="page-social">
         <div style="max-width:1000px">
 
