@@ -545,7 +545,7 @@ function showPage(page){
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
   try{ localStorage.setItem('ace_last_page',page); }catch(e){}
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker','creatives-tracking':'Creatives Tracking','client-onboarding':'Client Onboarding','client-creatives':'My Creatives','client-materials':'My Materials','proposal-builder':'Proposal Builder'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','brand-strategy':'Creative Tracker','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker','creatives-tracking':'Creatives Tracking','client-onboarding':'Client Onboarding','client-creatives':'My Creatives','client-materials':'My Materials','proposal-builder':'Proposal Builder'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
@@ -567,6 +567,7 @@ function showPage(page){
   if(page==='automation'){loadAutomationProjects();}
   if(page==='social'){loadSocial();}
   if(page==='brand'){loadBrandCreatives();}
+  if(page==='brand-strategy'){loadBrandStrategy();}
   if(page==='call-tracker'){loadCallTracker();}
   if(page==='advertiser-tasks'){loadAdvertiserTasks();}
   if(page==='sales-tracker'){loadSalesTracker();}
@@ -4283,10 +4284,10 @@ function generateWithTool(tool, prompt, type){
 async function generateHiggsfield(prompt, apiKey, type){
   try{
     showNotif('⚡ Sending to Higgsfield API...','success');
-    var res=await fetch('/api/higgs-generate',{
+    var res=await fetch('/api/media-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,apiKey:apiKey,type:type,
+      body:JSON.stringify({provider:'higgs',prompt:prompt,apiKey:apiKey,type:type,
         model:getToolSetting('higgs-model','soul-2'),
         duration:parseInt(getToolSetting('higgs-duration','4'))})
     });
@@ -4317,10 +4318,10 @@ async function generateGrok(prompt, apiKey, type){
     showNotif('⚡ Grok generating (may take 30-60 sec)...','success');
     var model=getToolSetting('grok-model','grok-imagine-video-1.5-preview');
     var duration=parseInt(getToolSetting('grok-duration','8'));
-    var res=await fetch('/api/grok-generate',{
+    var res=await fetch('/api/media-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,apiKey:apiKey,model:model,duration:duration,type:type})
+      body:JSON.stringify({provider:'grok',prompt:prompt,apiKey:apiKey,model:model,duration:duration,type:type})
     });
     var d=await res.json();
     if(d.url){
@@ -4349,10 +4350,10 @@ async function generateVeo(prompt, apiKey, type){
     showNotif('⚡ Veo generating (1-3 minutes)...','success');
     var model=getToolSetting('veo-model','veo-3');
     var duration=parseInt(getToolSetting('veo-duration','8'));
-    var res=await fetch('/api/veo-generate',{
+    var res=await fetch('/api/media-generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:prompt,apiKey:apiKey,model:model,duration:duration,type:type})
+      body:JSON.stringify({provider:'veo',prompt:prompt,apiKey:apiKey,model:model,duration:duration,type:type})
     });
     var d=await res.json();
     if(d.url){
@@ -5245,10 +5246,9 @@ async function generateSceneVideo(idx,tool){
     var apiKey=getSecureApiKey(tool)||getToolSetting(tool+'-api-key');
     if(!apiKey){showNotif('No API key for '+tool+' — set in Settings!','error');showPage('settings');return;}
     try{
-      var endpoint=tool==='grok'?'/api/grok-generate':'/api/veo-generate';
       var model=tool==='grok'?getToolSetting('grok-model','grok-imagine-video-1.5-preview'):getToolSetting('veo-model','veo-3');
-      var res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({prompt:prompt,apiKey:apiKey,model:model,duration:8,type:'video'})});
+      var res=await fetch('/api/media-generate',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({provider:tool,prompt:prompt,apiKey:apiKey,model:model,duration:8,type:'video'})});
       var d=await res.json();
       if(d.url){
         if(statusEl)statusEl.innerHTML='✅ Video ready! <a href="'+d.url+'" target="_blank" style="color:var(--yellow)">Open →</a>';
@@ -11807,4 +11807,295 @@ function copyProposalText(id){
       document.body.removeChild(ta);
     });
   }catch(e){ showNotif('Copy failed: '+(e.message||e),'error'); }
+}
+
+// =====================================================================
+// BRAND STRATEGY SYSTEM (Log Creative / Strategy / Tracker)
+// Uses bs_brands / bs_products / bs_personas / bs_problems / bs_creatives.
+// Direct sb.from() calls + RLS, matching the rest of this app's pattern.
+// =====================================================================
+var bsBrands={}, bsProducts=[], bsPersonas=[], bsProblemsCache={};
+var bsActiveBrand=null, bsStep=1, bsManagingPersonaId=null, bsInitialized=false;
+
+var BS_DESIRES=[
+  ['Recognition','Recognition, respect, fame, exclusivity, prestige, popularity, status'],
+  ['Remuneration','Making or saving money, career advancement, success, financial independence'],
+  ['Rejuvenation','Longevity, health, fitness, energy, vitality'],
+  ['Relaxation','Convenience, leisure, free time, freedom from worry'],
+  ['Revenge','Overcoming or proving something after feeling unsuccessful, rejected, disrespected, unloved, or unattractive'],
+  ['Relief','Freedom from pain, shame, guilt, difficulty, frustration, or other burdens'],
+  ['Results','Proof that the effort or spend paid off — visible, measurable outcomes']
+];
+var BS_AWARENESS=[
+  ['unaware','Unaware — not yet aware of the problem or desire, or won\u2019t honestly admit it'],
+  ['problem_aware','Problem Aware — knows they have a problem, but doesn\u2019t connect solving it with your product'],
+  ['solution_aware','Solution Aware — knows the kind of solution they want, but doesn\u2019t know your product exists'],
+  ['product_aware','Product Aware — knows your product, but isn\u2019t yet convinced they want it'],
+  ['most_aware','Most Aware — wants your product, just needs the right offer, timing, or reason to act']
+];
+function bsLabelFor(list,val){ var f=list.find(function(x){return x[0]===val;}); return f?f[1]:val; }
+function bsScoreOptions(sel){ var h=''; for(var i=1;i<=10;i++){ h+='<option value="'+i+'"'+(i===sel?' selected':'')+'>'+i+'</option>'; } return h; }
+
+async function loadBrandStrategy(){
+  if(!bsInitialized){
+    bsInitialized=true;
+    try{ var savedBrand=localStorage.getItem('bs_active_brand'); if(savedBrand) bsActiveBrand=savedBrand; }catch(e){}
+    try{ var savedStep=parseInt(localStorage.getItem('bs_step'),10); if(savedStep>=1 && savedStep<=4) bsStep=savedStep; }catch(e){}
+  }
+  await bsLoadBrands();
+  await bsLoadLibrary();
+  renderBsBrandSelect();
+  var b=bsBrands[bsActiveBrand];
+  var descEl=document.getElementById('bs-brand-desc'); if(descEl) descEl.value = b?(b.description||''):'';
+  renderBsProducts();
+  renderBsPersonas();
+  document.querySelectorAll('.bs-wiz-panel').forEach(function(p){ p.classList.toggle('active', parseInt(p.dataset.bsPanel,10)===bsStep); });
+  renderBsWizardHeader();
+  if(bsStep===4) renderBsProblemPersonaSelect();
+}
+
+function bsSwitchView(view){
+  document.querySelectorAll('.bs-view').forEach(function(v){ v.classList.remove('active'); });
+  document.querySelectorAll('.bs-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('bs-view-'+view).classList.add('active');
+  document.getElementById('bs-tab-'+view).classList.add('active');
+}
+
+async function bsLoadBrands(){
+  try{
+    var r=await sb.from('bs_brands').select('*').order('name');
+    if(r.error) throw r.error;
+    bsBrands={};
+    (r.data||[]).forEach(function(x){ bsBrands[x.id]=x; });
+  }catch(e){ bsBrands={}; console.error('bsLoadBrands',e); }
+}
+async function bsLoadLibrary(){
+  try{ var r=await sb.from('bs_products').select('*').order('created_at'); bsProducts=r.data||[]; }catch(e){ bsProducts=[]; }
+  try{ var r2=await sb.from('bs_personas').select('*').order('created_at'); bsPersonas=r2.data||[]; }catch(e){ bsPersonas=[]; }
+}
+async function bsLoadProblemsFor(personaId){
+  try{ var r=await sb.from('bs_problems').select('*').eq('persona_id',personaId).order('total_score',{ascending:false}); bsProblemsCache[personaId]=r.data||[]; }
+  catch(e){ bsProblemsCache[personaId]=[]; }
+  return bsProblemsCache[personaId];
+}
+
+function renderBsBrandSelect(){
+  var ids=Object.keys(bsBrands);
+  var sel=document.getElementById('bs-brand-select');
+  var current=sel.value||bsActiveBrand;
+  sel.innerHTML=ids.map(function(id){ return '<option value="'+ctEsc(id)+'">'+ctEsc(bsBrands[id].name)+'</option>'; }).join('');
+  if(ids.indexOf(current)>-1) sel.value=current; else if(ids[0]) sel.value=ids[0];
+  bsActiveBrand=sel.value||null;
+}
+document.addEventListener('DOMContentLoaded', function(){
+  var sel=document.getElementById('bs-brand-select');
+  if(!sel) return;
+  sel.addEventListener('change', function(){
+    bsActiveBrand=sel.value; bsStep=1; bsManagingPersonaId=null;
+    try{ localStorage.setItem('bs_active_brand',bsActiveBrand); localStorage.setItem('bs_step','1'); }catch(e){}
+    loadBrandStrategy();
+  });
+  document.getElementById('bs-brand-add-toggle').addEventListener('click', function(){
+    var block=document.getElementById('bs-brand-add-block');
+    block.style.display = block.style.display==='none' ? 'flex' : 'none';
+  });
+  document.getElementById('bs-save-brand').addEventListener('click', async function(){
+    var statusEl=document.getElementById('bs-brand-status');
+    var name=document.getElementById('bs-new-brand-name').value.trim();
+    var site=document.getElementById('bs-new-brand-site').value.trim();
+    if(!name){ statusEl.textContent='Type a brand name.'; statusEl.className='bs-status err'; return; }
+    var id=name.toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+    try{
+      var r=await sb.from('bs_brands').upsert({id:id,name:name,website:site||null}).select();
+      if(r.error) throw r.error;
+      await bsLoadBrands();
+      bsActiveBrand=id;
+      document.getElementById('bs-new-brand-name').value='';
+      document.getElementById('bs-new-brand-site').value='';
+      statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
+      loadBrandStrategy();
+    }catch(e){ statusEl.textContent="Couldn't save."; statusEl.className='bs-status err'; }
+  });
+  document.getElementById('bs-save-brand-desc').addEventListener('click', async function(){
+    if(!bsActiveBrand) return;
+    var statusEl=document.getElementById('bs-brand-desc-status');
+    var desc=document.getElementById('bs-brand-desc').value.trim();
+    try{
+      var r=await sb.from('bs_brands').update({description:desc}).eq('id',bsActiveBrand);
+      if(r.error) throw r.error;
+      await bsLoadBrands();
+      statusEl.textContent='Saved ✓'; statusEl.className='bs-status ok';
+      setTimeout(function(){statusEl.textContent='';},2000);
+    }catch(e){ statusEl.textContent="Couldn't save."; statusEl.className='bs-status err'; }
+  });
+
+  document.getElementById('bs-per-desire').innerHTML = BS_DESIRES.map(function(d){ return '<option value="'+ctEsc(d[0])+'">'+ctEsc(d[0])+'</option>'; }).join('');
+  document.getElementById('bs-per-awareness').innerHTML = '<option value="">Select…</option>' + BS_AWARENESS.map(function(a){ return '<option value="'+a[0]+'">'+ctEsc(a[1].split(' — ')[0])+'</option>'; }).join('');
+
+  // ---------- Products ----------
+  document.getElementById('bs-p-save').addEventListener('click', async function(){
+    var statusEl=document.getElementById('bs-p-status');
+    if(!bsActiveBrand){ statusEl.textContent='Pick/create a brand first.'; statusEl.className='bs-status err'; return; }
+    var name=document.getElementById('bs-p-name').value.trim();
+    var details=document.getElementById('bs-p-details').value.trim();
+    var positioning=document.getElementById('bs-p-positioning').value.trim();
+    if(!name||!positioning){ statusEl.textContent='Product name and Positioning are required.'; statusEl.className='bs-status err'; return; }
+    try{
+      var r=await sb.from('bs_products').insert({brand_id:bsActiveBrand,name:name,details:details||null,positioning:positioning});
+      if(r.error) throw r.error;
+      document.getElementById('bs-p-name').value='';
+      document.getElementById('bs-p-details').value='';
+      document.getElementById('bs-p-positioning').value='';
+      statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
+      await bsLoadLibrary(); renderBsProducts(); renderBsWizardHeader();
+      setTimeout(function(){statusEl.textContent='';},2000);
+    }catch(e){ statusEl.textContent="Couldn't save."; statusEl.className='bs-status err'; }
+  });
+
+  // ---------- Personas ----------
+  document.getElementById('bs-per-save').addEventListener('click', async function(){
+    var statusEl=document.getElementById('bs-per-status');
+    if(!bsActiveBrand){ statusEl.textContent='Pick/create a brand first.'; statusEl.className='bs-status err'; return; }
+    var name=document.getElementById('bs-per-name').value.trim();
+    var desire=document.getElementById('bs-per-desire').value;
+    var awareness=document.getElementById('bs-per-awareness').value;
+    var desc=document.getElementById('bs-per-desc').value.trim();
+    if(!name){ statusEl.textContent='Persona name required.'; statusEl.className='bs-status err'; return; }
+    try{
+      var r=await sb.from('bs_personas').insert({brand_id:bsActiveBrand,name:name,desire:desire||null,market_awareness:awareness||null,description:desc||null});
+      if(r.error) throw r.error;
+      document.getElementById('bs-per-name').value='';
+      document.getElementById('bs-per-desc').value='';
+      statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
+      await bsLoadLibrary(); renderBsPersonas(); renderBsWizardHeader();
+      setTimeout(function(){statusEl.textContent='';},2000);
+    }catch(e){ statusEl.textContent="Couldn't save."; statusEl.className='bs-status err'; }
+  });
+
+  // ---------- Problems ----------
+  document.getElementById('bs-prob-persona-select').addEventListener('change', async function(){
+    bsManagingPersonaId=document.getElementById('bs-prob-persona-select').value;
+    await bsLoadProblemsFor(bsManagingPersonaId);
+    renderBsProblemsWorkspace();
+  });
+  document.getElementById('bs-prob-save').addEventListener('click', async function(){
+    var statusEl=document.getElementById('bs-prob-status');
+    if(!bsManagingPersonaId){ statusEl.textContent='Pick a persona first.'; statusEl.className='bs-status err'; return; }
+    var problem=document.getElementById('bs-prob-text').value.trim();
+    if(!problem){ statusEl.textContent='Type a problem first.'; statusEl.className='bs-status err'; return; }
+    var intensity=parseInt(document.getElementById('bs-prob-intensity').value,10);
+    var repeatability=parseInt(document.getElementById('bs-prob-repeatability').value,10);
+    var scale=parseInt(document.getElementById('bs-prob-scale').value,10);
+    try{
+      var r=await sb.from('bs_problems').insert({persona_id:bsManagingPersonaId,problem:problem,intensity:intensity,repeatability:repeatability,scale:scale});
+      if(r.error) throw r.error;
+      document.getElementById('bs-prob-text').value='';
+      statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
+      await bsLoadProblemsFor(bsManagingPersonaId); renderBsProblemsWorkspace();
+      setTimeout(function(){statusEl.textContent='';},2000);
+    }catch(e){ statusEl.textContent="Couldn't save."; statusEl.className='bs-status err'; }
+  });
+
+  // ---------- Wizard navigation ----------
+  document.querySelectorAll('.bs-wiz-step').forEach(function(){});
+  document.getElementById('bs-wiz-to-2').addEventListener('click', function(){ bsGoToStep(2); });
+  document.getElementById('bs-wiz-to-1-b').addEventListener('click', function(){ bsGoToStep(1); });
+  document.getElementById('bs-wiz-to-3').addEventListener('click', function(){ bsGoToStep(3); });
+  document.getElementById('bs-wiz-to-2-b').addEventListener('click', function(){ bsGoToStep(2); });
+  document.getElementById('bs-wiz-to-4').addEventListener('click', function(){ bsGoToStep(4); });
+  document.getElementById('bs-wiz-to-3-b').addEventListener('click', function(){ bsGoToStep(3); });
+});
+
+function bsComputeUnlocks(){
+  var hasBrand=!!bsActiveBrand;
+  var hasProduct=bsProducts.some(function(p){return p.brand_id===bsActiveBrand;});
+  var hasPersona=bsPersonas.some(function(p){return p.brand_id===bsActiveBrand;});
+  return {1:true,2:hasBrand,3:hasBrand&&hasProduct,4:hasBrand&&hasPersona};
+}
+function renderBsWizardHeader(){
+  var unlocks=bsComputeUnlocks();
+  var header=document.getElementById('bs-wiz-header');
+  var steps=[['1','Brand'],['2','Products'],['3','Audience'],['4','Problems']];
+  var html='';
+  steps.forEach(function(s,i){
+    var n=parseInt(s[0],10);
+    var cls=(n===bsStep?'active':'')+' '+(unlocks[n]&&n<bsStep?'done':'')+' '+(!unlocks[n]?'locked':'');
+    html+='<div class="bs-wiz-step '+cls+'" onclick="bsGoToStep('+n+')"><div class="bs-wiz-circle">'+n+'</div><div class="bs-wiz-label">'+s[1]+'</div></div>';
+    if(i<steps.length-1) html+='<div class="bs-wiz-line '+(unlocks[n+1]?'done':'')+'"></div>';
+  });
+  header.innerHTML=html;
+  var navMap={'bs-wiz-to-2':2,'bs-wiz-to-3':3,'bs-wiz-to-4':4};
+  Object.keys(navMap).forEach(function(id){
+    var btn=document.getElementById(id); if(!btn) return;
+    var ok=unlocks[navMap[id]];
+    btn.disabled=!ok; btn.style.opacity=ok?'1':'.4'; btn.style.pointerEvents=ok?'auto':'none';
+  });
+}
+function bsGoToStep(n){
+  var unlocks=bsComputeUnlocks();
+  if(!unlocks[n]) return;
+  bsStep=n;
+  try{ localStorage.setItem('bs_step',String(n)); }catch(e){}
+  document.querySelectorAll('.bs-wiz-panel').forEach(function(p){ p.classList.toggle('active', parseInt(p.dataset.bsPanel,10)===n); });
+  renderBsWizardHeader();
+  if(n===4) renderBsProblemPersonaSelect();
+}
+
+function renderBsProducts(){
+  var holder=document.getElementById('bs-products-list');
+  var list=bsProducts.filter(function(p){return p.brand_id===bsActiveBrand;});
+  if(list.length===0){ holder.innerHTML='<div style="font-size:12px;color:var(--text3);">No products yet.</div>'; return; }
+  holder.innerHTML=list.map(function(p){
+    return '<div class="bs-row" data-id="'+p.id+'"><div><div class="name">'+ctEsc(p.name)+'</div><div class="sub">'+ctEsc((p.positioning||'').slice(0,140))+'</div></div><div class="acts"><button type="button" class="bs-danger" onclick="bsDeleteProduct(\''+p.id+'\')">Delete</button></div></div>';
+  }).join('');
+}
+async function bsDeleteProduct(id){
+  if(!confirm('Delete this product?')) return;
+  await sb.from('bs_products').delete().eq('id',id);
+  await bsLoadLibrary(); renderBsProducts(); renderBsWizardHeader();
+}
+
+function renderBsPersonas(){
+  var holder=document.getElementById('bs-personas-list');
+  var list=bsPersonas.filter(function(p){return p.brand_id===bsActiveBrand;});
+  if(list.length===0){ holder.innerHTML='<div style="font-size:12px;color:var(--text3);">No personas yet.</div>'; return; }
+  holder.innerHTML=list.map(function(p){
+    var sub=(p.desire?('Desire: '+ctEsc(p.desire)+' · '):'')+ctEsc((p.description||'').slice(0,100));
+    return '<div class="bs-row" data-id="'+p.id+'"><div><div class="name">'+ctEsc(p.name)+'</div><div class="sub">'+sub+'</div></div><div class="acts"><button type="button" class="bs-link" onclick="bsManagePersona(\''+p.id+'\')">Manage Problems</button><button type="button" class="bs-danger" onclick="bsDeletePersona(\''+p.id+'\')">Delete</button></div></div>';
+  }).join('');
+}
+function bsManagePersona(id){ bsManagingPersonaId=id; bsGoToStep(4); }
+async function bsDeletePersona(id){
+  if(!confirm('Delete this persona? Its saved problems will be removed too.')) return;
+  await sb.from('bs_personas').delete().eq('id',id);
+  await bsLoadLibrary(); renderBsPersonas(); renderBsWizardHeader();
+}
+
+async function renderBsProblemPersonaSelect(){
+  var sel=document.getElementById('bs-prob-persona-select');
+  var list=bsPersonas.filter(function(p){return p.brand_id===bsActiveBrand;});
+  var current=(bsManagingPersonaId && list.some(function(p){return p.id===bsManagingPersonaId;})) ? bsManagingPersonaId : (list[0]?list[0].id:null);
+  sel.innerHTML=list.map(function(p){ return '<option value="'+p.id+'"'+(p.id===current?' selected':'')+'>'+ctEsc(p.name)+'</option>'; }).join('');
+  bsManagingPersonaId=current;
+  document.getElementById('bs-prob-intensity').innerHTML=bsScoreOptions(1);
+  document.getElementById('bs-prob-repeatability').innerHTML=bsScoreOptions(1);
+  document.getElementById('bs-prob-scale').innerHTML=bsScoreOptions(1);
+  if(bsManagingPersonaId){ await bsLoadProblemsFor(bsManagingPersonaId); renderBsProblemsWorkspace(); }
+}
+function renderBsProblemsWorkspace(){
+  var list=bsProblemsCache[bsManagingPersonaId]||[];
+  var holder=document.getElementById('bs-problems-list');
+  holder.innerHTML = list.length===0 ? '<div style="font-size:12px;color:var(--text3);">No problems yet.</div>' : list.map(function(p){
+    return '<div class="bs-row" data-id="'+p.id+'"><div><div class="name">'+ctEsc(p.problem)+'</div><div class="sub">Intensity '+p.intensity+' · Repeatability '+p.repeatability+' · Scale '+p.scale+' · Score '+p.total_score+'</div></div><div class="acts"><button type="button" class="bs-danger" onclick="bsDeleteProblem(\''+p.id+'\')">Delete</button></div></div>';
+  }).join('');
+  var top3=list.slice().sort(function(a,b){return b.total_score-a.total_score;}).slice(0,3);
+  var t3holder=document.getElementById('bs-top3-list');
+  t3holder.innerHTML = top3.length===0 ? '<div style="font-size:12px;color:var(--text3);">No scores yet.</div>' : top3.map(function(p,i){
+    return '<div class="bs-top3"><span><span class="rank">#'+(i+1)+'</span>'+ctEsc(p.problem)+'</span><span>'+p.total_score+'</span></div>';
+  }).join('');
+}
+async function bsDeleteProblem(id){
+  if(!confirm('Delete this problem?')) return;
+  await sb.from('bs_problems').delete().eq('id',id);
+  await bsLoadProblemsFor(bsManagingPersonaId); renderBsProblemsWorkspace();
 }
