@@ -2425,6 +2425,24 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                   <label class="ob-flabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1-1"/></svg>Link</label>
                   <input type="text" class="form-input" id="ob-link" placeholder="Link to the creative file"/>
                 </div>
+                <div class="ob-field">
+                  <label class="ob-flabel">Sizing</label>
+                  <input type="text" class="form-input" id="ob-sizing" list="ob-sizing-presets" placeholder="Pumili o mag-type ng size"/>
+                  <datalist id="ob-sizing-presets">
+                    <option value="9:16 (Vertical / Stories / Reels)">
+                    <option value="4:5 (Portrait / Feed)">
+                    <option value="1:1 (Square)">
+                    <option value="16:9 (Landscape)">
+                  </datalist>
+                </div>
+                <div class="ob-field">
+                  <label class="ob-flabel">Link to Adset</label>
+                  <input type="text" class="form-input" id="ob-adsetlink" placeholder="Paste adset URL (once live)"/>
+                </div>
+                <div class="ob-field">
+                  <label class="ob-flabel">Link to Ads Manager</label>
+                  <input type="text" class="form-input" id="ob-adsmanagerlink" placeholder="Paste Ads Manager URL (once live)"/>
+                </div>
               </div>
               <div class="ob-field">
                 <label class="ob-flabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>Tag</label>
@@ -2558,6 +2576,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <option value="VUP">VUP / VIRAL</option>
               <option value="ACU">ACU</option>
             </select>
+            <label style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px">From<input type="date" class="form-input" id="ob-date-from" style="width:auto;padding:6px 8px;font-size:12px" onchange="obRenderRows()"></label>
+            <label style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px">To<input type="date" class="form-input" id="ob-date-to" style="width:auto;padding:6px 8px;font-size:12px" onchange="obRenderRows()"></label>
           </div>
 
           <div class="ob-listhead">
@@ -5916,6 +5936,38 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <div class="form-field" style="margin-bottom:10px">
         <label class="form-label">Script</label>
         <textarea class="form-textarea" id="obd-script" rows="6" placeholder="Buong script o outline..."></textarea>
+      </div>
+      <div class="form-field" style="margin-bottom:10px">
+        <label class="form-label">Sizing</label>
+        <input class="form-input" id="obd-sizing" list="obd-sizing-presets" placeholder="Pumili o mag-type ng size">
+        <datalist id="obd-sizing-presets">
+          <option value="9:16 (Vertical / Stories / Reels)">
+          <option value="4:5 (Portrait / Feed)">
+          <option value="1:1 (Square)">
+          <option value="16:9 (Landscape)">
+        </datalist>
+      </div>
+      <div class="form-field" style="margin-bottom:10px">
+        <label class="form-label">Link to Adset</label>
+        <input class="form-input" id="obd-adsetlink" placeholder="Paste adset URL">
+      </div>
+      <div class="form-field" style="margin-bottom:10px">
+        <label class="form-label">Link to Ads Manager</label>
+        <input class="form-input" id="obd-adsmanagerlink" placeholder="Paste Ads Manager URL">
+      </div>
+      <div style="border-top:0.5px solid var(--border);margin:14px 0;padding-top:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--yellow);text-transform:uppercase;margin-bottom:10px">🎯 Strategy</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="form-field"><label class="form-label">Brand</label><select class="form-select" id="obd-bs-brand"><option value="">Select brand…</option></select></div>
+          <div class="form-field"><label class="form-label">Product</label><select class="form-select" id="obd-bs-product"><option value="">Select product…</option></select></div>
+          <div class="form-field"><label class="form-label">Persona</label><select class="form-select" id="obd-bs-persona"><option value="">Select persona…</option></select></div>
+          <div class="form-field"><label class="form-label">Identify the Problem</label><select class="form-select" id="obd-bs-problem"><option value="">Select problem…</option></select></div>
+          <div class="form-field"><label class="form-label">Market Awareness</label><select class="form-select" id="obd-bs-awareness"><option value="">Select…</option></select></div>
+          <div class="form-field"><label class="form-label">Market Sophistication</label><select class="form-select" id="obd-bs-sophistication"><option value="">Select…</option></select></div>
+        </div>
+        <div class="form-field" style="margin-top:10px"><label class="form-label">Type of Ad</label><input class="form-input" id="obd-bs-typeofad" placeholder="e.g. Agitate the Pain of Problem"></div>
+        <div class="form-field" style="margin-top:10px"><label class="form-label">Strengthen Hook Pattern</label><input class="form-input" id="obd-bs-hookpattern" placeholder="e.g. State the Promise, Use Emotion"></div>
+        <div class="form-field" style="margin-top:10px"><label class="form-label">Headline</label><textarea class="form-textarea" id="obd-bs-headline" rows="2" placeholder="Final headline..."></textarea></div>
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
