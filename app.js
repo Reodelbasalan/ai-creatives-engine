@@ -12894,6 +12894,7 @@ function cbOnClientChange(){
   prodSel.innerHTML='<option value="">Select product…</option>'+bsProducts.filter(function(p){return p.brand_id===cbActiveClient;}).map(function(p){ return '<option value="'+p.id+'">'+escapeHtml(p.name)+'</option>'; }).join('');
   perSel.innerHTML='<option value="">Select persona…</option>'+bsPersonas.filter(function(p){return p.brand_id===cbActiveClient;}).map(function(p){ return '<option value="'+p.id+'">'+escapeHtml(p.name)+'</option>'; }).join('');
   document.getElementById('cb-bs-problem').innerHTML='<option value="">Select problem…</option>';
+  if(typeof cbSwitchView==='function') cbSwitchView('list');
   cbLoadCreatives();
 }
 async function cbOnPersonaChange(){
@@ -13003,33 +13004,476 @@ async function cbLoadCreatives(){
   }catch(e){ cbItems=[]; console.error('cbLoadCreatives error:',e); }
   cbRenderRows();
 }
+// ========================================================================
+// CLIENT BRAND CREATIVES — List/History/Analytics parity with Own Brand
+// ========================================================================
+var cbWinnerFilterVal='';
+var CB_ARCHIVE_MS=48*60*60*1000; // unused directly but kept for parity/reference
+
+function cbIsArchived(c){
+  // Published = agad mawala sa List, punta History (same rule as Own Brand)
+  return (c.status||'')==='Published';
+}
+
+function cbRenderWinnerFilter(){
+  var el=document.getElementById('cb-winner-filter');
+  if(!el) return;
+  var TROPHY='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2"/><path d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2"/><path d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3"/><path d="M4 22h16"/><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"/><path d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3"/></svg>';
+  var FLASK='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>';
+  var XICO='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+  var opts=[
+    {v:'',label:'All',ic:'',c:'var(--text2)'},
+    {v:'Winner',label:'Winner',ic:TROPHY,c:'#22c55e'},
+    {v:'Testing',label:'Testing',ic:FLASK,c:'#f59e0b'},
+    {v:'Killed',label:'Killed',ic:XICO,c:'#ef4444'}
+  ];
+  el.innerHTML=opts.map(function(o){
+    var active=cbWinnerFilterVal===o.v;
+    return '<button type="button" onclick="cbSetWinnerFilter(\''+o.v+'\')" style="font-size:11px;font-weight:650;padding:5px 12px;border-radius:20px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;background:'+(active?o.c+'22':'transparent')+';color:'+(active?o.c:'var(--text3)')+';border:0.5px solid '+(active?o.c+'55':'var(--border2)')+'">'+(o.ic?o.ic:'')+o.label+'</button>';
+  }).join('');
+}
+function cbSetWinnerFilter(v){ cbWinnerFilterVal=v; cbRenderWinnerFilter(); cbRenderRows(); }
+
+function cbPopulateFormatFilter(){
+  var sel=document.getElementById('cb-format-filter');
+  if(!sel) return;
+  var cur=sel.value;
+  var formats=Array.from(new Set((cbItems||[]).map(function(c){return c.format;}).filter(Boolean))).sort();
+  sel.innerHTML='<option value="">All formats</option>'+formats.map(function(f){ return '<option value="'+escapeHtml(f)+'">'+escapeHtml(f)+'</option>'; }).join('');
+  sel.value=cur;
+  var aSel=document.getElementById('cb-angle-filter');
+  if(aSel){
+    var curA=aSel.value;
+    var angles=Array.from(new Set((cbItems||[]).map(function(c){return c.angle_hook;}).filter(Boolean))).sort();
+    aSel.innerHTML='<option value="">All angles/hooks</option>'+angles.map(function(a){ return '<option value="'+escapeHtml(a)+'">'+escapeHtml(a)+'</option>'; }).join('');
+    aSel.value=curA;
+  }
+}
+function cbClearFilters(){
+  var s=document.getElementById('cb-search'); if(s)s.value='';
+  var f=document.getElementById('cb-format-filter'); if(f)f.value='';
+  var a=document.getElementById('cb-angle-filter'); if(a)a.value='';
+  var df=document.getElementById('cb-date-from'); if(df)df.value='';
+  var dt=document.getElementById('cb-date-to'); if(dt)dt.value='';
+  cbWinnerFilterVal='';
+  cbRenderWinnerFilter();
+  cbRenderRows();
+}
+function cbSetDatePreset(preset){
+  var now=new Date();
+  var y=now.getFullYear(), m=now.getMonth();
+  if(preset==='last_month'){ m=m-1; if(m<0){ m=11; y=y-1; } }
+  var first=new Date(y,m,1);
+  var last=new Date(y,m+1,0);
+  function toISO(d){ return d.toISOString().slice(0,10); }
+  document.getElementById('cb-date-from').value=toISO(first);
+  document.getElementById('cb-date-to').value=toISO(last);
+  cbRenderRows();
+}
+
 function cbRenderRows(){
   var box=document.getElementById('cb-rows');
   if(!box) return;
-  var q=(document.getElementById('cb-search').value||'').toLowerCase().trim();
-  var statusFilter=document.getElementById('cb-status-filter').value;
-  var visible=cbItems.filter(function(c){
-    var hay=[c.page_name,c.angle_hook,c.concept,c.script,c.format].filter(Boolean).join(' ').toLowerCase();
-    return (!q || hay.indexOf(q)>=0) && (!statusFilter || c.winner_status===statusFilter);
-  });
-  if(visible.length===0){ box.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:12px;">Walang creatives pa para dito.</div>'; return; }
-  box.innerHTML=visible.map(function(c){
+  cbRenderWinnerFilter();
+  cbPopulateFormatFilter();
+  var visible=cbItems.filter(function(c){ return !cbIsArchived(c); });
+  if(cbWinnerFilterVal){ visible=visible.filter(function(c){ return (c.winner_status||'Testing')===cbWinnerFilterVal; }); }
+  var fmtVal=document.getElementById('cb-format-filter')?.value||'';
+  if(fmtVal){ visible=visible.filter(function(c){ return (c.format||'')===fmtVal; }); }
+  var angleVal=document.getElementById('cb-angle-filter')?.value||'';
+  if(angleVal){ visible=visible.filter(function(c){ return (c.angle_hook||'')===angleVal; }); }
+  var q=(document.getElementById('cb-search')?.value||'').toLowerCase().trim();
+  if(q){
+    visible=visible.filter(function(c){
+      var hay=[c.page_name,c.angle_hook,c.concept,c.script,c.format].filter(Boolean).join(' ').toLowerCase();
+      return hay.indexOf(q)>=0;
+    });
+  }
+  var dFrom=document.getElementById('cb-date-from')?.value||'';
+  var dTo=document.getElementById('cb-date-to')?.value||'';
+  if(dFrom||dTo){
+    visible=visible.filter(function(c){
+      var d=(c.created_at||'').slice(0,10);
+      if(!d) return false;
+      if(dFrom && d<dFrom) return false;
+      if(dTo && d>dTo) return false;
+      return true;
+    });
+  }
+  if(!visible.length){ box.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:12px;">'+((cbWinnerFilterVal||fmtVal||angleVal||q)?'Walang tugmang creative.':'Walang creatives pa para dito.')+'</div>'; return; }
+  box.innerHTML=visible.map(function(c){ return cbBuildRowHtml(c); }).join('');
+}
+
+function cbBuildRowHtml(c){
+  var linkChips=[
+    c.link_url?('<a href="'+c.link_url+'" target="_blank" class="ob-openlink" onclick="event.stopPropagation()" title="Creative file">🎬 Open</a>'):'',
+    c.adset_link?('<a href="'+c.adset_link+'" target="_blank" class="ob-openlink" onclick="event.stopPropagation()" title="Adset">📊 Adset</a>'):'',
+    c.ads_manager_link?('<a href="'+c.ads_manager_link+'" target="_blank" class="ob-openlink" onclick="event.stopPropagation()" title="Ads Manager">📈 Ads Mgr</a>'):''
+  ].filter(Boolean);
+  var link=linkChips.length?linkChips.join(' '):'<span class="ob-muted">—</span>';
+  var date=c.created_at?new Date(c.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric'}):'—';
+  var st=c.status||'Pending approval';
+  var stColors={
+    'Pending approval':{bg:'rgba(251,146,60,0.15)',c:'#fb923c'},
+    'Draft':{bg:'rgba(138,135,129,0.15)',c:'#a6a39c'},
+    'Approved':{bg:'rgba(96,165,250,0.15)',c:'#7db4fb'},
+    'Published':{bg:'rgba(94,234,212,0.14)',c:'#5eead4'}
+  };
+  var sc=stColors[st]||stColors['Pending approval'];
+  var brandColor=obBrandColor(c.page_name);
+  var winStatus=c.winner_status||'Testing';
+  var TROPHY='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2"/><path d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2"/><path d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3"/><path d="M4 22h16"/><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"/><path d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3"/></svg>';
+  var FLASK='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>';
+  var XICO='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+  var winMeta={'Winner':{c:'#22c55e',bg:'rgba(34,197,94,0.14)',ic:TROPHY},'Testing':{c:'#f59e0b',bg:'rgba(245,158,11,0.14)',ic:FLASK},'Killed':{c:'#ef4444',bg:'rgba(239,68,68,0.14)',ic:XICO}};
+  var wm=winMeta[winStatus]||winMeta['Testing'];
+  var isAdmin=currentUserRole==='admin';
+
+  var winnerBadge='<div class="ob-status-dd" id="cb-wdd-'+c.id+'" style="position:relative">'
+    +'<button class="ob-winpill" onclick="cbWinnerToggle(\''+c.id+'\')" style="background:'+wm.bg+';color:'+wm.c+';border-color:'+wm.c+'44">'
+    +wm.ic+' '+winStatus
+    +'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>'
+    +'</button>'
+    +'<div class="ob-status-menu" style="display:none;position:absolute;right:0;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:100;min-width:112px">'
+    +'<div onclick="cbWinnerPick(\''+c.id+'\',\'Winner\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer;display:flex;align-items:center;gap:7px">'+TROPHY+' Winner</div>'
+    +'<div onclick="cbWinnerPick(\''+c.id+'\',\'Testing\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer;display:flex;align-items:center;gap:7px">'+FLASK+' Testing</div>'
+    +'<div onclick="cbWinnerPick(\''+c.id+'\',\'Killed\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer;display:flex;align-items:center;gap:7px">'+XICO+' Killed</div>'
+    +'</div></div>';
+
+  var statusPill='<div class="ob-status-dd" id="cb-sdd-'+c.id+'" style="position:relative">'
+    +'<button class="ob-statuspill" onclick="cbStatusToggle(\''+c.id+'\')" style="background:'+sc.bg+';color:'+sc.c+';border-color:'+sc.c+'44">'
+    +st+'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>'
+    +'<div class="ob-status-menu" style="display:none;position:absolute;margin-top:4px;background:#16161a;border:0.5px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:100;min-width:150px">'
+    +'<div onclick="cbStatusPick(\''+c.id+'\',\'Pending approval\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Pending approval</div>'
+    +'<div onclick="cbStatusPick(\''+c.id+'\',\'Approved\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Approved</div>'
+    +'<div onclick="cbStatusPick(\''+c.id+'\',\'Published\')" style="padding:7px 10px;border-radius:6px;font-size:11px;color:#c9c6be;cursor:pointer">Published</div>'
+    +'</div></div>';
+
+  var approveBtn=(isAdmin && st==='Pending approval')
+    ? '<button class="ob-lbtn approve" onclick="cbApprove(\''+c.id+'\')" title="Approve"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg>Approve</button>'
+    : '';
+  var publishBtn=(st==='Approved')
+    ? '<button class="ob-lbtn pub" onclick="cbPublish(\''+c.id+'\')" title="Mark as published"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Publish</button>'
+    : '';
+  var detailsBtn='<button class="ob-lbtn icon" onclick="openCbDetailModal(\''+c.id+'\')" title="Details"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>';
+  var delBtn='<button class="ob-lbtn icon del" onclick="cbDeleteCreative(\''+c.id+'\')" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>';
+
+  var sub='';
+  if(c.format||c.angle_hook){
+    sub='<div class="ob-lsub">'+(c.format?'<span class="ob-lfmt">'+escapeHtml(c.format)+'</span>':'')+(c.format&&c.angle_hook?' · ':'')+escapeHtml(c.angle_hook||'')+'</div>';
+  }
+  if(c.persona_id || c.market_awareness || c.problem_text){
+    var personaObj=bsPersonas.find(function(p){return p.id===c.persona_id;});
+    var bits=[];
+    if(personaObj) bits.push(escapeHtml(personaObj.name));
+    if(c.problem_text) bits.push(escapeHtml((c.problem_text||'').slice(0,60)));
+    if(c.market_awareness) bits.push(escapeHtml(bsLabelFor(BS_AWARENESS,c.market_awareness).split(' — ')[0]));
+    if(bits.length) sub+='<div class="ob-lsub" style="color:var(--yellow2);opacity:.85;">🎯 '+bits.join(' · ')+'</div>';
+  }
+  var tagCell=c.tag?('<span class="ob-tagchip"><span class="ob-tagdot" style="background:'+obTagColor(c.tag)+'"></span>'+escapeHtml(c.tag)+'</span>'):'<span class="ob-muted">—</span>';
+
+  return '<div class="ob-item" data-id="'+c.id+'" style="--ac:'+brandColor+'">'
+    +'<div class="ob-lmain"><div class="ob-lname">'+escapeHtml(c.page_name||'—')+'</div>'+sub+'</div>'
+    +'<div class="ob-ltag">'+tagCell+'</div>'
+    +'<div class="ob-ldate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+date+'</div>'
+    +'<div class="ob-llink">'+link+'</div>'
+    +'<div class="ob-lwin">'+winnerBadge+'</div>'
+    +'<div class="ob-lactions">'+statusPill+approveBtn+publishBtn+detailsBtn+delBtn+'</div>'
+    +'</div>';
+}
+
+function cbRowHtml(id){
+  var c=cbItems.find(function(x){ return x.id===id; });
+  return c?cbBuildRowHtml(c):'';
+}
+function cbUpdateRow(id){
+  var row=document.querySelector('.ob-item[data-id="'+id+'"]');
+  if(row) row.outerHTML=cbRowHtml(id);
+}
+
+async function cbLogHistory(creativeId, pageName, action, item){
+  try{
+    var actorName=(currentUser && (currentUser.user_metadata?.name || currentUser.email)) || 'Someone';
+    var row={
+      creative_id: creativeId, client_brand_id: cbActiveClient, page_name: pageName, action: action,
+      actor_id: currentUser?.id || null, actor_name: actorName
+    };
+    if(item){
+      row.ad_copy=item.ad_copy||null;
+      row.link_url=item.link_url||null;
+      row.tag=item.tag||null;
+      row.creative_date=item.created_at||null;
+    }
+    var r=await sb.from('client_creatives_log').insert(row);
+    if(r.error){
+      await sb.from('client_creatives_log').insert({
+        creative_id: creativeId, client_brand_id: cbActiveClient, page_name: pageName, action: action,
+        actor_id: currentUser?.id || null, actor_name: actorName
+      });
+    }
+  }catch(e){ console.error('cbLogHistory failed:', e); }
+}
+
+async function cbApprove(id){
+  try{
+    await sb.from('client_creatives').update({status:'Approved'}).eq('id',id);
+    showNotif('Creative approved','success');
+    await cbLoadCreatives();
+  }catch(e){ showNotif('Approve failed','error'); }
+}
+async function cbPublish(id){
+  try{
+    var item=cbItems.find(function(x){ return x.id===id; });
+    await sb.from('client_creatives').update({status:'Published', published_at:new Date().toISOString()}).eq('id',id);
+    await cbLogHistory(id, item?item.page_name:'', 'published', item);
+    showNotif('Marked as published','success');
+    await cbLoadCreatives();
+  }catch(e){ showNotif('Publish failed','error'); }
+}
+async function cbUnpublish(id){
+  try{
+    var item=cbItems.find(function(x){ return x.id===id; });
+    await sb.from('client_creatives').update({status:'Approved'}).eq('id',id);
+    await cbLogHistory(id, item?item.page_name:'', 'unpublished', item);
+    showNotif('Marked as unpublished','success');
+    await cbLoadCreatives();
+  }catch(e){ showNotif('Unpublish failed','error'); }
+}
+async function cbDeleteCreative(id){
+  try{
+    await sb.from('client_creatives').delete().eq('id',id);
+    await cbLoadCreatives();
+    showNotif('Creative deleted','success');
+  }catch(e){ showNotif('Delete failed','error'); }
+}
+
+function cbStatusToggle(id){
+  var menu=document.querySelector('#cb-sdd-'+id+' .ob-status-menu');
+  document.querySelectorAll('.ob-status-menu').forEach(function(m){ if(m!==menu) m.style.display='none'; });
+  document.querySelectorAll('.ob-item.dd-open').forEach(function(r){ r.classList.remove('dd-open'); });
+  if(menu){
+    var show=(menu.style.display==='none'||!menu.style.display);
+    menu.style.display = show ? 'block' : 'none';
+    var row=menu.closest('.ob-item'); if(row && show) row.classList.add('dd-open');
+  }
+}
+async function cbStatusPick(id, status){
+  var item=cbItems.find(function(x){ return x.id===id; });
+  var prev=item?item.status:null;
+  try{
+    if(item) item.status=status;
+    var upd={status:status};
+    if(status==='Published'){ upd.published_at=new Date().toISOString(); if(item) item.published_at=upd.published_at; }
+    if(status==='Published'){
+      var row=document.querySelector('.ob-item[data-id="'+id+'"]');
+      if(row){ row.style.transition='opacity .3s,transform .3s'; row.style.opacity='0'; row.style.transform='translateX(20px)'; }
+    } else {
+      cbUpdateRow(id);
+    }
+    await sb.from('client_creatives').update(upd).eq('id',id);
+    if(status==='Published'){
+      await cbLogHistory(id, item?item.page_name:'', 'published', item);
+      setTimeout(function(){ cbLoadCreatives(); }, 320);
+    }
+  }catch(e){
+    if(item) item.status=prev; cbUpdateRow(id);
+    showNotif('Hindi na-update ang status','error');
+  }
+}
+function cbWinnerToggle(id){
+  var menu=document.querySelector('#cb-wdd-'+id+' .ob-status-menu');
+  document.querySelectorAll('.ob-status-menu').forEach(function(m){ if(m!==menu) m.style.display='none'; });
+  document.querySelectorAll('.ob-item.dd-open').forEach(function(r){ r.classList.remove('dd-open'); });
+  if(menu){
+    var show=(menu.style.display==='none'||!menu.style.display);
+    menu.style.display = show ? 'block' : 'none';
+    var row=menu.closest('.ob-item'); if(row && show) row.classList.add('dd-open');
+  }
+}
+async function cbWinnerPick(id, winnerStatus){
+  var item=cbItems.find(function(x){ return x.id===id; });
+  var prev=item?item.winner_status:null;
+  try{
+    if(item) item.winner_status=winnerStatus;
+    cbUpdateRow(id);
+    await sb.from('client_creatives').update({winner_status:winnerStatus}).eq('id',id);
+    showNotif(winnerStatus==='Winner'?'Marked as Winner!':'Updated','success');
+  }catch(e){
+    if(item) item.winner_status=prev; cbUpdateRow(id);
+    showNotif('Hindi na-update','error');
+  }
+}
+
+// ---------- History tab ----------
+var cbHistoryItems=[];
+async function loadCbHistory(){
+  var box=document.getElementById('cb-history-body');
+  if(!box) return;
+  if(!cbActiveClient){ box.innerHTML=''; return; }
+  skelRows('cb-history-body', 4);
+  try{
+    var r=await sb.from('client_creatives_log').select('*').eq('client_brand_id',cbActiveClient).order('created_at',{ascending:false}).limit(200);
+    cbHistoryItems=r.data||[];
+  }catch(e){ cbHistoryItems=[]; }
+  if(!cbHistoryItems.length){
+    box.innerHTML=emptyState(ICO_MEGAPHONE,'No publish history yet','Publish or unpublish actions will be logged here.');
+    return;
+  }
+  box.innerHTML=cbHistoryItems.map(function(h){
+    var isPub=h.action==='published';
+    var badge=isPub
+      ? '<span style="background:rgba(94,234,212,0.14);color:#5eead4;font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px">Published</span>'
+      : '<span style="background:rgba(251,146,60,0.15);color:#fb923c;font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px">Unpublished</span>';
+    var when=h.created_at?new Date(h.created_at).toLocaleString('en-PH',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}):'—';
+    var tagCell=h.tag?obTagBadge(h.tag):'<span style="color:#7a7a85">—</span>';
+    var linkCell=h.link_url
+      ? '<a href="'+escapeHtml(h.link_url)+'" target="_blank" rel="noopener" style="color:var(--yellow);font-size:11px;font-weight:600">Open</a>'
+      : '<span style="color:#7a7a85">—</span>';
+    return '<div class="ob-hist-row">'
+      + '<div class="ob-hist-name">'+escapeHtml(h.page_name||'—')+'</div>'
+      + '<div>'+badge+'</div>'
+      + '<div>'+tagCell+'</div>'
+      + '<div>'+linkCell+'</div>'
+      + '<div class="ob-hist-actor">'+escapeHtml(h.actor_name||'Someone')+'</div>'
+      + '<div class="ob-hist-date">'+when+'</div>'
+      + '</div>';
+  }).join('');
+}
+
+// ---------- Analytics tab ----------
+async function loadCbAnalytics(){
+  var statsBox=document.getElementById('cb-analytics-stats');
+  var breakBox=document.getElementById('cb-analytics-breakdown');
+  if(!statsBox) return;
+  if(!cbActiveClient){ statsBox.innerHTML=''; breakBox.innerHTML=''; return; }
+  var items=cbItems||[];
+  var total=items.length;
+  var winners=items.filter(function(c){ return c.winner_status==='Winner'; });
+  var testing=items.filter(function(c){ return (c.winner_status||'Testing')==='Testing'; });
+  var killed=items.filter(function(c){ return c.winner_status==='Killed'; });
+  var decided=winners.length+killed.length;
+  var winRate=decided?Math.round(winners.length/decided*100):0;
+
+  if(!total){
+    statsBox.innerHTML=emptyState(ICO_MEGAPHONE,'Walang data pa','Mag-add ng creatives para makita ang analytics.');
+    breakBox.innerHTML='';
+    document.getElementById('cb-analytics-winners-body').innerHTML='';
+    return;
+  }
+  function groupBy(list, keyFn){
+    var g={};
+    list.forEach(function(c){
+      var k=keyFn(c)||'(walang laman)';
+      if(!g[k]) g[k]={total:0,winners:0};
+      g[k].total++;
+      if(c.winner_status==='Winner') g[k].winners++;
+    });
+    return g;
+  }
+  var byFormat=groupBy(items, function(c){return c.format;});
+  var byAngle=groupBy(items, function(c){return c.angle_hook;});
+  function renderGroupTable(g){
+    var keys=Object.keys(g).sort(function(a,b){ return g[b].winners-g[a].winners || g[b].total-g[a].total; });
+    if(!keys.length) return '<div style="font-size:11px;color:var(--text3);padding:8px 0">Walang data.</div>';
+    return keys.map(function(k){
+      var d=g[k];
+      var pct=d.total?Math.round(d.winners/d.total*100):0;
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:0.5px solid var(--border)">'
+        +'<span style="flex:1;font-size:12px;color:var(--text2)">'+escapeHtml(k)+'</span>'
+        +'<span style="font-size:11px;color:var(--text3)">'+d.winners+'/'+d.total+' winners</span>'
+        +'<span style="font-size:11px;font-weight:700;color:'+(pct>=50?'#22c55e':pct>0?'#f59e0b':'var(--text3)')+';min-width:38px;text-align:right">'+pct+'%</span>'
+        +'</div>';
+    }).join('');
+  }
+  statsBox.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px">'
+    +statCard('Total creatives',total,'var(--text)')
+    +statCard('🏆 Winners',winners.length,'#22c55e')
+    +statCard('🧪 Testing',testing.length,'#f59e0b')
+    +statCard('❌ Killed',killed.length,'#ef4444')
+    +statCard('Win rate',winRate+'%','#a78bfa')
+    +'</div>';
+  breakBox.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px">'
+    +'<div class="form-card"><div class="form-card-title" style="margin-bottom:4px">By Format</div>'+renderGroupTable(byFormat)+'</div>'
+    +'<div class="form-card"><div class="form-card-title" style="margin-bottom:4px">By Angle / Hook</div>'+renderGroupTable(byAngle)+'</div>'
+    +'</div>';
+
+  var fmtSel=document.getElementById('cb-ana-format-filter');
+  if(fmtSel){
+    var curFmt=fmtSel.value;
+    var formats=Array.from(new Set(winners.map(function(c){return c.format;}).filter(Boolean))).sort();
+    fmtSel.innerHTML='<option value="">All formats</option>'+formats.map(function(f){ return '<option value="'+escapeHtml(f)+'">'+escapeHtml(f)+'</option>'; }).join('');
+    fmtSel.value=curFmt;
+  }
+  var angleSel=document.getElementById('cb-ana-angle-filter');
+  if(angleSel){
+    var curAngle=angleSel.value;
+    var angles=Array.from(new Set(winners.map(function(c){return c.angle_hook;}).filter(Boolean))).sort();
+    angleSel.innerHTML='<option value="">All angles/hooks</option>'+angles.map(function(a){ return '<option value="'+escapeHtml(a)+'">'+escapeHtml(a)+'</option>'; }).join('');
+    angleSel.value=curAngle;
+  }
+  cbRenderWinnersList();
+}
+function cbRenderWinnersList(){
+  var box=document.getElementById('cb-analytics-winners-body');
+  if(!box) return;
+  var winners=(cbItems||[]).filter(function(c){ return c.winner_status==='Winner'; });
+  var fmtVal=document.getElementById('cb-ana-format-filter')?.value||'';
+  if(fmtVal){ winners=winners.filter(function(c){ return (c.format||'')===fmtVal; }); }
+  var angleVal=document.getElementById('cb-ana-angle-filter')?.value||'';
+  if(angleVal){ winners=winners.filter(function(c){ return (c.angle_hook||'')===angleVal; }); }
+  var q=(document.getElementById('cb-ana-search')?.value||'').toLowerCase().trim();
+  if(q){
+    winners=winners.filter(function(c){
+      var hay=[c.page_name,c.angle_hook,c.concept,c.script,c.format].filter(Boolean).join(' ').toLowerCase();
+      return hay.indexOf(q)>=0;
+    });
+  }
+  var winnersListHtml=winners.length?winners.map(function(c){
     var meta=[c.format,c.angle_hook].filter(Boolean).join(' · ');
     var personaObj=bsPersonas.find(function(p){return p.id===c.persona_id;});
-    var stratBits=[];
-    if(personaObj) stratBits.push(escapeHtml(personaObj.name));
-    if(c.problem_text) stratBits.push(escapeHtml((c.problem_text||'').slice(0,60)));
-    var stratLine=stratBits.length?('<div style="font-size:11px;color:var(--yellow2);opacity:.85;margin-top:2px;">🎯 '+stratBits.join(' · ')+'</div>'):'';
-    var winColor=c.winner_status==='Winner'?'#22c55e':(c.winner_status==='Killed'?'#ef4444':'#f59e0b');
+    var strategyBits=[];
+    if(personaObj) strategyBits.push('<b>Persona:</b> '+escapeHtml(personaObj.name));
+    if(c.problem_text) strategyBits.push('<b>Problem:</b> '+escapeHtml(c.problem_text));
+    if(c.desire) strategyBits.push('<b>Desire:</b> '+escapeHtml(c.desire));
+    if(c.market_awareness) strategyBits.push('<b>Awareness:</b> '+escapeHtml(bsLabelFor(BS_AWARENESS,c.market_awareness).split(' — ')[0]));
+    if(c.market_sophistication) strategyBits.push('<b>Sophistication:</b> '+escapeHtml(c.market_sophistication));
+    if(c.type_of_ad) strategyBits.push('<b>Type of Ad:</b> '+escapeHtml(c.type_of_ad));
+    if(c.hook_pattern) strategyBits.push('<b>Hook Pattern:</b> '+escapeHtml(c.hook_pattern));
+    if(c.headline) strategyBits.push('<b>Headline:</b> '+escapeHtml(c.headline));
+    var strategyHtml=strategyBits.length?'<div style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6;background:var(--bg3);border-radius:6px;padding:8px 10px;">'+strategyBits.join('<br>')+'</div>':'';
+    var res=c.results||{};
+    var resBits=[res.ctr?('CTR '+res.ctr):'', res.cpc?('CPC '+res.cpc):'', res.cpa?('CPA '+res.cpa):'', res.roas?('ROAS '+res.roas):'', res.hookRate?('Hook Rate '+res.hookRate):'', res.holdRate?('Hold Rate '+res.holdRate):''].filter(Boolean);
+    var resHtml=resBits.length?'<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:#22c55e;margin-bottom:6px;font-weight:600;">'+resBits.map(function(b){return '<span>'+b+'</span>';}).join('')+'</div>':'';
     return '<div class="form-card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer" onclick="openCbDetailModal(\''+c.id+'\')">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">'
-      +'<div style="font-size:13px;font-weight:700">'+escapeHtml(c.page_name||'—')+'</div>'
-      +'<span style="font-size:10px;font-weight:700;color:'+winColor+'">'+escapeHtml(c.winner_status||'Testing')+'</span>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px">'
+      +'<div style="font-size:13px;font-weight:700">🏆 '+escapeHtml(c.page_name||'—')+'</div>'
+      +'<span style="font-size:10px;color:var(--text3)">📝 View full details →</span>'
       +'</div>'
-      +(meta?'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+escapeHtml(meta)+'</div>':'')
-      +stratLine
+      +(meta?'<div style="font-size:11px;color:#22c55e;margin-bottom:6px">'+escapeHtml(meta)+'</div>':'')
+      +resHtml
+      +strategyHtml
+      +(c.concept?'<div style="font-size:11.5px;color:var(--text2);margin-bottom:4px"><b style="color:var(--text3);font-weight:600">Concept:</b> '+escapeHtml(c.concept)+'</div>':'')
+      +(c.script?'<div style="font-size:11.5px;color:var(--text3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"><b style="color:var(--text3);font-weight:600">Script:</b> '+escapeHtml(c.script)+'</div>':'')
+      +(!c.concept&&!c.script&&!strategyBits.length?'<div style="font-size:11px;color:var(--text3);font-style:italic">Wala pang script/concept/strategy. Click para dagdagan.</div>':'')
       +'</div>';
-  }).join('');
+  }).join(''):'<div style="font-size:11px;color:var(--text3);padding:12px 0;text-align:center">'+((fmtVal||angleVal||q)?'Walang winner na tugma sa filter/search.':'Wala pang winner. I-mark yung mga panalong creative para makita dito.')+'</div>';
+  box.innerHTML=winnersListHtml;
+}
+
+// ---------- Tabs ----------
+function cbSwitchView(view){
+  var listV=document.getElementById('cb-view-list');
+  var histV=document.getElementById('cb-view-history');
+  var anaV=document.getElementById('cb-view-analytics');
+  var tabL=document.getElementById('cb-tab-list');
+  var tabH=document.getElementById('cb-tab-history');
+  var tabA=document.getElementById('cb-tab-analytics');
+  if(!listV||!histV||!anaV||!tabL||!tabH||!tabA) return;
+  listV.style.display='none'; histV.style.display='none'; anaV.style.display='none';
+  tabL.classList.remove('active'); tabH.classList.remove('active'); tabA.classList.remove('active');
+  if(view==='history'){ histV.style.display=''; tabH.classList.add('active'); loadCbHistory(); }
+  else if(view==='analytics'){ anaV.style.display=''; tabA.classList.add('active'); loadCbAnalytics(); }
+  else { listV.style.display=''; tabL.classList.add('active'); }
 }
 
 // ---------- Details modal ----------
