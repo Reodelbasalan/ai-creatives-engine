@@ -2692,7 +2692,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <div class="ob-field"><label class="ob-flabel">Details (optional)</label><input type="text" class="form-input" id="bs-p-details" placeholder="Key facts the team should know" /></div>
               </div>
               <div class="ob-field"><label class="ob-flabel">Positioning</label><textarea class="form-textarea" id="bs-p-positioning" rows="3" placeholder="What are we promising + why is our solution different/believable?"></textarea></div>
-              <div><button type="button" class="yellow-btn" id="bs-p-save">+ Add product</button><span class="bs-status" id="bs-p-status"></span></div>
+              <div><button type="button" class="yellow-btn" id="bs-p-save">+ Add product</button><button type="button" class="bs-ghost-btn" id="bs-p-cancel-edit" style="display:none;" onclick="bsCancelEditProduct()">Cancel edit</button><span class="bs-status" id="bs-p-status"></span></div>
               <div style="margin-top:14px;"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">SAVED PRODUCTS</div><div id="bs-products-list"></div></div>
               <div class="bs-nav"><button type="button" class="bs-link" id="bs-wiz-to-1-b">← Back to Brand</button><button type="button" class="yellow-btn" id="bs-wiz-to-3">Continue to Audience →</button></div>
             </div>
@@ -2721,7 +2721,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <div class="ob-field"><label class="ob-flabel">Repeatability</label><select class="form-select" id="bs-prob-repeatability"></select></div>
                 <div class="ob-field"><label class="ob-flabel">Scale</label><select class="form-select" id="bs-prob-scale"></select></div>
               </div>
-              <div><button type="button" class="yellow-btn" id="bs-prob-save">+ Add problem</button><span class="bs-status" id="bs-prob-status"></span></div>
+              <div><button type="button" class="yellow-btn" id="bs-prob-save">+ Add problem</button><button type="button" class="bs-ghost-btn" id="bs-prob-cancel-edit" style="display:none;" onclick="bsCancelEditProblem()">Cancel edit</button><span class="bs-status" id="bs-prob-status"></span></div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px;">
                 <div><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">ALL PROBLEMS</div><div id="bs-problems-list"></div></div>
                 <div><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">🏆 TOP 3 PROBLEMS</div><div id="bs-top3-list"></div></div>
