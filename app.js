@@ -12855,6 +12855,9 @@ var cbActiveClient=null, cbItems=[], cbInitialized=false;
 
 async function loadClientBrandCreatives(){
   cbInitParticles();
+  var _cf=document.getElementById('cb-form');
+  if(_cf){ _cf.style.maxHeight='0'; _cf.style.opacity='0'; _cf.style.marginBottom='0'; _cf.style.paddingTop='0'; _cf.style.paddingBottom='0'; }
+  var _clbl=document.getElementById('cb-toggle-label'); if(_clbl) _clbl.textContent='+ Add creative';
   if(!cbInitialized){
     cbInitialized=true;
     if(Object.keys(bsBrands).length===0) await bsLoadBrands();
