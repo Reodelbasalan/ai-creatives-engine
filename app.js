@@ -9033,6 +9033,14 @@ async function openObBrandDetailModal(id){
   document.getElementById('obd-adsetlink').value=c.adset_link||'';
   document.getElementById('obd-adsmanagerlink').value=c.ads_manager_link||'';
   document.getElementById('obd-bs-headline').value=c.headline||'';
+  var res=c.results||{};
+  document.getElementById('obd-res-ctr').value=res.ctr||'';
+  document.getElementById('obd-res-cpc').value=res.cpc||'';
+  document.getElementById('obd-res-cpa').value=res.cpa||'';
+  document.getElementById('obd-res-roas').value=res.roas||'';
+  document.getElementById('obd-res-hookrate').value=res.hookRate||'';
+  document.getElementById('obd-res-holdrate').value=res.holdRate||'';
+  document.getElementById('obd-res-notes').value=res.notes||'';
   var cur=c.winner_status||'Testing';
   var picker=document.getElementById('obd-winner-picker');
   picker.setAttribute('data-current',cur);
@@ -9126,7 +9134,16 @@ async function saveObBrandDetails(){
     market_sophistication:document.getElementById('obd-bs-sophistication').value||null,
     type_of_ad:bsCollectChecks('obd-typeofad-checks').join(', ')||null,
     hook_pattern:bsCollectChecks('obd-hook-checks').join(', ')||null,
-    headline:(document.getElementById('obd-bs-headline').value||'').trim()||null
+    headline:(document.getElementById('obd-bs-headline').value||'').trim()||null,
+    results:{
+      ctr:(document.getElementById('obd-res-ctr').value||'').trim(),
+      cpc:(document.getElementById('obd-res-cpc').value||'').trim(),
+      cpa:(document.getElementById('obd-res-cpa').value||'').trim(),
+      roas:(document.getElementById('obd-res-roas').value||'').trim(),
+      hookRate:(document.getElementById('obd-res-hookrate').value||'').trim(),
+      holdRate:(document.getElementById('obd-res-holdrate').value||'').trim(),
+      notes:(document.getElementById('obd-res-notes').value||'').trim()
+    }
   };
   try{
     var{error}=await sb.from('brand_creatives').update(payload).eq('id',id);
@@ -9143,6 +9160,8 @@ async function loadObAnalytics(){
   var breakBox=document.getElementById('ob-analytics-breakdown');
   if(!statsBox) return;
   if(!obItems.length){ await loadBrandCreatives(); }
+  if(Object.keys(bsBrands).length===0) await bsLoadBrands();
+  if(bsProducts.length===0 && bsPersonas.length===0) await bsLoadLibrary();
   var items=obItems||[];
   var total=items.length;
   var winners=items.filter(function(c){ return c.winner_status==='Winner'; });
@@ -9236,15 +9255,31 @@ function obRenderWinnersList(){
 
   var winnersListHtml=winners.length?winners.map(function(c){
     var meta=[c.format,c.angle_hook].filter(Boolean).join(' · ');
+    var personaObj=bsPersonas.find(function(p){return p.id===c.persona_id;});
+    var strategyBits=[];
+    if(personaObj) strategyBits.push('<b>Persona:</b> '+escapeHtml(personaObj.name));
+    if(c.problem_text) strategyBits.push('<b>Problem:</b> '+escapeHtml(c.problem_text));
+    if(c.desire) strategyBits.push('<b>Desire:</b> '+escapeHtml(c.desire));
+    if(c.market_awareness) strategyBits.push('<b>Awareness:</b> '+escapeHtml(bsLabelFor(BS_AWARENESS,c.market_awareness).split(' \u2014 ')[0]));
+    if(c.market_sophistication) strategyBits.push('<b>Sophistication:</b> '+escapeHtml(c.market_sophistication));
+    if(c.type_of_ad) strategyBits.push('<b>Type of Ad:</b> '+escapeHtml(c.type_of_ad));
+    if(c.hook_pattern) strategyBits.push('<b>Hook Pattern:</b> '+escapeHtml(c.hook_pattern));
+    if(c.headline) strategyBits.push('<b>Headline:</b> '+escapeHtml(c.headline));
+    var strategyHtml=strategyBits.length?'<div style="font-size:11px;color:var(--text2);margin-bottom:6px;line-height:1.6;background:var(--bg3);border-radius:6px;padding:8px 10px;">'+strategyBits.join('<br>')+'</div>':'';
+    var res=c.results||{};
+    var resBits=[res.ctr?('CTR '+res.ctr):'', res.cpc?('CPC '+res.cpc):'', res.cpa?('CPA '+res.cpa):'', res.roas?('ROAS '+res.roas):'', res.hookRate?('Hook Rate '+res.hookRate):'', res.holdRate?('Hold Rate '+res.holdRate):''].filter(Boolean);
+    var resHtml=resBits.length?'<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:#22c55e;margin-bottom:6px;font-weight:600;">'+resBits.map(function(b){return '<span>'+b+'</span>';}).join('')+'</div>':'';
     return '<div class="form-card" style="padding:12px 14px;margin-bottom:8px;cursor:pointer" onclick="openObBrandDetailModal(\''+c.id+'\')">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px">'
       +'<div style="font-size:13px;font-weight:700">🏆 '+escapeHtml(c.page_name||'—')+'</div>'
       +'<span style="font-size:10px;color:var(--text3)">📝 View full details →</span>'
       +'</div>'
       +(meta?'<div style="font-size:11px;color:#22c55e;margin-bottom:6px">'+escapeHtml(meta)+'</div>':'')
+      +resHtml
+      +strategyHtml
       +(c.concept?'<div style="font-size:11.5px;color:var(--text2);margin-bottom:4px"><b style="color:var(--text3);font-weight:600">Concept:</b> '+escapeHtml(c.concept)+'</div>':'')
       +(c.script?'<div style="font-size:11.5px;color:var(--text3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"><b style="color:var(--text3);font-weight:600">Script:</b> '+escapeHtml(c.script)+'</div>':'')
-      +(!c.concept&&!c.script?'<div style="font-size:11px;color:var(--text3);font-style:italic">Wala pang script/concept. Click para dagdagan.</div>':'')
+      +(!c.concept&&!c.script&&!strategyBits.length?'<div style="font-size:11px;color:var(--text3);font-style:italic">Wala pang script/concept/strategy. Click para dagdagan.</div>':'')
       +'</div>';
   }).join(''):'<div style="font-size:11px;color:var(--text3);padding:12px 0;text-align:center">'+((fmtVal||angleVal||q)?'Walang winner na tugma sa filter/search.':'Wala pang winner. I-mark yung mga panalong creative para makita dito.')+'</div>';
 
@@ -12582,4 +12617,24 @@ function bsCopyDetailsForGpt(c){
     catch(e){ statusEl.textContent='Hindi na-copy — subukan ulit.'; statusEl.style.color='var(--red)'; }
     document.body.removeChild(ta);
   });
+}
+
+function obToggleStrategySection(){
+  var body=document.getElementById('ob-strategy-body');
+  var chevron=document.getElementById('ob-strategy-chevron');
+  var isOpen=body.style.display!=='none';
+  body.style.display=isOpen?'none':'block';
+  chevron.style.transform=isOpen?'rotate(0deg)':'rotate(180deg)';
+}
+
+function obSetDatePreset(preset){
+  var now=new Date();
+  var y=now.getFullYear(), m=now.getMonth();
+  if(preset==='last_month'){ m=m-1; if(m<0){ m=11; y=y-1; } }
+  var first=new Date(y,m,1);
+  var last=new Date(y,m+1,0);
+  function toISO(d){ return d.toISOString().slice(0,10); }
+  document.getElementById('ob-date-from').value=toISO(first);
+  document.getElementById('ob-date-to').value=toISO(last);
+  obRenderRows();
 }
