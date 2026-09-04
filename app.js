@@ -9029,10 +9029,9 @@ async function openObBrandDetailModal(id){
   document.getElementById('obd-concept').value=c.concept||'';
   document.getElementById('obd-script').value=c.script||'';
   document.getElementById('obd-sizing').value=c.sizing||'';
+  document.getElementById('obd-outputlink').value=c.link_url||'';
   document.getElementById('obd-adsetlink').value=c.adset_link||'';
   document.getElementById('obd-adsmanagerlink').value=c.ads_manager_link||'';
-  document.getElementById('obd-bs-typeofad').value=c.type_of_ad||'';
-  document.getElementById('obd-bs-hookpattern').value=c.hook_pattern||'';
   document.getElementById('obd-bs-headline').value=c.headline||'';
   var cur=c.winner_status||'Testing';
   var picker=document.getElementById('obd-winner-picker');
@@ -9073,6 +9072,16 @@ async function openObBrandDetailModal(id){
   brandSel.onchange=function(){ refreshObdProductPersona(brandSel.value, null, null); };
   document.getElementById('obd-bs-persona').onchange=function(){ refreshObdProblem(document.getElementById('obd-bs-persona').value, null); };
 
+  var savedHooks=(c.hook_pattern||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  bsRenderHookChecks('obd-hook-checks', savedHooks);
+  var savedTypeOfAd=(c.type_of_ad||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  bsRenderTypeOfAdChecks('obd-typeofad-checks', c.market_awareness||'', savedTypeOfAd);
+  awSel.onchange=function(){ bsRenderTypeOfAdChecks('obd-typeofad-checks', awSel.value, []); };
+  bsWireCustomAdd('obd-typeofad-custom','obd-typeofad-add','obd-typeofad-checks',3);
+  bsWireCustomAdd('obd-hook-custom','obd-hook-add','obd-hook-checks',3);
+
+  document.getElementById('obd-copy-details').onclick=function(){ bsCopyDetailsForGpt(c); };
+
   document.getElementById('ob-brand-detail-modal').classList.add('open');
 }
 function obdSetWinner(key){
@@ -9103,6 +9112,7 @@ async function saveObBrandDetails(){
     concept:(document.getElementById('obd-concept').value||'').trim()||null,
     script:(document.getElementById('obd-script').value||'').trim()||null,
     winner_status:winnerStatus,
+    link_url:(document.getElementById('obd-outputlink').value||'').trim()||null,
     sizing:(document.getElementById('obd-sizing').value||'').trim()||null,
     adset_link:(document.getElementById('obd-adsetlink').value||'').trim()||null,
     ads_manager_link:(document.getElementById('obd-adsmanagerlink').value||'').trim()||null,
@@ -9114,8 +9124,8 @@ async function saveObBrandDetails(){
     desire:personaObj?personaObj.desire:null,
     market_awareness:document.getElementById('obd-bs-awareness').value||null,
     market_sophistication:document.getElementById('obd-bs-sophistication').value||null,
-    type_of_ad:(document.getElementById('obd-bs-typeofad').value||'').trim()||null,
-    hook_pattern:(document.getElementById('obd-bs-hookpattern').value||'').trim()||null,
+    type_of_ad:bsCollectChecks('obd-typeofad-checks').join(', ')||null,
+    hook_pattern:bsCollectChecks('obd-hook-checks').join(', ')||null,
     headline:(document.getElementById('obd-bs-headline').value||'').trim()||null
   };
   try{
@@ -9344,8 +9354,8 @@ async function obAddCreative(){
     var bsProblemId=(document.getElementById('ob-bs-problem')?.value||'')||null;
     var bsAwareness=(document.getElementById('ob-bs-awareness')?.value||'')||null;
     var bsSophistication=(document.getElementById('ob-bs-sophistication')?.value||'')||null;
-    var bsTypeOfAd=(document.getElementById('ob-bs-typeofad')?.value||'').trim()||null;
-    var bsHookPattern=(document.getElementById('ob-bs-hookpattern')?.value||'').trim()||null;
+    var bsTypeOfAd=bsCollectChecks('ob-typeofad-checks').join(', ')||null;
+    var bsHookPattern=bsCollectChecks('ob-hook-checks').join(', ')||null;
     var bsHeadline=(document.getElementById('ob-bs-headline')?.value||'').trim()||null;
     var bsPersonaObj=bsPersonas.find(function(p){return p.id===bsPersonaId;});
     var bsDesire=bsPersonaObj?bsPersonaObj.desire:null;
@@ -9365,8 +9375,10 @@ async function obAddCreative(){
     var fEl=document.getElementById('ob-format'); if(fEl)fEl.value='';
     var cEl=document.getElementById('ob-concept'); if(cEl)cEl.value='';
     var sEl=document.getElementById('ob-script'); if(sEl)sEl.value='';
-    var bsFieldIds=['ob-bs-brand','ob-bs-product','ob-bs-persona','ob-bs-problem','ob-bs-awareness','ob-bs-sophistication','ob-bs-typeofad','ob-bs-hookpattern','ob-bs-headline','ob-sizing','ob-adsetlink','ob-adsmanagerlink'];
+    var bsFieldIds=['ob-bs-brand','ob-bs-product','ob-bs-persona','ob-bs-problem','ob-bs-awareness','ob-bs-sophistication','ob-bs-headline','ob-sizing','ob-adsetlink','ob-adsmanagerlink'];
     bsFieldIds.forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+    document.querySelectorAll('.ob-hook-checks-cb').forEach(function(cb){ cb.checked=false; });
+    bsRenderTypeOfAdChecks('ob-typeofad-checks','',[]);
     obRemoveFile();
     obToggleForm();
     await loadBrandCreatives();
@@ -12399,6 +12411,10 @@ async function obBsSyncStrategyFields(){
     soSel.innerHTML='<option value="">Select…</option>'+BS_SOPHISTICATION.map(function(s){ return '<option value="'+s[0]+'">'+escapeHtml(s[1].split(' — ')[0])+'</option>'; }).join('');
 
     document.getElementById('ob-bs-persona').addEventListener('change', obBsOnPersonaChange);
+    awSel.addEventListener('change', function(){ bsRenderTypeOfAdChecks('ob-typeofad-checks', awSel.value, []); });
+    bsRenderHookChecks('ob-hook-checks', []);
+    bsWireCustomAdd('ob-typeofad-custom','ob-typeofad-add','ob-typeofad-checks',3);
+    bsWireCustomAdd('ob-hook-custom','ob-hook-add','ob-hook-checks',3);
   } else if(brandSel){
     // brand list may have changed since last open — refresh options, keep selection if still valid
     var cur=brandSel.value;
@@ -12422,4 +12438,148 @@ async function obBsOnPersonaChange(){
   var problems=await bsLoadProblemsFor(personaId);
   var ranked=problems.slice().sort(function(a,b){return b.total_score-a.total_score;});
   probSel.innerHTML='<option value="">Select problem…</option>'+ranked.map(function(p,i){ return '<option value="'+p.id+'">'+(i===0?'⭐ ':'')+escapeHtml(p.problem)+' (Score '+p.total_score+')</option>'; }).join('');
+}
+
+// ---------- Type of Ad + Hook Pattern libraries (same as Soul Luna Creative Tracker) ----------
+var BS_TYPE_OF_AD = {
+  unaware: ['Pattern Interrupt / Curiosity Hook — no problem or product named yet','Entertainment or Story Lead-in'],
+  problem_aware: [
+    'Agitate the Pain of Problem → Introduce Solution for the first time',
+    'Educational Content — what\u2019s causing the pain, what solutions exist, why it matters now',
+    'Quiz','Image w/ Hook Pattern Text Overlay','Video w/ Hook Pattern Text Overlay',
+    'Problem Statistics — validate the struggle',
+    'How-To / Tutorial of the Benefit — no solution introduced yet',
+    'GPAISACA — Hook → Problem → Agitate → Invalidate Other Solutions → Solution → Action → Credibility → Action → Outro',
+  ],
+  solution_aware: [
+    'Compare solution types — position product as best of category',
+    'Mechanism explainer — why this type of solution works',
+    'Objection-handling for this type of solution',
+  ],
+  product_aware: ['Direct comparison vs alternatives','Social proof / testimonial-led','Feature-benefit breakdown of your product specifically'],
+  most_aware: ['Offer / urgency-led — promo, limited slots, deadline','Retarget with a fresh reason to act now'],
+};
+var BS_HOOK_PATTERNS=[
+  ['state_promise','State the Promise','Directly communicate the benefit. e.g. "Double Your Energy in Just 7 Days."'],
+  ['specific_numbers','Use Specific Numbers or Facts','Specifics build credibility. e.g. "How 10,000 Women Beat Fatigue\u2014And How You Can Too."'],
+  ['introduce_newness','Introduce Newness','Something never seen before. e.g. "Introducing the World\u2019s First Smart Cupping Device."'],
+  ['bold_claim','Make a Bold Claim','Confident, attention-grabbing. e.g. "Never Feel Sore Again\u2014Guaranteed."'],
+  ['reveal_secret','Reveal a Secret','Product as insider truth. e.g. "The Ancient Recovery Technique Athletes Don\u2019t Want You to Know."'],
+  ['ask_question','Ask a Question','Engage curiosity directly. e.g. "Tired of Waking Up Sore?"'],
+  ['inspire_aspiration','Inspire Aspiration','Tap the desire to improve. e.g. "Recover Like the World\u2019s Top Athletes."'],
+  ['self_identity','Appeal to Self-Identity','See themselves in a select group. e.g. "For Those Who Take Recovery as Seriously as Training."'],
+  ['invoke_curiosity','Invoke Curiosity','Mystery or intrigue. e.g. "Why Are These Marks a Sign of Success?"'],
+  ['state_problem','State the Problem','Acknowledge the pain point directly. e.g. "Struggling with Constant Muscle Pain?"'],
+  ['use_emotion','Use Emotion','Pride, fear, hope, or relief. e.g. "Feel Stronger Than Ever\u2014Starting Today."'],
+  ['command_attention','Command Attention','Action verbs to energize. e.g. "Boost Your Recovery Now!"'],
+  ['challenge_reader','Challenge the Reader','Provocative or contrarian. e.g. "Everything You Know About Pain Relief Is Wrong."'],
+  ['contrast','Use Contrast or Opposites','Unexpected pairing. e.g. "Soothe Pain Without Lifting a Finger."'],
+  ['speed_convenience','Promise Speed or Convenience','How fast results come. e.g. "Feel the Difference in Just 5 Minutes."'],
+  ['power_words','Use Power Words','"Finally," "Discover," "Proven," "Revealed." e.g. "Discover the Secret to Pain-Free Recovery."'],
+  ['how_to','Frame as a How-To','Instructional. e.g. "How to Eliminate Muscle Soreness Forever."'],
+  ['visual_language','Use Visual Language','Vivid mental picture. e.g. "Feel Your Muscles Relax Like Never Before."'],
+  ['safety_comfort','Appeal to Safety or Comfort','Address fear of danger/discomfort. e.g. "Safe, Gentle Relief for Even the Most Sensitive Muscles."'],
+  ['relatable','Make It Relatable','Resonates with their experience. e.g. "We Know Soreness Can Be a Pain\u2014Let\u2019s Fix It."'],
+  ['highlight_results','Highlight Results','Outcomes over features. e.g. "Recover Faster and Feel Better Than Ever."'],
+  ['shock_value','Use Shock Value','Unexpected or controversial. e.g. "Why Your Recovery Routine Is Hurting You."'],
+  ['simplify','Simplify Complexity','Make it easy to understand. e.g. "The Recovery Solution You\u2019ve Been Waiting For."'],
+  ['speak_directly','Speak Directly to the Reader','Use "you." e.g. "You Deserve to Feel Better\u2014We Can Help."'],
+  ['trends','Piggyback on Trends','Reference something popular. e.g. "Why Top Athletes Swear By This Therapy."'],
+  ['nostalgia','Tap into Nostalgia','Longing for the past. e.g. "Rediscover the Ancient Healing Practice Backed by Modern Science."'],
+  ['educate_sell','Educate While Selling','Teach something new. e.g. "What Makes Cupping Therapy the #1 Recovery Trend?"'],
+  ['metaphor','Use Metaphors or Analogies','Explain creatively. e.g. "This Device Works Like a Personal Masseuse\u2014Anytime, Anywhere."'],
+  ['novelty','Appeal to Novelty or Innovation','Cutting-edge angle. e.g. "The Revolutionary Device Changing How We Heal."'],
+  ['common_mistake','Point Out a Common Mistake','e.g. "The #1 Mistake People Make When Recovering."'],
+  ['tap_fear','Tap into Fear','e.g. "What You Don\u2019t Know About This Could Hurt You."'],
+  ['provide_list','Provide a List','e.g. "The Top 5 Tips for Faster Recovery."'],
+  ['announce_discovery','Announce a Discovery','e.g. "Scientists Discover a New Way to Ease Muscle Pain."'],
+];
+
+function bsWireCheckLimit(containerId, max){
+  document.querySelectorAll('.'+containerId+'-cb').forEach(function(cb){
+    cb.onchange=function(){
+      if(document.querySelectorAll('.'+containerId+'-cb:checked').length>max){ cb.checked=false; showNotif('Hanggang '+max+' lang.','error'); }
+    };
+  });
+}
+function bsRenderHookChecks(containerId, selected){
+  var holder=document.getElementById(containerId);
+  if(!holder) return;
+  holder.innerHTML=BS_HOOK_PATTERNS.map(function(h){
+    var checked=(selected||[]).indexOf(h[1])>-1;
+    return '<label class="bs-check-opt"><input type="checkbox" value="'+h[1]+'" class="'+containerId+'-cb"'+(checked?' checked':'')+' /><span><b>'+escapeHtml(h[1])+'</b> \u2014 '+escapeHtml(h[2])+'</span></label>';
+  }).join('');
+  bsWireCheckLimit(containerId,3);
+}
+function bsCollectChecks(containerId){
+  return Array.from(document.querySelectorAll('.'+containerId+'-cb:checked')).map(function(cb){ return cb.value; });
+}
+function bsWireCustomAdd(inputId, btnId, containerId, max){
+  var btn=document.getElementById(btnId);
+  if(!btn || btn.dataset.wired) return;
+  btn.dataset.wired='1';
+  btn.addEventListener('click', function(){
+    var input=document.getElementById(inputId);
+    var val=input.value.trim();
+    if(!val) return;
+    if(document.querySelectorAll('.'+containerId+'-cb:checked').length>=max){ showNotif('Hanggang '+max+' lang.','error'); return; }
+    var holder=document.getElementById(containerId);
+    if(holder.children.length===1 && holder.children[0].tagName!=='LABEL') holder.innerHTML='';
+    var label=document.createElement('label');
+    label.className='bs-check-opt';
+    label.innerHTML='<input type="checkbox" value="'+escapeHtml(val)+'" class="'+containerId+'-cb" checked /><span>'+escapeHtml(val)+' (custom)</span>';
+    holder.appendChild(label);
+    bsWireCheckLimit(containerId,max);
+    input.value='';
+  });
+}
+function bsRenderTypeOfAdChecks(containerId, awarenessVal, selected){
+  var holder=document.getElementById(containerId);
+  if(!holder) return;
+  var opts=BS_TYPE_OF_AD[awarenessVal]||[];
+  if(opts.length===0){ holder.innerHTML='<div style="font-size:11px;color:var(--text3);padding:6px;">Pumili muna ng Market Awareness\u2026</div>'; return; }
+  holder.innerHTML=opts.map(function(o){
+    var checked=(selected||[]).indexOf(o)>-1;
+    return '<label class="bs-check-opt"><input type="checkbox" value="'+escapeHtml(o)+'" class="'+containerId+'-cb"'+(checked?' checked':'')+' /><span>'+escapeHtml(o)+'</span></label>';
+  }).join('');
+  bsWireCheckLimit(containerId,3);
+}
+
+// ---------- Copy Details for GPT (from the Details modal) ----------
+function bsCopyDetailsForGpt(c){
+  var statusEl=document.getElementById('obd-copy-status');
+  var product=bsProducts.find(function(p){return p.id===document.getElementById('obd-bs-product').value;});
+  var persona=bsPersonas.find(function(p){return p.id===document.getElementById('obd-bs-persona').value;});
+  var awarenessVal=document.getElementById('obd-bs-awareness').value;
+  var sophisticationVal=document.getElementById('obd-bs-sophistication').value;
+  var awarenessFull=BS_AWARENESS.find(function(a){return a[0]===awarenessVal;});
+  var typeOfAdList=bsCollectChecks('obd-typeofad-checks');
+  var hookList=bsCollectChecks('obd-hook-checks');
+  var headline=(document.getElementById('obd-bs-headline').value||'').trim();
+  var problemSel=document.getElementById('obd-bs-problem');
+  var problemText=problemSel.options[problemSel.selectedIndex]?problemSel.options[problemSel.selectedIndex].text:'';
+
+  var txt='Ikaw ay isang copywriter para sa Facebook ads. Taglish ang gamitin mo, natural, hindi corporate ang tono.\n\n';
+  if(product) txt+='PRODUCT: '+product.name+'\nPositioning: '+(product.positioning||'')+'\n\n';
+  if(persona) txt+='PERSONA: '+persona.name+(persona.description?(' — '+persona.description):'')+'\n';
+  if(persona && persona.desire) txt+='Desire: '+persona.desire+'\n';
+  if(problemText && problemText!=='Select problem…') txt+='Problem: '+problemText+'\n';
+  if(awarenessFull) txt+='Market Awareness: '+awarenessFull[1]+'\n';
+  if(sophisticationVal) txt+='Market Sophistication: '+sophisticationVal+'\n';
+  if(headline) txt+='Current Headline: '+headline+'\n';
+  txt+='\n';
+  if(typeOfAdList.length) txt+='TYPE OF AD: '+typeOfAdList.join(', ')+'\n';
+  if(hookList.length) txt+='HOOK PATTERN(S) TO USE: '+hookList.join(', ')+'\n';
+  txt+='\n';
+  txt+='TASK:\nGumawa ng buong video ad script na naka-target sa persona at problem sa itaas, gamit ang Type of Ad at Hook Pattern(s) na nabanggit. Taglish, casual, parang totoong tao ang nagsasalita — hindi corporate. Isama rin ang suggested visual direction bawat segment.';
+
+  navigator.clipboard.writeText(txt).then(function(){
+    statusEl.textContent='Nakopya ✓ — i-paste sa ChatGPT/Claude.'; statusEl.style.color='var(--green)';
+    setTimeout(function(){ statusEl.textContent=''; },3000);
+  }).catch(function(){
+    var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); statusEl.textContent='Nakopya ✓'; statusEl.style.color='var(--green)'; }
+    catch(e){ statusEl.textContent='Hindi na-copy — subukan ulit.'; statusEl.style.color='var(--red)'; }
+    document.body.removeChild(ta);
+  });
 }
