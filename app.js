@@ -540,6 +540,7 @@ function showApp(){
 }
 
 function showPage(page){
+  if(page!=='client-brand' && typeof cbRestoreStrategyHome==='function') cbRestoreStrategyHome();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
@@ -11978,6 +11979,7 @@ function copyProposalText(id){
 // =====================================================================
 var bsBrands={}, bsProducts=[], bsPersonas=[], bsProblemsCache={};
 var bsActiveBrand=null, bsStep=1, bsManagingPersonaId=null, bsInitialized=false;
+var bsLockedBrandId=null; // set to a client id while the Strategy wizard is being borrowed by Client Brand Creatives
 
 var BS_DESIRES=[
   ['Recognition','Recognition, respect, fame, exclusivity, prestige, popularity, status'],
@@ -12045,15 +12047,21 @@ async function bsLoadProblemsFor(personaId){
 function renderBsBrandSelect(){
   var ids=Object.keys(bsBrands);
   var sel=document.getElementById('bs-brand-select');
-  var current=sel.value||bsActiveBrand;
+  var current=bsLockedBrandId||sel.value||bsActiveBrand;
   sel.innerHTML=ids.map(function(id){ return '<option value="'+ctEsc(id)+'">'+ctEsc(bsBrands[id].name)+'</option>'; }).join('');
   if(ids.indexOf(current)>-1) sel.value=current; else if(ids[0]) sel.value=ids[0];
-  bsActiveBrand=sel.value||null;
+  bsActiveBrand=bsLockedBrandId||sel.value||null;
+  sel.disabled=!!bsLockedBrandId;
+  var addToggle=document.getElementById('bs-brand-add-toggle');
+  if(addToggle) addToggle.style.display=bsLockedBrandId?'none':'';
+  var addBlock=document.getElementById('bs-brand-add-block');
+  if(addBlock && bsLockedBrandId) addBlock.style.display='none';
 }
 document.addEventListener('DOMContentLoaded', function(){
   var sel=document.getElementById('bs-brand-select');
   if(!sel) return;
   sel.addEventListener('change', function(){
+    if(bsLockedBrandId){ sel.value=bsLockedBrandId; return; }
     bsActiveBrand=sel.value; bsStep=1; bsManagingPersonaId=null;
     try{ localStorage.setItem('bs_active_brand',bsActiveBrand); localStorage.setItem('bs_step','1'); }catch(e){}
     loadBrandStrategy();
@@ -12755,6 +12763,23 @@ document.addEventListener('DOMContentLoaded', function(){
   var contBtn=document.getElementById('bs-continue-to-add-creative');
   if(contBtn){
     contBtn.addEventListener('click', async function(){
+      if(bsLockedBrandId){
+        cbSwitchView('list');
+        var cwrap=document.getElementById('cb-form');
+        var cIsOpen=cwrap.style.maxHeight && cwrap.style.maxHeight!=='0px';
+        if(!cIsOpen) cbToggleForm();
+        if(bsManagingPersonaId){
+          var cbPersonaSel=document.getElementById('cb-bs-persona');
+          if(cbPersonaSel){ cbPersonaSel.value=bsManagingPersonaId; await cbOnPersonaChange(); }
+        }
+        var cbody=document.getElementById('cb-strategy-body');
+        if(cbody && cbody.style.display==='none') cbToggleStrategySection();
+        setTimeout(function(){
+          var ctarget=document.getElementById('cb-strategy-body');
+          if(ctarget) ctarget.scrollIntoView({behavior:'smooth',block:'start'});
+        },150);
+        return;
+      }
       obSwitchView('list');
       var wrap=document.getElementById('ob-form');
       var isOpen=wrap.style.maxHeight && wrap.style.maxHeight!=='0px';
@@ -13460,20 +13485,57 @@ function cbRenderWinnersList(){
   box.innerHTML=winnersListHtml;
 }
 
-// ---------- Tabs ----------
+// ---------- Tabs (List / History / Analytics / Strategy) ----------
+// The Strategy tab borrows the SAME wizard DOM+logic Own Brand uses (ob-view-strategy) —
+// it gets moved into Client Brand Creatives' slot and locked to the active client, then
+// moved back home when you leave. Keeps one wizard implementation instead of two.
+function cbEnterStrategy(){
+  var wiz=document.getElementById('ob-view-strategy');
+  var slot=document.getElementById('cb-view-strategy');
+  if(!wiz||!slot||!cbActiveClient) return;
+  if(!window.__obStrategyHomeParent){
+    window.__obStrategyHomeParent=wiz.parentNode;
+    window.__obStrategyHomeNext=wiz.nextSibling;
+  }
+  if(!bsLockedBrandId){ window.__obStrategyOwnBrand=bsActiveBrand; }
+  if(wiz.parentNode!==slot) slot.appendChild(wiz);
+  wiz.style.display='';
+  bsLockedBrandId=cbActiveClient;
+  bsActiveBrand=cbActiveClient;
+  bsStep=1; bsManagingPersonaId=null;
+  loadBrandStrategy();
+}
+function cbRestoreStrategyHome(){
+  var wiz=document.getElementById('ob-view-strategy');
+  if(!wiz || !window.__obStrategyHomeParent) return;
+  if(wiz.parentNode!==window.__obStrategyHomeParent){
+    if(window.__obStrategyHomeNext && window.__obStrategyHomeNext.parentNode===window.__obStrategyHomeParent){
+      window.__obStrategyHomeParent.insertBefore(wiz, window.__obStrategyHomeNext);
+    } else {
+      window.__obStrategyHomeParent.appendChild(wiz);
+    }
+  }
+  if(bsLockedBrandId){
+    bsLockedBrandId=null;
+    if(window.__obStrategyOwnBrand){ bsActiveBrand=window.__obStrategyOwnBrand; }
+  }
+}
 function cbSwitchView(view){
   var listV=document.getElementById('cb-view-list');
   var histV=document.getElementById('cb-view-history');
   var anaV=document.getElementById('cb-view-analytics');
+  var stratSlot=document.getElementById('cb-view-strategy');
   var tabL=document.getElementById('cb-tab-list');
   var tabH=document.getElementById('cb-tab-history');
   var tabA=document.getElementById('cb-tab-analytics');
+  var tabS=document.getElementById('cb-tab-strategy');
   if(!listV||!histV||!anaV||!tabL||!tabH||!tabA) return;
-  listV.style.display='none'; histV.style.display='none'; anaV.style.display='none';
-  tabL.classList.remove('active'); tabH.classList.remove('active'); tabA.classList.remove('active');
-  if(view==='history'){ histV.style.display=''; tabH.classList.add('active'); loadCbHistory(); }
-  else if(view==='analytics'){ anaV.style.display=''; tabA.classList.add('active'); loadCbAnalytics(); }
-  else { listV.style.display=''; tabL.classList.add('active'); }
+  listV.style.display='none'; histV.style.display='none'; anaV.style.display='none'; if(stratSlot) stratSlot.style.display='none';
+  tabL.classList.remove('active'); tabH.classList.remove('active'); tabA.classList.remove('active'); if(tabS) tabS.classList.remove('active');
+  if(view==='history'){ histV.style.display=''; tabH.classList.add('active'); cbRestoreStrategyHome(); loadCbHistory(); }
+  else if(view==='analytics'){ anaV.style.display=''; tabA.classList.add('active'); cbRestoreStrategyHome(); loadCbAnalytics(); }
+  else if(view==='strategy'){ if(stratSlot) stratSlot.style.display=''; if(tabS) tabS.classList.add('active'); cbEnterStrategy(); }
+  else { listV.style.display=''; tabL.classList.add('active'); cbRestoreStrategyHome(); }
 }
 
 // ---------- Details modal ----------
