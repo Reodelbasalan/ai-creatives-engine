@@ -8573,11 +8573,15 @@ function obToggleForm(){
   var isOpen=wrap.style.maxHeight && wrap.style.maxHeight!=='0px';
   if(isOpen){
     wrap.style.maxHeight='0'; wrap.style.opacity='0'; wrap.style.marginBottom='0'; wrap.style.paddingTop='0'; wrap.style.paddingBottom='0';
+    wrap.style.overflowY='hidden';
     if(btn) btn.style.opacity='1';
     if(lbl) lbl.textContent='Add creative';
   } else {
     wrap.style.paddingTop='22px'; wrap.style.paddingBottom='22px';
-    wrap.style.maxHeight=wrap.scrollHeight+'px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
+    var cap=Math.round(window.innerHeight*0.75);
+    wrap.style.maxHeight=Math.min(wrap.scrollHeight,cap)+'px';
+    wrap.style.overflowY=wrap.scrollHeight>cap?'auto':'hidden';
+    wrap.style.opacity='1'; wrap.style.marginBottom='16px';
     if(btn) btn.style.opacity='0.55';
     if(lbl) lbl.textContent='Close form';
     obBsSyncStrategyFields();
@@ -12717,7 +12721,11 @@ function obRecalcFormHeight(){
   if(!wrap) return;
   var formIsOpen=wrap.style.maxHeight && wrap.style.maxHeight!=='0px';
   if(formIsOpen){
-    setTimeout(function(){ wrap.style.maxHeight=wrap.scrollHeight+'px'; }, 10);
+    setTimeout(function(){
+      var cap=Math.round(window.innerHeight*0.75);
+      wrap.style.maxHeight=Math.min(wrap.scrollHeight,cap)+'px';
+      wrap.style.overflowY=wrap.scrollHeight>cap?'auto':'hidden';
+    }, 10);
   }
 }
 function obToggleStrategySection(){
