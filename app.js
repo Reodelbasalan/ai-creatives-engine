@@ -12538,7 +12538,7 @@ async function obBsSyncStrategyFields(){
     soSel.innerHTML='<option value="">Select…</option>'+BS_SOPHISTICATION.map(function(s){ return '<option value="'+s[0]+'">'+escapeHtml(s[1].split(' — ')[0])+'</option>'; }).join('');
 
     document.getElementById('ob-bs-persona').addEventListener('change', obBsOnPersonaChange);
-    awSel.addEventListener('change', function(){ bsRenderTypeOfAdChecks('ob-typeofad-checks', awSel.value, []); });
+    awSel.addEventListener('change', function(){ bsRenderTypeOfAdChecks('ob-typeofad-checks', awSel.value, []); if(typeof obRecalcFormHeight==='function') obRecalcFormHeight(); });
     bsRenderHookChecks('ob-hook-checks', []);
     bsWireCustomAdd('ob-typeofad-custom','ob-typeofad-add','ob-typeofad-checks',3);
     bsWireCustomAdd('ob-hook-custom','ob-hook-add','ob-hook-checks',3);
@@ -12658,6 +12658,7 @@ function bsWireCustomAdd(inputId, btnId, containerId, max){
     holder.appendChild(label);
     bsWireCheckLimit(containerId,max);
     input.value='';
+    if(typeof obRecalcFormHeight==='function') obRecalcFormHeight();
   });
 }
 function bsRenderTypeOfAdChecks(containerId, awarenessVal, selected){
@@ -12711,12 +12712,21 @@ function bsCopyDetailsForGpt(c){
   });
 }
 
+function obRecalcFormHeight(){
+  var wrap=document.getElementById('ob-form');
+  if(!wrap) return;
+  var formIsOpen=wrap.style.maxHeight && wrap.style.maxHeight!=='0px';
+  if(formIsOpen){
+    setTimeout(function(){ wrap.style.maxHeight=wrap.scrollHeight+'px'; }, 10);
+  }
+}
 function obToggleStrategySection(){
   var body=document.getElementById('ob-strategy-body');
   var chevron=document.getElementById('ob-strategy-chevron');
   var isOpen=body.style.display!=='none';
   body.style.display=isOpen?'none':'block';
   chevron.style.transform=isOpen?'rotate(0deg)':'rotate(180deg)';
+  obRecalcFormHeight();
 }
 
 function obSetDatePreset(preset){
