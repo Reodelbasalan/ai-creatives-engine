@@ -8706,6 +8706,8 @@ function obClearFilters(){
   var f=document.getElementById('ob-format-filter'); if(f)f.value='';
   var a=document.getElementById('ob-angle-filter'); if(a)a.value='';
   var b=document.getElementById('ob-brand-filter'); if(b)b.value='';
+  var df=document.getElementById('ob-date-from'); if(df)df.value='';
+  var dt=document.getElementById('ob-date-to'); if(dt)dt.value='';
   obWinnerFilterVal='';
   obRenderWinnerFilter();
   obRenderRows();
@@ -8733,13 +8735,29 @@ function obRenderRows(){
       return hay.indexOf(q)>=0;
     });
   }
+  var dFrom=document.getElementById('ob-date-from')?.value||'';
+  var dTo=document.getElementById('ob-date-to')?.value||'';
+  if(dFrom||dTo){
+    visible=visible.filter(function(c){
+      var d=(c.created_at||'').slice(0,10);
+      if(!d) return false;
+      if(dFrom && d<dFrom) return false;
+      if(dTo && d>dTo) return false;
+      return true;
+    });
+  }
   if(!visible.length){ box.innerHTML=emptyState(ICO_MEGAPHONE, (obWinnerFilterVal||fmtVal||angleVal||q)?'Walang tugmang creative':'No active brand creatives', (obWinnerFilterVal||fmtVal||angleVal||q)?'Baguhin ang filter/search para makita ang iba.':'Published items auto-move to History. Click "Add creative" to log a new one.'); return; }
   var isAdmin=currentUserRole==='admin';
   box.innerHTML=visible.map(function(c){ return obBuildRowHtml(c,isAdmin); }).join('');
 }
 
 function obBuildRowHtml(c,isAdmin){
-    var link=c.link_url?('<a href="'+c.link_url+'" target="_blank" class="ob-openlink">Open<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1-1"/></svg></a>'):'<span class="ob-muted">\u2014</span>';
+    var linkChips=[
+      c.link_url?('<a href="'+c.link_url+'" target="_blank" class="ob-openlink" onclick="event.stopPropagation()" title="Creative file">🎬 Open</a>'):'',
+      c.adset_link?('<a href="'+c.adset_link+'" target="_blank" class="ob-openlink" onclick="event.stopPropagation()" title="Adset">📊 Adset</a>'):'',
+      c.ads_manager_link?('<a href="'+c.ads_manager_link+'" target="_blank" class="ob-openlink" onclick="event.stopPropagation()" title="Ads Manager">📈 Ads Mgr</a>'):''
+    ].filter(Boolean);
+    var link=linkChips.length?linkChips.join(' '):'<span class="ob-muted">\u2014</span>';
     var date=c.created_at?new Date(c.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric'}):'\u2014';
     var st=c.status||'Pending approval';
     var stColors={
@@ -9001,7 +9019,7 @@ var OB_WINNER_STATES=[
   {key:'Testing', ic:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>', c:'#f59e0b'},
   {key:'Killed', ic:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>', c:'#ef4444'}
 ];
-function openObBrandDetailModal(id){
+async function openObBrandDetailModal(id){
   var c=obItems.find(function(x){ return x.id===id; });
   if(!c){ showNotif('Not found','error'); return; }
   document.getElementById('obd-id').value=id;
@@ -9010,6 +9028,12 @@ function openObBrandDetailModal(id){
   document.getElementById('obd-format').value=c.format||'';
   document.getElementById('obd-concept').value=c.concept||'';
   document.getElementById('obd-script').value=c.script||'';
+  document.getElementById('obd-sizing').value=c.sizing||'';
+  document.getElementById('obd-adsetlink').value=c.adset_link||'';
+  document.getElementById('obd-adsmanagerlink').value=c.ads_manager_link||'';
+  document.getElementById('obd-bs-typeofad').value=c.type_of_ad||'';
+  document.getElementById('obd-bs-hookpattern').value=c.hook_pattern||'';
+  document.getElementById('obd-bs-headline').value=c.headline||'';
   var cur=c.winner_status||'Testing';
   var picker=document.getElementById('obd-winner-picker');
   picker.setAttribute('data-current',cur);
@@ -9017,6 +9041,38 @@ function openObBrandDetailModal(id){
     var active=w.key===cur;
     return '<button type="button" onclick="obdSetWinner(\''+w.key+'\')" data-winner="'+w.key+'" style="font-size:11px;font-weight:650;padding:5px 11px;border-radius:20px;cursor:pointer;background:'+(active?w.c+'22':'transparent')+';color:'+(active?w.c:'var(--text3)')+';border:0.5px solid '+(active?w.c+'55':'var(--border2)')+'">'+w.ic+' '+w.key+'</button>';
   }).join('');
+
+  // ---- Strategy cascading dropdowns, pre-filled with this creative's saved values ----
+  if(Object.keys(bsBrands).length===0) await bsLoadBrands();
+  if(bsProducts.length===0 && bsPersonas.length===0) await bsLoadLibrary();
+  var awSel=document.getElementById('obd-bs-awareness');
+  awSel.innerHTML='<option value="">Select…</option>'+BS_AWARENESS.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===c.market_awareness?' selected':'')+'>'+escapeHtml(a[1].split(' — ')[0])+'</option>'; }).join('');
+  var soSel=document.getElementById('obd-bs-sophistication');
+  var BS_SOPHISTICATION=[['first','First Stage'],['second','Second Stage'],['third','Third Stage'],['fourth','Fourth Stage']];
+  soSel.innerHTML='<option value="">Select…</option>'+BS_SOPHISTICATION.map(function(s){ return '<option value="'+s[0]+'"'+(s[0]===c.market_sophistication?' selected':'')+'>'+escapeHtml(s[1])+'</option>'; }).join('');
+
+  var brandSel=document.getElementById('obd-bs-brand');
+  brandSel.innerHTML='<option value="">Select brand…</option>'+Object.keys(bsBrands).map(function(bid){ return '<option value="'+escapeHtml(bid)+'"'+(bid===c.brand_id?' selected':'')+'>'+escapeHtml(bsBrands[bid].name)+'</option>'; }).join('');
+
+  async function refreshObdProductPersona(brandId, keepProductId, keepPersonaId){
+    var prodSel=document.getElementById('obd-bs-product');
+    var perSel=document.getElementById('obd-bs-persona');
+    prodSel.innerHTML='<option value="">Select product…</option>'+bsProducts.filter(function(p){return p.brand_id===brandId;}).map(function(p){ return '<option value="'+p.id+'"'+(p.id===keepProductId?' selected':'')+'>'+escapeHtml(p.name)+'</option>'; }).join('');
+    perSel.innerHTML='<option value="">Select persona…</option>'+bsPersonas.filter(function(p){return p.brand_id===brandId;}).map(function(p){ return '<option value="'+p.id+'"'+(p.id===keepPersonaId?' selected':'')+'>'+escapeHtml(p.name)+'</option>'; }).join('');
+    await refreshObdProblem(keepPersonaId, c.problem_id);
+  }
+  async function refreshObdProblem(personaId, keepProblemId){
+    var probSel=document.getElementById('obd-bs-problem');
+    if(!personaId){ probSel.innerHTML='<option value="">Select problem…</option>'; return; }
+    var problems=await bsLoadProblemsFor(personaId);
+    var ranked=problems.slice().sort(function(a,b){return b.total_score-a.total_score;});
+    probSel.innerHTML='<option value="">Select problem…</option>'+ranked.map(function(p,i){ return '<option value="'+p.id+'"'+(p.id===keepProblemId?' selected':'')+'>'+(i===0?'⭐ ':'')+escapeHtml(p.problem)+' (Score '+p.total_score+')</option>'; }).join('');
+  }
+  await refreshObdProductPersona(c.brand_id, c.product_id, c.persona_id);
+
+  brandSel.onchange=function(){ refreshObdProductPersona(brandSel.value, null, null); };
+  document.getElementById('obd-bs-persona').onchange=function(){ refreshObdProblem(document.getElementById('obd-bs-persona').value, null); };
+
   document.getElementById('ob-brand-detail-modal').classList.add('open');
 }
 function obdSetWinner(key){
@@ -9037,12 +9093,30 @@ async function saveObBrandDetails(){
   if(!id) return;
   var picker=document.getElementById('obd-winner-picker');
   var winnerStatus=picker.getAttribute('data-current')||'Testing';
+  var personaId=document.getElementById('obd-bs-persona').value||null;
+  var problemId=document.getElementById('obd-bs-problem').value||null;
+  var personaObj=bsPersonas.find(function(p){return p.id===personaId;});
+  var problemObj=(bsProblemsCache[personaId]||[]).find(function(p){return p.id===problemId;});
   var payload={
     angle_hook:(document.getElementById('obd-angle').value||'').trim()||null,
     format:(document.getElementById('obd-format').value||'').trim()||null,
     concept:(document.getElementById('obd-concept').value||'').trim()||null,
     script:(document.getElementById('obd-script').value||'').trim()||null,
-    winner_status:winnerStatus
+    winner_status:winnerStatus,
+    sizing:(document.getElementById('obd-sizing').value||'').trim()||null,
+    adset_link:(document.getElementById('obd-adsetlink').value||'').trim()||null,
+    ads_manager_link:(document.getElementById('obd-adsmanagerlink').value||'').trim()||null,
+    brand_id:document.getElementById('obd-bs-brand').value||null,
+    product_id:document.getElementById('obd-bs-product').value||null,
+    persona_id:personaId,
+    problem_id:problemId,
+    problem_text:problemObj?problemObj.problem:null,
+    desire:personaObj?personaObj.desire:null,
+    market_awareness:document.getElementById('obd-bs-awareness').value||null,
+    market_sophistication:document.getElementById('obd-bs-sophistication').value||null,
+    type_of_ad:(document.getElementById('obd-bs-typeofad').value||'').trim()||null,
+    hook_pattern:(document.getElementById('obd-bs-hookpattern').value||'').trim()||null,
+    headline:(document.getElementById('obd-bs-headline').value||'').trim()||null
   };
   try{
     var{error}=await sb.from('brand_creatives').update(payload).eq('id',id);
@@ -9260,6 +9334,9 @@ async function obAddCreative(){
     var format=(document.getElementById('ob-format')?.value||'').trim()||null;
     var concept=(document.getElementById('ob-concept')?.value||'').trim()||null;
     var script=(document.getElementById('ob-script')?.value||'').trim()||null;
+    var sizing=(document.getElementById('ob-sizing')?.value||'').trim()||null;
+    var adsetLink=(document.getElementById('ob-adsetlink')?.value||'').trim()||null;
+    var adsManagerLink=(document.getElementById('ob-adsmanagerlink')?.value||'').trim()||null;
 
     var bsBrandId=(document.getElementById('ob-bs-brand')?.value||'')||null;
     var bsProductId=(document.getElementById('ob-bs-product')?.value||'')||null;
@@ -9275,7 +9352,7 @@ async function obAddCreative(){
     var bsProblemObj=(bsProblemsCache[bsPersonaId]||[]).find(function(p){return p.id===bsProblemId;});
     var bsProblemText=bsProblemObj?bsProblemObj.problem:null;
 
-    var r=await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, tag:tag, status:'Pending approval', angle_hook:angle, format:format, concept:concept, script:script, winner_status:'Testing',
+    var r=await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, tag:tag, status:'Pending approval', angle_hook:angle, format:format, concept:concept, script:script, winner_status:'Testing', sizing:sizing, adset_link:adsetLink, ads_manager_link:adsManagerLink,
       brand_id:bsBrandId, product_id:bsProductId, persona_id:bsPersonaId, problem_id:bsProblemId, problem_text:bsProblemText, desire:bsDesire,
       market_awareness:bsAwareness, market_sophistication:bsSophistication, type_of_ad:bsTypeOfAd, hook_pattern:bsHookPattern, headline:bsHeadline});
     if(r.error) throw r.error;
@@ -9288,7 +9365,7 @@ async function obAddCreative(){
     var fEl=document.getElementById('ob-format'); if(fEl)fEl.value='';
     var cEl=document.getElementById('ob-concept'); if(cEl)cEl.value='';
     var sEl=document.getElementById('ob-script'); if(sEl)sEl.value='';
-    var bsFieldIds=['ob-bs-brand','ob-bs-product','ob-bs-persona','ob-bs-problem','ob-bs-awareness','ob-bs-sophistication','ob-bs-typeofad','ob-bs-hookpattern','ob-bs-headline'];
+    var bsFieldIds=['ob-bs-brand','ob-bs-product','ob-bs-persona','ob-bs-problem','ob-bs-awareness','ob-bs-sophistication','ob-bs-typeofad','ob-bs-hookpattern','ob-bs-headline','ob-sizing','ob-adsetlink','ob-adsmanagerlink'];
     bsFieldIds.forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
     obRemoveFile();
     obToggleForm();
