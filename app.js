@@ -545,7 +545,7 @@ function showPage(page){
   const pg=document.getElementById('page-'+page);if(pg)pg.classList.add('active');
   const nv=document.getElementById('nav-'+page);if(nv)nv.classList.add('active');
   try{ localStorage.setItem('ace_last_page',page); }catch(e){}
-  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','brand-strategy':'Creative Tracker','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker','creatives-tracking':'Creatives Tracking','client-onboarding':'Client Onboarding','client-creatives':'My Creatives','client-materials':'My Materials','proposal-builder':'Proposal Builder'};
+  const titles={dashboard:'Dashboard','new-project':'New project','all-projects':'All projects','editor-portal':'My tasks',users:'Team members',analytics:'Analytics',finance:'Sales & Expenses',submission:'Client form',settings:'Settings',chat:'Team chat',profile:'My profile',clients:'Clients','client-dashboard':'My dashboard',activity:'Activity log',attendance:'Attendance',worklog:'Work log',automation:'Automation Pipeline','image-creatives':'⚡ Image Creatives',extensions:'Extensions',social:'Social Posting',brand:'Own Brand Creatives','call-tracker':'Call Tracker','advertiser-tasks':'Advertiser Tasks','sales-tracker':'Sales & Ads Tracker','creatives-tracking':'Creatives Tracking','client-onboarding':'Client Onboarding','client-creatives':'My Creatives','client-materials':'My Materials','proposal-builder':'Proposal Builder'};
   document.getElementById('topbar-title').textContent=titles[page]||page;
   var tbCenter=document.getElementById('topbar-center');
   if(tbCenter) tbCenter.style.display = (page==='image-creatives') ? 'flex' : 'none';
@@ -567,7 +567,6 @@ function showPage(page){
   if(page==='automation'){loadAutomationProjects();}
   if(page==='social'){loadSocial();}
   if(page==='brand'){loadBrandCreatives();}
-  if(page==='brand-strategy'){loadBrandStrategy();}
   if(page==='call-tracker'){loadCallTracker();}
   if(page==='advertiser-tasks'){loadAdvertiserTasks();}
   if(page==='sales-tracker'){loadSalesTracker();}
@@ -8581,6 +8580,7 @@ function obToggleForm(){
     wrap.style.maxHeight=wrap.scrollHeight+'px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
     if(btn) btn.style.opacity='0.55';
     if(lbl) lbl.textContent='Close form';
+    obBsSyncStrategyFields();
   }
 }
 
@@ -8790,6 +8790,14 @@ function obBuildRowHtml(c,isAdmin){
     var sub='';
     if(c.format||c.angle_hook){
       sub='<div class="ob-lsub">'+(c.format?'<span class="ob-lfmt">'+escapeHtml(c.format)+'</span>':'')+(c.format&&c.angle_hook?' \u00b7 ':'')+escapeHtml(c.angle_hook||'')+'</div>';
+    }
+    if(c.persona_id || c.market_awareness || c.problem_text){
+      var personaObj=bsPersonas.find(function(p){return p.id===c.persona_id;});
+      var bits=[];
+      if(personaObj) bits.push(escapeHtml(personaObj.name));
+      if(c.problem_text) bits.push(escapeHtml((c.problem_text||'').slice(0,60)));
+      if(c.market_awareness) bits.push(escapeHtml(bsLabelFor(BS_AWARENESS,c.market_awareness).split(' \u2014 ')[0]));
+      if(bits.length) sub+='<div class="ob-lsub" style="color:var(--yellow2);opacity:.85;">\ud83c\udfaf '+bits.join(' \u00b7 ')+'</div>';
     }
     var tagCell=c.tag?('<span class="ob-tagchip"><span class="ob-tagdot" style="background:'+obTagColor(c.tag)+'"></span>'+escapeHtml(c.tag)+'</span>'):'<span class="ob-muted">\u2014</span>';
 
@@ -9170,17 +9178,23 @@ function obSwitchView(view){
   var listV=document.getElementById('ob-view-list');
   var histV=document.getElementById('ob-view-history');
   var anaV=document.getElementById('ob-view-analytics');
+  var stratV=document.getElementById('ob-view-strategy');
   var tabL=document.getElementById('ob-tab-list');
   var tabH=document.getElementById('ob-tab-history');
   var tabA=document.getElementById('ob-tab-analytics');
-  listV.style.display='none'; histV.style.display='none'; anaV.style.display='none';
-  tabL.classList.remove('active'); tabH.classList.remove('active'); tabA.classList.remove('active');
+  var tabS=document.getElementById('ob-tab-strategy');
+  listV.style.display='none'; histV.style.display='none'; anaV.style.display='none'; if(stratV) stratV.style.display='none';
+  tabL.classList.remove('active'); tabH.classList.remove('active'); tabA.classList.remove('active'); if(tabS) tabS.classList.remove('active');
   if(view==='history'){
     histV.style.display=''; tabH.classList.add('active');
     loadObHistory();
   } else if(view==='analytics'){
     anaV.style.display=''; tabA.classList.add('active');
     loadObAnalytics();
+  } else if(view==='strategy'){
+    if(stratV) stratV.style.display='';
+    if(tabS) tabS.classList.add('active');
+    loadBrandStrategy();
   } else {
     listV.style.display=''; tabL.classList.add('active');
   }
@@ -9246,7 +9260,24 @@ async function obAddCreative(){
     var format=(document.getElementById('ob-format')?.value||'').trim()||null;
     var concept=(document.getElementById('ob-concept')?.value||'').trim()||null;
     var script=(document.getElementById('ob-script')?.value||'').trim()||null;
-    var r=await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, tag:tag, status:'Pending approval', angle_hook:angle, format:format, concept:concept, script:script, winner_status:'Testing'});
+
+    var bsBrandId=(document.getElementById('ob-bs-brand')?.value||'')||null;
+    var bsProductId=(document.getElementById('ob-bs-product')?.value||'')||null;
+    var bsPersonaId=(document.getElementById('ob-bs-persona')?.value||'')||null;
+    var bsProblemId=(document.getElementById('ob-bs-problem')?.value||'')||null;
+    var bsAwareness=(document.getElementById('ob-bs-awareness')?.value||'')||null;
+    var bsSophistication=(document.getElementById('ob-bs-sophistication')?.value||'')||null;
+    var bsTypeOfAd=(document.getElementById('ob-bs-typeofad')?.value||'').trim()||null;
+    var bsHookPattern=(document.getElementById('ob-bs-hookpattern')?.value||'').trim()||null;
+    var bsHeadline=(document.getElementById('ob-bs-headline')?.value||'').trim()||null;
+    var bsPersonaObj=bsPersonas.find(function(p){return p.id===bsPersonaId;});
+    var bsDesire=bsPersonaObj?bsPersonaObj.desire:null;
+    var bsProblemObj=(bsProblemsCache[bsPersonaId]||[]).find(function(p){return p.id===bsProblemId;});
+    var bsProblemText=bsProblemObj?bsProblemObj.problem:null;
+
+    var r=await sb.from('brand_creatives').insert({page_name:page, ad_copy:adcopy||null, link_url:link||null, tag:tag, status:'Pending approval', angle_hook:angle, format:format, concept:concept, script:script, winner_status:'Testing',
+      brand_id:bsBrandId, product_id:bsProductId, persona_id:bsPersonaId, problem_id:bsProblemId, problem_text:bsProblemText, desire:bsDesire,
+      market_awareness:bsAwareness, market_sophistication:bsSophistication, type_of_ad:bsTypeOfAd, hook_pattern:bsHookPattern, headline:bsHeadline});
     if(r.error) throw r.error;
     showNotif('Brand creative added!','success');
     document.getElementById('ob-page').value='';
@@ -9257,6 +9288,8 @@ async function obAddCreative(){
     var fEl=document.getElementById('ob-format'); if(fEl)fEl.value='';
     var cEl=document.getElementById('ob-concept'); if(cEl)cEl.value='';
     var sEl=document.getElementById('ob-script'); if(sEl)sEl.value='';
+    var bsFieldIds=['ob-bs-brand','ob-bs-product','ob-bs-persona','ob-bs-problem','ob-bs-awareness','ob-bs-sophistication','ob-bs-typeofad','ob-bs-hookpattern','ob-bs-headline'];
+    bsFieldIds.forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
     obRemoveFile();
     obToggleForm();
     await loadBrandCreatives();
@@ -11845,6 +11878,7 @@ async function loadBrandStrategy(){
   await bsLoadBrands();
   await bsLoadLibrary();
   renderBsBrandSelect();
+  if(typeof bsPopulateLogBrandSelect==='function') bsPopulateLogBrandSelect();
   var b=bsBrands[bsActiveBrand];
   var descEl=document.getElementById('bs-brand-desc'); if(descEl) descEl.value = b?(b.description||''):'';
   renderBsProducts();
@@ -12098,4 +12132,217 @@ async function bsDeleteProblem(id){
   if(!confirm('Delete this problem?')) return;
   await sb.from('bs_problems').delete().eq('id',id);
   await bsLoadProblemsFor(bsManagingPersonaId); renderBsProblemsWorkspace();
+}
+
+// ---------- Log Creative: libraries ----------
+var BS_TYPE_OF_AD={
+  unaware:['Pattern Interrupt / Curiosity Hook','Entertainment or Story Lead-in'],
+  problem_aware:['Agitate the Pain of Problem → Introduce Solution','Educational Content','Quiz','Image w/ Hook Text Overlay','Video w/ Hook Text Overlay','Problem Statistics','How-To / Tutorial of the Benefit','GPAISACA'],
+  solution_aware:['Compare solution types','Mechanism explainer','Objection-handling'],
+  product_aware:['Direct comparison vs alternatives','Social proof / testimonial-led','Feature-benefit breakdown'],
+  most_aware:['Offer / urgency-led','Retarget with a fresh reason to act now']
+};
+var BS_HOOK_PATTERNS=[
+  ['state_promise','State the Promise','e.g. "Double Your Energy in Just 7 Days."'],
+  ['specific_numbers','Use Specific Numbers or Facts','e.g. "How 10,000 Women Beat Fatigue."'],
+  ['introduce_newness','Introduce Newness','e.g. "Introducing the World\u2019s First..."'],
+  ['bold_claim','Make a Bold Claim','e.g. "Never Feel Sore Again\u2014Guaranteed."'],
+  ['reveal_secret','Reveal a Secret','e.g. "The Technique They Don\u2019t Want You to Know."'],
+  ['ask_question','Ask a Question','e.g. "Tired of Waking Up Sore?"'],
+  ['inspire_aspiration','Inspire Aspiration','e.g. "Recover Like the World\u2019s Top Athletes."'],
+  ['self_identity','Appeal to Self-Identity','e.g. "For Those Who Take Recovery Seriously."'],
+  ['invoke_curiosity','Invoke Curiosity','e.g. "Why Are These Marks a Sign of Success?"'],
+  ['state_problem','State the Problem','e.g. "Struggling with Constant Pain?"'],
+  ['use_emotion','Use Emotion','e.g. "Feel Stronger Than Ever."'],
+  ['command_attention','Command Attention','e.g. "Boost Your Recovery Now!"'],
+  ['challenge_reader','Challenge the Reader','e.g. "Everything You Know Is Wrong."'],
+  ['contrast','Use Contrast or Opposites','e.g. "Soothe Pain Without Lifting a Finger."'],
+  ['speed_convenience','Promise Speed or Convenience','e.g. "Feel the Difference in 5 Minutes."'],
+  ['power_words','Use Power Words','"Finally," "Discover," "Proven," "Revealed."'],
+  ['how_to','Frame as a How-To','e.g. "How to Eliminate Soreness Forever."'],
+  ['visual_language','Use Visual Language','e.g. "Feel Your Muscles Relax."'],
+  ['safety_comfort','Appeal to Safety or Comfort','e.g. "Safe, Gentle Relief."'],
+  ['relatable','Make It Relatable','e.g. "We Know Soreness Is a Pain."'],
+  ['highlight_results','Highlight Results','e.g. "Recover Faster Than Ever."'],
+  ['shock_value','Use Shock Value','e.g. "Why Your Routine Is Hurting You."'],
+  ['simplify','Simplify Complexity','e.g. "The Solution You\u2019ve Been Waiting For."'],
+  ['speak_directly','Speak Directly to the Reader','e.g. "You Deserve to Feel Better."'],
+  ['trends','Piggyback on Trends','e.g. "Why Top Athletes Swear By This."'],
+  ['educate_sell','Educate While Selling','e.g. "What Makes This #1?"'],
+  ['metaphor','Use Metaphors or Analogies','e.g. "Like a Personal Masseuse."'],
+  ['novelty','Appeal to Novelty or Innovation','e.g. "The Device Changing How We Heal."'],
+  ['common_mistake','Point Out a Common Mistake','e.g. "The #1 Mistake People Make."'],
+  ['tap_fear','Tap into Fear','e.g. "What You Don\u2019t Know Could Hurt You."'],
+  ['provide_list','Provide a List','e.g. "Top 5 Tips for Faster Recovery."']
+];
+
+function bsPopulateLogStaticFields(){
+  var awEl=document.getElementById('bs-f-awareness');
+  awEl.innerHTML='<option value="">Select…</option>'+BS_AWARENESS.map(function(a){return '<option value="'+a[0]+'">'+ctEsc(a[1].split(' — ')[0])+'</option>';}).join('');
+  var hookHolder=document.getElementById('bs-f-hooks');
+  hookHolder.innerHTML=BS_HOOK_PATTERNS.map(function(h){
+    return '<label style="display:flex;gap:8px;align-items:flex-start;font-size:12px;padding:4px;border-radius:6px;cursor:pointer;"><input type="checkbox" value="'+h[0]+'" class="bs-f-hook-cb" style="margin-top:3px;accent-color:var(--yellow);" /><span><b>'+ctEsc(h[1])+'</b> — <span style="color:var(--text3);">'+ctEsc(h[2])+'</span></span></label>';
+  }).join('');
+  hookHolder.querySelectorAll('.bs-f-hook-cb').forEach(function(cb){
+    cb.addEventListener('change', function(){
+      if(hookHolder.querySelectorAll('.bs-f-hook-cb:checked').length>3){ cb.checked=false; showNotif('Up to 3 hook patterns only.','error'); }
+    });
+  });
+  awEl.addEventListener('change', bsUpdateTypeOfAdOptions);
+}
+function bsUpdateTypeOfAdOptions(){
+  var opts=BS_TYPE_OF_AD[document.getElementById('bs-f-awareness').value]||[];
+  document.getElementById('bs-f-typeofad').innerHTML='<option value="">Select…</option>'+opts.map(function(o){return '<option value="'+ctEsc(o)+'">'+ctEsc(o)+'</option>';}).join('');
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  var brandSel=document.getElementById('bs-f-brand');
+  if(!brandSel) return;
+  bsPopulateLogStaticFields();
+
+  brandSel.addEventListener('change', bsOnLogBrandChange);
+  document.getElementById('bs-f-product').addEventListener('change', function(){
+    var p=bsProducts.find(function(x){return x.id===document.getElementById('bs-f-product').value;});
+    var wrap=document.getElementById('bs-f-positioning-wrap');
+    if(p && p.positioning){ document.getElementById('bs-f-positioning-display').textContent=p.positioning; wrap.hidden=false; }
+    else{ wrap.hidden=true; }
+  });
+  document.getElementById('bs-f-persona').addEventListener('change', async function(){
+    var id=document.getElementById('bs-f-persona').value;
+    var p=bsPersonas.find(function(x){return x.id===id;});
+    document.getElementById('bs-f-desire').value = p ? (p.desire||'') : '';
+    if(p && p.market_awareness){ document.getElementById('bs-f-awareness').value=p.market_awareness; bsUpdateTypeOfAdOptions(); }
+    var probSel=document.getElementById('bs-f-problem');
+    probSel.innerHTML='<option value="">Select problem…</option>';
+    if(!id) return;
+    var problems=await bsLoadProblemsFor(id);
+    var ranked=problems.slice().sort(function(a,b){return b.total_score-a.total_score;});
+    probSel.innerHTML='<option value="">Select problem…</option>'+ranked.map(function(pr,i){ return '<option value="'+pr.id+'">'+(i===0?'\u2b50 ':'')+ctEsc(pr.problem)+' (Score '+pr.total_score+')</option>'; }).join('');
+  });
+
+  document.getElementById('bs-f-submit').addEventListener('click', bsSubmitCreative);
+});
+
+function bsOnLogBrandChange(){
+  var brandId=document.getElementById('bs-f-brand').value;
+  document.getElementById('bs-f-product').innerHTML='<option value="">Select product…</option>'+bsProducts.filter(function(p){return p.brand_id===brandId;}).map(function(p){return '<option value="'+p.id+'">'+ctEsc(p.name)+'</option>';}).join('');
+  document.getElementById('bs-f-persona').innerHTML='<option value="">Select persona…</option>'+bsPersonas.filter(function(p){return p.brand_id===brandId;}).map(function(p){return '<option value="'+p.id+'">'+ctEsc(p.name)+'</option>';}).join('');
+  document.getElementById('bs-f-desire').value='';
+  document.getElementById('bs-f-positioning-wrap').hidden=true;
+  document.getElementById('bs-f-problem').innerHTML='<option value="">Select problem…</option>';
+}
+function bsPopulateLogBrandSelect(){
+  var sel=document.getElementById('bs-f-brand');
+  var current=sel.value;
+  sel.innerHTML='<option value="">Select brand…</option>'+Object.keys(bsBrands).map(function(id){return '<option value="'+ctEsc(id)+'">'+ctEsc(bsBrands[id].name)+'</option>';}).join('');
+  if(bsBrands[current]) sel.value=current;
+}
+
+async function bsSubmitCreative(){
+  var statusEl=document.getElementById('bs-f-status');
+  var name=document.getElementById('bs-f-name').value.trim();
+  var creator=document.getElementById('bs-f-creator').value.trim();
+  var by=document.getElementById('bs-f-by').value.trim();
+  var tagsRaw=document.getElementById('bs-f-tags').value.trim();
+  var tags=tagsRaw?tagsRaw.split(',').map(function(t){return t.trim();}).filter(Boolean):[];
+  var hookPatterns=Array.from(document.querySelectorAll('.bs-f-hook-cb:checked')).map(function(cb){
+    var found=BS_HOOK_PATTERNS.find(function(h){return h[0]===cb.value;});
+    return found?found[1]:cb.value;
+  });
+  var personaId=document.getElementById('bs-f-persona').value||null;
+  var problemId=document.getElementById('bs-f-problem').value||null;
+  var problemText=null;
+  if(personaId && bsProblemsCache[personaId]){
+    var pr=bsProblemsCache[personaId].find(function(p){return p.id===problemId;});
+    if(pr) problemText=pr.problem;
+  }
+
+  if(!name && !creator){ statusEl.textContent='Add at least a title or a concept creator.'; statusEl.className='bs-status err'; return; }
+
+  var payload={
+    ad_name: name || ('Untitled — '+new Date().toLocaleDateString()),
+    script: document.getElementById('bs-f-script').value.trim(),
+    concept_link: document.getElementById('bs-f-conceptlink').value.trim(),
+    adset_link: document.getElementById('bs-f-adsetlink').value.trim(),
+    ads_manager_link: document.getElementById('bs-f-adsmgrlink').value.trim(),
+    tags: tags,
+    concept_creator: creator || 'Unassigned',
+    editor: document.getElementById('bs-f-editor').value.trim(),
+    submitted_by: by || creator || 'Unknown',
+    page: document.getElementById('bs-f-page').value.trim() || null,
+    date_launched: document.getElementById('bs-f-date').value || null,
+    brand_id: document.getElementById('bs-f-brand').value || null,
+    product_id: document.getElementById('bs-f-product').value || null,
+    persona_id: personaId,
+    problem_id: problemId,
+    problem_text: problemText,
+    desire: document.getElementById('bs-f-desire').value || null,
+    market_awareness: document.getElementById('bs-f-awareness').value || null,
+    hypothesis: document.getElementById('bs-f-hypothesis').value.trim(),
+    type_of_ad: document.getElementById('bs-f-typeofad').value || null,
+    hook_patterns: hookPatterns,
+    headline: document.getElementById('bs-f-headline').value.trim(),
+    ad_copy: document.getElementById('bs-f-adcopy').value.trim(),
+    format: document.getElementById('bs-f-format').value || null,
+    sizing: document.getElementById('bs-f-sizing').value.trim() || null
+  };
+
+  statusEl.innerHTML='Saving…'; statusEl.className='bs-status';
+  try{
+    var r=await sb.from('bs_creatives').insert(payload);
+    if(r.error) throw r.error;
+    statusEl.textContent='Logged ✓'; statusEl.className='bs-status ok';
+    showNotif('Creative logged! ✓','success');
+    ['bs-f-creator','bs-f-editor','bs-f-name','bs-f-page','bs-f-date','bs-f-by','bs-f-tags','bs-f-conceptlink','bs-f-script','bs-f-hypothesis','bs-f-headline','bs-f-adcopy','bs-f-adsetlink','bs-f-adsmgrlink','bs-f-sizing'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('bs-f-brand').value='';
+    bsOnLogBrandChange();
+    document.getElementById('bs-f-format').value='';
+    document.querySelectorAll('.bs-f-hook-cb').forEach(function(cb){cb.checked=false;});
+    setTimeout(function(){statusEl.textContent='';},3000);
+  }catch(e){
+    statusEl.textContent="Couldn't save: "+(e.message||e); statusEl.className='bs-status err';
+  }
+}
+
+// ---------- Strategy fields inside the "Add creative" form ----------
+async function obBsSyncStrategyFields(){
+  if(Object.keys(bsBrands).length===0) await bsLoadBrands();
+  if(bsProducts.length===0 && bsPersonas.length===0) await bsLoadLibrary();
+
+  var brandSel=document.getElementById('ob-bs-brand');
+  if(brandSel && !brandSel.dataset.wired){
+    brandSel.dataset.wired='1';
+    brandSel.innerHTML='<option value="">Select brand…</option>'+Object.keys(bsBrands).map(function(id){ return '<option value="'+escapeHtml(id)+'">'+escapeHtml(bsBrands[id].name)+'</option>'; }).join('');
+    brandSel.addEventListener('change', obBsOnBrandChange);
+
+    var awSel=document.getElementById('ob-bs-awareness');
+    awSel.innerHTML='<option value="">Select…</option>'+BS_AWARENESS.map(function(a){ return '<option value="'+a[0]+'">'+escapeHtml(a[1].split(' — ')[0])+'</option>'; }).join('');
+    var soSel=document.getElementById('ob-bs-sophistication');
+    var BS_SOPHISTICATION=[['first','First Stage — Be Simple and Direct'],['second','Second Stage — Enlarge the working claim'],['third','Third Stage — New mechanism'],['fourth','Fourth Stage — Elaborate the mechanism']];
+    soSel.innerHTML='<option value="">Select…</option>'+BS_SOPHISTICATION.map(function(s){ return '<option value="'+s[0]+'">'+escapeHtml(s[1].split(' — ')[0])+'</option>'; }).join('');
+
+    document.getElementById('ob-bs-persona').addEventListener('change', obBsOnPersonaChange);
+  } else if(brandSel){
+    // brand list may have changed since last open — refresh options, keep selection if still valid
+    var cur=brandSel.value;
+    brandSel.innerHTML='<option value="">Select brand…</option>'+Object.keys(bsBrands).map(function(id){ return '<option value="'+escapeHtml(id)+'">'+escapeHtml(bsBrands[id].name)+'</option>'; }).join('');
+    if(Object.keys(bsBrands).indexOf(cur)>-1) brandSel.value=cur;
+  }
+}
+function obBsOnBrandChange(){
+  var brandId=document.getElementById('ob-bs-brand').value;
+  var prodSel=document.getElementById('ob-bs-product');
+  var perSel=document.getElementById('ob-bs-persona');
+  prodSel.innerHTML='<option value="">Select product…</option>'+bsProducts.filter(function(p){return p.brand_id===brandId;}).map(function(p){ return '<option value="'+p.id+'">'+escapeHtml(p.name)+'</option>'; }).join('');
+  perSel.innerHTML='<option value="">Select persona…</option>'+bsPersonas.filter(function(p){return p.brand_id===brandId;}).map(function(p){ return '<option value="'+p.id+'">'+escapeHtml(p.name)+'</option>'; }).join('');
+  document.getElementById('ob-bs-problem').innerHTML='<option value="">Select problem…</option>';
+}
+async function obBsOnPersonaChange(){
+  var personaId=document.getElementById('ob-bs-persona').value;
+  var probSel=document.getElementById('ob-bs-problem');
+  probSel.innerHTML='<option value="">Select problem…</option>';
+  if(!personaId) return;
+  var problems=await bsLoadProblemsFor(personaId);
+  var ranked=problems.slice().sort(function(a,b){return b.total_score-a.total_score;});
+  probSel.innerHTML='<option value="">Select problem…</option>'+ranked.map(function(p,i){ return '<option value="'+p.id+'">'+(i===0?'⭐ ':'')+escapeHtml(p.problem)+' (Score '+p.total_score+')</option>'; }).join('');
 }
