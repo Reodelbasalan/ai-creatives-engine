@@ -12091,6 +12091,7 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('bs-per-awareness').innerHTML = '<option value="">Select…</option>' + BS_AWARENESS.map(function(a){ return '<option value="'+a[0]+'">'+ctEsc(a[1].split(' — ')[0])+'</option>'; }).join('');
 
   // ---------- Products ----------
+  var bsEditingProductId=null;
   document.getElementById('bs-p-save').addEventListener('click', async function(){
     var statusEl=document.getElementById('bs-p-status');
     if(!bsActiveBrand){ statusEl.textContent='Pick/create a brand first.'; statusEl.className='bs-status err'; return; }
@@ -12099,16 +12100,44 @@ document.addEventListener('DOMContentLoaded', function(){
     var positioning=document.getElementById('bs-p-positioning').value.trim();
     if(!name||!positioning){ statusEl.textContent='Product name and Positioning are required.'; statusEl.className='bs-status err'; return; }
     try{
-      var r=await sb.from('bs_products').insert({brand_id:bsActiveBrand,name:name,details:details||null,positioning:positioning});
-      if(r.error) throw r.error;
-      document.getElementById('bs-p-name').value='';
-      document.getElementById('bs-p-details').value='';
-      document.getElementById('bs-p-positioning').value='';
-      statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
+      if(bsEditingProductId){
+        var ru=await sb.from('bs_products').update({name:name,details:details||null,positioning:positioning}).eq('id',bsEditingProductId);
+        if(ru.error) throw ru.error;
+        statusEl.textContent='Saved ✓'; statusEl.className='bs-status ok';
+        bsCancelEditProduct();
+      } else {
+        var r=await sb.from('bs_products').insert({brand_id:bsActiveBrand,name:name,details:details||null,positioning:positioning});
+        if(r.error) throw r.error;
+        document.getElementById('bs-p-name').value='';
+        document.getElementById('bs-p-details').value='';
+        document.getElementById('bs-p-positioning').value='';
+        statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
+      }
       await bsLoadLibrary(); renderBsProducts(); renderBsWizardHeader();
       setTimeout(function(){statusEl.textContent='';},2000);
     }catch(e){ statusEl.textContent='Error: '+(e.message||e); statusEl.className='bs-status err'; console.error('Strategy save error:', e); }
   });
+  window.bsEditProduct=function(id){
+    var p=bsProducts.find(function(x){return x.id===id;});
+    if(!p) return;
+    bsEditingProductId=id;
+    document.getElementById('bs-p-name').value=p.name||'';
+    document.getElementById('bs-p-details').value=p.details||'';
+    document.getElementById('bs-p-positioning').value=p.positioning||'';
+    document.getElementById('bs-p-save').textContent='Save changes';
+    var cancelBtn=document.getElementById('bs-p-cancel-edit');
+    if(cancelBtn) cancelBtn.style.display='inline-block';
+    document.getElementById('bs-p-name').scrollIntoView({behavior:'smooth',block:'center'});
+  };
+  window.bsCancelEditProduct=function(){
+    bsEditingProductId=null;
+    document.getElementById('bs-p-name').value='';
+    document.getElementById('bs-p-details').value='';
+    document.getElementById('bs-p-positioning').value='';
+    document.getElementById('bs-p-save').textContent='+ Add product';
+    var cancelBtn=document.getElementById('bs-p-cancel-edit');
+    if(cancelBtn) cancelBtn.style.display='none';
+  };
 
   // ---------- Personas ----------
   var bsEditingPersonaId=null;
@@ -12167,6 +12196,7 @@ document.addEventListener('DOMContentLoaded', function(){
     await bsLoadProblemsFor(bsManagingPersonaId);
     renderBsProblemsWorkspace();
   });
+  var bsEditingProblemId=null;
   document.getElementById('bs-prob-save').addEventListener('click', async function(){
     var statusEl=document.getElementById('bs-prob-status');
     if(!bsManagingPersonaId){ statusEl.textContent='Pick a persona first.'; statusEl.className='bs-status err'; return; }
@@ -12176,14 +12206,45 @@ document.addEventListener('DOMContentLoaded', function(){
     var repeatability=parseInt(document.getElementById('bs-prob-repeatability').value,10);
     var scale=parseInt(document.getElementById('bs-prob-scale').value,10);
     try{
-      var r=await sb.from('bs_problems').insert({persona_id:bsManagingPersonaId,problem:problem,intensity:intensity,repeatability:repeatability,scale:scale});
-      if(r.error) throw r.error;
-      document.getElementById('bs-prob-text').value='';
-      statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
+      if(bsEditingProblemId){
+        var ru=await sb.from('bs_problems').update({problem:problem,intensity:intensity,repeatability:repeatability,scale:scale}).eq('id',bsEditingProblemId);
+        if(ru.error) throw ru.error;
+        statusEl.textContent='Saved ✓'; statusEl.className='bs-status ok';
+        bsCancelEditProblem();
+      } else {
+        var r=await sb.from('bs_problems').insert({persona_id:bsManagingPersonaId,problem:problem,intensity:intensity,repeatability:repeatability,scale:scale});
+        if(r.error) throw r.error;
+        document.getElementById('bs-prob-text').value='';
+        statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
+      }
       await bsLoadProblemsFor(bsManagingPersonaId); renderBsProblemsWorkspace();
       setTimeout(function(){statusEl.textContent='';},2000);
     }catch(e){ statusEl.textContent='Error: '+(e.message||e); statusEl.className='bs-status err'; console.error('Strategy save error:', e); }
   });
+  window.bsEditProblem=function(id){
+    var list=bsProblemsCache[bsManagingPersonaId]||[];
+    var p=list.find(function(x){return x.id===id;});
+    if(!p) return;
+    bsEditingProblemId=id;
+    document.getElementById('bs-prob-text').value=p.problem||'';
+    document.getElementById('bs-prob-intensity').value=p.intensity;
+    document.getElementById('bs-prob-repeatability').value=p.repeatability;
+    document.getElementById('bs-prob-scale').value=p.scale;
+    document.getElementById('bs-prob-save').textContent='Save changes';
+    var cancelBtn=document.getElementById('bs-prob-cancel-edit');
+    if(cancelBtn) cancelBtn.style.display='inline-block';
+    document.getElementById('bs-prob-text').scrollIntoView({behavior:'smooth',block:'center'});
+  };
+  window.bsCancelEditProblem=function(){
+    bsEditingProblemId=null;
+    document.getElementById('bs-prob-text').value='';
+    document.getElementById('bs-prob-intensity').value='1';
+    document.getElementById('bs-prob-repeatability').value='1';
+    document.getElementById('bs-prob-scale').value='1';
+    document.getElementById('bs-prob-save').textContent='+ Add problem';
+    var cancelBtn=document.getElementById('bs-prob-cancel-edit');
+    if(cancelBtn) cancelBtn.style.display='none';
+  };
 
   // ---------- Wizard navigation ----------
   document.querySelectorAll('.bs-wiz-step').forEach(function(){});
@@ -12235,7 +12296,7 @@ function renderBsProducts(){
   var list=bsProducts.filter(function(p){return p.brand_id===bsActiveBrand;});
   if(list.length===0){ holder.innerHTML='<div style="font-size:12px;color:var(--text3);">No products yet.</div>'; return; }
   holder.innerHTML=list.map(function(p){
-    return '<div class="bs-row" data-id="'+p.id+'"><div><div class="name">'+ctEsc(p.name)+'</div><div class="sub">'+ctEsc((p.positioning||'').slice(0,140))+'</div></div><div class="acts"><button type="button" class="bs-danger" onclick="bsDeleteProduct(\''+p.id+'\')">Delete</button></div></div>';
+    return '<div class="bs-row" data-id="'+p.id+'"><div><div class="name">'+ctEsc(p.name)+'</div><div class="sub">'+ctEsc((p.positioning||'').slice(0,140))+'</div></div><div class="acts"><button type="button" class="bs-link" onclick="bsEditProduct(\''+p.id+'\')">Edit</button><button type="button" class="bs-danger" onclick="bsDeleteProduct(\''+p.id+'\')">Delete</button></div></div>';
   }).join('');
 }
 async function bsDeleteProduct(id){
@@ -12275,7 +12336,7 @@ function renderBsProblemsWorkspace(){
   var list=bsProblemsCache[bsManagingPersonaId]||[];
   var holder=document.getElementById('bs-problems-list');
   holder.innerHTML = list.length===0 ? '<div style="font-size:12px;color:var(--text3);">No problems yet.</div>' : list.map(function(p){
-    return '<div class="bs-row" data-id="'+p.id+'"><div><div class="name">'+ctEsc(p.problem)+'</div><div class="sub">Intensity '+p.intensity+' · Repeatability '+p.repeatability+' · Scale '+p.scale+' · Score '+p.total_score+'</div></div><div class="acts"><button type="button" class="bs-danger" onclick="bsDeleteProblem(\''+p.id+'\')">Delete</button></div></div>';
+    return '<div class="bs-row" data-id="'+p.id+'"><div><div class="name">'+ctEsc(p.problem)+'</div><div class="sub">Intensity '+p.intensity+' · Repeatability '+p.repeatability+' · Scale '+p.scale+' · Score '+p.total_score+'</div></div><div class="acts"><button type="button" class="bs-link" onclick="bsEditProblem(\''+p.id+'\')">Edit</button><button type="button" class="bs-danger" onclick="bsDeleteProblem(\''+p.id+'\')">Delete</button></div></div>';
   }).join('');
   var top3=list.slice().sort(function(a,b){return b.total_score-a.total_score;}).slice(0,3);
   var t3holder=document.getElementById('bs-top3-list');
