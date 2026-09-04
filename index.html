@@ -2520,12 +2520,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 </div>
               </div>
               <div class="ob-field">
-                <label class="ob-flabel">Type of Ad</label>
-                <input type="text" class="form-input" id="ob-bs-typeofad" placeholder="e.g. Agitate the Pain of Problem → Introduce Solution"/>
+                <label class="ob-flabel">Type of Ad <span style="color:var(--text3);font-weight:400">(pumili ng hanggang 3 \u2014 batay sa Market Awareness sa itaas)</span></label>
+                <div id="ob-typeofad-checks" class="bs-check-grid"><div style="font-size:11px;color:var(--text3);padding:6px;">Pumili muna ng Market Awareness\u2026</div></div>
+                <div style="display:flex;gap:6px;margin-top:6px;"><input type="text" class="form-input" id="ob-typeofad-custom" placeholder="Magdagdag ng sarili\u2026" style="flex:1;"/><button type="button" class="bs-ghost-btn" id="ob-typeofad-add">+ Add</button></div>
               </div>
               <div class="ob-field">
-                <label class="ob-flabel">Strengthen Hook Pattern</label>
-                <input type="text" class="form-input" id="ob-bs-hookpattern" placeholder="e.g. State the Promise, Use Emotion"/>
+                <label class="ob-flabel">Strengthen Hook Pattern <span style="color:var(--text3);font-weight:400">(pumili ng hanggang 3)</span></label>
+                <div id="ob-hook-checks" class="bs-check-grid"></div>
+                <div style="display:flex;gap:6px;margin-top:6px;"><input type="text" class="form-input" id="ob-hook-custom" placeholder="Magdagdag ng sarili\u2026" style="flex:1;"/><button type="button" class="bs-ghost-btn" id="ob-hook-add">+ Add</button></div>
               </div>
               <div class="ob-field">
                 <label class="ob-flabel">Headline</label>
@@ -5938,6 +5940,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <textarea class="form-textarea" id="obd-script" rows="6" placeholder="Buong script o outline..."></textarea>
       </div>
       <div class="form-field" style="margin-bottom:10px">
+        <label class="form-label">Output / Creative Link</label>
+        <input class="form-input" id="obd-outputlink" placeholder="Link to the finished creative file">
+      </div>
+      <div class="form-field" style="margin-bottom:10px">
         <label class="form-label">Sizing</label>
         <input class="form-input" id="obd-sizing" list="obd-sizing-presets" placeholder="Pumili o mag-type ng size">
         <datalist id="obd-sizing-presets">
@@ -5956,7 +5962,11 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <input class="form-input" id="obd-adsmanagerlink" placeholder="Paste Ads Manager URL">
       </div>
       <div style="border-top:0.5px solid var(--border);margin:14px 0;padding-top:14px">
-        <div style="font-size:11px;font-weight:700;color:var(--yellow);text-transform:uppercase;margin-bottom:10px">🎯 Strategy</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:700;color:var(--yellow);text-transform:uppercase">🎯 Strategy</div>
+          <button type="button" class="bs-ghost-btn" id="obd-copy-details" style="font-size:11px;padding:5px 10px">📋 Copy Details for GPT</button>
+        </div>
+        <span id="obd-copy-status" style="font-size:11px;"></span>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div class="form-field"><label class="form-label">Brand</label><select class="form-select" id="obd-bs-brand"><option value="">Select brand…</option></select></div>
           <div class="form-field"><label class="form-label">Product</label><select class="form-select" id="obd-bs-product"><option value="">Select product…</option></select></div>
@@ -5965,11 +5975,27 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div class="form-field"><label class="form-label">Market Awareness</label><select class="form-select" id="obd-bs-awareness"><option value="">Select…</option></select></div>
           <div class="form-field"><label class="form-label">Market Sophistication</label><select class="form-select" id="obd-bs-sophistication"><option value="">Select…</option></select></div>
         </div>
-        <div class="form-field" style="margin-top:10px"><label class="form-label">Type of Ad</label><input class="form-input" id="obd-bs-typeofad" placeholder="e.g. Agitate the Pain of Problem"></div>
-        <div class="form-field" style="margin-top:10px"><label class="form-label">Strengthen Hook Pattern</label><input class="form-input" id="obd-bs-hookpattern" placeholder="e.g. State the Promise, Use Emotion"></div>
+        <div class="form-field" style="margin-top:10px">
+          <label class="form-label">Type of Ad <span style="color:var(--text3);font-weight:400">(hanggang 3 — batay sa Market Awareness)</span></label>
+          <div id="obd-typeofad-checks" class="bs-check-grid"><div style="font-size:11px;color:var(--text3);padding:6px;">Pumili muna ng Market Awareness…</div></div>
+          <div style="display:flex;gap:6px;margin-top:6px;"><input type="text" class="form-input" id="obd-typeofad-custom" placeholder="Magdagdag ng sarili…" style="flex:1;"/><button type="button" class="bs-ghost-btn" id="obd-typeofad-add">+ Add</button></div>
+        </div>
+        <div class="form-field" style="margin-top:10px">
+          <label class="form-label">Strengthen Hook Pattern <span style="color:var(--text3);font-weight:400">(hanggang 3)</span></label>
+          <div id="obd-hook-checks" class="bs-check-grid"></div>
+          <div style="display:flex;gap:6px;margin-top:6px;"><input type="text" class="form-input" id="obd-hook-custom" placeholder="Magdagdag ng sarili…" style="flex:1;"/><button type="button" class="bs-ghost-btn" id="obd-hook-add">+ Add</button></div>
+        </div>
         <div class="form-field" style="margin-top:10px"><label class="form-label">Headline</label><textarea class="form-textarea" id="obd-bs-headline" rows="2" placeholder="Final headline..."></textarea></div>
       </div>
     </div>
+
+    <style>
+      .bs-check-grid{max-height:200px;overflow-y:auto;border:0.5px solid var(--border2);border-radius:8px;padding:6px;background:var(--bg3);}
+      .bs-check-opt{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text2);}
+      .bs-check-opt:hover{background:var(--bg4);}
+      .bs-check-opt input{margin-top:2px;flex-shrink:0;}
+      .bs-check-opt b{color:var(--text);}
+    </style>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button class="yellow-btn" onclick="saveObBrandDetails()" style="flex:1">Save details</button>
     </div>
