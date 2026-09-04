@@ -2492,7 +2492,11 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
 
             <div class="ob-fsection">
-              <div class="ob-fsection-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="19" r="1"/></svg>Strategy <span style="color:var(--text3);font-weight:400">(optional — from the Strategy tab)</span></div>
+              <div class="ob-fsection-label" style="cursor:pointer;user-select:none;" onclick="obToggleStrategySection()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="19" r="1"/></svg>Strategy <span style="color:var(--text3);font-weight:400">(optional — from the Strategy tab)</span>
+                <svg id="ob-strategy-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;transition:transform .15s ease;"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div id="ob-strategy-body" style="display:none;">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                 <div class="ob-field">
                   <label class="ob-flabel">Brand</label>
@@ -2532,6 +2536,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <div class="ob-field">
                 <label class="ob-flabel">Headline</label>
                 <textarea class="form-input" id="ob-bs-headline" rows="2" placeholder="Final headline..." style="resize:vertical"></textarea>
+              </div>
               </div>
             </div>
 
@@ -2580,6 +2585,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </select>
             <label style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px">From<input type="date" class="form-input" id="ob-date-from" style="width:auto;padding:6px 8px;font-size:12px" onchange="obRenderRows()"></label>
             <label style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px">To<input type="date" class="form-input" id="ob-date-to" style="width:auto;padding:6px 8px;font-size:12px" onchange="obRenderRows()"></label>
+            <button type="button" class="ghost-btn" onclick="obSetDatePreset('this_month')" style="font-size:11px">This month</button>
+            <button type="button" class="ghost-btn" onclick="obSetDatePreset('last_month')" style="font-size:11px">Last month</button>
           </div>
 
           <div class="ob-listhead">
@@ -5960,6 +5967,18 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <div class="form-field" style="margin-bottom:10px">
         <label class="form-label">Link to Ads Manager</label>
         <input class="form-input" id="obd-adsmanagerlink" placeholder="Paste Ads Manager URL">
+      </div>
+      <div style="border-top:0.5px solid var(--border);margin:14px 0;padding-top:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--yellow);text-transform:uppercase;margin-bottom:10px">📊 Results Review</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div class="form-field"><label class="form-label">CTR</label><input class="form-input" id="obd-res-ctr" placeholder="e.g. 1.8%"></div>
+          <div class="form-field"><label class="form-label">CPC</label><input class="form-input" id="obd-res-cpc" placeholder="e.g. ₱12"></div>
+          <div class="form-field"><label class="form-label">CPA</label><input class="form-input" id="obd-res-cpa" placeholder="e.g. ₱420"></div>
+          <div class="form-field"><label class="form-label">ROAS</label><input class="form-input" id="obd-res-roas" placeholder="e.g. 2.8x"></div>
+          <div class="form-field"><label class="form-label">Hook Rate</label><input class="form-input" id="obd-res-hookrate" placeholder="e.g. 32%"></div>
+          <div class="form-field"><label class="form-label">Hold Rate</label><input class="form-input" id="obd-res-holdrate" placeholder="e.g. 18%"></div>
+        </div>
+        <div class="form-field" style="margin-top:10px"><label class="form-label">Notes</label><textarea class="form-textarea" id="obd-res-notes" rows="2" placeholder="Anumang learnings o observations..."></textarea></div>
       </div>
       <div style="border-top:0.5px solid var(--border);margin:14px 0;padding-top:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
