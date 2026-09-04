@@ -4750,6 +4750,11 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     /* glass cards para kita ang motion bg sa likod */
     #page-brand .form-card,#page-brand .ob-hero{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent),rgba(17,17,20,0.72)!important;backdrop-filter:blur(6px)}
     #page-brand #ob-view-history{background:rgba(17,17,20,0.72)!important;backdrop-filter:blur(6px)}
+    /* ─── CLIENT BRAND — same motion bg containment as Own Brand (missing this broke the sidebar) ─── */
+    #page-client-brand{position:relative}
+    #page-client-brand:not(.active) .ob-wave,#page-client-brand:not(.active) .ob-glow,#page-client-brand:not(.active) .ob-pcl span{animation-play-state:paused!important}
+    #page-client-brand .form-card,#page-client-brand .ob-hero{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent),rgba(17,17,20,0.72)!important;backdrop-filter:blur(6px)}
+    #page-client-brand #cb-view-history{background:rgba(17,17,20,0.72)!important;backdrop-filter:blur(6px)}
     /* prettified form */
     .ob-form-title{font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--yellow,#facc15);display:flex;align-items:center;gap:8px;margin-bottom:18px}
     .ob-form-title svg{width:16px;height:16px;flex-shrink:0}
