@@ -12669,3 +12669,74 @@ function obSetDatePreset(preset){
   document.getElementById('ob-date-to').value=toISO(last);
   obRenderRows();
 }
+
+// ---------- Continue from Strategy Step 4 straight into Add Creative ----------
+document.addEventListener('DOMContentLoaded', function(){
+  var contBtn=document.getElementById('bs-continue-to-add-creative');
+  if(contBtn){
+    contBtn.addEventListener('click', async function(){
+      obSwitchView('list');
+      var wrap=document.getElementById('ob-form');
+      var isOpen=wrap.style.maxHeight && wrap.style.maxHeight!=='0px';
+      if(!isOpen) obToggleForm();
+      await obBsSyncStrategyFields();
+      if(bsActiveBrand){
+        document.getElementById('ob-bs-brand').value=bsActiveBrand;
+        obBsOnBrandChange();
+      }
+      if(bsManagingPersonaId){
+        document.getElementById('ob-bs-persona').value=bsManagingPersonaId;
+        await obBsOnPersonaChange();
+      }
+      var body=document.getElementById('ob-strategy-body');
+      if(body && body.style.display==='none') obToggleStrategySection();
+      setTimeout(function(){
+        var target=document.getElementById('ob-strategy-body');
+        if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+      },150);
+    });
+  }
+  var copyBtn=document.getElementById('bs-copy-strategy-prompt');
+  if(copyBtn){
+    copyBtn.addEventListener('click', async function(){
+      var statusEl=document.getElementById('bs-copy-strategy-status');
+      var b=bsBrands[bsActiveBrand];
+      var products=bsProducts.filter(function(p){return p.brand_id===bsActiveBrand;});
+      var persona=bsPersonas.find(function(p){return p.id===bsManagingPersonaId;});
+      var problems=(bsProblemsCache[bsManagingPersonaId]||[]).slice().sort(function(a,b){return b.total_score-a.total_score;}).slice(0,3);
+      var txt='Ikaw ay isang creative strategist at copywriter para sa Facebook ads. Taglish ang gamitin mo, natural, hindi corporate ang tono.\n\n';
+      txt+='BRAND: '+(b?b.name:'')+'\n';
+      if(b && b.description) txt+=b.description+'\n';
+      txt+='\n';
+      if(products.length){
+        txt+='PRODUCT/S:\n';
+        products.forEach(function(p){ txt+='- '+p.name+(p.details?(' ('+p.details+')'):'')+': '+(p.positioning||'')+'\n'; });
+        txt+='\n';
+      }
+      if(persona){
+        txt+='PERSONA: '+persona.name+(persona.description?(' — '+persona.description):'')+'\n';
+        if(persona.desire) txt+='Desire: '+persona.desire+'\n';
+        if(persona.market_awareness) txt+='Market Awareness: '+bsLabelFor(BS_AWARENESS,persona.market_awareness)+'\n';
+        if(persona.market_sophistication) txt+='Market Sophistication: '+persona.market_sophistication+'\n';
+      }
+      txt+='\n';
+      if(problems.length){
+        txt+='TOP PROBLEMS (ranked, Intensity × Repeatability × Scale):\n';
+        problems.forEach(function(p,i){ txt+=(i+1)+'. '+p.problem+' (Score: '+p.total_score+')\n'; });
+        txt+='\n';
+      }
+      txt+='TASK:\nGumawa ng creative concept at buong video ad script na naka-target sa persona at problem sa itaas. Taglish, casual, parang totoong tao ang nagsasalita — hindi corporate. Isama rin ang suggested visual direction bawat segment.';
+
+      try{
+        await navigator.clipboard.writeText(txt);
+        statusEl.textContent='Nakopya ✓ — i-paste sa ChatGPT/Claude.'; statusEl.className='bs-status ok';
+        setTimeout(function(){statusEl.textContent='';},3000);
+      }catch(err){
+        var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); statusEl.textContent='Nakopya ✓'; statusEl.className='bs-status ok'; }
+        catch(e2){ statusEl.textContent='Hindi na-copy — subukan ulit.'; statusEl.className='bs-status err'; }
+        document.body.removeChild(ta);
+      }
+    });
+  }
+});
