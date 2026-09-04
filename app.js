@@ -12111,6 +12111,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ---------- Personas ----------
+  var bsEditingPersonaId=null;
   document.getElementById('bs-per-save').addEventListener('click', async function(){
     var statusEl=document.getElementById('bs-per-status');
     if(!bsActiveBrand){ statusEl.textContent='Pick/create a brand first.'; statusEl.className='bs-status err'; return; }
@@ -12120,15 +12121,45 @@ document.addEventListener('DOMContentLoaded', function(){
     var desc=document.getElementById('bs-per-desc').value.trim();
     if(!name){ statusEl.textContent='Persona name required.'; statusEl.className='bs-status err'; return; }
     try{
-      var r=await sb.from('bs_personas').insert({brand_id:bsActiveBrand,name:name,desire:desire||null,market_awareness:awareness||null,description:desc||null});
-      if(r.error) throw r.error;
-      document.getElementById('bs-per-name').value='';
-      document.getElementById('bs-per-desc').value='';
-      statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
+      if(bsEditingPersonaId){
+        var ru=await sb.from('bs_personas').update({name:name,desire:desire||null,market_awareness:awareness||null,description:desc||null}).eq('id',bsEditingPersonaId);
+        if(ru.error) throw ru.error;
+        statusEl.textContent='Saved ✓'; statusEl.className='bs-status ok';
+        bsCancelEditPersona();
+      } else {
+        var r=await sb.from('bs_personas').insert({brand_id:bsActiveBrand,name:name,desire:desire||null,market_awareness:awareness||null,description:desc||null});
+        if(r.error) throw r.error;
+        document.getElementById('bs-per-name').value='';
+        document.getElementById('bs-per-desc').value='';
+        statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
+      }
       await bsLoadLibrary(); renderBsPersonas(); renderBsWizardHeader();
       setTimeout(function(){statusEl.textContent='';},2000);
     }catch(e){ statusEl.textContent='Error: '+(e.message||e); statusEl.className='bs-status err'; console.error('Strategy save error:', e); }
   });
+  window.bsEditPersona=function(id){
+    var p=bsPersonas.find(function(x){return x.id===id;});
+    if(!p) return;
+    bsEditingPersonaId=id;
+    document.getElementById('bs-per-name').value=p.name||'';
+    document.getElementById('bs-per-desire').value=p.desire||'';
+    document.getElementById('bs-per-awareness').value=p.market_awareness||'';
+    document.getElementById('bs-per-desc').value=p.description||'';
+    document.getElementById('bs-per-save').textContent='Save changes';
+    var cancelBtn=document.getElementById('bs-per-cancel-edit');
+    if(cancelBtn) cancelBtn.style.display='inline-block';
+    document.getElementById('bs-per-name').scrollIntoView({behavior:'smooth',block:'center'});
+  };
+  window.bsCancelEditPersona=function(){
+    bsEditingPersonaId=null;
+    document.getElementById('bs-per-name').value='';
+    document.getElementById('bs-per-desire').value='';
+    document.getElementById('bs-per-awareness').value='';
+    document.getElementById('bs-per-desc').value='';
+    document.getElementById('bs-per-save').textContent='+ Add persona';
+    var cancelBtn=document.getElementById('bs-per-cancel-edit');
+    if(cancelBtn) cancelBtn.style.display='none';
+  };
 
   // ---------- Problems ----------
   document.getElementById('bs-prob-persona-select').addEventListener('change', async function(){
@@ -12219,7 +12250,7 @@ function renderBsPersonas(){
   if(list.length===0){ holder.innerHTML='<div style="font-size:12px;color:var(--text3);">No personas yet.</div>'; return; }
   holder.innerHTML=list.map(function(p){
     var sub=(p.desire?('Desire: '+ctEsc(p.desire)+' · '):'')+ctEsc((p.description||'').slice(0,100));
-    return '<div class="bs-row" data-id="'+p.id+'"><div><div class="name">'+ctEsc(p.name)+'</div><div class="sub">'+sub+'</div></div><div class="acts"><button type="button" class="bs-link" onclick="bsManagePersona(\''+p.id+'\')">Manage Problems</button><button type="button" class="bs-danger" onclick="bsDeletePersona(\''+p.id+'\')">Delete</button></div></div>';
+    return '<div class="bs-row" data-id="'+p.id+'"><div><div class="name">'+ctEsc(p.name)+'</div><div class="sub">'+sub+'</div></div><div class="acts"><button type="button" class="bs-link" onclick="bsEditPersona(\''+p.id+'\')">Edit</button><button type="button" class="bs-link" onclick="bsManagePersona(\''+p.id+'\')">Manage Problems</button><button type="button" class="bs-danger" onclick="bsDeletePersona(\''+p.id+'\')">Delete</button></div></div>';
   }).join('');
 }
 function bsManagePersona(id){ bsManagingPersonaId=id; bsGoToStep(4); }
