@@ -2775,6 +2775,22 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <div id="cb-empty-state" style="text-align:center;padding:50px 20px;color:var(--text3);font-size:13px;">Pumili o magdagdag ng client sa itaas para magsimula.</div>
 
         <div id="cb-main-area" style="display:none;">
+          <div class="ob-tabs" style="margin-bottom:14px;">
+            <button type="button" class="ob-tab active" id="cb-tab-list" onclick="cbSwitchView('list')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+              List
+            </button>
+            <button type="button" class="ob-tab" id="cb-tab-history" onclick="cbSwitchView('history')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
+              History
+            </button>
+            <button type="button" class="ob-tab" id="cb-tab-analytics" onclick="cbSwitchView('analytics')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              Analytics
+            </button>
+          </div>
+
+          <div id="cb-view-list">
           <button type="button" class="yellow-btn" id="cb-toggle-btn" onclick="cbToggleForm()"><span id="cb-toggle-label">+ Add creative</span></button>
 
           <div class="form-card" id="cb-form" style="max-height:0;overflow:hidden;opacity:0;padding-top:0;padding-bottom:0;margin-bottom:0;transition:max-height .32s ease,opacity .28s ease,margin-bottom .28s ease,padding .28s ease">
@@ -2832,16 +2848,61 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <span class="bs-status" id="cb-save-status" style="display:block;margin-top:8px;"></span>
           </div>
 
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 10px;align-items:center">
-            <input type="text" class="form-input" id="cb-search" placeholder="🔍 Search script, concept, angle, page..." style="max-width:280px" oninput="cbRenderRows()">
-            <select class="form-select" id="cb-status-filter" style="max-width:150px" onchange="cbRenderRows()">
-              <option value="">All statuses</option>
-              <option value="Winner">Winner</option>
-              <option value="Testing">Testing</option>
-              <option value="Killed">Killed</option>
+          <div class="ob-toolbar" style="margin-top:16px;">
+            <div class="ob-toolbar-search">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" class="form-input" id="cb-search" placeholder="Search script, concept, angle, page..." oninput="cbRenderRows()">
+            </div>
+            <div id="cb-winner-filter" style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0"></div>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+            <select class="form-select" id="cb-format-filter" style="max-width:170px" onchange="cbRenderRows()">
+              <option value="">All formats</option>
             </select>
+            <select class="form-select" id="cb-angle-filter" style="max-width:190px" onchange="cbRenderRows()">
+              <option value="">All angles/hooks</option>
+            </select>
+            <button class="ghost-btn" onclick="cbClearFilters()" style="font-size:11px">Clear</button>
+            <label style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px">From<input type="date" class="form-input" id="cb-date-from" style="width:auto;padding:6px 8px;font-size:12px" onchange="cbRenderRows()"></label>
+            <label style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px">To<input type="date" class="form-input" id="cb-date-to" style="width:auto;padding:6px 8px;font-size:12px" onchange="cbRenderRows()"></label>
+            <button type="button" class="ghost-btn" onclick="cbSetDatePreset('this_month')" style="font-size:11px">This month</button>
+            <button type="button" class="ghost-btn" onclick="cbSetDatePreset('last_month')" style="font-size:11px">Last month</button>
+          </div>
+
+          <div class="ob-listhead">
+            <span class="lh-main">Creative</span>
+            <span>Tag</span>
+            <span>Date</span>
+            <span>Link</span>
+            <span>Status</span>
+            <span class="lh-act">Actions</span>
           </div>
           <div id="cb-rows"></div>
+          </div>
+
+          <div class="form-card" id="cb-view-history" style="display:none;padding:0;overflow:hidden">
+            <div class="table-head" style="grid-template-columns:1.3fr 0.8fr 0.9fr 0.7fr 1fr 1.1fr;font-size:10px;letter-spacing:0.06em;color:#8a8a95;padding:12px 16px">
+              <span>Page name</span><span>Action</span><span>Tag</span><span>Link</span><span>By</span><span>Date</span>
+            </div>
+            <div id="cb-history-body"></div>
+          </div>
+
+          <div id="cb-view-analytics" style="display:none">
+            <div id="cb-analytics-stats"></div>
+            <div id="cb-analytics-breakdown"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 10px;align-items:center">
+              <input type="text" class="form-input" id="cb-ana-search" placeholder="🔍 Search script, concept, angle..." style="max-width:280px" oninput="cbRenderWinnersList()">
+              <select class="form-select" id="cb-ana-format-filter" style="max-width:170px" onchange="cbRenderWinnersList()">
+                <option value="">All formats</option>
+              </select>
+              <select class="form-select" id="cb-ana-angle-filter" style="max-width:190px" onchange="cbRenderWinnersList()">
+                <option value="">All angles/hooks</option>
+              </select>
+            </div>
+            <div class="form-card-title" style="margin-bottom:8px">🏆 Winning Creatives</div>
+            <div id="cb-analytics-winners-body"></div>
+          </div>
         </div>
       </div>
 
