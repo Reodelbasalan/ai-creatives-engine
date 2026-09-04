@@ -12072,7 +12072,7 @@ document.addEventListener('DOMContentLoaded', function(){
       document.getElementById('bs-new-brand-site').value='';
       statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
       loadBrandStrategy();
-    }catch(e){ statusEl.textContent="Couldn't save."; statusEl.className='bs-status err'; }
+    }catch(e){ statusEl.textContent='Error: '+(e.message||e); statusEl.className='bs-status err'; console.error('Strategy save error:', e); }
   });
   document.getElementById('bs-save-brand-desc').addEventListener('click', async function(){
     if(!bsActiveBrand) return;
@@ -12084,7 +12084,7 @@ document.addEventListener('DOMContentLoaded', function(){
       await bsLoadBrands();
       statusEl.textContent='Saved ✓'; statusEl.className='bs-status ok';
       setTimeout(function(){statusEl.textContent='';},2000);
-    }catch(e){ statusEl.textContent="Couldn't save."; statusEl.className='bs-status err'; }
+    }catch(e){ statusEl.textContent='Error: '+(e.message||e); statusEl.className='bs-status err'; console.error('Strategy save error:', e); }
   });
 
   document.getElementById('bs-per-desire').innerHTML = BS_DESIRES.map(function(d){ return '<option value="'+ctEsc(d[0])+'">'+ctEsc(d[0])+'</option>'; }).join('');
@@ -12107,7 +12107,7 @@ document.addEventListener('DOMContentLoaded', function(){
       statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
       await bsLoadLibrary(); renderBsProducts(); renderBsWizardHeader();
       setTimeout(function(){statusEl.textContent='';},2000);
-    }catch(e){ statusEl.textContent="Couldn't save."; statusEl.className='bs-status err'; }
+    }catch(e){ statusEl.textContent='Error: '+(e.message||e); statusEl.className='bs-status err'; console.error('Strategy save error:', e); }
   });
 
   // ---------- Personas ----------
@@ -12127,7 +12127,7 @@ document.addEventListener('DOMContentLoaded', function(){
       statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
       await bsLoadLibrary(); renderBsPersonas(); renderBsWizardHeader();
       setTimeout(function(){statusEl.textContent='';},2000);
-    }catch(e){ statusEl.textContent="Couldn't save."; statusEl.className='bs-status err'; }
+    }catch(e){ statusEl.textContent='Error: '+(e.message||e); statusEl.className='bs-status err'; console.error('Strategy save error:', e); }
   });
 
   // ---------- Problems ----------
@@ -12151,7 +12151,7 @@ document.addEventListener('DOMContentLoaded', function(){
       statusEl.textContent='Added ✓'; statusEl.className='bs-status ok';
       await bsLoadProblemsFor(bsManagingPersonaId); renderBsProblemsWorkspace();
       setTimeout(function(){statusEl.textContent='';},2000);
-    }catch(e){ statusEl.textContent="Couldn't save."; statusEl.className='bs-status err'; }
+    }catch(e){ statusEl.textContent='Error: '+(e.message||e); statusEl.className='bs-status err'; console.error('Strategy save error:', e); }
   });
 
   // ---------- Wizard navigation ----------
