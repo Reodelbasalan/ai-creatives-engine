@@ -6014,13 +6014,15 @@ function renderAdsSpendChart(adsLog){
 function renderFinAdsTable(adsLog){
   var body=document.getElementById('fin-ads-body');
   if(!body) return;
+  window._finAdsCache=adsLog;
   body.innerHTML=adsLog.length?adsLog.map(function(a,i){
-    return '<div class="table-row" style="grid-template-columns:0.4fr 1.2fr 1fr 1fr 1.6fr 32px">'
+    return '<div class="table-row" style="grid-template-columns:0.4fr 1.2fr 1fr 1fr 1.6fr 32px 32px">'
       +'<div style="color:var(--text3);font-size:11px">'+(adsLog.length-i)+'</div>'
       +'<div class="row-date">'+fmtDate(a.spend_date)+'</div>'
       +'<div style="font-weight:650;color:var(--purple)">'+finPHP(a.total_ads_spent)+'</div>'
       +'<div style="font-size:11px;color:var(--text2)">'+(a.cost_per_message?finPHP(a.cost_per_message):'—')+'</div>'
       +'<div style="font-size:11px;color:var(--text2)">'+(a.total_messages||0)+' msgs'+(a.notes?' · '+a.notes:'')+'</div>'
+      +'<div class="proj-row-del" title="Edit" onclick="editAdsSpend(\''+a.id+'\')" style="color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>'
       +'<div class="proj-row-del" title="Delete" onclick="deleteAdsSpend(\''+a.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>'
       +'</div>';
   }).join(''):'<div class="table-empty"><div class="table-empty-icon">📈</div>No ads spend logged in this period yet.</div>';
@@ -6128,22 +6130,62 @@ async function submitAdsSpend(){
     total_ads_spent:parseFloat(document.getElementById('fin-ads-spent')?.value)||0,
     cost_per_message:parseFloat(document.getElementById('fin-ads-cpm')?.value)||0,
     total_messages:parseInt(document.getElementById('fin-ads-msgs')?.value)||0,
-    notes:document.getElementById('fin-ads-notes')?.value?.trim()||null,
-    created_by:currentUser.id
+    notes:document.getElementById('fin-ads-notes')?.value?.trim()||null
   };
+  var editId=document.getElementById('fin-ads-edit-id')?.value||'';
   var origHtml=btn?btn.innerHTML:'';
   if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Saving...'; }
   try{
-    var{error}=await sb.from('ads_spend_log').insert(payload);
+    var error;
+    if(editId){
+      ({error}=await sb.from('ads_spend_log').update(payload).eq('id',editId));
+    } else {
+      payload.created_by=currentUser.id;
+      ({error}=await sb.from('ads_spend_log').insert(payload));
+    }
     if(error){ showNotif('Error: '+error.message,'error'); return; }
-    showNotif('Ads spend saved! ✓','success');
+    showNotif(editId?'Ads spend updated! ✓':'Ads spend saved! ✓','success');
     ['fin-ads-spent','fin-ads-cpm','fin-ads-msgs','fin-ads-notes'].forEach(function(id){
       var el=document.getElementById(id); if(el)el.value='';
     });
+    cancelAdsSpendEdit();
     finToggleAdsForm(true);
     loadFinancePage();
   }catch(err){ showNotif('Error: '+(err?.message||err),'error'); }
   finally{ if(btn){ btn.disabled=false; btn.innerHTML=origHtml; } }
+}
+
+function editAdsSpend(id){
+  var entry=(window._finAdsCache||[]).find(function(a){ return a.id===id; });
+  if(!entry){ showNotif('Entry not found','error'); return; }
+  finToggleAdsForm();
+  var wrap=document.getElementById('fin-ads-form-wrap');
+  if(wrap && (!wrap.style.maxHeight || wrap.style.maxHeight==='0px' || wrap.style.maxHeight==='0')){
+    wrap.style.maxHeight='700px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
+  }
+  document.getElementById('fin-ads-edit-id').value=id;
+  document.getElementById('fin-ads-date').value=entry.spend_date?String(entry.spend_date).slice(0,10):'';
+  document.getElementById('fin-ads-spent').value=entry.total_ads_spent||0;
+  document.getElementById('fin-ads-cpm').value=entry.cost_per_message||0;
+  document.getElementById('fin-ads-msgs').value=entry.total_messages||0;
+  document.getElementById('fin-ads-notes').value=entry.notes||'';
+  var titleEl=document.getElementById('fin-ads-form-title');
+  if(titleEl){ titleEl.textContent='✏️ Editing ads spend — '+fmtDate(entry.spend_date); titleEl.style.display=''; }
+  var submitBtn=document.getElementById('fin-ads-submit-btn');
+  if(submitBtn) submitBtn.innerHTML='Update ads spend';
+  var cancelBtn=document.getElementById('fin-ads-cancel-edit-btn');
+  if(cancelBtn) cancelBtn.style.display='';
+  document.getElementById('fin-ads-date')?.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function cancelAdsSpendEdit(){
+  document.getElementById('fin-ads-edit-id').value='';
+  var titleEl=document.getElementById('fin-ads-form-title');
+  if(titleEl){ titleEl.textContent=''; titleEl.style.display='none'; }
+  var submitBtn=document.getElementById('fin-ads-submit-btn');
+  if(submitBtn) submitBtn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Save ads spend';
+  var cancelBtn=document.getElementById('fin-ads-cancel-edit-btn');
+  if(cancelBtn) cancelBtn.style.display='none';
 }
 
 async function deleteAdsSpend(id){
@@ -6270,23 +6312,63 @@ async function submitExpense(){
     category:document.getElementById('fin-exp-category')?.value||'Other',
     item_name:document.getElementById('fin-exp-item')?.value?.trim(),
     amount:parseFloat(document.getElementById('fin-exp-amount')?.value)||0,
-    notes:document.getElementById('fin-exp-notes')?.value?.trim()||null,
-    created_by:currentUser.id
+    notes:document.getElementById('fin-exp-notes')?.value?.trim()||null
   };
   if(!payload.item_name){ showNotif('Item / description is required','error'); return; }
+  var editId=document.getElementById('fin-exp-edit-id')?.value||'';
   var origHtml=btn?btn.innerHTML:'';
   if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Saving...'; }
   try{
-    var{error}=await sb.from('business_expenses').insert(payload);
+    var error;
+    if(editId){
+      ({error}=await sb.from('business_expenses').update(payload).eq('id',editId));
+    } else {
+      payload.created_by=currentUser.id;
+      ({error}=await sb.from('business_expenses').insert(payload));
+    }
     if(error){ showNotif('Error: '+error.message,'error'); return; }
-    showNotif('Expense saved! ✓','success');
+    showNotif(editId?'Expense updated! ✓':'Expense saved! ✓','success');
     ['fin-exp-item','fin-exp-amount','fin-exp-notes'].forEach(function(id){
       var el=document.getElementById(id); if(el)el.value='';
     });
+    cancelExpenseEdit();
     finToggleExpenseForm(true);
     loadFinancePage();
   }catch(err){ showNotif('Error: '+(err?.message||err),'error'); }
   finally{ if(btn){ btn.disabled=false; btn.innerHTML=origHtml; } }
+}
+
+function editExpense(id){
+  var entry=(window._finExpCache||[]).find(function(e){ return e.id===id; });
+  if(!entry){ showNotif('Entry not found','error'); return; }
+  finToggleExpenseForm();
+  var wrap=document.getElementById('fin-expense-form-wrap');
+  if(wrap && (!wrap.style.maxHeight || wrap.style.maxHeight==='0px' || wrap.style.maxHeight==='0')){
+    wrap.style.maxHeight='700px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
+  }
+  document.getElementById('fin-exp-edit-id').value=id;
+  document.getElementById('fin-exp-date').value=entry.expense_date?String(entry.expense_date).slice(0,10):'';
+  document.getElementById('fin-exp-category').value=entry.category||'Other';
+  document.getElementById('fin-exp-item').value=entry.item_name||'';
+  document.getElementById('fin-exp-amount').value=entry.amount||0;
+  document.getElementById('fin-exp-notes').value=entry.notes||'';
+  var titleEl=document.getElementById('fin-exp-form-title');
+  if(titleEl){ titleEl.textContent='✏️ Editing expense — '+(entry.item_name||''); titleEl.style.display=''; }
+  var submitBtn=document.getElementById('fin-exp-submit-btn');
+  if(submitBtn) submitBtn.innerHTML='Update expense';
+  var cancelBtn=document.getElementById('fin-exp-cancel-edit-btn');
+  if(cancelBtn) cancelBtn.style.display='';
+  document.getElementById('fin-exp-date')?.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function cancelExpenseEdit(){
+  document.getElementById('fin-exp-edit-id').value='';
+  var titleEl=document.getElementById('fin-exp-form-title');
+  if(titleEl){ titleEl.textContent=''; titleEl.style.display='none'; }
+  var submitBtn=document.getElementById('fin-exp-submit-btn');
+  if(submitBtn) submitBtn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Save expense';
+  var cancelBtn=document.getElementById('fin-exp-cancel-edit-btn');
+  if(cancelBtn) cancelBtn.style.display='none';
 }
 
 async function deleteSale(id){
@@ -6466,15 +6548,17 @@ async function loadFinancePage(){
   }
 
   // ── Expenses table ──
+  window._finExpCache=expenses;
   if(!expErr){
     expBody.innerHTML=expenses.length?expenses.map(function(e,i){
-      return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.2fr 1.6fr 1fr 1.4fr 32px">'
+      return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.2fr 1.6fr 1fr 1.4fr 32px 32px">'
         +'<div style="color:var(--text3);font-size:11px">'+(expenses.length-i)+'</div>'
         +'<div class="row-date">'+fmtDate(e.expense_date)+'</div>'
         +'<div style="font-size:11px;color:var(--text2)">'+(e.category||'—')+'</div>'
         +'<div class="row-name">'+(e.item_name||'—')+'</div>'
         +'<div style="font-weight:650;color:#f87171">'+finPHP(e.amount)+'</div>'
         +'<div style="font-size:11px;color:var(--text3)">'+(e.notes||'—')+'</div>'
+        +'<div class="proj-row-del" title="Edit" onclick="editExpense(\''+e.id+'\')" style="color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>'
         +'<div class="proj-row-del" title="Delete" onclick="deleteExpense(\''+e.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>'
         +'</div>';
     }).join(''):'<div class="table-empty"><div class="table-empty-icon">🧾</div>No expenses in this period yet.</div>';
@@ -8899,11 +8983,48 @@ async function loadObHistory(){
     var r=await sb.from('brand_creatives_log').select('*').order('created_at',{ascending:false}).limit(200);
     obHistoryItems=r.data||[];
   }catch(e){ obHistoryItems=[]; }
-  if(!obHistoryItems.length){
-    box.innerHTML=emptyState(ICO_MEGAPHONE,'No publish history yet','Publish or unpublish actions will be logged here.');
+  obRenderHistoryRows();
+}
+
+// ── History date filter (From/To + presets) — client-side lang, kasabay ng
+// paglo-load ng obHistoryItems sa loadObHistory() ──
+function obHistSetDatePreset(preset){
+  var now=new Date();
+  var y=now.getFullYear(), m=now.getMonth();
+  if(preset==='last_month'){ m=m-1; if(m<0){ m=11; y=y-1; } }
+  var first=new Date(y,m,1);
+  var last=new Date(y,m+1,0);
+  function toISO(d){ return d.toISOString().slice(0,10); }
+  document.getElementById('ob-hist-date-from').value=toISO(first);
+  document.getElementById('ob-hist-date-to').value=toISO(last);
+  obRenderHistoryRows();
+}
+function obHistClearDates(){
+  var df=document.getElementById('ob-hist-date-from'); if(df)df.value='';
+  var dt=document.getElementById('ob-hist-date-to'); if(dt)dt.value='';
+  obRenderHistoryRows();
+}
+
+function obRenderHistoryRows(){
+  var box=document.getElementById('ob-history-body');
+  if(!box) return;
+  var rows=obHistoryItems;
+  var dFrom=document.getElementById('ob-hist-date-from')?.value||'';
+  var dTo=document.getElementById('ob-hist-date-to')?.value||'';
+  if(dFrom||dTo){
+    rows=rows.filter(function(h){
+      var d=(h.created_at||'').slice(0,10);
+      if(!d) return false;
+      if(dFrom && d<dFrom) return false;
+      if(dTo && d>dTo) return false;
+      return true;
+    });
+  }
+  if(!rows.length){
+    box.innerHTML=emptyState(ICO_MEGAPHONE,'No publish history yet',(dFrom||dTo)?'Walang tugma sa napiling date range — subukan i-widen o i-clear ang filter.':'Publish or unpublish actions will be logged here.');
     return;
   }
-  box.innerHTML=obHistoryItems.map(function(h){
+  box.innerHTML=rows.map(function(h){
     var isPub=h.action==='published';
     var badge=isPub
       ? '<span style="background:rgba(94,234,212,0.14);color:#5eead4;font-size:10px;font-weight:650;padding:3px 9px;border-radius:20px">Published</span>'
@@ -8913,6 +9034,9 @@ async function loadObHistory(){
     var linkCell=h.link_url
       ? '<a href="'+escapeHtml(h.link_url)+'" target="_blank" rel="noopener" style="color:var(--yellow);font-size:11px;font-weight:600">Open</a>'
       : '<span style="color:#7a7a85">—</span>';
+    var editCell=h.creative_id
+      ? '<div class="proj-row-del" title="Edit creative (winner tag, ads manager link, atbp.)" onclick="openObBrandDetailModal(\''+h.creative_id+'\')" style="color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>'
+      : '<span style="color:#7a7a85">—</span>';
     return '<div class="ob-hist-row">'
       + '<div class="ob-hist-name">'+escapeHtml(h.page_name||'—')+'</div>'
       + '<div>'+badge+'</div>'
@@ -8920,6 +9044,7 @@ async function loadObHistory(){
       + '<div>'+linkCell+'</div>'
       + '<div class="ob-hist-actor">'+escapeHtml(h.actor_name||'Someone')+'</div>'
       + '<div class="ob-hist-date">'+when+'</div>'
+      + '<div>'+editCell+'</div>'
       + '</div>';
   }).join('');
 }
@@ -9027,6 +9152,14 @@ var OB_WINNER_STATES=[
 ];
 async function openObBrandDetailModal(id){
   var c=obItems.find(function(x){ return x.id===id; });
+  if(!c){
+    // Hindi na kasama sa List (naka-History na / naka-publish lagpas 48h) —
+    // kunin diretso sa Supabase para pede pa rin i-edit (winner tag, ads manager link, atbp.)
+    try{
+      var r=await sb.from('brand_creatives').select('*').eq('id',id).single();
+      c=r.data;
+    }catch(e){}
+  }
   if(!c){ showNotif('Not found','error'); return; }
   document.getElementById('obd-id').value=id;
   document.getElementById('ob-brand-detail-title').textContent='🎬 '+(c.page_name||'Creative details');
