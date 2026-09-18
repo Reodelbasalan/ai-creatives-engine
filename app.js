@@ -9629,7 +9629,7 @@ function ctFilteredLogs(){
       if(to && d>to) return false;
     }
     if(q){
-      var hay=((c.client||'')+' '+(c.contact||'')+' '+(c.phone||'')+' '+(c.package||'')+' '+(c.agent_name||'')).toLowerCase();
+      var hay=((c.client||'')+' '+(c.contact||'')+' '+(c.phone||'')+' '+(c.package||'')+' '+(c.agent_name||'')+' '+(c.notes||'')).toLowerCase();
       if(hay.indexOf(q)===-1) return false;
     }
     return true;
@@ -9680,13 +9680,16 @@ function renderCallLogs(){
       callTime=d.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',hour12:true});
     }
     var vaLine=isAdmin&&c.agent_name?'<div class="row-sub" style="font-size:10px">👤 '+ctEsc(c.agent_name)+'</div>':'';
-    return '<div class="table-row" style="grid-template-columns:1.6fr 1.3fr 1.1fr 1fr 0.9fr 130px;cursor:pointer" onclick="editCallLog(\''+c.id+'\')" title="Click to view / edit">'
-      +'<div><div class="row-name">'+ctEsc(c.client||'—')+'</div><div class="row-sub">'+ctEsc(c.contact||'')+'</div>'+vaLine+'</div>'
+    var fuCount=Number(c.follow_up_count)||0;
+    var followUpTag=fuCount>0?'<span style="display:inline-block;margin-left:6px;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;background:rgba(245,158,11,0.15);color:var(--amber);vertical-align:middle">🔄 F/U x'+fuCount+'</span>':'';
+    var noteIcon=c.notes?'<span title="'+ctEsc(c.notes)+'" style="margin-left:6px;font-size:11px;cursor:help;vertical-align:middle">📝</span>':'';
+    return '<div class="table-row" style="grid-template-columns:1.6fr 1.3fr 1.1fr 1fr 0.9fr 160px;cursor:pointer" onclick="editCallLog(\''+c.id+'\')" title="Click to view / edit">'
+      +'<div><div class="row-name">'+ctEsc(c.client||'—')+followUpTag+noteIcon+'</div><div class="row-sub">'+ctEsc(c.contact||'')+'</div>'+vaLine+'</div>'
       +'<div><div class="row-meta" style="font-size:11px">'+ctEsc(c.phone||'—')+'</div><div class="row-sub">'+ctEsc(c.package||'')+'</div></div>'
       +'<div><div class="row-meta" style="font-size:11px">'+callDate+'</div><div class="row-sub">'+callTime+'</div><div class="row-sub" style="font-size:10px">'+ctEsc(c.call_status||'')+'</div></div>'
       +'<div><span style="font-size:10px;color:'+dealColor+';font-weight:700">'+ctEsc(c.deal_status||'Prospect')+'</span></div>'
       +'<div class="row-meta" style="font-size:11px;color:'+(Number(c.est_value)>0?'var(--amber)':'var(--text3)')+'">'+ctPeso(c.est_value)+'</div>'
-      +'<div style="display:flex;gap:4px" onclick="event.stopPropagation()"><button onclick="editCallLog(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px">Edit</button><button onclick="deleteCallLog(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Del</button></div>'
+      +'<div style="display:flex;gap:4px" onclick="event.stopPropagation()"><button onclick="bumpFollowUp(\''+c.id+'\')" class="ghost-btn" title="Log another follow-up" style="font-size:10px;padding:3px 6px">🔄+1</button><button onclick="editCallLog(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 6px">Edit</button><button onclick="deleteCallLog(\''+c.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 6px;color:var(--red);border-color:rgba(239,68,68,0.2)">Del</button></div>'
       +'</div>';
   }).join('');
 }
@@ -9748,7 +9751,9 @@ async function saveCallLog(){
     call_at:callAt,
     call_status:document.getElementById('ct-callstatus')?.value||null,
     deal_status:document.getElementById('ct-dealstatus')?.value||'Prospect',
-    est_value:Number(document.getElementById('ct-value')?.value)||0
+    est_value:Number(document.getElementById('ct-value')?.value)||0,
+    follow_up_count:Number(document.getElementById('ct-followup')?.value)||0,
+    notes:document.getElementById('ct-notes')?.value?.trim()||null
   };
   var editId=document.getElementById('ct-edit-id')?.value||'';
   var btn=document.getElementById('ct-save-btn');
@@ -9762,7 +9767,7 @@ async function saveCallLog(){
   if(btn){btn.disabled=false;btn.textContent='Log call';}
   if(error){ showNotif('Error: '+error.message,'error'); return; }
   showNotif(editId?'Call updated! ✓':'Call logged! ✓','success');
-  ['ct-client','ct-contact','ct-phone','ct-package','ct-calldate','ct-calltime','ct-value'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['ct-client','ct-contact','ct-phone','ct-package','ct-calldate','ct-calltime','ct-value','ct-followup','ct-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var ds=document.getElementById('ct-dealstatus'); if(ds)ds.value='Prospect';
   var cs=document.getElementById('ct-callstatus'); if(cs)cs.value='Completed';
   cancelCallLogEdit();
@@ -9786,6 +9791,8 @@ function editCallLog(id){
   document.getElementById('ct-callstatus').value=c.call_status||'Completed';
   document.getElementById('ct-dealstatus').value=c.deal_status||'Prospect';
   document.getElementById('ct-value').value=c.est_value||0;
+  document.getElementById('ct-followup').value=c.follow_up_count||0;
+  document.getElementById('ct-notes').value=c.notes||'';
   var agentSel=document.getElementById('ct-agent');
   if(agentSel && currentUserRole==='admin'){ agentSel.value=c.agent_id||''; }
   var titleEl=document.getElementById('ct-form-title'); if(titleEl) titleEl.textContent='Edit call — '+(c.client||'');
@@ -9799,6 +9806,16 @@ function cancelCallLogEdit(){
   var titleEl=document.getElementById('ct-form-title'); if(titleEl) titleEl.textContent='Log a call';
   var saveBtn=document.getElementById('ct-save-btn'); if(saveBtn) saveBtn.textContent='Log call';
   var cancelBtn=document.getElementById('ct-cancel-edit-btn'); if(cancelBtn) cancelBtn.style.display='none';
+}
+
+async function bumpFollowUp(id){
+  var c=callLogsCache.find(function(x){ return x.id===id; });
+  if(!c){ showNotif('Call not found','error'); return; }
+  var newCount=(Number(c.follow_up_count)||0)+1;
+  var{error}=await sb.from('call_logs').update({follow_up_count:newCount}).eq('id',id);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Follow-up logged (x'+newCount+') ✓','success');
+  loadCallTracker();
 }
 
 async function deleteCallLog(id){
