@@ -9847,6 +9847,8 @@ var AT_BRAND={"meta":"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fw
 var advTasksCache=[];
 var atTeamCache=[];          // [{id,name}]
 var atStatFilter='In Progress';   // 'In Progress' | 'Done' | 'Not Done' | ''
+var atPeriod='today';        // 'today' | '7d' | 'all' — saklaw ng Done / Not done
+var AT_INI={};               // id -> unique initials
 var atWho='';                // assignee filter (admin)
 var atView='list';           // 'list' | 'board'
 var atFormWho=[];            // assignee ids sa New task form
@@ -9877,7 +9879,19 @@ function atInitials(name){
   return (p.length>1?(p[0][0]+p[1][0]):p[0].slice(0,2)).toUpperCase();
 }
 function atAvColor(id){ var h=0,s=String(id||''); for(var i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))>>>0; } return AT_AV_COLORS[h%AT_AV_COLORS.length]; }
-function atAvatar(a){ return '<span class="atx-av" style="background:'+atAvColor(a.id)+'" title="'+ctEsc(a.name||'')+'">'+ctEsc(atInitials(a.name))+'</span>'; }
+function atBuildInitials(){
+  AT_INI={}; var used={};
+  atTeamCache.forEach(function(p){
+    var nm=String(p.name||'?').replace(/@.*/,'').trim(), parts=nm.split(/\s+/), base=atInitials(nm), ini=base;
+    if(used[ini]){
+      var w=parts[0].replace(/[^A-Za-z]/g,'')||parts[0];
+      for(var k=2;k<w.length&&used[ini];k++) ini=(w[0]+w[k]).toUpperCase();
+      if(used[ini]) ini=base[0]+String(Object.keys(used).length%10);
+    }
+    used[ini]=1; AT_INI[p.id]=ini;
+  });
+}
+function atAvatar(a){ return '<span class="atx-av" style="background:'+atAvColor(a.id)+'" title="'+ctEsc(a.name||'')+'">'+ctEsc(AT_INI[a.id]||atInitials(a.name))+'</span>'; }
 function atTagChip(t,removeFn){
   return '<span class="atx-tag"><i style="background:'+(AT_TAG_COLORS[t]||'#8a857a')+'"></i>'+ctEsc(t)
     +(removeFn?'<span class="atx-tag-x" onclick="'+removeFn+'(\''+ctEsc(t).replace(/'/g,"\\'")+'\')">\u00d7</span>':'')+'</span>';
@@ -9922,9 +9936,15 @@ function atInitIcons(){
 async function loadAdvertiserTasks(){
   var isAdmin=currentUserRole==='admin';
   atInitParticles(); atInitIcons();
-  var{data,error}=await sb.from('advertiser_tasks').select('*').order('created_at',{ascending:false});
-  if(error){ showNotif('Error loading tasks: '+error.message,'error'); advTasksCache=[]; }
-  else { advTasksCache=data||[]; }
+  // Active tasks: lahat. Done / Not done: yung sakop lang ng period (default: ngayong araw)
+  var since=atPeriodStart();
+  var qActive=sb.from('advertiser_tasks').select('*').or('status.eq.In Progress,status.is.null').order('created_at',{ascending:false});
+  var qClosed=sb.from('advertiser_tasks').select('*').in('status',['Done','Not Done']).order('done_at',{ascending:false}).limit(1000);
+  if(since) qClosed=qClosed.gte('done_at',since.toISOString());
+  var res=await Promise.all([qActive,qClosed]);
+  var err=res[0].error||res[1].error;
+  if(err){ showNotif('Error loading tasks: '+err.message,'error'); }
+  advTasksCache=(res[0].data||[]).concat(res[1].data||[]);
   if(!isAdmin && currentUser?.id){
     advTasksCache=advTasksCache.filter(function(t){ return atTaskAssignedTo(t,currentUser.id); });
   }
@@ -9933,6 +9953,7 @@ async function loadAdvertiserTasks(){
   if(isAdmin && !atTeamCache.length){
     var{data:profs}=await sb.from('profiles').select('id,name,email,role').order('name');
     atTeamCache=(profs||[]).filter(function(p){ return p.role!=='client'; }).map(function(p){ return {id:p.id,name:p.name||p.email}; });
+    atBuildInitials();
   }
   atRenderWho(); atRenderFormPick(); atRenderPlat(); atRenderPendingTags();
   renderAdvertiserTasks();
@@ -9952,6 +9973,14 @@ function atFilteredTasks(ignoreStatus){
   });
 }
 function atSetStat(s){ atStatFilter=s; renderAdvertiserTasks(); }
+function atPeriodStart(){
+  if(atPeriod==='all') return null;
+  var d=new Date(); d.setHours(0,0,0,0);
+  if(atPeriod==='7d') d.setDate(d.getDate()-6);
+  return d;
+}
+function atSetPeriod(p){ if(p===atPeriod) return; atPeriod=p; loadAdvertiserTasks(); }
+function atPeriodLabel(){ return atPeriod==='today'?'today':atPeriod==='7d'?'· 7 days':'· all time'; }
 function atSetWho(id){ atWho=id; atRenderWho(); renderAdvertiserTasks(); }
 function atSetView(v){
   atView=v;
@@ -9983,7 +10012,12 @@ function renderAdvertiserTasks(){
   var base=atFilteredTasks(true);
   var cnt={'In Progress':0,'Done':0,'Not Done':0};
   base.forEach(function(t){ var s=t.status||'In Progress'; if(cnt[s]!=null) cnt[s]++; });
-  var stats=[['In Progress','In progress',cnt['In Progress'],'#f5a524'],['Done','Done',cnt['Done'],'#34d399'],['Not Done','Not done',cnt['Not Done'],'#f87171'],['','All',base.length,'var(--yellow)']];
+  var pl=atPeriodLabel();
+  var stats=[['In Progress','In progress',cnt['In Progress'],'#f5a524'],['Done','Done '+pl,cnt['Done'],'#34d399'],['Not Done','Not done '+pl,cnt['Not Done'],'#f87171'],['','Total',base.length,'var(--yellow)']];
+  var pEl=document.getElementById('at-period');
+  if(pEl) pEl.innerHTML=[['today','Today'],['7d','7 days'],['all','All time']].map(function(o){
+    return '<button class="'+(atPeriod===o[0]?'on':'')+'" onclick="atSetPeriod(\''+o[0]+'\')">'+o[1]+'</button>';
+  }).join('');
   var sEl=document.getElementById('at-stats');
   if(sEl) sEl.innerHTML=stats.map(function(s){
     return '<button class="atx-stat'+(atStatFilter===s[0]?' on':'')+'" onclick="atSetStat(\''+s[0]+'\')"><div class="atx-stat-n">'+s[2]+'</div><div class="atx-stat-l"><span class="atx-dot" style="background:'+s[3]+'"></span>'+s[1]+'</div></button>';
@@ -9997,7 +10031,7 @@ function renderAdvertiserTasks(){
   atRowAnims.forEach(function(a){ a.destroy(); }); atRowAnims=[];
   if(rows){
     if(!list.length){
-      var emptyMsg=atStatFilter==='In Progress'?'Walang active na task. Pindutin ang New task para gumawa.':'Walang task na tugma sa filter na ito.';
+      var emptyMsg=atStatFilter==='In Progress'?'Walang active na task. Pindutin ang New task para gumawa.':(atPeriod==='today'&&(atStatFilter==='Done'||atStatFilter==='Not Done'))?'Wala pang na-close ngayong araw. Piliin ang 7 days o All time para makita ang luma.':'Walang task na tugma sa filter na ito.';
       rows.innerHTML='<div class="atx-empty"><b>Wala pa dito</b>'+emptyMsg+'</div>';
     } else {
       rows.innerHTML=list.map(function(t,i){
