@@ -10025,7 +10025,7 @@ function renderAdvertiserTasks(){
 
   var list=atFilteredTasks(false);
   var head=document.getElementById('at-list-head');
-  if(head) head.innerHTML='<span>Task</span><span>'+(isAdmin?'Assigned':'')+'</span><span>'+(atStatFilter==='Done'||atStatFilter==='Not Done'?'Closed':'Added')+'</span><span>Status</span><span style="text-align:right">Actions</span>';
+  if(head) head.innerHTML='<span>Task</span><span>'+(isAdmin?'Assigned':'')+'</span><span>'+(atStatFilter==='Done'||atStatFilter==='Not Done'?'Closed':'Added')+'</span><span>Status</span><span>Actions</span>';
 
   var rows=document.getElementById('at-rows');
   atRowAnims.forEach(function(a){ a.destroy(); }); atRowAnims=[];
