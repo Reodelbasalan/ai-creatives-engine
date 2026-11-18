@@ -9837,272 +9837,305 @@ function clearCallFilters(){
 }
 
 
+// useAnimations (MIT) — https://useanimations.com
+var AT_UA={"plusToX":{"nm":"plus-to-x","v":"5.6.5","fr":30,"ip":0,"op":30,"w":32,"h":32,"ddd":0,"assets":[],"layers":[{"ddd":0,"ind":1,"ty":4,"sr":1,"ks":{"o":{"a":0,"k":100},"r":{"a":0,"k":0},"p":{"a":0,"k":[16,16,0]},"a":{"a":0,"k":[0,0,0]},"s":{"a":0,"k":[100,100,100]}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0]],"o":[[0,0],[0,0]],"v":[[5,12],[19,12]],"c":false}}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":0,"k":[0,0]},"a":{"a":0,"k":[12,12]},"s":{"a":0,"k":[100,100]},"r":{"a":1,"k":[{"i":{"x":[0.501],"y":[1]},"o":{"x":[0.502],"y":[0]},"t":0,"s":[0]},{"t":30,"s":[135]}]},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0]],"o":[[0,0],[0,0]],"v":[[12,5],[12,19]],"c":false}}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":0,"k":[0,0]},"a":{"a":0,"k":[12,12]},"s":{"a":0,"k":[100,100]},"r":{"a":1,"k":[{"i":{"x":[0.501],"y":[1]},"o":{"x":[0.502],"y":[0]},"t":0,"s":[0]},{"t":30,"s":[315]}]},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0}],"ip":0,"op":30,"st":0,"bm":0}],"markers":[]},"searchToX":{"nm":"search-to-x","v":"5.6.5","fr":30,"ip":0,"op":30,"w":32,"h":32,"ddd":0,"assets":[],"layers":[{"ddd":0,"ind":1,"ty":4,"sr":1,"ks":{"o":{"a":0,"k":100},"r":{"a":0,"k":0},"p":{"a":0,"k":[16,16,0]},"a":{"a":0,"k":[12,12,0]},"s":{"a":0,"k":[100,100,100]}},"ao":0,"shapes":[{"ty":"gr","it":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0]],"o":[[0,0],[0,0]],"v":[[-6,-6],[6,6]],"c":false}}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":0,"k":[12,12]},"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"r":{"a":1,"k":[{"i":{"x":[0.7],"y":[1]},"o":{"x":[0.7],"y":[0]},"t":10,"s":[0]},{"t":29,"s":[270]}]},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0]],"o":[[0,0],[0,0]],"v":[[6,-6],[-6,6]],"c":false}}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":0,"k":[12,12]},"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"r":{"a":1,"k":[{"i":{"x":[0.7],"y":[1]},"o":{"x":[0.7],"y":[0]},"t":10,"s":[90]},{"t":29,"s":[270]}]},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"tr","p":{"a":0,"k":[12,12]},"a":{"a":0,"k":[12,12]},"s":{"a":0,"k":[100,100]},"r":{"a":0,"k":0},"o":{"a":1,"k":[{"i":{"x":[0.833],"y":[0.833]},"o":{"x":[0.167],"y":[0.167]},"t":9,"s":[0]},{"t":10,"s":[100]}]},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"gr","it":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":1,"k":[{"i":{"x":0.31,"y":1},"o":{"x":0.3,"y":0},"t":0,"s":[{"i":[[-4.142,0],[0,-4.142],[4.143,0],[0,4.143]],"o":[[4.143,0],[0,4.143],[-4.142,0],[0,-4.142]],"v":[[0,-7.5],[7.5,0],[0,7.5],[-7.5,0]],"c":true}]},{"t":10,"s":[{"i":[[-4.142,0],[0.013,0.044],[4.143,0],[0.053,0.022]],"o":[[4.143,0],[-0.009,0.022],[-4.142,0],[0.009,-0.022]],"v":[[0,-0.031],[7.5,0],[-0.018,-0.074],[-7.5,0]],"c":true}]}]}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":1,"k":[{"i":{"x":0.3,"y":1},"o":{"x":0.3,"y":0},"t":5,"s":[10.5,10.5],"to":[0.167,0.167],"ti":[-0.167,-0.167]},{"t":10,"s":[11.5,11.5]}]},"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"r":{"a":0,"k":45},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0]],"o":[[0,0],[0,0]],"v":[[2.6,2.6],[-2.6,-2.6]],"c":false}}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":1,"k":[{"i":{"x":0.3,"y":1},"o":{"x":0.3,"y":0},"t":5,"s":[18.4,18.4],"to":[-0.573,-0.562],"ti":[0.573,0.562]},{"t":10,"s":[14.962,15.025]}]},"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"r":{"a":0,"k":0},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"tr","p":{"a":0,"k":[12,12]},"a":{"a":0,"k":[12,12]},"s":{"a":0,"k":[100,100]},"r":{"a":0,"k":0},"o":{"a":1,"k":[{"i":{"x":[0.833],"y":[0.833]},"o":{"x":[0.167],"y":[0.167]},"t":9,"s":[100]},{"t":10,"s":[0]}]},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0}],"ip":0,"op":30,"st":0,"bm":0}],"markers":[]},"trash2":{"nm":"trash-V2","v":"5.6.5","fr":30,"ip":0,"op":5,"w":32,"h":32,"ddd":0,"assets":[],"layers":[{"ddd":0,"ind":1,"ty":4,"sr":1,"ks":{"o":{"a":0,"k":100},"r":{"a":0,"k":0},"p":{"a":0,"k":[16,18.5,0]},"a":{"a":0,"k":[16,16,0]},"s":{"a":0,"k":[100,100,100]}},"ao":0,"shapes":[{"ty":"gr","it":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0],[-1.104,0],[0,0],[0,-1.104],[0,0]],"o":[[0,0],[0,-1.104],[0,0],[1.104,0],[0,0],[0,0]],"v":[[-4,2],[-4,0],[-2,-2],[2,-2],[4,0],[4,2]],"c":false}}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":0,"k":[16,8]},"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"r":{"a":0,"k":0},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0],[0,0]],"o":[[0,0],[0,0],[0,0]],"v":[[7,10],[9,10],[25,10]],"c":false}}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":0,"k":[0,0]},"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"r":{"a":0,"k":0},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"tr","p":{"a":1,"k":[{"i":{"x":0.794,"y":1},"o":{"x":0.157,"y":0},"t":0,"s":[23.003,9],"to":[0,-0.133],"ti":[0,0.034]},{"t":5,"s":[23.003,6]}]},"a":{"a":0,"k":[23.003,10]},"s":{"a":0,"k":[100,100]},"r":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":0,"s":[0]},{"t":5,"s":[20]}]},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"gr","it":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0]],"o":[[0,0],[0,0]],"v":[[18,15],[18,21]],"c":false}}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":0,"k":[0,0]},"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"r":{"a":0,"k":0},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0]],"o":[[0,0],[0,0]],"v":[[14,15],[14,21]],"c":false}}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":0,"k":[0,0]},"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"r":{"a":0,"k":0},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0],[1.104,0],[0,0],[0,1.104],[0,0]],"o":[[0,0],[0,1.104],[0,0],[-1.104,0],[0,0],[0,0]],"v":[[7,-8],[7,6],[5,8],[-5,8],[-7,6],[-7,-8]],"c":false}}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":0,"k":[16,18]},"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"r":{"a":0,"k":0},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"tr","p":{"a":1,"k":[{"i":{"x":0.833,"y":1},"o":{"x":0.167,"y":0},"t":0,"s":[16,18],"to":[0,0.167],"ti":[0,-0.167]},{"t":5,"s":[16,19]}]},"a":{"a":0,"k":[16,18]},"s":{"a":0,"k":[100,100]},"r":{"a":0,"k":0},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0}],"ip":0,"op":5,"st":0,"bm":0}],"markers":[]},"edit":{"nm":"edit","v":"5.6.5","fr":30,"ip":0,"op":60,"w":32,"h":32,"ddd":0,"assets":[],"layers":[{"ddd":0,"ind":1,"ty":4,"sr":1,"ks":{"o":{"a":0,"k":100},"r":{"a":0,"k":0},"p":{"a":0,"k":[17.5,18.5,0]},"a":{"a":0,"k":[16,16,0]},"s":{"a":0,"k":[100,100,100]}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0],[0,0],[0,0],[0,0]],"o":[[0,0],[0,0],[0,0],[0,0],[0,0]],"v":[[3.5,-7.5],[7.5,-3.5],[-3.5,7.5],[-7.5,7.5],[-7.5,3.5]],"c":true}}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":1,"k":[{"i":{"x":0.667,"y":1},"o":{"x":0.217,"y":0},"t":0,"s":[14.5,13.5],"to":[-1,-0.25],"ti":[1,0.25]},{"i":{"x":0.7,"y":0.7},"o":{"x":0.188,"y":0.188},"t":10,"s":[8.5,12],"to":[0,0],"ti":[0,0]},{"i":{"x":0.7,"y":1},"o":{"x":0.167,"y":0},"t":18,"s":[8.5,12],"to":[1.667,-0.083],"ti":[-0.833,0]},{"i":{"x":0.7,"y":1},"o":{"x":0.167,"y":0},"t":32,"s":[18.5,11.5],"to":[0.833,0],"ti":[-0.833,0.083]},{"i":{"x":0.7,"y":1},"o":{"x":0.167,"y":0},"t":42,"s":[13.5,12],"to":[0.833,-0.083],"ti":[-1.667,0.167]},{"t":60,"s":[23.5,11]}]},"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"r":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":0,"s":[0]},{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":10,"s":[-10]},{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":18,"s":[-10]},{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":32,"s":[-20]},{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":42,"s":[-10]},{"t":60,"s":[-26]}]},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0},{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0]],"o":[[0,0],[0,0]],"v":[[7,26],[25,26]],"c":false}}},{"ty":"tm","s":{"a":0,"k":0},"e":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":18,"s":[0]},{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":32,"s":[65]},{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":42,"s":[28]},{"t":60,"s":[100]}]},"o":{"a":0,"k":0},"m":1},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tr","p":{"a":0,"k":[-5,-5]},"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"r":{"a":0,"k":0},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0}],"ip":0,"op":60,"st":0,"bm":0}],"markers":[]},"checkmark":{"nm":"checkMark","v":"5.7.1","fr":30,"ip":0,"op":45,"w":32,"h":32,"ddd":0,"assets":[],"layers":[{"ddd":0,"ind":1,"ty":4,"sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.833],"y":[0.833]},"o":{"x":[0.167],"y":[0.167]},"t":0,"s":[0]},{"t":5,"s":[100]}]},"r":{"a":0,"k":0},"p":{"a":0,"k":[16,16,0]},"a":{"a":0,"k":[12,12,0]},"s":{"a":0,"k":[100,100,100]}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ks":{"a":0,"k":{"i":[[0,0],[0,0],[0,0]],"o":[[0,0],[0,0],[0,0]],"v":[[8,-5.5],[-3,5.5],[-8,0.5]],"c":false}}},{"ty":"st","c":{"a":0,"k":[0,0,0,1]},"o":{"a":0,"k":100},"w":{"a":0,"k":2},"lc":2,"lj":2,"bm":0},{"ty":"tm","s":{"a":1,"k":[{"i":{"x":[0.3],"y":[1]},"o":{"x":[0.3],"y":[0]},"t":0,"s":[100]},{"t":45,"s":[0]}]},"e":{"a":0,"k":100},"o":{"a":0,"k":0},"m":1},{"ty":"tr","p":{"a":0,"k":[12,11.5]},"a":{"a":0,"k":[0,0]},"s":{"a":0,"k":[100,100]},"r":{"a":0,"k":0},"o":{"a":0,"k":100},"sk":{"a":0,"k":0},"sa":{"a":0,"k":0}}],"bm":0}],"ip":0,"op":45,"st":0,"bm":0}],"markers":[]}};
+// theSVG brand icons (MIT) — https://thesvg.org
+var AT_BRAND={"meta":"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22256%22%20height%3D%22171%22%20preserveAspectRatio%3D%22xMidYMid%22%20viewBox%3D%220%200%20256%20171%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22a%22%20x1%3D%2213.878%25%22%20x2%3D%2289.144%25%22%20y1%3D%2255.934%25%22%20y2%3D%2258.694%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%230064E1%22%2F%3E%3Cstop%20offset%3D%2240%25%22%20stop-color%3D%22%230064E1%22%2F%3E%3Cstop%20offset%3D%2283%25%22%20stop-color%3D%22%230073EE%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%230082FB%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22b%22%20x1%3D%2254.315%25%22%20x2%3D%2254.315%25%22%20y1%3D%2282.782%25%22%20y2%3D%2239.307%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%230082FB%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%230064E0%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Cpath%20fill%3D%22%230081FB%22%20d%3D%22M27.651%20112.136c0%209.775%202.146%2017.28%204.95%2021.82%203.677%205.947%209.16%208.466%2014.751%208.466%207.211%200%2013.808-1.79%2026.52-19.372%2010.185-14.092%2022.186-33.874%2030.26-46.275l13.675-21.01c9.499-14.591%2020.493-30.811%2033.1-41.806C161.196%204.985%20172.298%200%20183.47%200c18.758%200%2036.625%2010.87%2050.3%2031.257C248.735%2053.584%20256%2081.707%20256%20110.729c0%2017.253-3.4%2029.93-9.187%2039.946-5.591%209.686-16.488%2019.363-34.818%2019.363v-27.616c15.695%200%2019.612-14.422%2019.612-30.927%200-23.52-5.484-49.623-17.564-68.273-8.574-13.23-19.684-21.313-31.907-21.313-13.22%200-23.859%209.97-35.815%2027.75-6.356%209.445-12.882%2020.956-20.208%2033.944l-8.066%2014.289c-16.203%2028.728-20.307%2035.271-28.408%2046.07-14.2%2018.91-26.324%2026.076-42.287%2026.076-18.935%200-30.91-8.2-38.325-20.556C2.973%20139.413%200%20126.202%200%20111.148l27.651.988Z%22%2F%3E%3Cpath%20fill%3D%22url(%23a)%22%20d%3D%22M21.802%2033.206C34.48%2013.666%2052.774%200%2073.757%200%2085.91%200%2097.99%203.597%20110.605%2013.897c13.798%2011.261%2028.505%2029.805%2046.853%2060.368l6.58%2010.967c15.881%2026.459%2024.917%2040.07%2030.205%2046.49%206.802%208.243%2011.565%2010.7%2017.752%2010.7%2015.695%200%2019.612-14.422%2019.612-30.927l24.393-.766c0%2017.253-3.4%2029.93-9.187%2039.946-5.591%209.686-16.488%2019.363-34.818%2019.363-11.395%200-21.49-2.475-32.654-13.007-8.582-8.083-18.615-22.443-26.334-35.352l-22.96-38.352C118.528%2064.08%20107.96%2049.73%20101.845%2043.23c-6.578-6.988-15.036-15.428-28.532-15.428-10.923%200-20.2%207.666-27.963%2019.39L21.802%2033.206Z%22%2F%3E%3Cpath%20fill%3D%22url(%23b)%22%20d%3D%22M73.312%2027.802c-10.923%200-20.2%207.666-27.963%2019.39-10.976%2016.568-17.698%2041.245-17.698%2064.944%200%209.775%202.146%2017.28%204.95%2021.82L9.027%20149.482C2.973%20139.413%200%20126.202%200%20111.148%200%2083.772%207.514%2055.24%2021.802%2033.206%2034.48%2013.666%2052.774%200%2073.757%200l-.445%2027.802Z%22%2F%3E%3C%2Fsvg%3E","tiktok":"data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20id%3D%22Layer_2%22%20viewBox%3D%220%200%20352.28%20398.67%22%3E%3Cdefs%3E%3Cstyle%3E.cls-2%7Bfill%3A%23fe2c55%7D.cls-3%7Bfill%3A%2325f4ee%7D%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22Layer_1-2%22%3E%3Cpath%20d%3D%22M137.17%20156.98v-15.56c-5.34-.73-10.76-1.18-16.29-1.18C54.23%20140.24%200%20194.47%200%20261.13c0%2040.9%2020.43%2077.09%2051.61%2098.97-20.12-21.6-32.46-50.53-32.46-82.31%200-65.7%2052.69-119.28%20118.03-120.81Z%22%20class%3D%22cls-3%22%2F%3E%3Cpath%20d%3D%22M140.02%20333c29.74%200%2054-23.66%2055.1-53.13l.11-263.2h48.08c-1-5.41-1.55-10.97-1.55-16.67h-65.67l-.11%20263.2c-1.1%2029.47-25.36%2053.13-55.1%2053.13-9.24%200-17.95-2.31-25.61-6.34C105.3%20323.9%20121.6%20333%20140.02%20333ZM333.13%20106V91.37c-18.34%200-35.43-5.45-49.76-14.8%2012.76%2014.65%2030.09%2025.22%2049.76%2029.43Z%22%20class%3D%22cls-3%22%2F%3E%3Cpath%20d%3D%22M283.38%2076.57c-13.98-16.05-22.47-37-22.47-59.91h-17.59c4.63%2025.02%2019.48%2046.49%2040.06%2059.91ZM120.88%20205.92c-30.44%200-55.21%2024.77-55.21%2055.21%200%2021.2%2012.03%2039.62%2029.6%2048.86-6.55-9.08-10.45-20.18-10.45-32.2%200-30.44%2024.77-55.21%2055.21-55.21%205.68%200%2011.13.94%2016.29%202.55v-67.05c-5.34-.73-10.76-1.18-16.29-1.18-.96%200-1.9.05-2.85.07v51.49c-5.16-1.61-10.61-2.55-16.29-2.55Z%22%20class%3D%22cls-2%22%2F%3E%3Cpath%20d%3D%22M333.13%20106v51.04c-34.05%200-65.61-10.89-91.37-29.38v133.47c0%2066.66-54.23%20120.88-120.88%20120.88-25.76%200-49.64-8.12-69.28-21.91%2022.08%2023.71%2053.54%2038.57%2088.42%2038.57%2066.66%200%20120.88-54.23%20120.88-120.88V144.33c25.76%2018.49%2057.32%2029.38%2091.37%2029.38v-65.68c-6.57%200-12.97-.71-19.14-2.03Z%22%20class%3D%22cls-2%22%2F%3E%3Cpath%20d%3D%22M241.76%20261.13V127.66c25.76%2018.49%2057.32%2029.38%2091.37%2029.38V106c-19.67-4.21-37-14.77-49.76-29.43-20.58-13.42-35.43-34.88-40.06-59.91h-48.08l-.11%20263.2c-1.1%2029.47-25.36%2053.13-55.1%2053.13-18.42%200-34.72-9.1-44.75-23.01-17.57-9.25-29.6-27.67-29.6-48.86%200-30.44%2024.77-55.21%2055.21-55.21%205.68%200%2011.13.94%2016.29%202.55v-51.49C71.83%20158.5%2019.14%20212.08%2019.14%20277.78c0%2031.78%2012.34%2060.71%2032.46%2082.31C71.23%20373.87%2095.12%20382%20120.88%20382c66.65%200%20120.88-54.23%20120.88-120.88Z%22%20style%3D%22fill%3A%23fff%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"};
 // ============================================================
-// ADVERTISER TASKS
+// ADVERTISER TASKS  (redesign: stats, list/board, task detail drawer)
 // ============================================================
 var advTasksCache=[];
-var advHistoryMode=false;
+var atTeamCache=[];          // [{id,name}]
+var atStatFilter='In Progress';   // 'In Progress' | 'Done' | 'Not Done' | ''
+var atWho='';                // assignee filter (admin)
+var atView='list';           // 'list' | 'board'
+var atFormWho=[];            // assignee ids sa New task form
+var atFormPlat='meta';
+var atPendingTags=[];
+var atDrawerId=null, atDraft=null;
+var atAnims={}, atRowAnims=[];
+var AT_STATUSES=['In Progress','Done','Not Done'];
+var AT_TAG_SUGG=['Retargeting','Winner','Testing','Scaling','New launch','Optimization'];
+var AT_TAG_COLORS={Retargeting:'#60a5fa',Winner:'#34d399',Testing:'#a78bfa',Scaling:'#f5c518','New launch':'#f472b6',Optimization:'#fb923c'};
+var AT_AV_COLORS=['#f5c518','#fb923c','#f472b6','#a78bfa','#60a5fa','#34d399','#22d3ee','#fda4af','#c4b5fd','#86efac','#fcd34d'];
 
-var atTeamCache=[];
-function atTaskAssignedTo(t,userId){
-  if(Array.isArray(t.assignees) && t.assignees.length){
-    return t.assignees.some(function(a){ return a.id===userId; });
-  }
-  return t.assignee_id===userId;
+function atStatusColor(s){ return s==='Done'?'#34d399':s==='Not Done'?'#f87171':'#f5a524'; }
+function atIsHistory(t){ return t.status==='Done'||t.status==='Not Done'; }
+function atTaskAssignees(t){
+  if(Array.isArray(t.assignees)&&t.assignees.length) return t.assignees;
+  return t.assignee_id?[{id:t.assignee_id,name:t.assignee_name||''}]:[];
 }
-function atTaskAssigneeNames(t){
-  if(Array.isArray(t.assignees) && t.assignees.length){
-    return t.assignees.map(function(a){ return a.name; }).join(', ');
+function atTaskAssignedTo(t,userId){ return atTaskAssignees(t).some(function(a){ return a.id===userId; }); }
+function atTaskAssigneeNames(t){ var a=atTaskAssignees(t); return a.length?a.map(function(x){return x.name;}).join(', '):'—'; }
+function atFmtDate(v){
+  if(!v) return {d:'—',t:''};
+  var d=new Date(v); if(isNaN(d)) return {d:String(v).slice(0,10),t:''};
+  return {d:d.toLocaleDateString('en-US',{month:'short',day:'numeric'}), t:d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})};
+}
+function atInitials(name){
+  var p=String(name||'?').replace(/@.*/,'').trim().split(/\s+/);
+  return (p.length>1?(p[0][0]+p[1][0]):p[0].slice(0,2)).toUpperCase();
+}
+function atAvColor(id){ var h=0,s=String(id||''); for(var i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))>>>0; } return AT_AV_COLORS[h%AT_AV_COLORS.length]; }
+function atAvatar(a){ return '<span class="atx-av" style="background:'+atAvColor(a.id)+'" title="'+ctEsc(a.name||'')+'">'+ctEsc(atInitials(a.name))+'</span>'; }
+function atTagChip(t,removeFn){
+  return '<span class="atx-tag"><i style="background:'+(AT_TAG_COLORS[t]||'#8a857a')+'"></i>'+ctEsc(t)
+    +(removeFn?'<span class="atx-tag-x" onclick="'+removeFn+'(\''+ctEsc(t).replace(/'/g,"\\'")+'\')">\u00d7</span>':'')+'</span>';
+}
+function atBrand(p,h){ return (p&&AT_BRAND[p])?'<img class="atx-brand" style="height:'+(h||12)+'px" src="'+AT_BRAND[p]+'" alt="'+(p==='meta'?'Meta':'TikTok')+'">':''; }
+
+// ---- animated icons (lottie) ----
+function atRecolor(o,c){
+  if(Array.isArray(o)){ o.forEach(function(x){ atRecolor(x,c); }); return; }
+  if(o&&typeof o==='object'){
+    if((o.ty==='st'||o.ty==='fl')&&o.c&&Array.isArray(o.c.k)&&typeof o.c.k[0]==='number'){ o.c.k=[c[0],c[1],c[2],1]; }
+    for(var k in o) atRecolor(o[k],c);
   }
-  return t.assignee_name||'—';
+}
+var AT_NOOP={play:function(){},setDirection:function(){},goToAndPlay:function(){},destroy:function(){}};
+function atLottie(el,name,rgb){
+  if(!el||!window.lottie||!AT_UA[name]) return AT_NOOP;
+  var d=JSON.parse(JSON.stringify(AT_UA[name])); atRecolor(d,rgb);
+  try{ return lottie.loadAnimation({container:el,renderer:'svg',loop:false,autoplay:false,animationData:d}); }catch(e){ return AT_NOOP; }
+}
+var AT_GOLD=[.96,.77,.09], AT_MUTED=[.54,.52,.48], AT_INK=[.1,.08,0], AT_RED=[.97,.44,.44];
+
+function atInitParticles(){
+  var box=document.getElementById('at-particles');
+  if(!box||box.childNodes.length) return;
+  var anims=['obP1','obP2','obP3','obP4'], out='';
+  for(var i=0;i<14;i++){
+    var top=Math.floor(Math.random()*92)+4, left=Math.floor(Math.random()*94)+3;
+    var sz=Math.floor(Math.random()*4)+3, dur=Math.floor(Math.random()*8)+9;
+    out+='<span style="width:'+sz+'px;height:'+sz+'px;top:'+top+'%;left:'+left+'%;animation:'+anims[i%4]+' '+dur+'s ease-in-out infinite"></span>';
+  }
+  box.innerHTML=out;
+}
+function atInitIcons(){
+  if(atAnims.ready) return;
+  atAnims.nw=atLottie(document.getElementById('at-lt-new'),'plusToX',AT_INK);
+  atAnims.sr=atLottie(document.getElementById('at-lt-search'),'searchToX',AT_MUTED);
+  atAnims.ready=!!window.lottie;
 }
 
+// ---- load ----
 async function loadAdvertiserTasks(){
   var isAdmin=currentUserRole==='admin';
-  var q=sb.from('advertiser_tasks').select('*').order('created_at',{ascending:false});
-  var{data,error}=await q;
+  atInitParticles(); atInitIcons();
+  var{data,error}=await sb.from('advertiser_tasks').select('*').order('created_at',{ascending:false});
   if(error){ showNotif('Error loading tasks: '+error.message,'error'); advTasksCache=[]; }
   else { advTasksCache=data||[]; }
-  // non-admin: client-side filter para sa tasks na assigned sa kanila (old or new format)
   if(!isAdmin && currentUser?.id){
     advTasksCache=advTasksCache.filter(function(t){ return atTaskAssignedTo(t,currentUser.id); });
   }
+  document.querySelectorAll('#page-advertiser-tasks .admin-only').forEach(function(el){ el.style.display=isAdmin?'':'none'; });
 
-  document.querySelectorAll('#page-advertiser-tasks .admin-only').forEach(function(el){el.style.display=isAdmin?'':'none';});
-
-  if(isAdmin){
+  if(isAdmin && !atTeamCache.length){
     var{data:profs}=await sb.from('profiles').select('id,name,email,role').order('name');
-    var advs=(profs||[]).filter(function(p){ return p.role!=='client'; });
-    atTeamCache=advs.map(function(p){ return {id:p.id, name:p.name||p.email}; });
-    var checksEl=document.getElementById('at-assignee-checks');
-    if(checksEl){
-      checksEl.innerHTML=atTeamCache.map(function(p){
-        return '<label style="display:flex;align-items:center;gap:5px;font-size:11.5px;cursor:pointer;color:var(--text2)"><input type="checkbox" class="at-assignee-cb" value="'+p.id+'" data-name="'+ctEsc(p.name)+'" style="accent-color:var(--yellow)">'+ctEsc(p.name)+'</label>';
-      }).join('')||'<span style="font-size:11px;color:var(--text3)">Walang team members pa.</span>';
-    }
-    var filterSel=document.getElementById('at-filter-assignee');
-    if(filterSel){
-      var curF=filterSel.value;
-      var names={};
-      advs.forEach(function(p){ names[p.id]=p.name||p.email; });
-      advTasksCache.forEach(function(t){
-        if(Array.isArray(t.assignees)){ t.assignees.forEach(function(a){ if(a.id&&!names[a.id]) names[a.id]=a.name||'Unknown'; }); }
-        else if(t.assignee_id&&!names[t.assignee_id]){ names[t.assignee_id]=t.assignee_name||'Unknown'; }
-      });
-      filterSel.innerHTML='<option value="">All advertisers</option>'+Object.keys(names).map(function(id){
-        return '<option value="'+id+'">'+ctEsc(names[id])+'</option>';
-      }).join('');
-      filterSel.value=curF;
-    }
+    atTeamCache=(profs||[]).filter(function(p){ return p.role!=='client'; }).map(function(p){ return {id:p.id,name:p.name||p.email}; });
   }
-
+  atRenderWho(); atRenderFormPick(); atRenderPlat(); atRenderPendingTags();
   renderAdvertiserTasks();
 }
 
-function atFilteredTasks(){
+// ---- filters ----
+function atFilteredTasks(ignoreStatus){
   var q=(document.getElementById('at-search')?.value||'').toLowerCase().trim();
-  var assignee=document.getElementById('at-filter-assignee')?.value||'';
   return advTasksCache.filter(function(t){
-    if(assignee && !atTaskAssignedTo(t,assignee)) return false;
-    if(q && (t.title||'').toLowerCase().indexOf(q)===-1 && (t.details||'').toLowerCase().indexOf(q)===-1) return false;
+    if(atWho && !atTaskAssignedTo(t,atWho)) return false;
+    if(!ignoreStatus && atStatFilter && (t.status||'In Progress')!==atStatFilter) return false;
+    if(q){
+      var hay=((t.title||'')+' '+(t.details||'')+' '+(Array.isArray(t.tags)?t.tags.join(' '):'')).toLowerCase();
+      if(hay.indexOf(q)===-1) return false;
+    }
     return true;
   });
 }
+function atSetStat(s){ atStatFilter=s; renderAdvertiserTasks(); }
+function atSetWho(id){ atWho=id; atRenderWho(); renderAdvertiserTasks(); }
+function atSetView(v){
+  atView=v;
+  document.getElementById('at-list-view').style.display=v==='list'?'':'none';
+  document.getElementById('at-board-view').style.display=v==='board'?'':'none';
+  document.getElementById('at-v-list').classList.toggle('on',v==='list');
+  document.getElementById('at-v-board').classList.toggle('on',v==='board');
+  renderAdvertiserTasks();
+}
+var atQHas=false;
+function atOnSearch(){
+  var has=!!document.getElementById('at-search').value;
+  if(has!==atQHas){ atQHas=has; if(atAnims.sr){ atAnims.sr.setDirection(has?1:-1); atAnims.sr.play(); } }
+  renderAdvertiserTasks();
+}
+function atClearSearch(){ if(!atQHas) return; var el=document.getElementById('at-search'); el.value=''; atOnSearch(); el.focus(); }
 
-function atStatusColor(s){
-  return s==='Done'?'var(--green)':s==='Not Done'?'var(--red)':'var(--amber)';
+function atRenderWho(){
+  var el=document.getElementById('at-who'); if(!el) return;
+  el.innerHTML='<button class="atx-who-all'+(atWho===''?' on':'')+'" onclick="atSetWho(\'\')">All</button>'
+    +atTeamCache.map(function(p){
+      return '<button class="'+(atWho===p.id?'on':'')+'" onclick="atSetWho(\''+p.id+'\')" title="'+ctEsc(p.name)+'">'+atAvatar(p)+'</button>';
+    }).join('');
 }
 
+// ---- render ----
 function renderAdvertiserTasks(){
   var isAdmin=currentUserRole==='admin';
-  var rows=atFilteredTasks();
-  var active=rows.filter(function(t){ return (t.status||'In Progress')!=='Done'&&(t.status||'')!=='Not Done'; });
-  var history=rows.filter(function(t){ return (t.status||'')==='Done'||(t.status||'')==='Not Done'; });
+  var base=atFilteredTasks(true);
+  var cnt={'In Progress':0,'Done':0,'Not Done':0};
+  base.forEach(function(t){ var s=t.status||'In Progress'; if(cnt[s]!=null) cnt[s]++; });
+  var stats=[['In Progress','In progress',cnt['In Progress'],'#f5a524'],['Done','Done',cnt['Done'],'#34d399'],['Not Done','Not done',cnt['Not Done'],'#f87171'],['','All',base.length,'var(--yellow)']];
+  var sEl=document.getElementById('at-stats');
+  if(sEl) sEl.innerHTML=stats.map(function(s){
+    return '<button class="atx-stat'+(atStatFilter===s[0]?' on':'')+'" onclick="atSetStat(\''+s[0]+'\')"><div class="atx-stat-n">'+s[2]+'</div><div class="atx-stat-l"><span class="atx-dot" style="background:'+s[3]+'"></span>'+s[1]+'</div></button>';
+  }).join('');
 
-  var activeBody=document.getElementById('at-active-body');
-  if(activeBody){
-    if(!active.length){ activeBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">📋</div>No active tasks.</div>'; }
-    else {
-      activeBody.innerHTML=active.map(function(t){
-        var assigneeLine=isAdmin?ctEsc(atTaskAssigneeNames(t)):'';
-        var tagsHtml=atTagBadges(t.tags);
-        var linkHtml=t.result_link?' <a href="'+ctEsc(t.result_link)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--accent,#378ADD);font-size:10px;text-decoration:none">🔗</a>':'';
-        return '<div class="table-row" style="grid-template-columns:2.2fr 1.1fr 1fr 90px;cursor:pointer" onclick="openAtDetailModal(\''+t.id+'\')">'
-          +'<div><div class="row-name">'+ctEsc(t.title||'—')+linkHtml+'</div>'+(t.details?'<div class="row-sub">'+ctEsc(t.details)+'</div>':'')+(tagsHtml?'<div style="margin-top:3px">'+tagsHtml+'</div>':'')+'</div>'
-          +'<div class="row-meta" style="font-size:11px">'+assigneeLine+'</div>'
-          +'<div onclick="event.stopPropagation()">'+atStatusSelect(t)+'</div>'
-          +'<div onclick="event.stopPropagation()"><button onclick="deleteAdvertiserTask(\''+t.id+'\')" class="ghost-btn" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button></div>'
-          +'</div>';
+  var list=atFilteredTasks(false);
+  var head=document.getElementById('at-list-head');
+  if(head) head.innerHTML='<span>Task</span><span>'+(isAdmin?'Assigned':'')+'</span><span>'+(atStatFilter==='Done'||atStatFilter==='Not Done'?'Closed':'Added')+'</span><span>Status</span><span style="text-align:right">Actions</span>';
+
+  var rows=document.getElementById('at-rows');
+  atRowAnims.forEach(function(a){ a.destroy(); }); atRowAnims=[];
+  if(rows){
+    if(!list.length){
+      var emptyMsg=atStatFilter==='In Progress'?'Walang active na task. Pindutin ang New task para gumawa.':'Walang task na tugma sa filter na ito.';
+      rows.innerHTML='<div class="atx-empty"><b>Wala pa dito</b>'+emptyMsg+'</div>';
+    } else {
+      rows.innerHTML=list.map(function(t,i){
+        var st=t.status||'In Progress';
+        var when=atFmtDate(atIsHistory(t)&&t.done_at?t.done_at:t.created_at);
+        var det=t.details?String(t.details).replace(/\s*\n+\s*/g,' \u00b7 '):'';
+        var tags=(Array.isArray(t.tags)?t.tags:[]).map(function(g){ return atTagChip(g); }).join('');
+        var link=t.result_link?'<a class="atx-rlink" href="'+ctEsc(t.result_link)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">Result \u2197</a>':'';
+        return '<article class="atx-row atx-st" style="--sc:'+atStatusColor(st)+';animation-delay:'+Math.min(i*40,400)+'ms">'
+          +'<div style="min-width:0"><div class="atx-title" onclick="atOpenDrawer(\''+t.id+'\')">'+ctEsc(t.title||'\u2014')+atBrand(t.platform)+'</div>'
+          +(det?'<div class="atx-det" onclick="atOpenDrawer(\''+t.id+'\')">'+ctEsc(det)+'</div>':'')
+          +((tags||link)?'<div class="atx-meta">'+tags+link+'</div>':'')+'</div>'
+          +'<div class="atx-avs">'+(isAdmin?atTaskAssignees(t).map(atAvatar).join(''):'')+'</div>'
+          +'<div class="atx-time"><b>'+when.d+'</b>'+when.t+'</div>'
+          +atStatusSelect(t)
+          +'<div class="atx-acts"><button class="atx-ib" title="Edit" aria-label="Edit task" onclick="atOpenDrawer(\''+t.id+'\')"><span class="atx-lt" data-ic="edit"></span></button>'
+          +'<button class="atx-ib atx-del" title="Delete" aria-label="Delete task" onclick="deleteAdvertiserTask(\''+t.id+'\')"><span class="atx-lt" data-ic="trash2" data-red="1"></span></button></div>'
+          +'</article>';
       }).join('');
+      rows.querySelectorAll('.atx-lt[data-ic]').forEach(function(el){
+        var a=atLottie(el,el.getAttribute('data-ic'),el.getAttribute('data-red')?AT_RED:AT_MUTED);
+        atRowAnims.push(a);
+        el.closest('button').addEventListener('mouseenter',function(){ a.goToAndPlay(0,true); });
+      });
     }
   }
 
-  var historyBody=document.getElementById('at-history-body');
-  if(historyBody){
-    if(!history.length){ historyBody.innerHTML='<div class="table-empty"><div class="table-empty-icon">📜</div>No completed tasks yet.</div>'; }
-    else {
-      historyBody.innerHTML=history.map(function(t){
-        var assigneeLine=isAdmin?ctEsc(atTaskAssigneeNames(t)):'';
-        var doneAt=t.done_at?String(t.done_at).slice(0,16).replace('T',' '):'—';
-        var tagsHtml=atTagBadges(t.tags);
-        var linkHtml=t.result_link?' <a href="'+ctEsc(t.result_link)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--accent,#378ADD);font-size:10px;text-decoration:none">🔗</a>':'';
-        return '<div class="table-row" style="grid-template-columns:2.2fr 1.1fr 1fr 1.1fr;cursor:pointer" onclick="openAtDetailModal(\''+t.id+'\')" title="Click to view detail">'
-          +'<div><div class="row-name">'+ctEsc(t.title||'—')+linkHtml+'</div>'+(t.details?'<div class="row-sub">'+ctEsc(t.details)+'</div>':'')+(tagsHtml?'<div style="margin-top:3px">'+tagsHtml+'</div>':'')+'</div>'
-          +'<div class="row-meta" style="font-size:11px">'+assigneeLine+'</div>'
-          +'<div><span style="font-size:10px;color:'+atStatusColor(t.status)+';font-weight:700">'+ctEsc(t.status||'')+'</span></div>'
-          +'<div class="row-meta" style="font-size:11px">'+doneAt+'</div>'
-          +'</div>';
-      }).join('');
-    }
+  var board=document.getElementById('at-board-view');
+  if(board){
+    var bl=atFilteredTasks(true);
+    board.innerHTML=AT_STATUSES.map(function(s){
+      var items=bl.filter(function(t){ return (t.status||'In Progress')===s; });
+      return '<div class="atx-col"><div class="atx-col-h"><span class="atx-dot" style="background:'+atStatusColor(s)+'"></span>'+s+'<span class="atx-col-c">'+items.length+'</span></div>'
+        +(items.length?items.map(function(t,i){
+          var det=t.details?String(t.details).replace(/\s*\n+\s*/g,' \u00b7 '):'';
+          var when=atFmtDate(t.created_at);
+          return '<div class="atx-card atx-st" style="animation-delay:'+Math.min(i*40,400)+'ms" onclick="atOpenDrawer(\''+t.id+'\')">'
+            +'<div class="atx-title">'+ctEsc(t.title||'\u2014')+atBrand(t.platform)+'</div>'
+            +(det?'<div class="atx-det atx-det2">'+ctEsc(det)+'</div>':'')
+            +'<div class="atx-meta">'+(Array.isArray(t.tags)?t.tags:[]).map(function(g){ return atTagChip(g); }).join('')+'</div>'
+            +'<div class="atx-card-f"><div class="atx-avs">'+(isAdmin?atTaskAssignees(t).map(atAvatar).join(''):'')+'</div><span class="atx-time">'+when.d+'</span></div></div>';
+        }).join(''):'<div class="atx-empty atx-empty-sm">Wala pa</div>')
+        +'</div>';
+    }).join('');
   }
 }
 
-function openAtDetailModal(id){
-  var t=advTasksCache.find(function(x){ return x.id===id; });
-  if(!t){ showNotif('Task not found','error'); return; }
-  var isAdmin=currentUserRole==='admin';
-  var isHistory=(t.status==='Done'||t.status==='Not Done');
-  var createdAt=t.created_at?String(t.created_at).slice(0,16).replace('T',' '):'—';
-  var doneAt=t.done_at?String(t.done_at).slice(0,16).replace('T',' '):'—';
-
-  var body='<div class="form-field" style="margin-bottom:10px"><label class="form-label">Task</label><input class="form-input" id="at-detail-title-input" value="'+ctEsc(t.title||'')+'" style="font-weight:700"></div>';
-  body+='<div class="form-field" style="margin-bottom:12px"><label class="form-label">Details</label><textarea class="form-textarea" id="at-detail-details-input" rows="3" placeholder="Notes about the task...">'+ctEsc(t.details||'')+'</textarea></div>';
-  body+='<div class="form-field" style="margin-bottom:10px"><label class="form-label">Tags <span class="opt">(comma-separated)</span></label><input class="form-input" id="at-detail-tags-input" value="'+ctEsc((Array.isArray(t.tags)?t.tags:[]).join(', '))+'" placeholder="Retargeting, Winner..."></div>';
-  body+='<div class="form-field" style="margin-bottom:12px"><label class="form-label">🔗 Result link <span class="opt">(Ads Manager URL)</span></label><input class="form-input" id="at-detail-link-input" value="'+ctEsc(t.result_link||'')+'" placeholder="https://business.facebook.com/..."></div>';
-  if(isAdmin){
-    var curAssignees=Array.isArray(t.assignees)&&t.assignees.length?t.assignees:(t.assignee_id?[{id:t.assignee_id,name:t.assignee_name}]:[]);
-    var curIds=curAssignees.map(function(a){return a.id;});
-    body+='<div class="form-field" style="margin-bottom:12px"><label class="form-label">Assign to <span class="opt">(tik lahat)</span></label>'
-      +'<div id="at-detail-assignee-checks" style="display:flex;flex-wrap:wrap;gap:8px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px;max-height:120px;overflow-y:auto">'
-      +(atTeamCache.length?atTeamCache.map(function(p){
-        return '<label style="display:flex;align-items:center;gap:5px;font-size:11.5px;cursor:pointer;color:var(--text2)"><input type="checkbox" class="at-detail-cb" value="'+p.id+'" data-name="'+ctEsc(p.name)+'"'+(curIds.indexOf(p.id)>=0?' checked':'')+' style="accent-color:var(--yellow)">'+ctEsc(p.name)+'</label>';
-      }).join(''):'<span style="font-size:11px;color:var(--text3)">Loading team...</span>')
-      +'</div></div>';
-  }
-  body+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:11.5px;margin-bottom:6px">'
-    +'<div><span style="color:var(--text3)">Status:</span> <span style="color:'+atStatusColor(t.status)+';font-weight:700">'+ctEsc(t.status||'')+'</span></div>'
-    +(isAdmin?'<div><span style="color:var(--text3)">Assigned to:</span> '+ctEsc(atTaskAssigneeNames(t))+'</div>':'')
-    +'<div><span style="color:var(--text3)">Created:</span> '+createdAt+(t.created_by_name?' by '+ctEsc(t.created_by_name):'')+'</div>'
-    +(isHistory?'<div><span style="color:var(--text3)">Done at:</span> '+doneAt+'</div>':'')
-    +'</div>';
-  if(t.result_link){ body+='<div style="margin-top:8px"><a href="'+ctEsc(t.result_link)+'" target="_blank" rel="noopener" class="ghost-btn" style="text-decoration:none;font-size:11px;color:var(--accent,#378ADD)">🔗 Open Ads Manager link</a></div>'; }
-
-  document.getElementById('at-detail-body').innerHTML=body;
-
-  var actions='<button class="yellow-btn" onclick="saveAtDetailEdits(\''+t.id+'\')" style="flex:1">Save changes</button>';
-  if(isHistory){
-    actions+='<button class="ghost-btn" onclick="atReopenTask(\''+t.id+'\');closeAtDetailModal()">↺ Reopen</button>';
-  } else {
-    actions+='<div>'+atStatusSelect(t)+'</div>';
-  }
-  actions+='<button class="ghost-btn" onclick="deleteAdvertiserTask(\''+t.id+'\');closeAtDetailModal()" style="color:var(--red);border-color:rgba(239,68,68,0.2)">Delete</button>';
-  document.getElementById('at-detail-actions').innerHTML=actions;
-
-  document.getElementById('at-detail-modal').classList.add('open');
-}
-
-async function saveAtDetailEdits(id){
-  var titleEl=document.getElementById('at-detail-title-input');
-  var detailsEl=document.getElementById('at-detail-details-input');
-  var newTitle=titleEl?titleEl.value.trim():'';
-  if(!newTitle){ showNotif('Task title is required','error'); return; }
-  var tagsEl=document.getElementById('at-detail-tags-input');
-  var linkEl=document.getElementById('at-detail-link-input');
-  var tags=tagsEl?tagsEl.value.split(',').map(function(x){return x.trim();}).filter(Boolean):[];
-  var payload={ title:newTitle, details:detailsEl?detailsEl.value.trim()||null:null, tags:tags, result_link:linkEl?linkEl.value.trim()||null:null };
-  // update assignees (admin only)
-  if(currentUserRole==='admin'){
-    var checks=document.querySelectorAll('.at-detail-cb:checked');
-    if(checks.length){
-      var assignees=[];
-      checks.forEach(function(cb){ assignees.push({id:cb.value, name:cb.getAttribute('data-name')||''}); });
-      payload.assignees=assignees;
-      payload.assignee_id=assignees[0].id;
-      payload.assignee_name=assignees[0].name;
-    }
-  }
-  var{error}=await sb.from('advertiser_tasks').update(payload).eq('id',id);
-  if(error){ showNotif('Error: '+error.message,'error'); return; }
-  showNotif('Task updated! ✓','success');
-  closeAtDetailModal();
-  loadAdvertiserTasks();
-}
-
-function closeAtDetailModal(){
-  document.getElementById('at-detail-modal').classList.remove('open');
-}
-
+// ---- status dropdown (custom) ----
 function atStatusSelect(t){
-  var statuses=['In Progress','Done','Not Done'];
-  return '<select class="form-select" style="font-size:11px;padding:5px 8px" onchange="updateAdvertiserTaskStatus(\''+t.id+'\',this.value)">'
-    +statuses.map(function(s){
-      return '<option value="'+s+'"'+(t.status===s?' selected':'')+'>'+s+'</option>';
-    }).join('')
-    +'</select>';
+  var st=t.status||'In Progress';
+  return '<div class="atx-sel" id="atsel-'+t.id+'"><button class="atx-sel-btn" onclick="atOpenSel(\''+t.id+'\',event)"><span class="atx-dot" style="background:'+atStatusColor(st)+'"></span>'+st
+    +'<svg class="atx-chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>'
+    +'<div class="atx-sel-menu">'+AT_STATUSES.map(function(s){
+      return '<div onclick="atPickStatus(\''+t.id+'\',\''+s+'\')"><span class="atx-dot" style="background:'+atStatusColor(s)+'"></span>'+s+'</div>';
+    }).join('')+'</div></div>';
 }
-
-function atToggleHistory(){
-  advHistoryMode=!advHistoryMode;
-  document.getElementById('at-active-wrap').style.display=advHistoryMode?'none':'';
-  document.getElementById('at-history-wrap').style.display=advHistoryMode?'':'none';
-  var btn=document.getElementById('at-toggle-history');
-  if(btn) btn.textContent=advHistoryMode?'📋 Back to active tasks':'📜 View history';
+function atCloseSels(){
+  document.querySelectorAll('.atx-sel.open').forEach(function(s){ s.classList.remove('open'); });
+  document.querySelectorAll('.atx-row.atx-dd').forEach(function(r){ r.classList.remove('atx-dd'); });
 }
-
-async function atReopenTask(id){
-  if(!confirm('I-reopen ang task na ito pabalik sa In Progress?'))return;
-  var{error}=await sb.from('advertiser_tasks').update({status:'In Progress',done_at:null,updated_at:new Date().toISOString()}).eq('id',id);
-  if(error){ showNotif('Error: '+error.message,'error'); return; }
-  showNotif('Task reopened','success');
-  loadAdvertiserTasks();
+function atOpenSel(id,e){
+  e.stopPropagation();
+  var s=document.getElementById('atsel-'+id), was=s.classList.contains('open');
+  atCloseSels();
+  if(!was){ s.classList.add('open'); var r=s.closest('.atx-row'); if(r) r.classList.add('atx-dd'); }
 }
+document.addEventListener('click',function(e){ if(!e.target.closest||!e.target.closest('.atx-sel')) atCloseSels(); });
+function atPickStatus(id,s){ atCloseSels(); updateAdvertiserTaskStatus(id,s); }
 
-var atPendingTags=[];
+// ---- new task form ----
+function atToggleForm(force){
+  var f=document.getElementById('at-form'); if(!f) return;
+  var open=typeof force==='boolean'?force:!f.classList.contains('open');
+  f.classList.toggle('open',open);
+  var lbl=document.getElementById('at-new-lbl'); if(lbl) lbl.textContent=open?'Close':'New task';
+  var btn=document.getElementById('at-new-btn'); if(btn) btn.setAttribute('aria-expanded',open);
+  if(atAnims.nw){ atAnims.nw.setDirection(open?1:-1); atAnims.nw.play(); }
+  if(open) setTimeout(function(){ var t=document.getElementById('at-title'); if(t) t.focus(); },320);
+}
+function atRenderFormPick(){
+  var el=document.getElementById('at-pick'); if(!el) return;
+  el.innerHTML=atTeamCache.length?atTeamCache.map(function(p){
+    return '<button type="button" class="'+(atFormWho.indexOf(p.id)>=0?'on':'')+'" onclick="atToggleFormWho(\''+p.id+'\')">'+atAvatar(p)+ctEsc(p.name)
+      +'<svg class="atx-chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></button>';
+  }).join(''):'<span style="font-size:12px;color:var(--text3)">Walang team members pa.</span>';
+}
+function atToggleFormWho(id){ var i=atFormWho.indexOf(id); if(i>=0) atFormWho.splice(i,1); else atFormWho.push(id); atRenderFormPick(); }
+function atRenderPlat(){
+  var el=document.getElementById('at-plat'); if(!el) return;
+  el.innerHTML=['meta','tiktok'].map(function(p){
+    return '<button type="button" class="'+(atFormPlat===p?'on':'')+'" onclick="atFormPlat=\''+p+'\';atRenderPlat()">'+atBrand(p,14)+(p==='meta'?'Meta':'TikTok')+'</button>';
+  }).join('');
+}
 function atChipKey(e){
   var inp=e.target;
   if(e.key==='Enter'||e.key===','){
-    e.preventDefault();
-    var v=inp.value.trim();
-    if(v && atPendingTags.indexOf(v)===-1){ atPendingTags.push(v); inp.value=''; atRenderPendingTags(); }
+    e.preventDefault(); atAddPendingTag(inp.value); inp.value='';
   } else if(e.key==='Backspace' && !inp.value && atPendingTags.length){
     atPendingTags.pop(); atRenderPendingTags();
   }
 }
+function atAddPendingTag(v){ v=String(v||'').trim(); if(v&&atPendingTags.indexOf(v)===-1) atPendingTags.push(v); atRenderPendingTags(); }
+function atDelPendingTag(v){ atPendingTags=atPendingTags.filter(function(x){ return x!==v; }); atRenderPendingTags(); }
 function atRenderPendingTags(){
-  var wrap=document.getElementById('at-chipwrap');
-  var inp=document.getElementById('at-chipinput');
-  if(!wrap||!inp) return;
-  wrap.querySelectorAll('.at-pending-chip').forEach(function(el){ el.remove(); });
-  atPendingTags.forEach(function(p,i){
-    var s=document.createElement('span');
-    s.className='ct-chip at-pending-chip';
-    s.innerHTML=ctEsc(p)+'<span class="ct-chip-x" onclick="atDelPendingTag('+i+')">\u00d7</span>';
-    wrap.insertBefore(s,inp);
-  });
+  var wrap=document.getElementById('at-tagbox'), inp=document.getElementById('at-chipinput');
+  if(wrap&&inp){
+    wrap.querySelectorAll('.atx-tag').forEach(function(el){ el.remove(); });
+    atPendingTags.forEach(function(p){ var s=document.createElement('span'); s.innerHTML=atTagChip(p,'atDelPendingTag'); wrap.insertBefore(s.firstChild,inp); });
+  }
+  var sg=document.getElementById('at-sugg');
+  if(sg) sg.innerHTML=AT_TAG_SUGG.filter(function(g){ return atPendingTags.indexOf(g)<0; }).map(function(g){ return '<button type="button" onclick="atAddPendingTag(\''+g+'\')">+ '+g+'</button>'; }).join('');
 }
-function atDelPendingTag(i){ atPendingTags.splice(i,1); atRenderPendingTags(); }
-function atTagBadges(tags){
-  if(!Array.isArray(tags)||!tags.length) return '';
-  return tags.map(function(t){
-    return '<span style="display:inline-block;font-size:9.5px;font-weight:600;padding:1px 7px;border-radius:999px;background:rgba(168,139,250,0.14);color:#a78bfa;border:0.5px solid rgba(168,139,250,0.3);margin-right:4px;margin-top:2px">'+ctEsc(t)+'</span>';
-  }).join('');
+
+// Supabase write na may fallback kung wala pang `platform` column
+async function atWrite(fn,payload){
+  var r=await fn(payload);
+  if(r.error && /platform/i.test(r.error.message||'') && 'platform' in payload){
+    var p2=Object.assign({},payload); delete p2.platform;
+    r=await fn(p2);
+    if(!r.error) console.warn('advertiser_tasks.platform column missing — run the migration SQL to save platforms.');
+  }
+  return r;
 }
 
 async function saveAdvertiserTask(){
-  var title=document.getElementById('at-title')?.value?.trim();
-  if(!title){ showNotif('Task is required','error'); return; }
+  var titleEl=document.getElementById('at-title');
+  var title=titleEl?.value?.trim();
+  if(!title){ if(titleEl){ titleEl.classList.add('atx-err'); titleEl.focus(); } showNotif('Lagyan muna ng task name','error'); return; }
+  titleEl.classList.remove('atx-err');
   var assignees=[];
   if(currentUserRole==='admin'){
-    document.querySelectorAll('.at-assignee-cb:checked').forEach(function(cb){
-      assignees.push({id:cb.value, name:cb.getAttribute('data-name')||''});
-    });
+    atFormWho.forEach(function(id){ var p=atTeamCache.find(function(x){ return x.id===id; }); if(p) assignees.push({id:p.id,name:p.name}); });
   }
-  // kung walang tik, i-assign sa gumawa (admin sa sarili)
   if(!assignees.length){
     assignees.push({id:currentUser?.id, name:document.getElementById('user-name-display')?.textContent||currentUser?.email||''});
   }
   var leftover=document.getElementById('at-chipinput')?.value?.trim();
-  if(leftover && atPendingTags.indexOf(leftover)===-1){ atPendingTags.push(leftover); }
+  if(leftover) atAddPendingTag(leftover);
   var payload={
     title:title,
     details:document.getElementById('at-details')?.value?.trim()||null,
@@ -10111,39 +10144,146 @@ async function saveAdvertiserTask(){
     assignees:assignees,
     status:'In Progress',
     tags:atPendingTags.slice(),
+    platform:atFormPlat,
     created_by:currentUser?.id,
     created_by_name:document.getElementById('user-name-display')?.textContent||currentUser?.email||''
   };
   var btn=document.getElementById('at-save-btn');
-  if(btn){btn.disabled=true;btn.textContent='Adding...';}
-  var{error}=await sb.from('advertiser_tasks').insert(payload);
-  if(btn){btn.disabled=false;btn.textContent='Add task';}
+  if(btn){ btn.disabled=true; btn.lastChild.textContent='Adding...'; }
+  var{error}=await atWrite(function(p){ return sb.from('advertiser_tasks').insert(p); },payload);
+  if(btn){ btn.disabled=false; btn.lastChild.textContent='Add task'; }
   if(error){ showNotif('Error: '+error.message,'error'); return; }
-  showNotif('Task added! \u2713','success');
-  ['at-title','at-details'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-  document.querySelectorAll('.at-assignee-cb:checked').forEach(function(cb){ cb.checked=false; });
-  var ci=document.getElementById('at-chipinput'); if(ci)ci.value='';
-  atPendingTags=[]; atRenderPendingTags();
+  showNotif('Task added \u2713','success');
+  ['at-title','at-details','at-chipinput'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  atFormWho=[]; atPendingTags=[]; atRenderFormPick(); atRenderPendingTags();
+  atToggleForm(false);
+  atStatFilter='In Progress';
   loadAdvertiserTasks();
 }
 
 async function updateAdvertiserTaskStatus(id,status){
   var payload={status:status,updated_at:new Date().toISOString()};
-  if(status==='Done'||status==='Not Done'){ payload.done_at=new Date().toISOString(); }
-  else { payload.done_at=null; }
+  payload.done_at=(status==='Done'||status==='Not Done')?new Date().toISOString():null;
+  var t=advTasksCache.find(function(x){ return x.id===id; });
+  if(t){ Object.assign(t,payload); renderAdvertiserTasks(); }   // optimistic, walang reload flash
   var{error}=await sb.from('advertiser_tasks').update(payload).eq('id',id);
-  if(error){ showNotif('Error: '+error.message,'error'); return; }
-  showNotif('Status updated','success');
-  loadAdvertiserTasks();
+  if(error){ showNotif('Error: '+error.message,'error'); loadAdvertiserTasks(); return; }
+  showNotif(status==='In Progress'?'Task reopened':'Status: '+status,'success');
 }
 
 async function deleteAdvertiserTask(id){
-  if(!confirm('Delete this task?'))return;
+  if(!confirm('Delete this task?')) return;
   var{error}=await sb.from('advertiser_tasks').delete().eq('id',id);
   if(error){ showNotif('Error: '+error.message,'error'); return; }
+  advTasksCache=advTasksCache.filter(function(x){ return x.id!==id; });
+  if(atDrawerId===id) atCloseDrawer();
+  renderAdvertiserTasks();
   showNotif('Task deleted','success');
+}
+
+// ---- task detail drawer ----
+function atOpenDrawer(id){
+  var t=advTasksCache.find(function(x){ return x.id===id; });
+  if(!t){ showNotif('Task not found','error'); return; }
+  atDrawerId=id;
+  atDraft={title:t.title||'',details:t.details||'',tags:(Array.isArray(t.tags)?t.tags:[]).slice(),link:t.result_link||'',
+    who:atTaskAssignees(t).map(function(a){ return a.id; }),platform:t.platform||'',status:t.status||'In Progress'};
+  atRenderDrawer();
+  document.getElementById('at-scrim').classList.add('open');
+  document.getElementById('at-drawer').classList.add('open');
+  setTimeout(function(){ var el=document.getElementById('atd-title'); if(el) el.focus(); },380);
+}
+function atCloseDrawer(){
+  document.getElementById('at-scrim')?.classList.remove('open');
+  document.getElementById('at-drawer')?.classList.remove('open');
+  atDrawerId=null; atDraft=null;
+}
+function atDrawerSync(){
+  if(!atDraft) return;
+  atDraft.title=document.getElementById('atd-title').value;
+  atDraft.details=document.getElementById('atd-details').value;
+  atDraft.link=document.getElementById('atd-link').value;
+}
+function atDrawerSet(k,v){
+  atDrawerSync();
+  if(k==='who'){ var i=atDraft.who.indexOf(v); if(i>=0) atDraft.who.splice(i,1); else atDraft.who.push(v); }
+  else if(k==='tag+'){ v=String(v||'').trim(); if(v&&atDraft.tags.indexOf(v)<0) atDraft.tags.push(v); }
+  else if(k==='tag-'){ atDraft.tags=atDraft.tags.filter(function(x){ return x!==v; }); }
+  else atDraft[k]=v;
+  atRenderDrawer();
+}
+function atDrawerTagKey(e){
+  if(e.key==='Enter'||e.key===','){ e.preventDefault(); atDrawerSet('tag+',e.target.value); setTimeout(function(){ var el=document.getElementById('atd-tag'); if(el) el.focus(); },20); }
+}
+function atDrawerRmTag(v){ atDrawerSet('tag-',v); }
+function atDrawerKey(e){
+  if(e.key==='Escape'){ e.preventDefault(); atCloseDrawer(); }
+  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); saveAtDetailEdits(); }
+}
+function atGrow(el){ if(!el) return; el.style.height='auto'; el.style.height=Math.min(el.scrollHeight+2,440)+'px'; }
+function atRenderDrawer(){
+  var x=atDraft, t=advTasksCache.find(function(y){ return y.id===atDrawerId; }), d=document.getElementById('at-drawer');
+  if(!x||!t||!d) return;
+  var isAdmin=currentUserRole==='admin';
+  var created=atFmtDate(t.created_at), done=atFmtDate(t.done_at);
+  var h='<div class="atx-dr-head"><h2 id="atd-h"><span class="atx-lt" id="atd-lt"></span>Task detail</h2>'
+    +'<button class="atx-ib" onclick="atCloseDrawer()" aria-label="Close"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>'
+    +'<div class="atx-dr-body">'
+    +'<div class="atx-field"><label for="atd-title">Task</label><input class="atx-inp atx-dr-title" id="atd-title" value="'+ctEsc(x.title)+'"></div>'
+    +'<div class="atx-field"><label for="atd-details">Details</label><textarea class="atx-inp atx-dr-det" id="atd-details" oninput="atGrow(this)" placeholder="Budget, audience, creatives, deadline...">'+ctEsc(x.details)+'</textarea></div>'
+    +'<div class="atx-field"><label>Status</label><div class="atx-seg">'+AT_STATUSES.map(function(s){
+        return '<button type="button" class="'+(x.status===s?'on':'')+'" onclick="atDrawerSet(\'status\',\''+s+'\')"><span class="atx-dot" style="background:'+atStatusColor(s)+'"></span>'+s+'</button>';
+      }).join('')+'</div></div>'
+    +'<div class="atx-field"><label>Tags</label><div class="atx-tagbox">'+x.tags.map(function(g){ return atTagChip(g,'atDrawerRmTag'); }).join('')
+    +'<input id="atd-tag" placeholder="Type tag + Enter" onkeydown="atDrawerTagKey(event)"></div>'
+    +'<div class="atx-sugg">'+AT_TAG_SUGG.filter(function(g){ return x.tags.indexOf(g)<0; }).map(function(g){ return '<button type="button" onclick="atDrawerSet(\'tag+\',\''+g+'\')">+ '+g+'</button>'; }).join('')+'</div></div>'
+    +'<div class="atx-field"><label for="atd-link">Result link <span>(Ads Manager URL)</span></label><div class="atx-linkrow">'
+    +'<input class="atx-inp" id="atd-link" value="'+ctEsc(x.link)+'" placeholder="https://business.facebook.com/..." oninput="var o=document.getElementById(\'atd-open\');o.classList.toggle(\'off\',!this.value.trim());o.href=this.value">'
+    +'<a id="atd-open" class="'+(x.link?'':'off')+'" href="'+ctEsc(x.link)+'" target="_blank" rel="noopener">Open \u2197</a></div></div>'
+    +(isAdmin?'<div class="atx-field"><label>Assign to <span>(pwede madami)</span></label><div class="atx-pick">'+atTeamCache.map(function(p){
+        return '<button type="button" class="'+(x.who.indexOf(p.id)>=0?'on':'')+'" onclick="atDrawerSet(\'who\',\''+p.id+'\')">'+atAvatar(p)+ctEsc(p.name)
+          +'<svg class="atx-chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></button>';
+      }).join('')+'</div></div>':'')
+    +'<div class="atx-field"><label>Platform</label><div class="atx-seg">'+['meta','tiktok'].map(function(p){
+        return '<button type="button" class="'+(x.platform===p?'on':'')+'" onclick="atDrawerSet(\'platform\',\''+p+'\')">'+atBrand(p,14)+(p==='meta'?'Meta':'TikTok')+'</button>';
+      }).join('')+'</div></div>'
+    +'<div class="atx-dr-meta"><div>Created<b>'+created.d+(created.t?' \u00b7 '+created.t:'')+'</b></div><div>Created by<b>'+ctEsc(t.created_by_name||'\u2014')+'</b></div>'
+    +(t.done_at?'<div>Closed<b>'+done.d+' \u00b7 '+done.t+'</b></div>':'')+'</div>'
+    +'</div>'
+    +'<div class="atx-dr-foot"><span class="atx-hint"><span class="atx-kbd">Ctrl</span>+<span class="atx-kbd">Enter</span> save \u00b7 <span class="atx-kbd">Esc</span> close</span>'
+    +'<button class="atx-btn atx-btn-del" onclick="deleteAdvertiserTask(\''+t.id+'\')">Delete</button>'
+    +'<button class="atx-btn atx-btn-gold" id="atd-save" onclick="saveAtDetailEdits()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>Save</button></div>';
+  d.innerHTML=h;
+  atGrow(document.getElementById('atd-details'));
+  if(atAnims.dr) atAnims.dr.destroy();
+  atAnims.dr=atLottie(document.getElementById('atd-lt'),'edit',AT_GOLD); atAnims.dr.goToAndPlay(0,true);
+}
+async function saveAtDetailEdits(){
+  if(!atDraft) return;
+  atDrawerSync();
+  var id=atDrawerId, x=atDraft;
+  if(!x.title.trim()){ var ti=document.getElementById('atd-title'); ti.classList.add('atx-err'); ti.focus(); showNotif('Task title is required','error'); return; }
+  var t=advTasksCache.find(function(y){ return y.id===id; });
+  var payload={title:x.title.trim(), details:x.details.trim()||null, tags:x.tags.slice(), result_link:x.link.trim()||null, platform:x.platform||null, updated_at:new Date().toISOString()};
+  if(t && x.status!==(t.status||'In Progress')){
+    payload.status=x.status;
+    payload.done_at=(x.status==='Done'||x.status==='Not Done')?new Date().toISOString():null;
+  }
+  if(currentUserRole==='admin' && x.who.length){
+    var assignees=x.who.map(function(wid){ var p=atTeamCache.find(function(q){ return q.id===wid; }); return p?{id:p.id,name:p.name}:null; }).filter(Boolean);
+    if(assignees.length){ payload.assignees=assignees; payload.assignee_id=assignees[0].id; payload.assignee_name=assignees[0].name; }
+  }
+  var btn=document.getElementById('atd-save'); if(btn) btn.disabled=true;
+  var{error}=await atWrite(function(p){ return sb.from('advertiser_tasks').update(p).eq('id',id); },payload);
+  if(btn) btn.disabled=false;
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  showNotif('Task updated \u2713','success');
+  atCloseDrawer();
   loadAdvertiserTasks();
 }
+// legacy name (kung may tumatawag pa)
+function closeAtDetailModal(){ atCloseDrawer(); }
+function openAtDetailModal(id){ atOpenDrawer(id); }
 
 
 // ============================================================

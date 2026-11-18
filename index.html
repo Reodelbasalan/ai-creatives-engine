@@ -1356,6 +1356,7 @@ body {
   }
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie_light.min.js"></script>
 </head>
 <body>
 
@@ -3259,79 +3260,57 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
       <!-- ADVERTISER TASKS PAGE -->
       <div class="page" id="page-advertiser-tasks">
-        <div style="max-width:1000px">
+        <div class="ob-bg"><div class="ob-wave"></div><div class="ob-glow"></div><div class="ob-pcl" id="at-particles"></div></div>
+        <div class="atx">
 
-          <!-- Add task -->
-          <div class="form-card" style="margin-bottom:14px">
-            <div class="form-card-title"><span>📋</span> Add task</div>
-            <div class="form-grid">
-              <div class="form-field full">
-                <label class="form-label">Task *</label>
-                <input class="form-input" id="at-title" placeholder="e.g. Launch Batik SW ads for Weng">
+          <header class="atx-head">
+            <div>
+              <h1>Advertiser tasks</h1>
+              <p>Assign, track and close out ad work across the team.</p>
+            </div>
+            <div class="atx-stats" id="at-stats"></div>
+          </header>
+
+          <div class="atx-toolbar">
+            <button class="atx-btn atx-btn-gold" id="at-new-btn" onclick="atToggleForm()" aria-expanded="false"><span class="atx-lt" id="at-lt-new"></span><span id="at-new-lbl">New task</span></button>
+            <div class="atx-search">
+              <span class="atx-lt" id="at-lt-search" onclick="atClearSearch()" title="Clear"></span>
+              <input id="at-search" placeholder="Search tasks, details or tags" oninput="atOnSearch()" aria-label="Search tasks">
+            </div>
+            <div class="atx-who admin-only" id="at-who" aria-label="Filter by advertiser"></div>
+            <div class="atx-view">
+              <button class="on" id="at-v-list" onclick="atSetView('list')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>List</button>
+              <button id="at-v-board" onclick="atSetView('board')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/></svg>Board</button>
+            </div>
+          </div>
+
+          <!-- New task (collapsible) -->
+          <section class="atx-form" id="at-form"><div><div class="atx-form-in">
+            <div class="atx-f-grid">
+              <div class="atx-col-f">
+                <div class="atx-field"><label for="at-title">Task</label><input class="atx-inp" id="at-title" placeholder="e.g. Launch Batik SW retargeting for Weng"></div>
+                <div class="atx-field"><label for="at-details">Details <span>(optional)</span></label><textarea class="atx-inp" id="at-details" rows="4" placeholder="Budget, audience, creatives to use, deadline"></textarea></div>
               </div>
-              <div class="form-field full">
-                <label class="form-label">Details (optional)</label>
-                <textarea class="form-textarea" id="at-details" rows="2" placeholder="Notes about the task..."></textarea>
-              </div>
-              <div class="form-field admin-only full" id="at-assignee-field">
-                <label class="form-label">Assign to <span class="opt">(tik lahat ng dapat)</span></label>
-                <div id="at-assignee-checks" style="display:flex;flex-wrap:wrap;gap:8px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px;max-height:130px;overflow-y:auto"></div>
-              </div>
-              <div class="form-field full">
-                <label class="form-label">Tags <span class="opt">(pili o type + Enter)</span></label>
-                <div class="ct-chipwrap" id="at-chipwrap" onclick="document.getElementById('at-chipinput').focus()">
-                  <input id="at-chipinput" list="at-tag-presets" placeholder="e.g. Retargeting, Winner..." style="flex:1;min-width:140px;background:transparent;border:none;color:var(--text);font-size:12.5px;outline:none;font-family:'Inter',sans-serif;padding:2px" onkeydown="atChipKey(event)">
-                  <datalist id="at-tag-presets">
-                    <option value="Retargeting"></option>
-                    <option value="Winner"></option>
-                    <option value="Testing"></option>
-                    <option value="Scaling"></option>
-                    <option value="New launch"></option>
-                    <option value="Optimization"></option>
-                  </datalist>
+              <div class="atx-col-f">
+                <div class="atx-field admin-only"><label>Assign to <span>(pwede madami — kapag wala, sa'yo ma-a-assign)</span></label><div class="atx-pick" id="at-pick"></div></div>
+                <div class="atx-field"><label>Platform</label><div class="atx-seg" id="at-plat"></div></div>
+                <div class="atx-field"><label>Tags</label>
+                  <div class="atx-tagbox" id="at-tagbox" onclick="document.getElementById('at-chipinput').focus()"><input id="at-chipinput" placeholder="Type tag + Enter" onkeydown="atChipKey(event)"></div>
+                  <div class="atx-sugg" id="at-sugg"></div>
                 </div>
               </div>
             </div>
-            <div style="margin-top:12px">
-              <button class="yellow-btn" id="at-save-btn" onclick="saveAdvertiserTask()">Add task</button>
+            <div class="atx-f-foot">
+              <button class="atx-btn" onclick="atToggleForm(false)">Cancel</button>
+              <button class="atx-btn atx-btn-gold" id="at-save-btn" onclick="saveAdvertiserTask()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>Add task</button>
             </div>
-          </div>
+          </div></div></section>
 
-          <!-- Filters -->
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
-            <input class="form-input" id="at-search" placeholder="Search task..." style="max-width:260px" oninput="renderAdvertiserTasks()">
-            <select class="form-select admin-only" id="at-filter-assignee" style="max-width:180px" onchange="renderAdvertiserTasks()">
-              <option value="">All advertisers</option>
-            </select>
-            <button class="ghost-btn" id="at-toggle-history" onclick="atToggleHistory()" style="font-size:11px">📜 View history</button>
-          </div>
-
-          <!-- Active tasks -->
-          <div id="at-active-wrap">
-            <div class="data-table" style="margin-bottom:16px">
-              <div class="table-head" style="grid-template-columns:2.2fr 1.1fr 1fr 90px">
-                <span>Task</span>
-                <span>Assigned to</span>
-                <span>Status</span>
-                <span></span>
-              </div>
-              <div id="at-active-body"></div>
-            </div>
-          </div>
-
-          <!-- History (hidden by default) -->
-          <div id="at-history-wrap" style="display:none">
-            <div class="form-card-title" style="margin-bottom:8px"><span>📜</span> Task history</div>
-            <div class="data-table">
-              <div class="table-head" style="grid-template-columns:2.2fr 1.1fr 1fr 1.1fr">
-                <span>Task</span>
-                <span>Assigned to</span>
-                <span>Status</span>
-                <span>Done at</span>
-              </div>
-              <div id="at-history-body"></div>
-            </div>
-          </div>
+          <section id="at-list-view">
+            <div class="atx-lhead" id="at-list-head"></div>
+            <div class="atx-rows" id="at-rows"></div>
+          </section>
+          <section id="at-board-view" class="atx-board" style="display:none"></section>
 
         </div>
       </div>
@@ -4758,6 +4737,178 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
     .ob-del-btn:hover { color:#f09595; }
 
     .ob-empty { padding:34px 16px; text-align:center; color:#7a7a85; font-size:12px; }
+
+    /* ─── ADVERTISER TASKS — REDESIGN (namespaced atx-) ─── */
+    #page-advertiser-tasks,#at-drawer{
+      --ax-line:rgba(255,240,200,.07);--ax-line2:rgba(255,240,200,.12);
+      --ax-bg2:rgba(18,17,14,.82);--ax-bg3:#191713;--ax-bg4:#211e19;
+      --ax-t1:#f3f1ec;--ax-t2:#b9b4a8;--ax-t3:#8a857a;--ax-t4:#5f5b52;
+      --ax-gold:#f5c518;--ax-gold-soft:rgba(245,197,24,.12);--ax-red:#f87171;
+      --ax-ease:cubic-bezier(.2,.8,.2,1);
+    }
+    #page-advertiser-tasks{position:relative}
+    #page-advertiser-tasks:not(.active) .ob-wave,#page-advertiser-tasks:not(.active) .ob-glow,#page-advertiser-tasks:not(.active) .ob-pcl span{animation-play-state:paused!important}
+    .atx{position:relative;z-index:1;width:100%}
+    .atx-lt{width:18px;height:18px;display:inline-block;flex-shrink:0}
+    .atx-lt svg{display:block}
+    .atx-brand{width:auto;vertical-align:-1px;margin-left:6px;opacity:.95}
+    .atx-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+
+    .atx-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap}
+    .atx-head h1{font-size:30px;font-weight:800;letter-spacing:-.6px;line-height:1.1;color:var(--ax-t1)}
+    .atx-head p{font-size:14px;color:var(--ax-t3);margin-top:6px}
+    .atx-stats{display:flex;gap:8px;flex-wrap:wrap}
+    .atx-stat{background:rgba(18,17,14,.7);border:1px solid var(--ax-line);border-radius:12px;padding:12px 18px;min-width:128px;text-align:left;cursor:pointer;color:var(--ax-t1);font-family:inherit;transition:border-color .2s var(--ax-ease),transform .2s var(--ax-ease),background .2s}
+    .atx-stat:hover{border-color:var(--ax-line2);transform:translateY(-1px)}
+    .atx-stat:active{transform:scale(.98)}
+    .atx-stat.on{border-color:rgba(245,197,24,.45);background:rgba(245,197,24,.07)}
+    .atx-stat-n{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1.2}
+    .atx-stat-l{font-size:11.5px;color:var(--ax-t3);margin-top:2px;display:flex;align-items:center;gap:6px}
+
+    .atx-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+    .atx-btn{height:40px;border-radius:10px;border:1px solid var(--ax-line2);background:var(--ax-bg3);color:var(--ax-t2);font-size:13px;font-weight:650;padding:0 14px;display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:inherit;transition:background .2s var(--ax-ease),border-color .2s,color .2s,transform .12s var(--ax-ease)}
+    .atx-btn:hover{color:var(--ax-t1);border-color:rgba(255,240,200,.2)}
+    .atx-btn:active{transform:scale(.97)}
+    .atx-btn:disabled{opacity:.6;cursor:default}
+    .atx-btn-gold{background:var(--ax-gold);border-color:var(--ax-gold);color:#1a1400}
+    .atx-btn-gold:hover{background:#ffd23a;color:#1a1400;border-color:#ffd23a}
+    .atx-btn-del{color:var(--ax-red);border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.06)}
+    .atx-btn-del:hover{color:#fff;background:rgba(248,113,113,.18);border-color:rgba(248,113,113,.5)}
+    .atx-search{flex:1;min-width:220px;position:relative}
+    .atx-search .atx-lt{position:absolute;left:11px;top:50%;transform:translateY(-50%);cursor:pointer;z-index:1}
+    .atx-search input{width:100%;height:40px;background:rgba(25,23,19,.8);border:1px solid var(--ax-line2);border-radius:10px;padding:0 14px 0 38px;color:var(--ax-t1);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s}
+    .atx-search input:focus{border-color:rgba(245,197,24,.45);box-shadow:0 0 0 3px var(--ax-gold-soft)}
+    .atx-who{flex-shrink:0;display:flex;gap:4px;background:rgba(25,23,19,.8);border:1px solid var(--ax-line2);border-radius:10px;padding:3px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+    .atx-who::-webkit-scrollbar{display:none}
+    .atx-who button{width:34px;height:34px;flex-shrink:0;border-radius:9px;border:0;background:transparent;cursor:pointer;display:grid;place-items:center;transition:background .2s}
+    .atx-who button:hover{background:rgba(255,255,255,.04)}
+    .atx-who button.on{background:var(--ax-gold-soft)}
+    .atx-who button.on .atx-av{box-shadow:0 0 0 2px var(--ax-gold)}
+    .atx-who .atx-who-all{width:auto;padding:0 11px;font-size:12px;font-weight:650;color:var(--ax-t3);font-family:inherit}
+    .atx-who .atx-who-all.on{color:var(--ax-gold)}
+    .atx-view{flex-shrink:0;display:flex;background:rgba(25,23,19,.8);border:1px solid var(--ax-line2);border-radius:10px;padding:3px}
+    .atx-view button{height:32px;padding:0 11px;border:0;border-radius:8px;background:transparent;color:var(--ax-t3);font-size:12px;font-weight:650;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit}
+    .atx-view button.on{background:var(--ax-bg4);color:var(--ax-t1)}
+
+    .atx-av{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:10px;font-weight:800;color:#1a1400;flex-shrink:0}
+    .atx-avs{display:flex;flex-wrap:wrap}
+    .atx-avs .atx-av{border:2px solid #12110e;margin-left:-6px}
+    .atx-avs .atx-av:first-child{margin-left:0}
+
+    .atx-form{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ax-ease),margin .35s var(--ax-ease)}
+    .atx-form.open{grid-template-rows:1fr;margin-bottom:16px}
+    .atx-form>div{overflow:hidden;min-height:0}
+    .atx-form-in{background:rgba(18,17,14,.88);border:1px solid var(--ax-line2);border-radius:16px;padding:20px}
+    .atx-f-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}
+    .atx-col-f{display:flex;flex-direction:column;gap:14px;min-width:0}
+    .atx-field{display:flex;flex-direction:column;gap:7px}
+    .atx-field label{font-size:12px;font-weight:650;color:var(--ax-t2)}
+    .atx-field label span{color:var(--ax-t4);font-weight:500}
+    .atx-inp{background:var(--ax-bg3);border:1px solid var(--ax-line2);border-radius:10px;padding:11px 13px;color:var(--ax-t1);font-size:13.5px;font-family:inherit;outline:none;resize:vertical;transition:border-color .2s,box-shadow .2s}
+    .atx-inp:focus{border-color:rgba(245,197,24,.45);box-shadow:0 0 0 3px var(--ax-gold-soft)}
+    .atx-inp::placeholder,.atx-tagbox input::placeholder,.atx-search input::placeholder{color:var(--ax-t4)}
+    .atx-inp.atx-err{border-color:var(--ax-red)}
+    .atx-pick,.atx-seg{display:flex;flex-wrap:wrap;gap:6px}
+    .atx-pick button,.atx-seg button{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 11px;border-radius:9px;border:1px solid var(--ax-line2);background:var(--ax-bg3);color:var(--ax-t2);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .18s var(--ax-ease)}
+    .atx-pick button{padding-left:4px}
+    .atx-pick button .atx-av{width:24px;height:24px;border-radius:7px;font-size:9.5px}
+    .atx-pick button:hover,.atx-seg button:hover{border-color:rgba(255,240,200,.2)}
+    .atx-pick button:active,.atx-seg button:active{transform:scale(.97)}
+    .atx-pick button.on,.atx-seg button.on{border-color:rgba(245,197,24,.5);background:var(--ax-gold-soft);color:var(--ax-t1)}
+    .atx-seg .atx-brand{margin-left:0}
+    .atx-chk{width:14px;height:14px;opacity:0;color:var(--ax-gold);transition:opacity .15s}
+    .atx-pick button.on .atx-chk{opacity:1}
+    .atx-tagbox{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--ax-bg3);border:1px solid var(--ax-line2);border-radius:10px;padding:7px 9px;min-height:44px;cursor:text}
+    .atx-tagbox:focus-within{border-color:rgba(245,197,24,.45);box-shadow:0 0 0 3px var(--ax-gold-soft)}
+    .atx-tagbox input{flex:1;min-width:120px;background:transparent;border:0;outline:0;color:var(--ax-t1);font-size:13px;font-family:inherit}
+    .atx-sugg{display:flex;gap:6px;flex-wrap:wrap}
+    .atx-sugg button{font-size:11px;font-weight:600;color:var(--ax-t3);background:transparent;border:1px dashed var(--ax-line2);border-radius:6px;padding:3px 8px;cursor:pointer;font-family:inherit}
+    .atx-sugg button:hover{color:var(--ax-gold);border-color:rgba(245,197,24,.4)}
+    .atx-f-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--ax-line)}
+
+    .atx-tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:650;padding:3px 8px;border-radius:5px;background:var(--ax-bg4);color:var(--ax-t2);border:1px solid var(--ax-line)}
+    .atx-tag i{width:5px;height:5px;border-radius:50%;display:inline-block}
+    .atx-tag-x{cursor:pointer;color:var(--ax-t4);margin-left:2px}
+    .atx-tag-x:hover{color:var(--ax-red)}
+    .atx-rlink{font-size:11px;font-weight:650;color:#93c5fd;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:5px;border:1px solid rgba(96,165,250,.25);background:rgba(96,165,250,.06)}
+    .atx-rlink:hover{background:rgba(96,165,250,.14)}
+
+    #page-advertiser-tasks{--ax-cols:minmax(0,1fr) 190px 120px 180px 84px}
+    .atx-lhead{display:grid;grid-template-columns:var(--ax-cols);gap:20px;padding:0 20px 10px;font-size:12px;font-weight:650;color:var(--ax-t4)}
+    .atx-rows{display:flex;flex-direction:column;gap:6px}
+    .atx-row{position:relative;display:grid;grid-template-columns:var(--ax-cols);gap:20px;align-items:center;background:var(--ax-bg2);border:1px solid var(--ax-line);border-radius:12px;padding:16px 18px 16px 22px;transition:background .2s var(--ax-ease),border-color .2s}
+    .atx-row:hover{background:rgba(25,23,19,.94);border-color:var(--ax-line2)}
+    .atx-row::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--sc)}
+    .atx-row.atx-dd{z-index:20}
+    .atx-title{font-size:15.5px;font-weight:700;letter-spacing:-.15px;color:var(--ax-t1);cursor:pointer;display:inline}
+    .atx-title:hover{color:var(--ax-gold)}
+    .atx-det{font-size:13px;color:var(--ax-t3);line-height:1.55;margin-top:4px;max-width:110ch;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+    .atx-det2{-webkit-line-clamp:2}
+    .atx-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+    .atx-time{font-size:11.5px;color:var(--ax-t3);font-variant-numeric:tabular-nums}
+    .atx-time b{display:block;font-weight:600;color:var(--ax-t2);font-size:12px}
+
+    .atx-sel{position:relative}
+    .atx-sel-btn{height:36px;width:100%;border-radius:8px;border:1px solid var(--ax-line2);background:var(--ax-bg3);color:var(--ax-t1);font-size:12px;font-weight:650;padding:0 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit;transition:border-color .2s}
+    .atx-sel-btn:hover{border-color:rgba(255,240,200,.22)}
+    .atx-chev{margin-left:auto;color:var(--ax-t4);transition:transform .2s}
+    .atx-sel.open .atx-chev{transform:rotate(180deg)}
+    .atx-sel-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#1a1814;border:1px solid var(--ax-line2);border-radius:10px;padding:4px;box-shadow:0 14px 34px rgba(0,0,0,.55);opacity:0;visibility:hidden;transform:translateY(-4px);transition:all .16s var(--ax-ease);z-index:30}
+    .atx-sel.open .atx-sel-menu{opacity:1;visibility:visible;transform:none}
+    .atx-sel-menu div{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:7px;font-size:12px;font-weight:600;color:var(--ax-t2);cursor:pointer}
+    .atx-sel-menu div:hover{background:rgba(255,255,255,.05);color:var(--ax-t1)}
+    .atx-acts{display:flex;gap:5px;justify-content:flex-end}
+    .atx-ib{width:32px;height:32px;border-radius:8px;border:1px solid var(--ax-line);background:transparent;color:var(--ax-t3);display:grid;place-items:center;cursor:pointer;transition:all .18s var(--ax-ease)}
+    .atx-ib:hover{color:var(--ax-t1);border-color:var(--ax-line2);background:var(--ax-bg3)}
+    .atx-ib:active{transform:scale(.94)}
+    .atx-ib.atx-del:hover{border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.08)}
+
+    .atx-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
+    .atx-col{background:rgba(18,17,14,.6);border:1px solid var(--ax-line);border-radius:16px;padding:10px}
+    .atx-col-h{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;padding:4px 6px 10px;color:var(--ax-t1)}
+    .atx-col-c{margin-left:auto;font-size:11px;color:var(--ax-t3);font-variant-numeric:tabular-nums;background:var(--ax-bg4);border-radius:5px;padding:1px 7px}
+    .atx-card{background:rgba(25,23,19,.95);border:1px solid var(--ax-line);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .2s,transform .2s var(--ax-ease)}
+    .atx-card:hover{border-color:var(--ax-line2);transform:translateY(-1px)}
+    .atx-card-f{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+
+    .atx-empty{text-align:center;padding:48px 20px;border:1px dashed var(--ax-line2);border-radius:16px;color:var(--ax-t3);font-size:13px}
+    .atx-empty b{display:block;color:var(--ax-t1);font-size:15px;margin-bottom:4px}
+    .atx-empty-sm{padding:22px 10px}
+    .atx-st{animation:atxIn .4s var(--ax-ease) both}
+    @keyframes atxIn{from{opacity:0;transform:translateY(10px)}}
+
+    /* task detail drawer */
+    .atx-scrim{position:fixed;inset:0;background:rgba(5,4,2,.55);backdrop-filter:blur(3px);z-index:900;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+    .atx-scrim.open{opacity:1;visibility:visible}
+    .atx-drawer{position:fixed;top:12px;right:12px;bottom:12px;width:min(540px,calc(100vw - 24px));background:#141310;border:1px solid var(--ax-line2);border-radius:18px;z-index:901;display:flex;flex-direction:column;transform:translateX(calc(100% + 24px));transition:transform .38s var(--ax-ease);box-shadow:-24px 0 60px rgba(0,0,0,.5);color:var(--ax-t1)}
+    .atx-drawer.open{transform:none}
+    .atx-dr-head{display:flex;align-items:center;gap:10px;padding:18px 20px 14px;border-bottom:1px solid var(--ax-line)}
+    .atx-dr-head h2{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+    .atx-dr-head .atx-ib{margin-left:auto}
+    .atx-dr-body{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:16px}
+    .atx-dr-title{font-size:17px;font-weight:700;letter-spacing:-.2px}
+    .atx-dr-det{min-height:180px;line-height:1.6;font-size:13.5px;white-space:pre-wrap}
+    .atx-linkrow{display:flex;gap:6px}
+    .atx-linkrow .atx-inp{flex:1;min-width:0}
+    .atx-linkrow a{height:44px;display:inline-flex;align-items:center;padding:0 12px;border-radius:10px;border:1px solid rgba(96,165,250,.35);background:rgba(96,165,250,.08);color:#93c5fd;font-size:12.5px;font-weight:650;text-decoration:none;white-space:nowrap}
+    .atx-linkrow a.off{opacity:.35;pointer-events:none}
+    .atx-dr-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--ax-bg3);border:1px solid var(--ax-line);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--ax-t3)}
+    .atx-dr-meta b{display:block;color:var(--ax-t1);font-weight:600;font-size:12.5px;margin-top:2px;font-variant-numeric:tabular-nums;word-break:break-all}
+    .atx-dr-foot{display:flex;align-items:center;gap:8px;padding:14px 20px;border-top:1px solid var(--ax-line)}
+    .atx-hint{font-size:11px;color:var(--ax-t4);margin-right:auto}
+    .atx-kbd{font-size:10px;font-weight:700;border:1px solid var(--ax-line2);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--ax-t3)}
+
+    @media (max-width:980px){
+      .atx-lhead{display:none}
+      .atx-row{grid-template-columns:1fr 1fr;row-gap:10px}
+      .atx-row>div:first-child{grid-column:1/-1}
+      .atx-board{grid-template-columns:1fr}
+      .atx-f-grid{grid-template-columns:1fr}
+      .atx-hint{display:none}
+    }
+    @media (prefers-reduced-motion:reduce){
+      .atx-st,.atx-drawer,.atx-form,.atx-sel-menu{animation:none!important;transition:none!important}
+    }
 
     /* ─── OWN BRAND — MOTION BG (waves + particles + drifting glow) ─── */
     #page-brand{position:relative}
@@ -6484,16 +6635,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
   </div>
 </div>
 
-<div class="modal-overlay" id="at-detail-modal">
-  <div class="modal" style="max-width:560px">
-    <div class="modal-head">
-      <div class="modal-title">📋 Task detail</div>
-      <button class="modal-close" onclick="closeAtDetailModal()">✕</button>
-    </div>
-    <div id="at-detail-body" style="font-size:12.5px;color:var(--text2);line-height:1.7"></div>
-    <div id="at-detail-actions" style="display:flex;gap:8px;margin-top:16px"></div>
-  </div>
-</div>
+<div class="atx-scrim" id="at-scrim" onclick="atCloseDrawer()"></div>
+<aside class="atx-drawer" id="at-drawer" role="dialog" aria-modal="true" aria-labelledby="atd-h" onkeydown="atDrawerKey(event)"></aside>
 
 <div class="modal-overlay" id="invoice-modal">
   <div class="modal" style="max-width:520px">
