@@ -9915,6 +9915,7 @@ function atLottie(el,name,rgb){
 var AT_GOLD=[.96,.77,.09], AT_MUTED=[.54,.52,.48], AT_INK=[.1,.08,0], AT_RED=[.97,.44,.44];
 
 function atInitParticles(){
+  return; // static bg na (walang gumagalaw)
   var box=document.getElementById('at-particles');
   if(!box||box.childNodes.length) return;
   var anims=['obP1','obP2','obP3','obP4'], out='';
