@@ -4915,6 +4915,54 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       .atx-st,.atx-drawer,.atx-form,.atx-sel-menu{animation:none!important;transition:none!important}
     }
 
+    /* ─── ADVERTISER TASKS — hover / click animations ─── */
+    @keyframes atxShine{from{transform:translateX(-120%) skewX(-20deg)}to{transform:translateX(220%) skewX(-20deg)}}
+    @keyframes atxWiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg)}75%{transform:rotate(14deg)}}
+    @keyframes atxPop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+    @keyframes atxRipple{to{transform:scale(1);opacity:0}}
+    #page-advertiser-tasks button,#at-drawer button,#page-advertiser-tasks .atx-sel-btn{position:relative;overflow:hidden}
+    .atx-ripple{position:absolute;border-radius:50%;pointer-events:none;background:currentColor;opacity:.22;transform:scale(0);animation:atxRipple .55s cubic-bezier(.2,.8,.2,1) forwards}
+    /* main buttons: lift + glow, press down */
+    .atx-btn{transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s,background .2s,border-color .2s,color .2s}
+    .atx-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px -8px rgba(0,0,0,.6)}
+    .atx-btn:active{transform:translateY(0) scale(.96);transition-duration:.08s}
+    .atx-btn-gold:hover{box-shadow:0 10px 26px -8px rgba(245,197,24,.55)}
+    .atx-btn-gold::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:translateX(-120%) skewX(-20deg);pointer-events:none}
+    .atx-btn-gold:hover::after{animation:atxShine .7s ease}
+    .atx-btn svg{transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+    .atx-btn:hover svg{transform:scale(1.15)}
+    /* icon buttons (edit / delete) */
+    .atx-ib{transition:transform .2s cubic-bezier(.2,.8,.2,1),background .2s,border-color .2s,color .2s,box-shadow .2s}
+    .atx-ib:hover{transform:translateY(-2px) scale(1.06);box-shadow:0 6px 14px -6px rgba(0,0,0,.6)}
+    .atx-ib:hover svg{animation:atxWiggle .45s ease}
+    .atx-ib.atx-del:hover{box-shadow:0 6px 16px -6px rgba(248,113,113,.5)}
+    .atx-ib:active{transform:scale(.9);transition-duration:.08s}
+    /* stat cards */
+    .atx-stat{transition:transform .22s cubic-bezier(.2,.8,.2,1),border-color .2s,background .2s,box-shadow .22s}
+    .atx-stat:hover{transform:translateY(-3px);box-shadow:0 12px 26px -12px rgba(0,0,0,.7)}
+    .atx-stat:hover .atx-stat-n{animation:atxPop .35s ease}
+    .atx-stat:active{transform:scale(.97);transition-duration:.08s}
+    /* avatar filter, toggles, pills */
+    .atx-who button{transition:background .2s,transform .2s cubic-bezier(.2,.8,.2,1)}
+    .atx-who button:hover{transform:translateY(-2px)}
+    .atx-who button:hover .atx-av{transform:scale(1.1)}
+    .atx-who button:active{transform:scale(.9);transition-duration:.08s}
+    .atx-av{transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+    .atx-view button,.atx-period button{transition:background .2s,color .2s,transform .18s cubic-bezier(.2,.8,.2,1)}
+    .atx-view button:hover,.atx-period button:hover{background:rgba(255,240,200,.06)}
+    .atx-view button:active,.atx-period button:active,.atx-pick button:active,.atx-seg button:active,.atx-sugg button:active{transform:scale(.93);transition-duration:.08s}
+    .atx-pick button,.atx-seg button,.atx-sugg button{transition:all .2s cubic-bezier(.2,.8,.2,1)}
+    .atx-pick button:hover,.atx-seg button:hover,.atx-sugg button:hover{transform:translateY(-2px)}
+    /* status dropdown */
+    .atx-sel-btn{transition:border-color .2s,box-shadow .2s,transform .2s cubic-bezier(.2,.8,.2,1)}
+    .atx-sel-btn:hover{box-shadow:0 0 0 3px var(--ax-gold-soft);transform:translateY(-1px)}
+    .atx-sel-btn:active{transform:scale(.97);transition-duration:.08s}
+    .atx-sel-menu div{transition:background .15s,padding-left .2s}
+    .atx-sel-menu div:hover{padding-left:16px}
+    /* rows */
+    .atx-row{transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .2s,background .2s,box-shadow .25s}
+    .atx-row:hover{transform:translateY(-2px);box-shadow:0 14px 30px -16px rgba(0,0,0,.8)}
+    @media (prefers-reduced-motion:reduce){#page-advertiser-tasks *,#at-drawer *{animation:none!important;transition:none!important}}
     /* ─── OWN BRAND — MOTION BG (waves + particles + drifting glow) ─── */
     #page-brand{position:relative}
     /* pause motion animations kapag di naka-view ang page (performance) */

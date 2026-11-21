@@ -10321,6 +10321,15 @@ function closeAtDetailModal(){ atCloseDrawer(); }
 function openAtDetailModal(id){ atOpenDrawer(id); }
 
 
+// Click ripple para sa buttons ng Advertiser Tasks
+document.addEventListener('pointerdown',function(e){
+  var b=e.target.closest&&e.target.closest('#page-advertiser-tasks button,#at-drawer button,#page-advertiser-tasks .atx-sel-btn');
+  if(!b||b.disabled) return;
+  var r=b.getBoundingClientRect(), d=Math.max(r.width,r.height)*2.2, s=document.createElement('span');
+  s.className='atx-ripple'; s.style.cssText='width:'+d+'px;height:'+d+'px;left:'+(e.clientX-r.left-d/2)+'px;top:'+(e.clientY-r.top-d/2)+'px';
+  b.appendChild(s); setTimeout(function(){ s.remove(); },600);
+});
+
 // ============================================================
 // SALES & ADS TRACKER
 // ============================================================
