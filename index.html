@@ -143,6 +143,12 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .stat-icon svg{width:15px;height:15px}
 .stat-label{font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.07em;font-weight:600}
 .stat-val{font-size:28px;font-weight:700;letter-spacing:-1.5px;line-height:1}
+.fin-sub{font-size:10.5px;color:var(--text3);margin-top:6px;line-height:1.35;position:relative}
+.fin-sub b{color:var(--text2);font-weight:650}
+.fin-row2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:14px;margin-bottom:1.25rem;align-items:start}
+.fin-row2-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media(max-width:1100px){.fin-row2{grid-template-columns:1fr}}
+@media(max-width:640px){.fin-row2-cards{grid-template-columns:1fr}}
 .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1.5rem}
 .pipe-col{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px;min-height:140px}
 .pipe-col-head{display:flex;align-items:center;gap:6px;margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px solid var(--border)}
@@ -3107,6 +3113,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <div style="max-width:1100px">
 
           <!-- Stats -->
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+            <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em">📊 Analytics <span id="ct-stats-scope" style="color:var(--text3);font-weight:600;text-transform:none;letter-spacing:0"></span></div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <button type="button" class="ghost-btn" onclick="ctShiftMonth(-1)" title="Previous month" style="padding:6px 10px">‹</button>
+              <select class="form-select" id="ct-stats-month" onchange="ctRenderAnalytics()" style="min-width:160px;padding:7px 30px 7px 12px;font-size:12px"></select>
+              <button type="button" class="ghost-btn" onclick="ctShiftMonth(1)" title="Next month" style="padding:6px 10px">›</button>
+            </div>
+          </div>
           <div class="stats-grid" id="ct-stats" style="margin-bottom:14px"></div>
 
           <!-- Log a call -->
@@ -4329,7 +4343,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <!-- SUMMARY CARDS -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1rem">
           <div class="stat-card c-green"><div class="stat-label">Total Sales</div><div class="stat-val" style="color:var(--green)" id="fin-stat-sales">₱0</div></div>
-          <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-val" style="color:#f87171" id="fin-stat-expenses">₱0</div></div>
+          <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-val" style="color:#f87171" id="fin-stat-expenses">₱0</div><div class="fin-sub" id="fin-stat-exp-sub"></div></div>
           <div class="stat-card c-yellow"><div class="stat-label">Net Profit</div><div class="stat-val" id="fin-stat-net">₱0</div></div>
           <div class="stat-card c-amber"><div class="stat-label">Total Orders</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-orders">0</div></div>
           <div class="stat-card c-purple" style="cursor:pointer" onclick="promptFinTarget()" title="Click to set your sales target">
@@ -4349,10 +4363,20 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div class="stat-card c-amber"><div class="stat-label">Avg Daily Spend</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-avgdaily">₱0</div></div>
         </div>
 
-        <!-- TOP VA PERFORMER -->
-        <div style="margin-bottom:1.25rem">
-          <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">🏆 Top VA Performers</div>
-          <div id="fin-va-leaderboard" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+        <!-- TOP VA PERFORMER + PAYMENTS + COMPARISON -->
+        <div class="fin-row2">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">🏆 Top VA Performers</div>
+            <div id="fin-va-leaderboard" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">💳 Payments &amp; Comparison</div>
+            <div class="fin-row2-cards">
+              <div class="stat-card c-green"><div class="stat-label">✅ Fully Paid</div><div class="stat-val" style="color:var(--green)" id="fin-stat-paid">₱0</div><div class="fin-sub" id="fin-stat-paid-sub"></div></div>
+              <div class="stat-card c-amber" style="cursor:pointer" onclick="finQuickFilterBalance()" title="Click para makita yung may balance"><div class="stat-label">⏳ Balance pa</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-balance">₱0</div><div class="fin-sub" id="fin-stat-balance-sub"></div></div>
+              <div class="stat-card c-purple"><div class="stat-label" id="fin-cmp-label">📊 vs Last Month</div><div class="stat-val" id="fin-cmp-val">—</div><div class="fin-sub" id="fin-cmp-sub"></div><div class="fin-sub" id="fin-best-sub" style="margin-top:3px"></div></div>
+            </div>
+          </div>
         </div>
 
         <!-- TABS -->

@@ -5962,6 +5962,66 @@ function renderFinBalanceChip(sales){
   chip.style.display='';
 }
 
+function finRenderPayments(sales){
+  var paid=sales.filter(function(o){ return o.paid_status==='Paid'; });
+  var bal=sales.filter(function(o){ return (o.paid_status||'Balance')==='Balance'; });
+  var sum=function(a){ return a.reduce(function(s,o){ return s+(Number(o.sales_amount)||0); },0); };
+  var set=function(id,v){ var el=document.getElementById(id); if(el) el.innerHTML=v; };
+  set('fin-stat-paid',finPHP(sum(paid)));
+  set('fin-stat-paid-sub','<b>'+paid.length+'</b> order'+(paid.length===1?'':'s')+' bayad na');
+  set('fin-stat-balance',finPHP(sum(bal)));
+  set('fin-stat-balance-sub',bal.length?'<b>'+bal.length+'</b> client'+(bal.length===1?'':'s')+' may balance · click para makita':'Wala nang balance 🎉');
+}
+
+var FIN_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function finShortDate(s){ var p=s.split('-'); return FIN_MON[+p[1]-1]+' '+(+p[2]); }
+async function finRenderComparison(df,dt,curSales){
+  var lbl=document.getElementById('fin-cmp-label'), val=document.getElementById('fin-cmp-val'),
+      sub=document.getElementById('fin-cmp-sub'), best=document.getElementById('fin-best-sub');
+  if(!val) return;
+  var{data,error}=await sb.from('sales_orders').select('order_date,sales_amount').order('order_date',{ascending:false}).limit(5000);
+  if(error){ val.textContent='—'; sub.textContent=''; return; }
+  data=data||[];
+  var sumRange=function(a,b){ return data.reduce(function(s,o){ var d=o.order_date||''; return (d>=a&&d<=b)?s+(Number(o.sales_amount)||0):s; },0); };
+  // Best month (lahat ng records)
+  var byMonth={};
+  data.forEach(function(o){ var m=(o.order_date||'').slice(0,7); if(m) byMonth[m]=(byMonth[m]||0)+(Number(o.sales_amount)||0); });
+  var bestM=Object.keys(byMonth).sort(function(a,b){ return byMonth[b]-byMonth[a]; })[0];
+  if(best) best.innerHTML=bestM?'🏆 Best month: <b>'+FIN_MON[+bestM.slice(5)-1]+' '+bestM.slice(0,4)+'</b> · <b>'+finPHP(byMonth[bestM])+'</b>':'';
+  if(!df||!dt){
+    lbl.textContent='📊 vs Last Month'; val.textContent='—'; val.style.color='var(--text3)';
+    sub.textContent='Pumili ng date range para may comparison';
+    return;
+  }
+  var today=projFmtDate(new Date());
+  var end=dt>today?today:dt;            // wag isama yung future days
+  if(end<df) end=df;
+  var s=new Date(df+'T00:00:00'), e=new Date(end+'T00:00:00');
+  var ps,pe,pfe,isMonth=df.slice(8)==='01';
+  if(isMonth){
+    // Same days last month (e.g. Nov 1–25 vs Oct 1–25)
+    ps=new Date(s.getFullYear(),s.getMonth()-1,1);
+    var lastDay=new Date(s.getFullYear(),s.getMonth(),0);
+    pe=new Date(ps); pe.setDate(ps.getDate()+Math.round((e-s)/86400000)); if(pe>lastDay) pe=lastDay;
+    pfe=lastDay;
+  } else {
+    var span=Math.round((e-s)/86400000)+1;
+    pe=new Date(s); pe.setDate(s.getDate()-1);
+    ps=new Date(pe); ps.setDate(pe.getDate()-(span-1));
+  }
+  var psS=projFmtDate(ps), peS=projFmtDate(pe);
+  var cur=sumRange(df,end), prev=sumRange(psS,peS);
+  lbl.textContent=isMonth?'📊 vs Last Month':'📊 vs Previous Period';
+  if(prev>0){
+    var pct=Math.round((cur-prev)/prev*100);
+    val.textContent=(pct>=0?'↑ +':'↓ ')+pct+'%';
+    val.style.color=pct>=0?'var(--green)':'#f87171';
+  } else { val.textContent=cur>0?'↑ New':'—'; val.style.color=cur>0?'var(--green)':'var(--text3)'; }
+  var html=finShortDate(psS)+'–'+finShortDate(peS)+': <b>'+finPHP(prev)+'</b>';
+  if(isMonth) html+=' · Buong '+FIN_MON[ps.getMonth()]+': <b>'+finPHP(sumRange(psS,projFmtDate(pfe)))+'</b>';
+  sub.innerHTML=html;
+}
+
 function finFilterSales(){
   renderFinSalesTable(finApplySalesSearch(window._finSalesCache||[]));
 }
@@ -6440,9 +6500,14 @@ async function loadFinancePage(){
   var totalMsgs=adsLog.reduce(function(s,a){return s+(Number(a.total_messages)||0);},0);
   var cpmEntries=adsLog.filter(function(a){return Number(a.cost_per_message)>0;});
   var avgCpm=cpmEntries.length?cpmEntries.reduce(function(s,a){return s+Number(a.cost_per_message);},0)/cpmEntries.length:0;
-  var net=totalSales-totalExpenses;
+  // Expenses = business expenses + ads spent (gastos din ang ads)
+  var allExpenses=totalExpenses+totalAds;
+  var net=totalSales-allExpenses;
   var elS=document.getElementById('fin-stat-sales'); if(elS)elS.textContent=finPHP(totalSales);
-  var elE=document.getElementById('fin-stat-expenses'); if(elE)elE.textContent=finPHP(totalExpenses);
+  var elE=document.getElementById('fin-stat-expenses'); if(elE)elE.textContent=finPHP(allExpenses);
+  var elES=document.getElementById('fin-stat-exp-sub'); if(elES)elES.innerHTML='Ads <b>'+finPHP(totalAds)+'</b> + Others <b>'+finPHP(totalExpenses)+'</b>';
+  finRenderPayments(sales);
+  finRenderComparison(df,dt,totalSales);
   var elN=document.getElementById('fin-stat-net'); if(elN){ elN.textContent=finPHP(net); elN.style.color=net>=0?'var(--green)':'#f87171'; }
   var elA=document.getElementById('fin-stat-ads'); if(elA)elA.textContent=finPHP(totalAds);
   var elCpm=document.getElementById('fin-stat-cpm'); if(elCpm)elCpm.textContent=finPHP(avgCpm);
@@ -9604,9 +9669,38 @@ async function loadCallTracker(){
     }
   }
 
+  ctBuildMonthOptions();
   renderCallStats();
   renderCallLogs();
   if(isAdmin) renderVAPerformance();
+}
+
+// ---- Analytics per month ----
+var CT_MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function ctMonthKey(c){ return c.call_at?projFmtDate(new Date(c.call_at)).slice(0,7):''; }
+function ctBuildMonthOptions(){
+  var sel=document.getElementById('ct-stats-month'); if(!sel) return;
+  var cur=sel.value, nowKey=projFmtDate(new Date()).slice(0,7), seen={};
+  seen[nowKey]=1;
+  callLogsCache.forEach(function(c){ var k=ctMonthKey(c); if(k) seen[k]=1; });
+  var keys=Object.keys(seen).sort().reverse();
+  sel.innerHTML=keys.map(function(k){
+    return '<option value="'+k+'">'+CT_MON[+k.slice(5)-1]+' '+k.slice(0,4)+(k===nowKey?' (this month)':'')+'</option>';
+  }).join('')+'<option value="all">All time</option>';
+  sel.value=(cur&&(seen[cur]||cur==='all'))?cur:nowKey;
+}
+function ctStatsRows(){
+  var m=document.getElementById('ct-stats-month')?.value||'all';
+  return m==='all'?callLogsCache:callLogsCache.filter(function(c){ return ctMonthKey(c)===m; });
+}
+function ctRenderAnalytics(){ renderCallStats(); if(currentUserRole==='admin') renderVAPerformance(); }
+function ctShiftMonth(dir){
+  var sel=document.getElementById('ct-stats-month'); if(!sel) return;
+  var i=sel.selectedIndex-dir;   // options: pinakabago sa taas
+  var last=sel.options.length-2; // wag isama "All time" sa arrows
+  if(sel.value==='all') i=dir<0?0:last;
+  if(i<0||i>last) return;
+  sel.selectedIndex=i; ctRenderAnalytics();
 }
 
 function ctEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -9650,7 +9744,9 @@ function ctDatePreset(kind,btnEl){
 
 function renderCallStats(){
   // Stats always reflect the current user's visible scope (all for admin, own for caller)
-  var rows=callLogsCache;
+  var rows=ctStatsRows();
+  var mSel=document.getElementById('ct-stats-month'), scope=document.getElementById('ct-stats-scope');
+  if(scope&&mSel&&mSel.selectedIndex>=0) scope.textContent='· '+mSel.options[mSel.selectedIndex].text.replace(' (this month)','');
   var total=rows.length;
   var won=rows.filter(function(c){return (c.deal_status||'')==='Won';}).length;
   var conv=total?Math.round(won/total*100):0;
@@ -9698,7 +9794,7 @@ function renderVAPerformance(){
   var body=document.getElementById('ct-performance-body');
   if(!body)return;
   var byVA={};
-  callLogsCache.forEach(function(c){
+  ctStatsRows().forEach(function(c){
     var k=c.agent_id||'unknown';
     if(!byVA[k]) byVA[k]={name:c.agent_name||'Unknown',total:0,won:0,value:0};
     byVA[k].total++;
