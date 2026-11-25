@@ -143,6 +143,33 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .stat-icon svg{width:15px;height:15px}
 .stat-label{font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.07em;font-weight:600}
 .stat-val{font-size:28px;font-weight:700;letter-spacing:-1.5px;line-height:1}
+.gi{display:inline-flex;flex-shrink:0;vertical-align:-3px}
+.gi svg{width:100%;height:100%;overflow:visible}
+.table-empty-icon .gi{vertical-align:middle}
+.fin-ic-card{padding-right:64px}
+.fin-ic{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(160deg,rgba(var(--ic),.18),rgba(var(--ic),.04));border:0.5px solid rgba(var(--ic),.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 20px -10px rgba(var(--ic),.6);z-index:1;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.fin-ic-card:hover .fin-ic{transform:translateY(-2px) rotate(-6deg) scale(1.06)}
+.fin-lt{width:24px;height:24px;display:block}
+.fin-lt svg{width:100%!important;height:100%!important}
+.fin-medal{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;flex-shrink:0;background:linear-gradient(160deg,rgba(var(--ic),.2),rgba(var(--ic),.05));border:0.5px solid rgba(var(--ic),.3)}
+.fin-pill-ic{display:inline-flex;align-items:center;gap:4px}
+.ct-mpick{position:relative;display:flex;align-items:center;gap:4px;padding:4px;border-radius:14px;background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:0.5px solid var(--border2);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.ct-mnav{width:32px;height:32px;border-radius:10px;border:0;background:transparent;color:var(--text2);display:grid;place-items:center;cursor:pointer;transition:background .2s,color .2s,transform .15s}
+.ct-mnav:hover{background:rgba(250,204,21,.1);color:var(--yellow)}
+.ct-mnav:active{transform:scale(.9)}
+.ct-mnav:disabled{opacity:.3;pointer-events:none}
+.ct-mbtn{height:32px;display:flex;align-items:center;gap:8px;padding:0 12px 0 10px;border-radius:10px;border:0.5px solid rgba(250,204,21,.25);background:rgba(250,204,21,.08);color:var(--text);font:inherit;font-size:12.5px;font-weight:650;cursor:pointer;min-width:178px;transition:background .2s,border-color .2s}
+.ct-mbtn:hover{background:rgba(250,204,21,.14);border-color:rgba(250,204,21,.45)}
+.ct-mbtn #ct-mlabel{flex:1;text-align:left}
+.ct-mlt{width:18px;height:18px;display:block}
+.ct-mlt svg{width:100%!important;height:100%!important}
+.ct-mmenu{position:absolute;top:calc(100% + 6px);right:0;min-width:220px;max-height:300px;overflow:auto;padding:6px;border-radius:14px;background:rgba(18,17,15,.97);backdrop-filter:blur(14px);border:0.5px solid var(--border2);box-shadow:0 22px 50px -12px rgba(0,0,0,.85);z-index:60;opacity:0;transform:translateY(-6px) scale(.98);pointer-events:none;transition:opacity .18s,transform .18s}
+.ct-mpick.open .ct-mmenu{opacity:1;transform:none;pointer-events:auto}
+.ct-mmenu button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border:0;border-radius:9px;background:transparent;color:var(--text2);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;text-align:left}
+.ct-mmenu button:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.ct-mmenu button.on{background:rgba(250,204,21,.1);color:var(--yellow)}
+.ct-mmenu button small{font-size:10.5px;color:var(--text3);font-weight:600}
+.ct-mmenu hr{border:0;border-top:0.5px solid var(--border);margin:5px 4px}
 .fin-sub{font-size:10.5px;color:var(--text3);margin-top:6px;line-height:1.35;position:relative}
 .fin-sub b{color:var(--text2);font-weight:650}
 .fin-row2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:14px;margin-bottom:1.25rem;align-items:start}
@@ -3114,18 +3141,21 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
           <!-- Stats -->
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-            <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em">📊 Analytics <span id="ct-stats-scope" style="color:var(--text3);font-weight:600;text-transform:none;letter-spacing:0"></span></div>
+            <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;display:flex;align-items:center;gap:6px"><span data-gi="chart-column" data-c="#facc15" data-s="14"></span> Analytics <span id="ct-stats-scope" style="color:var(--text3);font-weight:600;text-transform:none;letter-spacing:0"></span></div>
             <div style="display:flex;gap:6px;align-items:center">
-              <button type="button" class="ghost-btn" onclick="ctShiftMonth(-1)" title="Previous month" style="padding:6px 10px">‹</button>
-              <select class="form-select" id="ct-stats-month" onchange="ctRenderAnalytics()" style="min-width:160px;padding:7px 30px 7px 12px;font-size:12px"></select>
-              <button type="button" class="ghost-btn" onclick="ctShiftMonth(1)" title="Next month" style="padding:6px 10px">›</button>
+              <div class="ct-mpick" id="ct-mpick">
+                <button type="button" class="ct-mnav" id="ct-mprev" onclick="ctShiftMonth(-1)" title="Previous month" aria-label="Previous month"><span data-gi="chevron-left" data-c="currentColor" data-s="16"></span></button>
+                <button type="button" class="ct-mbtn" onclick="ctToggleMonthMenu()" onmouseenter="ctCalPlay()" aria-haspopup="listbox"><span class="ct-mlt" id="ct-mlt"></span><span id="ct-mlabel">This month</span><span data-gi="chevron-down" data-c="currentColor" data-s="14"></span></button>
+                <button type="button" class="ct-mnav" id="ct-mnext" onclick="ctShiftMonth(1)" title="Next month" aria-label="Next month"><span data-gi="chevron-right" data-c="currentColor" data-s="16"></span></button>
+                <div class="ct-mmenu" id="ct-mmenu" role="listbox"></div>
+              </div>
             </div>
           </div>
           <div class="stats-grid" id="ct-stats" style="margin-bottom:14px"></div>
 
           <!-- Log a call -->
           <div class="form-card" style="margin-bottom:14px">
-            <div class="form-card-title"><span>📞</span> <span id="ct-form-title">Log a call</span></div>
+            <div class="form-card-title"><span data-gi="phone" data-c="#f59e0b" data-s="16"></span> <span id="ct-form-title">Log a call</span></div>
             <input type="hidden" id="ct-edit-id" value="">
             <div class="form-grid">
               <div class="form-field">
@@ -3236,7 +3266,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <button type="button" class="proj-preset-pill" onclick="ctDatePreset('lastmonth',this)">Last Month</button>
             <button type="button" class="proj-preset-pill active" onclick="ctDatePreset('all',this)">All time</button>
             <button type="button" class="proj-preset-pill" id="ct-preset-custom" onclick="openDateRangeModal('call-tracker')">Custom</button>
-            <button type="button" class="proj-range-btn" onclick="openDateRangeModal('call-tracker')">📅 <span id="ct-range-label">All time</span></button>
+            <button type="button" class="proj-range-btn" onclick="openDateRangeModal('call-tracker')"><span data-gi="calendar" data-c="#facc15" data-s="15"></span> <span id="ct-range-label">All time</span></button>
             <input type="hidden" id="ct-date-from"/>
             <input type="hidden" id="ct-date-to"/>
           </div>
@@ -3256,7 +3286,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
           <!-- VA Performance (admin only) -->
           <div class="admin-only" id="ct-performance-wrap">
-            <div class="form-card-title" style="margin-bottom:8px"><span>📊</span> VA Performance</div>
+            <div class="form-card-title" style="margin-bottom:8px"><span data-gi="trophy" data-c="#facc15" data-s="16"></span> VA Performance</div>
             <div class="data-table">
               <div class="table-head" style="grid-template-columns:2fr 1fr 1fr 1fr 1.2fr">
                 <span>VA</span>
@@ -4322,7 +4352,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
       <!-- SALES & EXPENSES (FINANCE) -->
       <div class="page" id="page-finance">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
-          <div class="section-label" style="margin:0">💰 Sales &amp; Expenses</div>
+          <div class="section-label" style="margin:0"><span data-gi="coins" data-c="#facc15" data-s="14"></span> Sales &amp; Expenses</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <div class="proj-date-presets" id="fin-date-presets">
               <button type="button" class="proj-preset-pill" onclick="finDatePreset('today',this)">Today</button>
@@ -4333,7 +4363,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
               <button type="button" class="proj-preset-pill" onclick="finDatePreset('all',this)">All time</button>
               <button type="button" class="proj-preset-pill" id="fin-preset-custom" onclick="openDateRangeModal('finance')">Custom</button>
             </div>
-            <button type="button" class="proj-range-btn" onclick="openDateRangeModal('finance')">📅 <span id="fin-range-label">This Month</span></button>
+            <button type="button" class="proj-range-btn" onclick="openDateRangeModal('finance')"><span data-gi="calendar" data-c="#facc15" data-s="15"></span> <span id="fin-range-label">This Month</span></button>
             <input type="hidden" id="fin-date-from"/>
             <input type="hidden" id="fin-date-to"/>
             <button class="ghost-btn" onclick="exportFinanceCSV()" style="font-size:11px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
@@ -4347,14 +4377,14 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div class="stat-card c-yellow"><div class="stat-label">Net Profit</div><div class="stat-val" id="fin-stat-net">₱0</div></div>
           <div class="stat-card c-amber"><div class="stat-label">Total Orders</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-orders">0</div></div>
           <div class="stat-card c-purple" style="cursor:pointer" onclick="promptFinTarget()" title="Click to set your sales target">
-            <div class="stat-label" style="display:flex;align-items:center;gap:5px">🎯 Gap to Target <span id="fin-target-label" style="color:var(--text3)"></span></div>
+            <div class="stat-label" style="display:flex;align-items:center;gap:5px"><span data-gi="target" data-c="#a78bfa" data-s="14"></span> Gap to Target <span id="fin-target-label" style="color:var(--text3)"></span></div>
             <div class="stat-val" id="fin-stat-gap" style="font-size:20px;letter-spacing:normal;color:var(--yellow);text-decoration:underline;text-decoration-style:dotted">+ Set target</div>
           </div>
         </div>
-        <div style="font-size:10px;color:var(--text3);margin-top:-10px;margin-bottom:1rem">🎯 Click the "Gap to Target" card to set or update your sales goal for the selected period.</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:-10px;margin-bottom:1rem;display:flex;align-items:center;gap:5px"><span data-gi="target" data-c="#a78bfa" data-s="12"></span> Click the "Gap to Target" card to set or update your sales goal for the selected period.</div>
 
         <!-- ADS METRICS -->
-        <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">📈 Ads Metrics</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px"><span data-gi="megaphone" data-c="#a78bfa" data-s="14"></span> Ads Metrics</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.25rem">
           <div class="stat-card c-purple"><div class="stat-label">Total Ads Spent</div><div class="stat-val" style="color:var(--purple)" id="fin-stat-ads">₱0</div></div>
           <div class="stat-card c-purple"><div class="stat-label">Avg Cost/Message</div><div class="stat-val" style="color:var(--purple)" id="fin-stat-cpm">₱0</div></div>
@@ -4366,32 +4396,32 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <!-- TOP VA PERFORMER + PAYMENTS + COMPARISON -->
         <div class="fin-row2">
           <div>
-            <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">🏆 Top VA Performers</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px"><span data-gi="trophy" data-c="#facc15" data-s="14"></span> Top VA Performers</div>
             <div id="fin-va-leaderboard" style="display:flex;gap:10px;flex-wrap:wrap"></div>
           </div>
           <div>
-            <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">💳 Payments &amp; Comparison</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px"><span data-gi="credit-card" data-c="#4ade80" data-s="14"></span> Payments &amp; Comparison</div>
             <div class="fin-row2-cards">
-              <div class="stat-card c-green"><div class="stat-label">✅ Fully Paid</div><div class="stat-val" style="color:var(--green)" id="fin-stat-paid">₱0</div><div class="fin-sub" id="fin-stat-paid-sub"></div></div>
-              <div class="stat-card c-amber" style="cursor:pointer" onclick="finQuickFilterBalance()" title="Click para makita yung may balance"><div class="stat-label">⏳ Balance pa</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-balance">₱0</div><div class="fin-sub" id="fin-stat-balance-sub"></div></div>
-              <div class="stat-card c-purple"><div class="stat-label" id="fin-cmp-label">📊 vs Last Month</div><div class="stat-val" id="fin-cmp-val">—</div><div class="fin-sub" id="fin-cmp-sub"></div><div class="fin-sub" id="fin-best-sub" style="margin-top:3px"></div></div>
+              <div class="stat-card c-green fin-ic-card"><div class="fin-ic" style="--ic:74,222,128"><span data-gi="circle-check" data-c="#4ade80" data-s="22"></span></div><div class="stat-label">Fully Paid</div><div class="stat-val" style="color:var(--green)" id="fin-stat-paid">₱0</div><div class="fin-sub" id="fin-stat-paid-sub"></div></div>
+              <div class="stat-card c-amber fin-ic-card" style="cursor:pointer" onclick="finQuickFilterBalance()" title="Click para makita yung may balance"><div class="fin-ic" style="--ic:245,158,11"><span data-gi="clock" data-c="#f59e0b" data-s="22"></span></div><div class="stat-label">Balance pa</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-balance">₱0</div><div class="fin-sub" id="fin-stat-balance-sub"></div></div>
+              <div class="stat-card c-purple fin-ic-card" onmouseenter="finCmpPlay()"><div class="fin-ic" id="fin-cmp-ic" style="--ic:167,139,250"><span class="fin-lt" id="fin-cmp-lt"></span></div><div class="stat-label" id="fin-cmp-label">vs Last Month</div><div class="stat-val" id="fin-cmp-val">—</div><div class="fin-sub" id="fin-cmp-sub"></div><div class="fin-sub" id="fin-best-sub" style="margin-top:3px"></div></div>
             </div>
           </div>
         </div>
 
         <!-- TABS -->
         <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-          <button type="button" class="proj-preset-pill active" id="fin-tab-sales-btn" onclick="finSwitchTab('sales')" style="padding:8px 18px">💵 Sales</button>
-          <button type="button" class="proj-preset-pill" id="fin-tab-expenses-btn" onclick="finSwitchTab('expenses')" style="padding:8px 18px">🧾 Expenses</button>
-          <button type="button" class="proj-preset-pill" id="fin-tab-ads-btn" onclick="finSwitchTab('ads')" style="padding:8px 18px">📈 Ads Spend</button>
-          <button type="button" class="proj-preset-pill" id="fin-tab-daily-btn" onclick="finSwitchTab('daily')" style="padding:8px 18px">📆 Daily Breakdown</button>
+          <button type="button" class="proj-preset-pill active" id="fin-tab-sales-btn" onclick="finSwitchTab('sales')" style="padding:8px 18px"><span data-gi="hand-coins" data-c="#4ade80" data-s="15"></span> Sales</button>
+          <button type="button" class="proj-preset-pill" id="fin-tab-expenses-btn" onclick="finSwitchTab('expenses')" style="padding:8px 18px"><span data-gi="receipt" data-c="#f87171" data-s="15"></span> Expenses</button>
+          <button type="button" class="proj-preset-pill" id="fin-tab-ads-btn" onclick="finSwitchTab('ads')" style="padding:8px 18px"><span data-gi="megaphone" data-c="#a78bfa" data-s="15"></span> Ads Spend</button>
+          <button type="button" class="proj-preset-pill" id="fin-tab-daily-btn" onclick="finSwitchTab('daily')" style="padding:8px 18px"><span data-gi="calendar-days" data-c="#f59e0b" data-s="15"></span> Daily Breakdown</button>
         </div>
 
         <!-- SALES TAB -->
         <div id="fin-sales-tab">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap">
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <input class="form-input" id="fin-sales-search" placeholder="🔍 Search client..." oninput="finFilterSales()" style="max-width:220px"/>
+              <input class="form-input" id="fin-sales-search" placeholder="Search client..." oninput="finFilterSales()" style="max-width:220px"/>
               <select class="form-select" id="fin-sales-status-filter" style="max-width:150px" onchange="finFilterSales()">
                 <option value="">All statuses</option>
                 <option value="Balance">Balance</option>
