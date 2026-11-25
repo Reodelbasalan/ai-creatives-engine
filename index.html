@@ -170,6 +170,104 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .ct-mmenu button.on{background:rgba(250,204,21,.1);color:var(--yellow)}
 .ct-mmenu button small{font-size:10.5px;color:var(--text3);font-weight:600}
 .ct-mmenu hr{border:0;border-top:0.5px solid var(--border);margin:5px 4px}
+/* ─── UI KIT: custom dropdown + dialog ─── */
+.ui-sel{position:relative;display:inline-block;width:100%}
+.ui-sel.pill{width:auto}
+.ui-sel-native{position:absolute!important;opacity:0!important;pointer-events:none!important;width:1px!important;height:1px!important;inset:0!important}
+.ui-sel-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px;padding:0 12px 0 14px;border-radius:10px;border:0.5px solid var(--border2);background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.01));color:var(--text);font:inherit;font-size:13px;font-weight:550;cursor:pointer;text-align:left;transition:border-color .2s,background .2s,box-shadow .2s}
+.ui-sel-btn:hover{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.05)}
+.ui-sel-btn:focus-visible,.ui-sel.open .ui-sel-btn{outline:none;border-color:rgba(250,204,21,.55);box-shadow:0 0 0 3px rgba(250,204,21,.12)}
+.ui-sel-lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ui-sel-chev{flex-shrink:0;opacity:.6;transition:transform .2s}
+.ui-sel.open .ui-sel-chev{transform:rotate(180deg)}
+.ui-sel.pill .ui-sel-btn{min-height:0;gap:6px;cursor:pointer}
+.ui-sel.pill .ui-sel-chev{width:12px;height:12px;opacity:.8}
+.ui-sel-menu{position:fixed;z-index:9999;max-height:280px;overflow:auto;padding:6px;border-radius:13px;background:rgba(20,19,16,.98);backdrop-filter:blur(16px);border:0.5px solid var(--border2);box-shadow:0 24px 50px -12px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.04);opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top;transition:opacity .16s,transform .16s}
+.ui-sel-menu.up{transform-origin:bottom;transform:translateY(6px) scale(.98)}
+.ui-sel-menu.show{opacity:1;transform:none}
+.ui-sel-menu button{width:100%;display:flex;align-items:center;gap:8px;padding:9px 11px;border:0;border-radius:8px;background:transparent;color:var(--text2);font:inherit;font-size:12.5px;font-weight:550;text-align:left;cursor:pointer;white-space:nowrap}
+.ui-sel-menu button:hover,.ui-sel-menu button:focus{outline:none;background:rgba(255,255,255,.05);color:var(--text)}
+.ui-sel-menu button.on{color:var(--yellow);background:rgba(250,204,21,.09)}
+.ui-sel-menu button.on::after{content:"";margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
+.ui-sel-menu button:disabled{opacity:.35;cursor:default}
+.ui-dlg-ov{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);opacity:0;transition:opacity .18s}
+.ui-dlg-ov.show{opacity:1}
+.ui-dlg{width:100%;max-width:420px;padding:22px;border-radius:20px;background:linear-gradient(170deg,#1a1814,#0e0d0b);border:0.5px solid var(--border2);box-shadow:0 40px 90px -20px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.05);transform:translateY(10px) scale(.97);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.ui-dlg-ov.show .ui-dlg{transform:none}
+.ui-dlg-head{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
+.ui-dlg-ic{width:46px;height:46px;border-radius:14px;flex-shrink:0;display:grid;place-items:center;background:linear-gradient(160deg,rgba(var(--ic),.2),rgba(var(--ic),.04));border:0.5px solid rgba(var(--ic),.3);box-shadow:0 10px 24px -12px rgba(var(--ic),.7)}
+.ui-dlg-title{font-size:16px;font-weight:750;color:var(--text);letter-spacing:-.2px}
+.ui-dlg-msg{font-size:12.5px;color:var(--text3);margin-top:4px;line-height:1.5}
+.ui-dlg-field{display:flex;align-items:center;gap:8px;height:50px;padding:0 14px;border-radius:12px;border:0.5px solid var(--border2);background:rgba(255,255,255,.03);transition:border-color .2s,box-shadow .2s}
+.ui-dlg-field:focus-within{border-color:rgba(250,204,21,.55);box-shadow:0 0 0 3px rgba(250,204,21,.12)}
+.ui-dlg-field span{font-size:20px;font-weight:700;color:var(--yellow)}
+.ui-dlg-field input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:20px;font-weight:700;letter-spacing:-.3px}
+.ui-dlg-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ui-dlg-chips button{padding:6px 11px;border-radius:20px;border:0.5px solid var(--border2);background:rgba(255,255,255,.03);color:var(--text2);font:inherit;font-size:11.5px;font-weight:600;cursor:pointer;transition:all .18s}
+.ui-dlg-chips button:hover{border-color:rgba(250,204,21,.4);color:var(--yellow);transform:translateY(-1px)}
+.ui-dlg-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.ui-dlg-btn{height:40px;padding:0 18px;border-radius:11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:transform .18s,box-shadow .2s,background .2s;border:0.5px solid transparent}
+.ui-dlg-btn:active{transform:scale(.96)}
+.ui-dlg-btn.ghost{background:rgba(255,255,255,.04);border-color:var(--border2);color:var(--text2)}
+.ui-dlg-btn.ghost:hover{color:var(--text);background:rgba(255,255,255,.07)}
+.ui-dlg-btn.gold{background:var(--yellow);color:#111}
+.ui-dlg-btn.gold:hover{box-shadow:0 10px 24px -8px rgba(250,204,21,.6);transform:translateY(-1px)}
+.ui-dlg-btn.danger{background:#ef4444;color:#fff}
+.ui-dlg-btn.danger:hover{box-shadow:0 10px 24px -8px rgba(239,68,68,.6);transform:translateY(-1px)}
+.fin-click{cursor:pointer}
+.fin-click.on{border-color:rgba(var(--ic-on,250,204,21),.6);box-shadow:0 0 0 1px rgba(var(--ic-on,250,204,21),.35),0 14px 30px -14px rgba(var(--ic-on,250,204,21),.55)}
+#fin-card-paid{--ic-on:74,222,128} #fin-card-balance{--ic-on:245,158,11}
+.fin-click.on .fin-sub::after{content:" · naka-filter";color:var(--yellow);font-weight:650}
+.ct-wrap{max-width:1500px}
+.ct-split{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,1fr);gap:14px;align-items:start;margin-bottom:16px}
+@media(max-width:1100px){.ct-split{grid-template-columns:1fr}}
+.ct-form{margin:0}
+.ct-form-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.ct-form-hint{font-size:10.5px;color:var(--text3)}
+.ct-sec{padding:14px 0;border-bottom:0.5px solid var(--border)}
+.ct-sec-h{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:750;letter-spacing:.09em;text-transform:uppercase;color:var(--text2);margin-bottom:10px}
+.ct-side{display:flex;flex-direction:column;gap:14px}
+.ct-card{margin:0;padding:16px 18px}
+#page-call-tracker .ct-card .form-card-title{font-size:11.5px!important;letter-spacing:.08em}
+.ui-dlg .ui-dlg-field input,.ui-dlg .ui-dlg-field input:focus{border:none!important;box-shadow:none!important;outline:none!important;background:transparent!important}
+.ui-dlg-field input{border:0!important;box-shadow:none!important;padding:0!important;background:transparent!important;height:auto!important;outline:0!important}
+.ct-card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.ct-legend{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text3)}
+.ct-legend i{width:8px;height:8px;border-radius:3px;display:inline-block;margin-left:6px}
+.ct-chart svg{width:100%;height:150px;display:block;overflow:visible}
+.ct-chart rect.b{transition:opacity .15s}
+.ct-chart g:hover rect.b{opacity:.75}
+.ct-pipe{display:flex;flex-direction:column;gap:10px}
+.ct-pipe-row{display:grid;grid-template-columns:96px 1fr auto;gap:10px;align-items:center;font-size:12px}
+.ct-pipe-row span{color:var(--text2);font-weight:600}
+.ct-pipe-bar{height:8px;border-radius:6px;background:rgba(255,255,255,.05);overflow:hidden}
+.ct-pipe-bar i{display:block;height:100%;border-radius:6px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.ct-pipe-row b{font-size:11.5px;color:var(--text);font-weight:700;text-align:right;min-width:86px}
+.ct-pipe-row b small{color:var(--text3);font-weight:600;margin-left:4px}
+.ct-insights{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ct-ins{padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.025);border:0.5px solid var(--border)}
+.ct-ins-l{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);display:flex;align-items:center;gap:5px}
+.ct-ins-v{font-size:17px;font-weight:750;color:var(--text);margin-top:5px;letter-spacing:-.3px}
+.ct-ins-s{font-size:10.5px;color:var(--text3);margin-top:2px}
+.ct-delta{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;margin-top:8px;padding:2px 7px;border-radius:20px;position:relative}
+.ct-delta.up{color:#4ade80;background:rgba(74,222,128,.1)}
+.ct-delta.down{color:#f87171;background:rgba(248,113,113,.1)}
+.ct-delta.flat{color:var(--text3);background:rgba(255,255,255,.05)}
+.ct-delta small{color:var(--text3);font-weight:600;margin-left:2px}
+.fin-cmp-btn{height:34px;display:inline-flex;align-items:center;gap:8px;padding:0 10px 0 12px;border-radius:10px;border:0.5px solid var(--border2);background:rgba(255,255,255,.03);color:var(--text2);font:inherit;font-size:12px;font-weight:650;cursor:pointer;transition:all .2s}
+.fin-cmp-btn:hover{color:var(--text);border-color:rgba(250,204,21,.35)}
+.fin-cmp-sw{width:28px;height:16px;border-radius:10px;background:rgba(255,255,255,.12);position:relative;transition:background .2s}
+.fin-cmp-sw i{position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.fin-cmp-on .fin-cmp-btn{color:var(--yellow);border-color:rgba(250,204,21,.45);background:rgba(250,204,21,.08)}
+.fin-cmp-on .fin-cmp-sw{background:var(--yellow)}
+.fin-cmp-on .fin-cmp-sw i{transform:translateX(12px);background:#111}
+.fin-d{display:none}
+.fin-cmp-on .fin-d:not(:empty){display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;position:relative;animation:finDIn .3s ease}
+@keyframes finDIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.fin-d.up{color:#4ade80;background:rgba(74,222,128,.1)} .fin-d.down{color:#f87171;background:rgba(248,113,113,.1)} .fin-d.flat{color:var(--text3);background:rgba(255,255,255,.05)}
+.fin-d small{color:var(--text3);font-weight:600}
+.ui-sel.compact{width:auto}
+.ui-sel.compact .ui-sel-btn{min-height:30px;height:30px;padding:0 9px 0 11px;font-size:12.5px;font-weight:650;border-radius:9px}
 .fin-sub{font-size:10.5px;color:var(--text3);margin-top:6px;line-height:1.35;position:relative}
 .fin-sub b{color:var(--text2);font-weight:650}
 .fin-row2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:14px;margin-bottom:1.25rem;align-items:start}
@@ -3137,7 +3235,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
 
       <!-- CALL TRACKER PAGE -->
       <div class="page" id="page-call-tracker">
-        <div style="max-width:1100px">
+        <div class="ct-wrap">
 
           <!-- Stats -->
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap">
@@ -3153,10 +3251,12 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           </div>
           <div class="stats-grid" id="ct-stats" style="margin-bottom:14px"></div>
 
-          <!-- Log a call -->
-          <div class="form-card" style="margin-bottom:14px">
-            <div class="form-card-title"><span data-gi="phone" data-c="#f59e0b" data-s="16"></span> <span id="ct-form-title">Log a call</span></div>
+          <!-- Log a call + analytics side -->
+          <div class="ct-split">
+          <div class="form-card ct-form">
+            <div class="ct-form-head"><div class="form-card-title" style="margin:0"><span data-gi="phone" data-c="#f59e0b" data-s="16"></span> <span id="ct-form-title">Log a call</span></div><span class="ct-form-hint">* required</span></div>
             <input type="hidden" id="ct-edit-id" value="">
+            <div class="ct-sec"><div class="ct-sec-h"><span data-gi="user" data-c="#a78bfa" data-s="13"></span>Client</div>
             <div class="form-grid">
               <div class="form-field">
                 <label class="form-label">Client / Company *</label>
@@ -3187,6 +3287,9 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                   <option value="Canvassing"></option>
                 </datalist>
               </div>
+            </div></div>
+            <div class="ct-sec"><div class="ct-sec-h"><span data-gi="clock" data-c="#facc15" data-s="13"></span>Call details</div>
+            <div class="form-grid">
               <div class="form-field">
                 <label class="form-label">Call Date</label>
                 <input class="form-input" id="ct-calldate" type="date">
@@ -3204,6 +3307,15 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                   <option value="Rescheduled">Rescheduled</option>
                 </select>
               </div>
+              <div class="form-field admin-only" id="ct-agent-field">
+                <label class="form-label">Agent (VA)</label>
+                <select class="form-select" id="ct-agent">
+                  <option value="">— Ako (admin) —</option>
+                </select>
+              </div>
+            </div></div>
+            <div class="ct-sec"><div class="ct-sec-h"><span data-gi="hand-coins" data-c="#4ade80" data-s="13"></span>Deal</div>
+            <div class="form-grid">
               <div class="form-field">
                 <label class="form-label">Deal Status</label>
                 <select class="form-select" id="ct-dealstatus">
@@ -3222,21 +3334,33 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                 <label class="form-label">Follow-ups made</label>
                 <input class="form-input" id="ct-followup" type="number" min="0" step="1" placeholder="0">
               </div>
-              <div class="form-field admin-only" id="ct-agent-field">
-                <label class="form-label">Agent (VA)</label>
-                <select class="form-select" id="ct-agent">
-                  <option value="">— Ako (admin) —</option>
-                </select>
-              </div>
+            </div></div>
+            <div class="ct-sec" style="border:0;padding-bottom:0"><div class="form-grid">
               <div class="form-field full">
                 <label class="form-label">Note</label>
                 <textarea class="form-textarea" id="ct-notes" placeholder="Anong napag-usapan, susunod na gagawin, etc." style="min-height:60px"></textarea>
               </div>
-            </div>
+            </div></div>
             <div style="margin-top:12px">
               <button class="yellow-btn" id="ct-save-btn" onclick="saveCallLog()">Log call</button>
               <button class="ghost-btn" id="ct-cancel-edit-btn" onclick="cancelCallLogEdit()" style="display:none;margin-left:8px">Cancel edit</button>
             </div>
+          </div>
+
+          <aside class="ct-side">
+            <div class="form-card ct-card">
+              <div class="ct-card-h"><div class="form-card-title" style="margin:0"><span data-gi="chart-column" data-c="#facc15" data-s="16"></span> <span id="ct-chart-title">Daily calls</span></div><div class="ct-legend"><i style="background:#facc15"></i>Calls<i style="background:#4ade80"></i>Won</div></div>
+              <div id="ct-chart" class="ct-chart"></div>
+            </div>
+            <div class="form-card ct-card">
+              <div class="ct-card-h"><div class="form-card-title" style="margin:0"><span data-gi="funnel-chart" data-c="#a78bfa" data-s="16"></span> Pipeline overview</div></div>
+              <div id="ct-pipeline"></div>
+            </div>
+            <div class="form-card ct-card">
+              <div class="ct-card-h"><div class="form-card-title" style="margin:0"><span data-gi="sparkles" data-c="#f59e0b" data-s="16"></span> Insights</div></div>
+              <div id="ct-insights" class="ct-insights"></div>
+            </div>
+          </aside>
           </div>
 
           <!-- Filters -->
@@ -4366,16 +4490,17 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             <button type="button" class="proj-range-btn" onclick="openDateRangeModal('finance')"><span data-gi="calendar" data-c="#facc15" data-s="15"></span> <span id="fin-range-label">This Month</span></button>
             <input type="hidden" id="fin-date-from"/>
             <input type="hidden" id="fin-date-to"/>
+            <button type="button" class="fin-cmp-btn" id="fin-cmp-btn" onclick="finToggleCompare()" title="Ipakita ang comparison vs previous period sa bawat card"><span data-gi="arrow-up-down" data-c="currentColor" data-s="14"></span><span>Compare</span><span class="fin-cmp-sw"><i></i></span></button>
             <button class="ghost-btn" onclick="exportFinanceCSV()" style="font-size:11px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</button>
           </div>
         </div>
 
         <!-- SUMMARY CARDS -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1rem">
-          <div class="stat-card c-green"><div class="stat-label">Total Sales</div><div class="stat-val" style="color:var(--green)" id="fin-stat-sales">₱0</div></div>
-          <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-val" style="color:#f87171" id="fin-stat-expenses">₱0</div><div class="fin-sub" id="fin-stat-exp-sub"></div></div>
-          <div class="stat-card c-yellow"><div class="stat-label">Net Profit</div><div class="stat-val" id="fin-stat-net">₱0</div></div>
-          <div class="stat-card c-amber"><div class="stat-label">Total Orders</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-orders">0</div></div>
+          <div class="stat-card c-green"><div class="stat-label">Total Sales</div><div class="stat-val" style="color:var(--green)" id="fin-stat-sales">₱0</div><div class="fin-d" id="fin-d-sales"></div></div>
+          <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-val" style="color:#f87171" id="fin-stat-expenses">₱0</div><div class="fin-sub" id="fin-stat-exp-sub"></div><div class="fin-d" id="fin-d-exp"></div></div>
+          <div class="stat-card c-yellow"><div class="stat-label">Net Profit</div><div class="stat-val" id="fin-stat-net">₱0</div><div class="fin-d" id="fin-d-net"></div></div>
+          <div class="stat-card c-amber"><div class="stat-label">Total Orders</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-orders">0</div><div class="fin-d" id="fin-d-orders"></div></div>
           <div class="stat-card c-purple" style="cursor:pointer" onclick="promptFinTarget()" title="Click to set your sales target">
             <div class="stat-label" style="display:flex;align-items:center;gap:5px"><span data-gi="target" data-c="#a78bfa" data-s="14"></span> Gap to Target <span id="fin-target-label" style="color:var(--text3)"></span></div>
             <div class="stat-val" id="fin-stat-gap" style="font-size:20px;letter-spacing:normal;color:var(--yellow);text-decoration:underline;text-decoration-style:dotted">+ Set target</div>
@@ -4386,10 +4511,10 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
         <!-- ADS METRICS -->
         <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px"><span data-gi="megaphone" data-c="#a78bfa" data-s="14"></span> Ads Metrics</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.25rem">
-          <div class="stat-card c-purple"><div class="stat-label">Total Ads Spent</div><div class="stat-val" style="color:var(--purple)" id="fin-stat-ads">₱0</div></div>
+          <div class="stat-card c-purple"><div class="stat-label">Total Ads Spent</div><div class="stat-val" style="color:var(--purple)" id="fin-stat-ads">₱0</div><div class="fin-d" id="fin-d-ads"></div></div>
           <div class="stat-card c-purple"><div class="stat-label">Avg Cost/Message</div><div class="stat-val" style="color:var(--purple)" id="fin-stat-cpm">₱0</div></div>
-          <div class="stat-card c-amber"><div class="stat-label">Total Messages</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-msgs">0</div></div>
-          <div class="stat-card c-green"><div class="stat-label">Ad ROAS</div><div class="stat-val" style="color:var(--green)" id="fin-stat-roas">0.00x</div></div>
+          <div class="stat-card c-amber"><div class="stat-label">Total Messages</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-msgs">0</div><div class="fin-d" id="fin-d-msgs"></div></div>
+          <div class="stat-card c-green"><div class="stat-label">Ad ROAS</div><div class="stat-val" style="color:var(--green)" id="fin-stat-roas">0.00x</div><div class="fin-d" id="fin-d-roas"></div></div>
           <div class="stat-card c-amber"><div class="stat-label">Avg Daily Spend</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-avgdaily">₱0</div></div>
         </div>
 
@@ -4402,8 +4527,8 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
           <div>
             <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px"><span data-gi="credit-card" data-c="#4ade80" data-s="14"></span> Payments &amp; Comparison</div>
             <div class="fin-row2-cards">
-              <div class="stat-card c-green fin-ic-card"><div class="fin-ic" style="--ic:74,222,128"><span data-gi="circle-check" data-c="#4ade80" data-s="22"></span></div><div class="stat-label">Fully Paid</div><div class="stat-val" style="color:var(--green)" id="fin-stat-paid">₱0</div><div class="fin-sub" id="fin-stat-paid-sub"></div></div>
-              <div class="stat-card c-amber fin-ic-card" style="cursor:pointer" onclick="finQuickFilterBalance()" title="Click para makita yung may balance"><div class="fin-ic" style="--ic:245,158,11"><span data-gi="clock" data-c="#f59e0b" data-s="22"></span></div><div class="stat-label">Balance pa</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-balance">₱0</div><div class="fin-sub" id="fin-stat-balance-sub"></div></div>
+              <div class="stat-card c-green fin-ic-card fin-click" id="fin-card-paid" onclick="finQuickFilterStatus('Paid')" title="Click para makita yung fully paid"><div class="fin-ic" style="--ic:74,222,128"><span data-gi="circle-check" data-c="#4ade80" data-s="22"></span></div><div class="stat-label">Fully Paid</div><div class="stat-val" style="color:var(--green)" id="fin-stat-paid">₱0</div><div class="fin-sub" id="fin-stat-paid-sub"></div></div>
+              <div class="stat-card c-amber fin-ic-card fin-click" id="fin-card-balance" onclick="finQuickFilterStatus('Balance')" title="Click para makita yung may balance"><div class="fin-ic" style="--ic:245,158,11"><span data-gi="clock" data-c="#f59e0b" data-s="22"></span></div><div class="stat-label">Balance pa</div><div class="stat-val" style="color:var(--amber)" id="fin-stat-balance">₱0</div><div class="fin-sub" id="fin-stat-balance-sub"></div></div>
               <div class="stat-card c-purple fin-ic-card" onmouseenter="finCmpPlay()"><div class="fin-ic" id="fin-cmp-ic" style="--ic:167,139,250"><span class="fin-lt" id="fin-cmp-lt"></span></div><div class="stat-label" id="fin-cmp-label">vs Last Month</div><div class="stat-val" id="fin-cmp-val">—</div><div class="fin-sub" id="fin-cmp-sub"></div><div class="fin-sub" id="fin-best-sub" style="margin-top:3px"></div></div>
             </div>
           </div>
