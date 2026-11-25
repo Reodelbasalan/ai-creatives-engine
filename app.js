@@ -6030,11 +6030,14 @@ async function finRenderComparison(df,dt,curSales){
     val.style.color=pct>=0?'var(--green)':'#f87171';
     finCmpIcon(pct>=0?'trendingUp':'trendingDown');
   } else { val.textContent=cur>0?'↑ New':'—'; val.style.color=cur>0?'var(--green)':'var(--text3)'; finCmpIcon('trendingUp'); }
-  var html=finShortDate(psS)+'–'+finShortDate(peS)+': <b>'+finPHP(prev)+'</b>';
+  var mx=Math.max(cur,prev,1);
+  var bar=function(lbl,v,col){ return '<div class="fin-cb"><span>'+lbl+'</span><div class="fin-cb-t"><i style="width:'+Math.max(2,Math.round(v/mx*100))+'%;background:'+col+'"></i></div><b>'+finPHP(v)+'</b></div>'; };
+  var html='<div class="fin-cbars">'+bar(finShortDate(df)+'–'+finShortDate(end).replace(/^\D+/,''),cur,cur>=prev?'#4ade80':'#f87171')+bar(finShortDate(psS)+'–'+finShortDate(peS).replace(/^\D+/,''),prev,'rgba(255,255,255,.28)')+'</div>'
+    +'<div class="fin-cnote">'+(cur>=prev?'Mas mataas ng ':'Mas mababa ng ')+'<b>'+finPHP(Math.abs(cur-prev))+'</b> (parehong araw)</div>';
   finRenderDeltas(psS,peS,prev,data,isMonth?FIN_MON[ps.getMonth()]:'prev');
   var lastFull=isMonth?sumRange(psS,projFmtDate(pfe)):prev;
   window._finCmp={lastFull:lastFull,best:bestM?byMonth[bestM]:0};
-  if(isMonth) html+=' · Buong '+FIN_MON[ps.getMonth()]+': <b>'+finPHP(lastFull)+'</b>';
+  if(isMonth) html+='<div class="fin-cnote">Buong '+FIN_MON[ps.getMonth()]+': <b>'+finPHP(lastFull)+'</b></div>';
   sub.innerHTML=html;
 }
 
@@ -6062,8 +6065,11 @@ async function finRenderDeltas(ps,pe,prevSales,salesData,label){
     var d=c-p, good=invert[k]?d<0:d>0, cls=d===0?'flat':(good?'up':'down');
     var pct=p?Math.round(d/Math.abs(p)*100):(c?100:0);
     var txt=k==='roas'?((d>=0?'+':'')+d.toFixed(2)+'x'):((d>=0?'+':'')+pct+'%');
+    var fmt=function(v){ return k==='orders'||k==='msgs'?Math.round(v).toLocaleString():k==='roas'?v.toFixed(2)+'x':finPHP(v); };
+    var diff=k==='roas'?'':((d>=0?'+':'−')+fmt(Math.abs(d)));
     el.className='fin-d '+cls;
-    el.innerHTML=(d>0?'↑':d<0?'↓':'→')+' '+txt+' <small>vs '+lab+'</small>';
+    el.innerHTML='<div class="fin-d-top"><span class="fin-d-badge">'+(d>0?'↑':d<0?'↓':'→')+' '+txt+'</span>'+(diff?'<span class="fin-d-amt">'+diff+'</span>':'')+'</div>'
+      +'<div class="fin-d-prev">'+finShortDate(ps)+'–'+finShortDate(pe)+': <b>'+fmt(p)+'</b></div>';
     el.title='Previous ('+finShortDate(ps)+'–'+finShortDate(pe)+'): '+(k==='orders'||k==='msgs'?p:k==='roas'?p.toFixed(2)+'x':finPHP(p));
   });
 }
