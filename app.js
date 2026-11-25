@@ -10201,14 +10201,16 @@ async function updateAdvertiserTaskStatus(id,status){
   payload.done_at=(status==='Done'||status==='Not Done')?new Date().toISOString():null;
   var t=advTasksCache.find(function(x){ return x.id===id; });
   if(t){ Object.assign(t,payload); renderAdvertiserTasks(); }   // optimistic, walang reload flash
-  var{error}=await sb.from('advertiser_tasks').update(payload).eq('id',id);
+  var{data,error}=await sb.from('advertiser_tasks').update(payload).eq('id',id).select('id');
+  if(!error && (!data||!data.length)) error={message:'Hindi na-save sa database (walang permiso sa task na ito — RLS). Ibabalik ko sa dati.'};
   if(error){ showNotif('Error: '+error.message,'error'); loadAdvertiserTasks(); return; }
   showNotif(status==='In Progress'?'Task reopened':'Status: '+status,'success');
 }
 
 async function deleteAdvertiserTask(id){
   if(!confirm('Delete this task?')) return;
-  var{error}=await sb.from('advertiser_tasks').delete().eq('id',id);
+  var{data,error}=await sb.from('advertiser_tasks').delete().eq('id',id).select('id');
+  if(!error && (!data||!data.length)) error={message:'Hindi na-delete sa database (walang permiso — RLS).'};
   if(error){ showNotif('Error: '+error.message,'error'); return; }
   advTasksCache=advTasksCache.filter(function(x){ return x.id!==id; });
   if(atDrawerId===id) atCloseDrawer();
@@ -10309,8 +10311,9 @@ async function saveAtDetailEdits(){
     if(assignees.length){ payload.assignees=assignees; payload.assignee_id=assignees[0].id; payload.assignee_name=assignees[0].name; }
   }
   var btn=document.getElementById('atd-save'); if(btn) btn.disabled=true;
-  var{error}=await atWrite(function(p){ return sb.from('advertiser_tasks').update(p).eq('id',id); },payload);
+  var{data,error}=await atWrite(function(p){ return sb.from('advertiser_tasks').update(p).eq('id',id).select('id'); },payload);
   if(btn) btn.disabled=false;
+  if(!error && (!data||!data.length)) error={message:'Hindi na-save sa database (walang permiso sa task na ito — RLS).'};
   if(error){ showNotif('Error: '+error.message,'error'); return; }
   showNotif('Task updated \u2713','success');
   atCloseDrawer();
