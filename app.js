@@ -6067,7 +6067,7 @@ async function finMcFetch(r){
   var sales=sum(s,'sales_amount'), ads=sum(ad,'total_ads_spent'), other=sum(e,'amount'), msgs=sum(ad,'total_messages');
   return {rows:s,sales:sales,orders:s.length,paid:sum(s.filter(function(o){return o.paid_status==='Paid';}),'sales_amount'),
     balance:sum(s.filter(function(o){return (o.paid_status||'Balance')==='Balance';}),'sales_amount'),
-    ads:ads,other:other,exp:ads+other,net:sales-ads-other,msgs:msgs,roas:ads>0?sales/ads:0,cpm:(function(){ var c=ad.filter(function(x){return Number(x.cost_per_message)>0;}); return c.length?c.reduce(function(t,x){return t+Number(x.cost_per_message);},0)/c.length:0; })()};  // same as Avg Cost/Message card
+    ads:ads,other:other,exp:ads+other,net:sales-ads-other,msgs:msgs,roas:ads>0?(sales-ads)/ads:0,cpm:(function(){ var c=ad.filter(function(x){return Number(x.cost_per_message)>0;}); return c.length?c.reduce(function(t,x){return t+Number(x.cost_per_message);},0)/c.length:0; })()};  // same as Avg Cost/Message card
 }
 var finMcSeq=0;
 async function finRenderMonthCompare(){
@@ -6087,7 +6087,7 @@ async function finRenderMonthCompare(){
   var money=function(v){ return finPHP(v); };
   var fmt={sales:money,exp:money,net:money,orders:function(v){return v;},paid:money,balance:money,ads:money,msgs:function(v){return Math.round(v).toLocaleString();},roas:function(v){return v.toFixed(2)+'x';},cpm:money};
   var M=[['sales','Total Sales','hand-coins','#4ade80',0],['exp','Total Expenses','receipt','#f87171',1],['net','Net Profit','coins','#facc15',0],['orders','Orders','list-checks','#f59e0b',0],
-         ['paid','Fully Paid','circle-check','#4ade80',0],['balance','Balance pa','clock','#f59e0b',1],['ads','Ads Spent','megaphone','#a78bfa',1],['msgs','Messages','phone','#f59e0b',0],['roas','Ad ROAS','trending-up','#4ade80',0],['cpm','Cost / Message','target','#a78bfa',1]];
+         ['paid','Fully Paid','circle-check','#4ade80',0],['balance','Balance pa','clock','#f59e0b',1],['ads','Ads Spent','megaphone','#a78bfa',1],['msgs','Messages','phone','#f59e0b',0],['roas','True ROAS','trending-up','#4ade80',0],['cpm','Cost / Message','target','#a78bfa',1]];
   var dline=function(k,a,b,inv){
     var d=b-a, good=inv?d<0:d>0, cls=d===0?'fin-n':(good?'fin-g':'fin-r');
     var pct=a?Math.round(d/Math.abs(a)*100):(b?100:0);
@@ -6128,7 +6128,7 @@ async function finRenderDeltas(ps,pe,prevSales,salesData,label){
   var ads=(r[1].data||[]).reduce(function(s,a){return s+(Number(a.total_ads_spent)||0);},0);
   var msgs=(r[1].data||[]).reduce(function(s,a){return s+(Number(a.total_messages)||0);},0);
   var orders=salesData.filter(function(o){ return o.order_date>=ps&&o.order_date<=pe; }).length;
-  var prev={sales:prevSales,exp:exp+ads,net:prevSales-exp-ads,orders:orders,ads:ads,msgs:msgs,roas:ads>0?prevSales/ads:0};
+  var prev={sales:prevSales,exp:exp+ads,net:prevSales-exp-ads,orders:orders,ads:ads,msgs:msgs,roas:ads>0?(prevSales-ads)/ads:0};
   var lab=label==='prev'?'prev':label;
   // ihambing yung current hanggang ngayon lang (hindi future days) — sales galing sa parehong window
   var invert={exp:1,ads:1};
@@ -6651,7 +6651,7 @@ async function loadFinancePage(){
   var elE=document.getElementById('fin-stat-expenses'); if(elE)elE.textContent=finPHP(allExpenses);
   var elES=document.getElementById('fin-stat-exp-sub'); if(elES)elES.innerHTML='Ads <b>'+finPHP(totalAds)+'</b> + Others <b>'+finPHP(totalExpenses)+'</b>';
   finRenderPayments(sales);
-  window._finCur={sales:totalSales,exp:allExpenses,net:net,orders:sales.length,ads:totalAds,msgs:totalMsgs,roas:totalAds>0?totalSales/totalAds:0};
+  window._finCur={sales:totalSales,exp:allExpenses,net:net,orders:sales.length,ads:totalAds,msgs:totalMsgs,roas:totalAds>0?(totalSales-totalAds)/totalAds:0};
   finSyncCompareBtn();
   if(finCompareOn()) finRenderMonthCompare();
   finRenderComparison(df,dt,totalSales);
@@ -6661,7 +6661,10 @@ async function loadFinancePage(){
   var elMsgs=document.getElementById('fin-stat-msgs'); if(elMsgs)elMsgs.textContent=totalMsgs;
   var elO=document.getElementById('fin-stat-orders'); if(elO)elO.textContent=sales.length;
   var adRoas=totalAds>0?(totalSales/totalAds):0;
-  var elRoas=document.getElementById('fin-stat-roas'); if(elRoas){ elRoas.textContent=adRoas.toFixed(2)+'x'; elRoas.style.color=adRoas>=1?'var(--green)':'#f87171'; }
+  // True ROAS = (Total sales − Ads spent) ÷ Ads spent
+  var netRoas=totalAds>0?(totalSales-totalAds)/totalAds:0;
+  var elRoas=document.getElementById('fin-stat-roas'); if(elRoas){ elRoas.textContent=netRoas.toFixed(2)+'x'; elRoas.style.color=netRoas>=1?'var(--green)':'#f87171'; }
+  var elRoasS=document.getElementById('fin-stat-roas-sub'); if(elRoasS) elRoasS.innerHTML=totalAds>0?'(Sales − Ads) ÷ Ads · Gross <b>'+adRoas.toFixed(2)+'x</b>':'Walang ads spend sa period na ito';
   var avgDaily=adsLog.length?(totalAds/adsLog.length):0;
   var elAvgDaily=document.getElementById('fin-stat-avgdaily'); if(elAvgDaily)elAvgDaily.textContent=finPHP(avgDaily);
 
