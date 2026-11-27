@@ -6305,11 +6305,12 @@ function renderFinSalesTable(sales){
     var amtCell='<div style="font-weight:650;color:var(--green)">'+finPHP(tt)+'</div>'
       +(o.paid_status==='Refunded'?'':(bl>0?'<div class="fin-amt-sub"><span>Paid <b style="color:#4ade80">'+finPHP(pd)+'</b></span><span>Bal <b style="color:#f59e0b">'+finPHP(bl)+'</b></span></div>':(tt>0?'<div class="fin-amt-sub"><b style="color:#4ade80">Fully paid</b></div>':'')))
       ;
-    return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.6fr 1fr 1.25fr 1fr 1fr 32px 32px 32px;cursor:pointer" onclick="editSale(\''+o.id+'\')" title="Click to view / edit">'
+    return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.6fr 0.9fr 0.6fr 1.25fr 1fr 1fr 32px 32px 32px;cursor:pointer" onclick="editSale(\''+o.id+'\')" title="Click to view / edit">'
       +'<div style="color:var(--text3);font-size:11px">'+(sales.length-i)+'</div>'
       +'<div class="row-date">'+fmtDate(o.order_date)+'</div>'
       +'<div><div class="row-name">'+(o.client_name||'—')+'</div><div class="row-sub">'+subParts.join(' · ')+'</div></div>'
-      +'<div style="font-size:11px;color:var(--text2)">'+(o.order_package||'—')+(finVideos(o)>1?'<div style="font-size:10px;color:var(--yellow);font-weight:700;margin-top:2px">'+finVideos(o)+' videos</div>':'')+'</div>'
+      +'<div style="font-size:11px;color:var(--text2)">'+(o.order_package||'—')+'</div>'
+      +'<div style="font-size:13px;font-weight:700;color:'+(finVideos(o)>1?'var(--yellow)':'var(--text2)')+'">'+finVideos(o)+'</div>'
       +'<div>'+amtCell+'</div>'
       +'<div style="font-size:11px;color:var(--text2)">'+(o.va_name||'—')+(o.sale_source==='Organic'?' <span style="font-size:9px;font-weight:700;color:#4ade80;border:1px solid rgba(74,222,128,0.35);border-radius:8px;padding:1px 6px;margin-left:3px">'+gIcon('sprout','#4ade80',11)+' Organic</span>':'')+'</div>'
       +'<div onclick="event.stopPropagation()">'+finStatusSelect(o,sc)+'</div>'
