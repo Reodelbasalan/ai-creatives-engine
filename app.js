@@ -14626,3 +14626,153 @@ function uiDialog(o){
   });
 }
 function uiConfirm(title,message,okText){ return uiDialog({title:title,message:message,icon:'triangle-alert',iconColor:'248,113,113',okText:okText||'Delete',danger:true}); }
+
+// Combobox: pamalit sa native <datalist> (lumalabas sa gilid sa Chrome)
+var uiCombo=null;
+function uiComboEnhance(inp){
+  if(!inp||inp._combo) return;
+  var listId=inp.getAttribute('list'); if(!listId) return;
+  inp._combo={listId:listId}; inp.removeAttribute('list'); inp.setAttribute('autocomplete','off');
+  inp.addEventListener('focus',function(){ uiComboOpen(inp); });
+  inp.addEventListener('input',function(){ uiComboOpen(inp); });
+  inp.addEventListener('blur',function(){ setTimeout(function(){ if(uiCombo&&uiCombo.inp===inp) uiComboClose(); },150); });
+  inp.addEventListener('keydown',function(e){
+    if(!uiCombo||uiCombo.inp!==inp) return;
+    var items=uiCombo.menu.querySelectorAll('button'); if(!items.length) return;
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      e.preventDefault(); uiCombo.i=(uiCombo.i+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;
+      items.forEach(function(b,k){ b.classList.toggle('on',k===uiCombo.i); }); items[uiCombo.i].scrollIntoView({block:'nearest'});
+    } else if(e.key==='Enter' && uiCombo.i>=0){ e.preventDefault(); items[uiCombo.i].click(); }
+    else if(e.key==='Escape'){ uiComboClose(); }
+  });
+}
+function uiComboOpen(inp){
+  var dl=document.getElementById(inp._combo.listId); if(!dl) return;
+  var q=(inp.value||'').trim().toLowerCase();
+  var vals=[].map.call(dl.options,function(o){ return o.value; }).filter(Boolean);
+  var hits=vals.filter(function(v){ return !q || v.toLowerCase().indexOf(q)>=0; });
+  if(q && hits.length===1 && hits[0].toLowerCase()===q){ uiComboClose(); return; }
+  hits.sort(function(a,b){ var A=a.toLowerCase().indexOf(q)===0, B=b.toLowerCase().indexOf(q)===0; return A===B?a.localeCompare(b):(A?-1:1); });
+  hits=hits.slice(0,60);
+  if(!hits.length){ uiComboClose(); return; }
+  if(!uiCombo||uiCombo.inp!==inp){
+    uiComboClose();
+    var m=document.createElement('div'); m.className='ui-sel-menu ui-combo-menu';
+    m.addEventListener('mousedown',function(e){ e.preventDefault(); });
+    document.body.appendChild(m); uiCombo={inp:inp,menu:m,i:-1};
+  }
+  var esc=function(s){ return String(s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  var hl=function(v){ if(!q) return esc(v); var i=v.toLowerCase().indexOf(q); return i<0?esc(v):esc(v.slice(0,i))+'<mark>'+esc(v.slice(i,i+q.length))+'</mark>'+esc(v.slice(i+q.length)); };
+  uiCombo.i=-1;
+  uiCombo.menu.innerHTML='<div class="ui-combo-h">'+(q?hits.length+' match'+(hits.length===1?'':'es'):'Previous clients')+'</div>'+hits.map(function(v){ return '<button type="button" data-v="'+esc(v)+'">'+hl(v)+'</button>'; }).join('');
+  uiCombo.menu.querySelectorAll('button').forEach(function(b){ b.onclick=function(){
+    inp.value=b.dataset.v; uiComboClose(); inp.dispatchEvent(new Event('input',{bubbles:true})); inp.dispatchEvent(new Event('change',{bubbles:true})); uiComboClose();
+  }; });
+  var r=inp.getBoundingClientRect(), m=uiCombo.menu;
+  m.style.left=r.left+'px'; m.style.width=r.width+'px'; m.style.minWidth='0';
+  var below=window.innerHeight-r.bottom>240;
+  m.style.top=(below?r.bottom+6:Math.max(8,r.top-6-Math.min(m.scrollHeight,280)))+'px';
+  requestAnimationFrame(function(){ m.classList.add('show'); });
+}
+function uiComboClose(){ if(uiCombo){ uiCombo.menu.remove(); uiCombo=null; } }
+document.addEventListener('scroll',function(e){ if(uiCombo && !(e.target.classList&&e.target.classList.contains('ui-combo-menu'))) uiComboClose(); },true);
+['page-finance','page-call-tracker'].forEach(function(id){
+  var el=document.getElementById(id); if(!el) return;
+  var run=function(){ el.querySelectorAll('input[list]').forEach(uiComboEnhance); };
+  run(); new MutationObserver(run).observe(el,{childList:true,subtree:true});
+});
+
+// Date + time picker: pamalit sa native calendar/clock ng browser
+(function(){
+  var d=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+  Object.defineProperty(HTMLInputElement.prototype,'value',{configurable:true,get:function(){ return d.get.call(this); },
+    set:function(v){ d.set.call(this,v); if(this._dp) this._dp.sync(); }});
+})();
+var UI_MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var uiPick=null;
+function uiPad(n){ return String(n).padStart(2,'0'); }
+function uiDateEnhance(inp){
+  if(!inp||inp._dp) return;
+  var isTime=inp.type==='time';
+  var wrap=document.createElement('div'); wrap.className='ui-dp';
+  var btn=document.createElement('button'); btn.type='button'; btn.className='ui-sel-btn ui-dp-btn';
+  btn.innerHTML=gIcon(isTime?'clock':'calendar','#facc15',15)+'<span class="ui-dp-lbl"></span>';
+  inp.parentNode.insertBefore(wrap,inp); wrap.appendChild(btn); wrap.appendChild(inp);
+  inp.classList.add('ui-sel-native'); inp.tabIndex=-1;
+  inp._dp={btn:btn,wrap:wrap,isTime:isTime,sync:function(){
+    var v=inp.value, l=btn.querySelector('.ui-dp-lbl');
+    if(!v){ l.textContent=isTime?'Select time':'Select date'; l.classList.add('ph'); return; }
+    l.classList.remove('ph');
+    if(isTime){ var h=+v.slice(0,2), m=v.slice(3,5); l.textContent=((h%12)||12)+':'+m+' '+(h<12?'AM':'PM'); }
+    else { var p=v.split('-'); l.textContent=UI_MON[+p[1]-1].slice(0,3)+' '+(+p[2])+', '+p[0]; }
+  }};
+  inp._dp.sync();
+  btn.addEventListener('click',function(e){ e.stopPropagation(); if(uiPick&&uiPick.inp===inp) uiPickClose(); else (isTime?uiTimeOpen:uiDateOpen)(inp); });
+}
+function uiPickPlace(m,inp){
+  document.body.appendChild(m);
+  var r=inp._dp.btn.getBoundingClientRect(), h=m.offsetHeight, w=m.offsetWidth;
+  m.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+'px';
+  m.style.top=(window.innerHeight-r.bottom>h+12?r.bottom+6:Math.max(8,r.top-h-6))+'px';
+  inp._dp.wrap.classList.add('open');
+  requestAnimationFrame(function(){ m.classList.add('show'); });
+}
+function uiPickSet(inp,v){ inp.value=v; inp.dispatchEvent(new Event('input',{bubbles:true})); inp.dispatchEvent(new Event('change',{bubbles:true})); }
+function uiDateOpen(inp,y,mo){
+  uiPickClose();
+  var cur=inp.value?inp.value.split('-').map(Number):null, today=new Date();
+  y=y!=null?y:(cur?cur[0]:today.getFullYear()); mo=mo!=null?mo:(cur?cur[1]-1:today.getMonth());
+  var m=document.createElement('div'); m.className='ui-pop ui-cal';
+  var first=new Date(y,mo,1).getDay(), days=new Date(y,mo+1,0).getDate(), prevDays=new Date(y,mo,0).getDate();
+  var tKey=today.getFullYear()+'-'+uiPad(today.getMonth()+1)+'-'+uiPad(today.getDate());
+  var cells='';
+  for(var i=0;i<42;i++){
+    var dn,yy=y,mm=mo,out=false;
+    if(i<first){ dn=prevDays-first+i+1; mm=mo-1; out=true; } else if(i>=first+days){ dn=i-first-days+1; mm=mo+1; out=true; } else dn=i-first+1;
+    var dt=new Date(yy,mm,dn), k=dt.getFullYear()+'-'+uiPad(dt.getMonth()+1)+'-'+uiPad(dt.getDate());
+    cells+='<button type="button" data-k="'+k+'" class="'+(out?'out ':'')+(k===inp.value?'sel ':'')+(k===tKey?'today':'')+'">'+dn+'</button>';
+  }
+  m.innerHTML='<div class="ui-cal-h"><button type="button" class="ui-cal-nav" data-n="-1">'+gIcon('chevron-left','currentColor',16)+'</button><div class="ui-cal-t">'+UI_MON[mo]+' <span>'+y+'</span></div><button type="button" class="ui-cal-nav" data-n="1">'+gIcon('chevron-right','currentColor',16)+'</button></div>'
+    +'<div class="ui-cal-w">'+['Su','Mo','Tu','We','Th','Fr','Sa'].map(function(d){return '<span>'+d+'</span>';}).join('')+'</div>'
+    +'<div class="ui-cal-g">'+cells+'</div>'
+    +'<div class="ui-cal-f"><button type="button" data-a="clear">Clear</button><button type="button" data-a="today">Today</button></div>';
+  m.addEventListener('click',function(e){
+    e.stopPropagation();
+    var b=e.target.closest('button'); if(!b) return;
+    if(b.dataset.n){ var nm=mo+(+b.dataset.n); uiDateOpen(inp,y+Math.floor(nm/12),(nm%12+12)%12); return; }
+    if(b.dataset.k){ uiPickSet(inp,b.dataset.k); uiPickClose(); return; }
+    if(b.dataset.a==='today'){ uiPickSet(inp,tKey); uiPickClose(); }
+    if(b.dataset.a==='clear'){ uiPickSet(inp,''); uiPickClose(); }
+  });
+  uiPick={inp:inp,menu:m}; uiPickPlace(m,inp);
+}
+function uiTimeOpen(inp){
+  uiPickClose();
+  var v=inp.value||'', h=v?+v.slice(0,2):9, mi=v?+v.slice(3,5):0, ap=h<12?'AM':'PM', h12=(h%12)||12;
+  var m=document.createElement('div'); m.className='ui-pop ui-time';
+  var col=function(name,arr,sel){ return '<div class="ui-time-c" data-c="'+name+'">'+arr.map(function(x){ return '<button type="button" data-v="'+x+'" class="'+(String(x)===String(sel)?'sel':'')+'">'+x+'</button>'; }).join('')+'</div>'; };
+  var mins=[]; for(var k=0;k<60;k+=5) mins.push(uiPad(k));
+  var minSel=uiPad(Math.round(mi/5)*5%60);
+  m.innerHTML='<div class="ui-time-g">'+col('h',[1,2,3,4,5,6,7,8,9,10,11,12],h12)+col('m',mins,minSel)+col('ap',['AM','PM'],ap)+'</div>'
+    +'<div class="ui-cal-f"><button type="button" data-a="now">Now</button><button type="button" data-a="ok" class="ok">Set time</button></div>';
+  var state={h:h12,m:minSel,ap:ap};
+  var commit=function(){ var hh=(+state.h%12)+(state.ap==='PM'?12:0); uiPickSet(inp,uiPad(hh)+':'+state.m); };
+  m.addEventListener('click',function(e){
+    e.stopPropagation(); var b=e.target.closest('button'); if(!b) return;
+    var c=b.parentNode.dataset.c;
+    if(c){ state[c]=b.dataset.v; b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('sel',x===b); }); commit(); return; }
+    if(b.dataset.a==='now'){ var n=new Date(); uiPickSet(inp,uiPad(n.getHours())+':'+uiPad(n.getMinutes())); uiPickClose(); }
+    if(b.dataset.a==='ok'){ commit(); uiPickClose(); }
+  });
+  uiPick={inp:inp,menu:m}; uiPickPlace(m,inp);
+  m.querySelectorAll('.ui-time-c .sel').forEach(function(s){ s.scrollIntoView({block:'center'}); });
+}
+function uiPickClose(){ if(uiPick){ uiPick.inp._dp.wrap.classList.remove('open'); uiPick.menu.remove(); uiPick=null; } }
+document.addEventListener('click',function(){ uiPickClose(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') uiPickClose(); });
+document.addEventListener('scroll',function(e){ if(uiPick && !uiPick.menu.contains(e.target)) uiPickClose(); },true);
+['page-finance','page-call-tracker'].forEach(function(id){
+  var el=document.getElementById(id); if(!el) return;
+  var run=function(){ el.querySelectorAll('input[type=date],input[type=time]').forEach(uiDateEnhance); };
+  run(); new MutationObserver(run).observe(el,{childList:true,subtree:true});
+});

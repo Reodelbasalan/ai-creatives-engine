@@ -190,6 +190,40 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .ui-sel-menu button.on{color:var(--yellow);background:rgba(250,204,21,.09)}
 .ui-sel-menu button.on::after{content:"";margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
 .ui-sel-menu button:disabled{opacity:.35;cursor:default}
+.ui-combo-h{padding:6px 10px 4px;font-size:9.5px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+.ui-combo-menu button mark{background:rgba(250,204,21,.18);color:var(--yellow);border-radius:3px;padding:0 1px}
+.ui-combo-menu button.on::after{display:none}
+.ui-dp{position:relative;width:100%}
+.ui-dp-btn{justify-content:flex-start!important;gap:9px!important}
+.ui-dp-lbl.ph{color:var(--text3);font-weight:500}
+.ui-dp.open .ui-dp-btn{border-color:rgba(250,204,21,.55);box-shadow:0 0 0 3px rgba(250,204,21,.12)}
+.ui-pop{position:fixed;z-index:9999;padding:12px;border-radius:16px;background:rgba(20,19,16,.98);backdrop-filter:blur(16px);border:0.5px solid var(--border2);box-shadow:0 28px 60px -14px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.04);opacity:0;transform:translateY(-6px) scale(.98);transition:opacity .16s,transform .16s}
+.ui-pop.show{opacity:1;transform:none}
+.ui-cal{width:282px}
+.ui-cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ui-cal-t{font-size:13.5px;font-weight:750;color:var(--text)}
+.ui-cal-t span{color:var(--yellow)}
+.ui-cal-nav{width:30px;height:30px;border-radius:9px;border:0;background:transparent;color:var(--text2);display:grid;place-items:center;cursor:pointer;transition:background .15s,color .15s}
+.ui-cal-nav:hover{background:rgba(250,204,21,.1);color:var(--yellow)}
+.ui-cal-w,.ui-cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.ui-cal-w span{text-align:center;font-size:10px;font-weight:700;color:var(--text3);padding:4px 0}
+.ui-cal-g button{height:34px;border:0;border-radius:9px;background:transparent;color:var(--text);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .12s,transform .12s}
+.ui-cal-g button:hover{background:rgba(255,255,255,.06)}
+.ui-cal-g button:active{transform:scale(.92)}
+.ui-cal-g button.out{color:var(--text3);opacity:.45}
+.ui-cal-g button.today{box-shadow:inset 0 0 0 1px rgba(250,204,21,.5);color:var(--yellow)}
+.ui-cal-g button.sel{background:var(--yellow);color:#111;font-weight:800;box-shadow:0 6px 16px -6px rgba(250,204,21,.7)}
+.ui-cal-f{display:flex;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)}
+.ui-cal-f button{padding:6px 12px;border-radius:8px;border:0;background:transparent;color:var(--text2);font:inherit;font-size:12px;font-weight:650;cursor:pointer}
+.ui-cal-f button:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.ui-cal-f button[data-a=today],.ui-cal-f button.ok{color:var(--yellow)}
+.ui-cal-f button.ok{background:var(--yellow);color:#111}
+.ui-time{width:240px}
+.ui-time-g{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;height:210px}
+.ui-time-c{overflow:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px;scrollbar-width:thin}
+.ui-time-c button{flex-shrink:0;height:32px;border:0;border-radius:8px;background:transparent;color:var(--text2);font:inherit;font-size:13px;font-weight:650;cursor:pointer}
+.ui-time-c button:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.ui-time-c button.sel{background:rgba(250,204,21,.14);color:var(--yellow)}
 .ui-dlg-ov{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);opacity:0;transition:opacity .18s}
 .ui-dlg-ov.show{opacity:1}
 .ui-dlg{width:100%;max-width:420px;padding:22px;border-radius:20px;background:linear-gradient(170deg,#1a1814,#0e0d0b);border:0.5px solid var(--border2);box-shadow:0 40px 90px -20px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.05);transform:translateY(10px) scale(.97);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
