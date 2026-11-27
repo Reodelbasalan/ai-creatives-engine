@@ -6345,12 +6345,35 @@ function finSwitchTab(tab){
   document.getElementById('fin-tab-daily-btn').classList.toggle('active',tab==='daily');
 }
 
+function finResetSaleForm(){
+  cancelSaleEdit();
+  ['fin-sale-client','fin-sale-contact','fin-sale-business','fin-sale-email','fin-sale-videotype','fin-sale-amount','fin-sale-amount-paid','fin-sale-va','fin-sale-notes'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  var pk=document.getElementById('fin-sale-package'); if(pk&&pk.options.length) pk.value=[].some.call(pk.options,function(o){return o.value==='Pro';})?'Pro':pk.options[0].value;
+  var src=document.getElementById('fin-sale-source'); if(src) src.value='VA Sale';
+  var st=document.getElementById('fin-sale-paid'); if(st) st.value='Balance';
+  var dt=document.getElementById('fin-sale-date'); if(dt) dt.value=projFmtDate(new Date());
+  if(typeof finSalePayCalc==='function') finSalePayCalc();
+}
+// Add sale: laging malinis na form (hindi na dala yung huling na-edit)
+function finNewSale(){
+  var wrap=document.getElementById('fin-sales-form-wrap');
+  var isOpen=wrap&&wrap.style.maxHeight&&wrap.style.maxHeight!=='0px'&&wrap.style.maxHeight!=='0';
+  var editing=!!document.getElementById('fin-sale-edit-id')?.value;
+  if(isOpen && !editing){ finCloseSaleForm(); return; }
+  finResetSaleForm();
+  if(!isOpen) finToggleSalesForm();
+  setTimeout(function(){ var c=document.getElementById('fin-sale-client'); if(c){ c.scrollIntoView({behavior:'smooth',block:'center'}); c.focus({preventScroll:true}); } },250);
+}
+function finCloseSaleForm(){ finToggleSalesForm(true); finResetSaleForm(); }
+
 function finToggleSalesForm(forceClose){
   var wrap=document.getElementById('fin-sales-form-wrap');
   var isOpen=wrap.style.maxHeight&&wrap.style.maxHeight!=='0px'&&wrap.style.maxHeight!=='0';
   var open=forceClose?false:!isOpen;
   if(open){
-    wrap.style.maxHeight='900px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
+    wrap.style.maxHeight='2000px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
     var dateEl=document.getElementById('fin-sale-date');
     if(dateEl&&!dateEl.value) dateEl.value=new Date().toISOString().slice(0,10);
   } else {
@@ -6536,7 +6559,7 @@ function editSale(id){
   finToggleSalesForm(); // buksan yung form kung sarado pa
   var wrap=document.getElementById('fin-sales-form-wrap');
   if(wrap && (!wrap.style.maxHeight || wrap.style.maxHeight==='0px' || wrap.style.maxHeight==='0')){
-    wrap.style.maxHeight='900px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
+    wrap.style.maxHeight='2000px'; wrap.style.opacity='1'; wrap.style.marginBottom='16px';
   }
   document.getElementById('fin-sale-edit-id').value=id;
   document.getElementById('fin-sale-date').value=sale.order_date?String(sale.order_date).slice(0,10):'';
