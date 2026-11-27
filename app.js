@@ -6285,7 +6285,7 @@ function renderFinAdsTable(adsLog){
 function finStatusSelect(o,sc){
   var statuses=['Balance','Paid','Pending','Refunded'];
   return '<select onchange="updateSaleStatus(\''+o.id+'\',this.value)" style="font-size:10px;font-weight:650;padding:3px 22px 3px 9px;border-radius:20px;background:'+sc+'22;color:'+sc+';border:0.5px solid '+sc+'55;cursor:pointer;appearance:auto">'
-    +statuses.map(function(s){ return '<option value="'+s+'"'+((o.paid_status||'Balance')===s?' selected':'')+'>'+s+'</option>'; }).join('')
+    +statuses.map(function(s){ return '<option value="'+s+'"'+((o.paid_status||'Balance')===s?' selected':'')+'>'+(s==='Paid'?'Fully Paid':s)+'</option>'; }).join('')
     +'</select>';
 }
 
@@ -6298,8 +6298,8 @@ function renderFinSalesTable(sales){
     var subParts=[o.business||o.contact,o.notes].filter(Boolean);
     var pd=finPaidAmt(o), bl=finBalAmt(o), tt=Number(o.sales_amount)||0;
     var amtCell='<div style="font-weight:650;color:var(--green)">'+finPHP(tt)+'</div>'
-      +(o.paid_status==='Refunded'?'':'<div class="fin-amt-sub"><span>Paid <b style="color:#4ade80">'+finPHP(pd)+'</b></span>'+(bl>0?'<span>Bal <b style="color:#f59e0b">'+finPHP(bl)+'</b></span>':'')+'</div>'
-      );
+      +(o.paid_status==='Refunded'?'':(bl>0?'<div class="fin-amt-sub"><span>Paid <b style="color:#4ade80">'+finPHP(pd)+'</b></span><span>Bal <b style="color:#f59e0b">'+finPHP(bl)+'</b></span></div>':(tt>0?'<div class="fin-amt-sub"><b style="color:#4ade80">Fully paid</b></div>':'')))
+      ;
     return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.6fr 1fr 1.25fr 1fr 1fr 32px 32px 32px;cursor:pointer" onclick="editSale(\''+o.id+'\')" title="Click to view / edit">'
       +'<div style="color:var(--text3);font-size:11px">'+(sales.length-i)+'</div>'
       +'<div class="row-date">'+fmtDate(o.order_date)+'</div>'
