@@ -315,6 +315,25 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .fin-mc-note b{color:var(--text2)}
 .fin-g{color:#4ade80}.fin-r{color:#f87171}.fin-n{color:var(--text3)}
 @media(max-width:800px){.fin-mc-row{grid-template-columns:110px 1fr 1fr;}.fin-mc-row .fin-mc-d{grid-column:2/-1;text-align:left}.fin-mc-hero{grid-template-columns:1fr}}
+.fin-pay{padding:14px;border-radius:14px;background:rgba(74,222,128,.035);border:0.5px solid rgba(74,222,128,.18)}
+.fin-pay-h{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:750;letter-spacing:.09em;text-transform:uppercase;color:var(--text2);margin-bottom:10px}
+.fin-pay-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:700px){.fin-pay-grid{grid-template-columns:1fr}}
+.fin-pay-in{position:relative}
+.fin-pay-in span{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-weight:700;font-size:13px;pointer-events:none}
+.fin-pay-in input{padding-left:26px!important;font-weight:650}
+.fin-pay-full{margin-left:6px;padding:1px 8px;border-radius:20px;border:0.5px solid rgba(74,222,128,.4);background:rgba(74,222,128,.1);color:#4ade80;font:inherit;font-size:10px;font-weight:700;cursor:pointer}
+.fin-pay-full:hover{background:rgba(74,222,128,.2)}
+.fin-pay-bal{height:40px;display:flex;align-items:center;padding:0 14px;border-radius:10px;background:rgba(255,255,255,.03);border:0.5px dashed var(--border2);font-size:15px;font-weight:800;color:var(--amber)}
+.fin-pay-bal.zero{color:#4ade80}
+.fin-pay-bar{height:5px;border-radius:4px;background:rgba(255,255,255,.06);margin-top:12px;overflow:hidden}
+.fin-pay-bar i{display:block;height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,#4ade80,#22c55e);transition:width .35s cubic-bezier(.2,.8,.2,1)}
+.fin-amt-sub{font-size:10px;color:var(--text3);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fin-amt-sub b{font-weight:700}
+.fin-amt-bar{height:3px;border-radius:3px;background:rgba(255,255,255,.07);margin-top:5px;overflow:hidden;max-width:120px}
+.fin-amt-bar i{display:block;height:100%;background:#4ade80;border-radius:3px}
+.fin-addpay{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:20px;border:0.5px solid rgba(74,222,128,.35);background:rgba(74,222,128,.08);color:#4ade80;font:inherit;font-size:9.5px;font-weight:700;cursor:pointer;transition:background .15s,transform .15s}
+.fin-addpay:hover{background:rgba(74,222,128,.18);transform:translateY(-1px)}
 .fin-sub{font-size:10.5px;color:var(--text3);margin-top:6px;line-height:1.35;position:relative}
 .fin-sub b{color:var(--text2);font-weight:650}
 .fin-row2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:14px;margin-bottom:1.25rem;align-items:start}
@@ -4644,7 +4663,15 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
                   </select>
                 </div>
                 <div class="form-field"><label class="form-label">Video type <span class="opt">(optional)</span></label><input class="form-input" id="fin-sale-videotype" placeholder="e.g. UGC / Static"/></div>
-                <div class="form-field"><label class="form-label">Sales amount (₱)</label><input type="number" class="form-input" id="fin-sale-amount" placeholder="0"/></div>
+                <div class="form-field full fin-pay">
+                  <div class="fin-pay-h"><span data-gi="credit-card" data-c="#4ade80" data-s="13"></span> Payment</div>
+                  <div class="fin-pay-grid">
+                    <div><label class="form-label">Total amount (closed)</label><div class="fin-pay-in"><span>₱</span><input type="number" class="form-input" id="fin-sale-amount" placeholder="0" oninput="finSalePayCalc()"/></div></div>
+                    <div><label class="form-label">Total na binayad ni client <button type="button" class="fin-pay-full" onclick="finSalePayFull()">Full</button></label><div class="fin-pay-in"><span>₱</span><input type="number" class="form-input" id="fin-sale-amount-paid" placeholder="0" oninput="finSalePayCalc()"/></div></div>
+                    <div><label class="form-label">Balance</label><div class="fin-pay-bal" id="fin-sale-balance-view">₱0</div></div>
+                  </div>
+                  <div class="fin-pay-bar"><i id="fin-sale-pay-bar"></i></div>
+                </div>
                 <div class="form-field"><label class="form-label">VA / Assigned to <span class="opt">(optional)</span></label><input class="form-input" id="fin-sale-va" placeholder="e.g. Hazel"/></div>
                 <div class="form-field"><label class="form-label">Sale Source</label><select class="form-select" id="fin-sale-source"><option value="VA Sale">VA Sale</option><option value="Organic">Organic</option></select></div>
                 <div class="form-field"><label class="form-label">Paid status</label>
@@ -4659,7 +4686,7 @@ Model: Women, 25, white Pinay, professional..." style="min-height:280px;font-siz
             </div>
           </div>
           <div class="data-table">
-            <div class="table-head" style="grid-template-columns:0.4fr 0.9fr 1.6fr 1fr 1fr 1fr 1fr 32px 32px">
+            <div class="table-head" style="grid-template-columns:0.4fr 0.9fr 1.6fr 1fr 1.25fr 1fr 1fr 32px 32px 32px">
               <span>#</span><span>Date</span><span>Client</span><span>Package</span><span>Sales</span><span>VA</span><span>Status</span><span></span><span></span>
             </div>
             <div id="fin-sales-body"></div>

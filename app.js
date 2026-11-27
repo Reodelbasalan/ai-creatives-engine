@@ -5933,7 +5933,7 @@ function finApplySalesSearch(salesArr){
   var statusFilter=document.getElementById('fin-sales-status-filter')?.value||'';
   var sourceFilter=document.getElementById('fin-sales-source-filter')?.value||'';
   var out=salesArr;
-  if(statusFilter){ out=out.filter(function(o){ return (o.paid_status||'Balance')===statusFilter; }); }
+  if(statusFilter){ out=out.filter(function(o){ return statusFilter==='Balance'?finBalAmt(o)>0:statusFilter==='Paid'?(o.paid_status!=='Refunded'&&finBalAmt(o)===0&&(Number(o.sales_amount)||0)>0):(o.paid_status||'Balance')===statusFilter; }); }
   if(sourceFilter){ out=out.filter(function(o){ return (o.sale_source||'VA Sale')===sourceFilter; }); }
   if(q){
     out=out.filter(function(o){
@@ -5965,21 +5965,73 @@ function finSyncCardFilter(){
 function renderFinBalanceChip(sales){
   var chip=document.getElementById('fin-balance-chip');
   if(!chip) return;
-  var balanceRows=(sales||[]).filter(function(o){ return (o.paid_status||'Balance')==='Balance'; });
+  var balanceRows=(sales||[]).filter(function(o){ return finBalAmt(o)>0; });
   if(!balanceRows.length){ chip.style.display='none'; return; }
-  var totalBalance=balanceRows.reduce(function(s,o){ return s+(Number(o.sales_amount)||0); },0);
+  var totalBalance=balanceRows.reduce(function(s,o){ return s+finBalAmt(o); },0);
   chip.innerHTML='<span class="fin-pill-ic">'+gIcon('triangle-alert','#f59e0b',13)+' '+balanceRows.length+' may balance — '+finPHP(totalBalance)+'</span>';
   chip.style.display='';
 }
 
+// Payment helpers (amount_paid column; fallback sa paid_status para sa lumang records)
+function finPaidAmt(o){
+  if(o.paid_status==='Refunded') return 0;
+  if(o.amount_paid!==null && o.amount_paid!==undefined && o.amount_paid!=='') return Number(o.amount_paid)||0;
+  return o.paid_status==='Paid'?(Number(o.sales_amount)||0):0;
+}
+function finBalAmt(o){
+  if(o.paid_status==='Refunded') return 0;
+  return Math.max(0,(Number(o.sales_amount)||0)-finPaidAmt(o));
+}
+function finAutoStatus(total,paid,cur){
+  if(cur==='Refunded'||cur==='Pending') return cur;
+  return (total>0 && paid>=total)?'Paid':'Balance';
+}
+function finSalePayCalc(){
+  var t=parseFloat(document.getElementById('fin-sale-amount')?.value)||0;
+  var p=parseFloat(document.getElementById('fin-sale-amount-paid')?.value)||0;
+  var b=Math.max(0,t-p), v=document.getElementById('fin-sale-balance-view'), bar=document.getElementById('fin-sale-pay-bar');
+  if(v){ v.textContent=finPHP(b); v.classList.toggle('zero',t>0&&b===0); }
+  if(bar) bar.style.width=(t>0?Math.min(100,Math.round(p/t*100)):0)+'%';
+  var st=document.getElementById('fin-sale-paid');
+  if(st && (st.value==='Paid'||st.value==='Balance') && t>0) st.value=p>=t?'Paid':'Balance';
+}
+function finSalePayFull(){ var t=document.getElementById('fin-sale-amount')?.value||''; var p=document.getElementById('fin-sale-amount-paid'); if(p){ p.value=t; finSalePayCalc(); } }
+// sumulat; kung wala pang amount_paid column, ulitin nang wala ito
+async function finSaleWrite(fn,payload){
+  var r=await fn(payload);
+  if(r.error && /amount_paid/i.test(r.error.message||'') && 'amount_paid' in payload){
+    var p2=Object.assign({},payload); delete p2.amount_paid;
+    r=await fn(p2);
+    if(!r.error) showNotif('Na-save, pero i-run muna ang sales-payments.sql sa Supabase para ma-save ang amount paid','error');
+  }
+  return r;
+}
+async function finAddPayment(id){
+  var cache=window._finSalesCache||[], o=cache.find(function(x){ return x.id===id; }); if(!o) return;
+  var bal=finBalAmt(o), chips=[];
+  if(bal>0){ chips.push({label:'Buong balance '+finPHP(bal),value:bal}); if(bal>1) chips.push({label:'Kalahati '+finPHP(Math.round(bal/2)),value:Math.round(bal/2)}); }
+  var v=await uiDialog({title:'Add payment — '+(o.client_name||''),message:'Total '+finPHP(o.sales_amount)+' · Bayad na '+finPHP(finPaidAmt(o))+' · Balance '+finPHP(bal),icon:'hand-coins',iconColor:'74,222,128',
+    input:{prefix:'₱',value:bal>0?String(bal):'',placeholder:'Magkano binayad ngayon'},chips:chips,okText:'Add payment'});
+  if(v===null) return;
+  var amt=parseFloat(String(v).replace(/[,₱\s]/g,''));
+  if(!(amt>0)){ showNotif('Maglagay ng tamang halaga','error'); return; }
+  var newPaid=finPaidAmt(o)+amt, total=Number(o.sales_amount)||0;
+  var payload={amount_paid:newPaid,paid_status:finAutoStatus(total,newPaid,o.paid_status)};
+  var r=await finSaleWrite(function(p){ return sb.from('sales_orders').update(p).eq('id',id); },payload);
+  if(r.error){ showNotif('Error: '+r.error.message,'error'); return; }
+  showNotif(newPaid>=total?'Fully paid na! ✓':'Payment added · Balance '+finPHP(Math.max(0,total-newPaid)),'success');
+  loadFinancePage();
+}
+
 function finRenderPayments(sales){
-  var paid=sales.filter(function(o){ return o.paid_status==='Paid'; });
-  var bal=sales.filter(function(o){ return (o.paid_status||'Balance')==='Balance'; });
-  var sum=function(a){ return a.reduce(function(s,o){ return s+(Number(o.sales_amount)||0); },0); };
+  var paid=sales.filter(function(o){ return o.paid_status!=='Refunded' && (Number(o.sales_amount)||0)>0 && finBalAmt(o)===0; });
+  var bal=sales.filter(function(o){ return finBalAmt(o)>0; });
+  var collected=sales.reduce(function(s,o){ return s+finPaidAmt(o); },0);
+  var owed=sales.reduce(function(s,o){ return s+finBalAmt(o); },0);
   var set=function(id,v){ var el=document.getElementById(id); if(el) el.innerHTML=v; };
-  set('fin-stat-paid',finPHP(sum(paid)));
-  set('fin-stat-paid-sub','<b>'+paid.length+'</b> order'+(paid.length===1?'':'s')+' bayad na · click para makita');
-  set('fin-stat-balance',finPHP(sum(bal)));
+  set('fin-stat-paid',finPHP(collected));
+  set('fin-stat-paid-sub','Total na nabayaran · <b>'+paid.length+'</b> fully paid · click para makita');
+  set('fin-stat-balance',finPHP(owed));
   set('fin-stat-balance-sub',bal.length?'<b>'+bal.length+'</b> client'+(bal.length===1?'':'s')+' may balance · click para makita':'Wala nang balance');
 }
 
@@ -6058,15 +6110,15 @@ function finMcBuildOptions(){
 }
 async function finMcFetch(r){
   var q=await Promise.all([
-    sb.from('sales_orders').select('sales_amount,paid_status,order_date').gte('order_date',r.from).lte('order_date',r.to).limit(2000),
+    sb.from('sales_orders').select('*').gte('order_date',r.from).lte('order_date',r.to).limit(2000),
     sb.from('business_expenses').select('amount').gte('expense_date',r.from).lte('expense_date',r.to).limit(2000),
     sb.from('ads_spend_log').select('total_ads_spent,total_messages,cost_per_message').gte('spend_date',r.from).lte('spend_date',r.to).limit(2000)
   ]);
   var s=q[0].data||[], e=q[1].data||[], ad=q[2].data||[];
   var sum=function(arr,f){ return arr.reduce(function(t,x){ return t+(Number(x[f])||0); },0); };
   var sales=sum(s,'sales_amount'), ads=sum(ad,'total_ads_spent'), other=sum(e,'amount'), msgs=sum(ad,'total_messages');
-  return {rows:s,sales:sales,orders:s.length,paid:sum(s.filter(function(o){return o.paid_status==='Paid';}),'sales_amount'),
-    balance:sum(s.filter(function(o){return (o.paid_status||'Balance')==='Balance';}),'sales_amount'),
+  return {rows:s,sales:sales,orders:s.length,paid:s.reduce(function(t,o){ return t+finPaidAmt(o); },0),
+    balance:s.reduce(function(t,o){ return t+finBalAmt(o); },0),
     ads:ads,other:other,exp:ads+other,net:sales-ads-other,msgs:msgs,roas:(ads+other)>0?sales/(ads+other):0,cpm:(function(){ var c=ad.filter(function(x){return Number(x.cost_per_message)>0;}); return c.length?c.reduce(function(t,x){return t+Number(x.cost_per_message);},0)/c.length:0; })()};  // same as Avg Cost/Message card
 }
 var finMcSeq=0;
@@ -6087,7 +6139,7 @@ async function finRenderMonthCompare(){
   var money=function(v){ return finPHP(v); };
   var fmt={sales:money,exp:money,net:money,orders:function(v){return v;},paid:money,balance:money,ads:money,msgs:function(v){return Math.round(v).toLocaleString();},roas:function(v){return v.toFixed(2)+'x';},cpm:money};
   var M=[['sales','Total Sales','hand-coins','#4ade80',0],['exp','Total Expenses','receipt','#f87171',1],['net','Net Profit','coins','#facc15',0],['orders','Orders','list-checks','#f59e0b',0],
-         ['paid','Fully Paid','circle-check','#4ade80',0],['balance','Balance pa','clock','#f59e0b',1],['ads','Ads Spent','megaphone','#a78bfa',1],['msgs','Messages','phone','#f59e0b',0],['roas','True ROAS','trending-up','#4ade80',0],['cpm','Cost / Message','target','#a78bfa',1]];
+         ['paid','Total Paid','circle-check','#4ade80',0],['balance','Balance pa','clock','#f59e0b',1],['ads','Ads Spent','megaphone','#a78bfa',1],['msgs','Messages','phone','#f59e0b',0],['roas','True ROAS','trending-up','#4ade80',0],['cpm','Cost / Message','target','#a78bfa',1]];
   var dline=function(k,a,b,inv){
     var d=b-a, good=inv?d<0:d>0, cls=d===0?'fin-n':(good?'fin-g':'fin-r');
     var pct=a?Math.round(d/Math.abs(a)*100):(b?100:0);
@@ -6166,11 +6218,14 @@ function finFilterSales(){
 }
 
 async function updateSaleStatus(id,newStatus){
-  var{error}=await sb.from('sales_orders').update({paid_status:newStatus}).eq('id',id);
-  if(error){ showNotif('Error: '+error.message,'error'); return; }
   var cache=window._finSalesCache||[];
   var row=cache.find(function(o){ return o.id===id; });
-  if(row) row.paid_status=newStatus;
+  var payload={paid_status:newStatus};
+  if(newStatus==='Paid' && row) payload.amount_paid=Number(row.sales_amount)||0;
+  var{error}=await finSaleWrite(function(p){ return sb.from('sales_orders').update(p).eq('id',id); },payload);
+  if(error){ showNotif('Error: '+error.message,'error'); return; }
+  if(row){ row.paid_status=newStatus; if('amount_paid' in payload) row.amount_paid=payload.amount_paid; }
+  finRenderPayments(cache);
   renderFinSalesTable(finApplySalesSearch(cache));
   renderFinBalanceChip(cache);
   showNotif('Status updated','success');
@@ -6241,12 +6296,16 @@ function renderFinSalesTable(sales){
     var statusColors={Paid:'#4ade80',Balance:'#facc15',Pending:'#fb923c',Refunded:'#f87171'};
     var sc=statusColors[o.paid_status]||'#9a9aa5';
     var subParts=[o.business||o.contact,o.notes].filter(Boolean);
-    return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.6fr 1fr 1fr 1fr 1fr 32px 32px 32px;cursor:pointer" onclick="editSale(\''+o.id+'\')" title="Click to view / edit">'
+    var pd=finPaidAmt(o), bl=finBalAmt(o), tt=Number(o.sales_amount)||0;
+    var amtCell='<div style="font-weight:650;color:var(--green)">'+finPHP(tt)+'</div>'
+      +(o.paid_status==='Refunded'?'':'<div class="fin-amt-sub"><span>Paid <b style="color:#4ade80">'+finPHP(pd)+'</b></span>'+(bl>0?'<span>Bal <b style="color:#f59e0b">'+finPHP(bl)+'</b></span><button type="button" class="fin-addpay" title="Add payment" onclick="event.stopPropagation();finAddPayment(\''+o.id+'\')">+ Bayad</button>':'')+'</div>'
+      +'<div class="fin-amt-bar"><i style="width:'+(tt>0?Math.min(100,Math.round(pd/tt*100)):0)+'%"></i></div>');
+    return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.6fr 1fr 1.25fr 1fr 1fr 32px 32px 32px;cursor:pointer" onclick="editSale(\''+o.id+'\')" title="Click to view / edit">'
       +'<div style="color:var(--text3);font-size:11px">'+(sales.length-i)+'</div>'
       +'<div class="row-date">'+fmtDate(o.order_date)+'</div>'
       +'<div><div class="row-name">'+(o.client_name||'—')+'</div><div class="row-sub">'+subParts.join(' · ')+'</div></div>'
       +'<div style="font-size:11px;color:var(--text2)">'+(o.order_package||'—')+'</div>'
-      +'<div style="font-weight:650;color:var(--green)">'+finPHP(o.sales_amount)+'</div>'
+      +'<div>'+amtCell+'</div>'
       +'<div style="font-size:11px;color:var(--text2)">'+(o.va_name||'—')+(o.sale_source==='Organic'?' <span style="font-size:9px;font-weight:700;color:#4ade80;border:1px solid rgba(74,222,128,0.35);border-radius:8px;padding:1px 6px;margin-left:3px">'+gIcon('sprout','#4ade80',11)+' Organic</span>':'')+'</div>'
       +'<div onclick="event.stopPropagation()">'+finStatusSelect(o,sc)+'</div>'
       +'<div class="proj-row-del" title="Edit" onclick="event.stopPropagation();editSale(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>'
@@ -6439,26 +6498,30 @@ async function submitSale(){
     sales_amount:parseFloat(document.getElementById('fin-sale-amount')?.value)||0,
     va_name:document.getElementById('fin-sale-va')?.value?.trim()||null,
     sale_source:document.getElementById('fin-sale-source')?.value||'VA Sale',
+    amount_paid:parseFloat(document.getElementById('fin-sale-amount-paid')?.value)||0,
     paid_status:document.getElementById('fin-sale-paid')?.value||'Balance',
     notes:document.getElementById('fin-sale-notes')?.value?.trim()||null
   };
   if(!payload.client_name){ showNotif('Client name is required','error'); return; }
+  if(payload.amount_paid>payload.sales_amount && payload.sales_amount>0){ showNotif('Mas malaki ang binayad kaysa total amount — pakicheck','error'); return; }
+  payload.paid_status=finAutoStatus(payload.sales_amount,payload.amount_paid,payload.paid_status);
   var editId=document.getElementById('fin-sale-edit-id')?.value||'';
   var origHtml=btn?btn.innerHTML:'';
   if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Saving...'; }
   try{
     var error;
     if(editId){
-      ({error}=await sb.from('sales_orders').update(payload).eq('id',editId));
+      ({error}=await finSaleWrite(function(p){ return sb.from('sales_orders').update(p).eq('id',editId); },payload));
     } else {
       payload.created_by=currentUser.id;
-      ({error}=await sb.from('sales_orders').insert(payload));
+      ({error}=await finSaleWrite(function(p){ return sb.from('sales_orders').insert(p); },payload));
     }
     if(error){ showNotif('Error: '+error.message,'error'); return; }
     showNotif(editId?'Sale updated! ✓':'Sale saved! ✓','success');
-    ['fin-sale-client','fin-sale-contact','fin-sale-business','fin-sale-email','fin-sale-videotype','fin-sale-amount','fin-sale-va','fin-sale-notes'].forEach(function(id){
+    ['fin-sale-client','fin-sale-contact','fin-sale-business','fin-sale-email','fin-sale-videotype','fin-sale-amount','fin-sale-amount-paid','fin-sale-va','fin-sale-notes'].forEach(function(id){
       var el=document.getElementById(id); if(el)el.value='';
     });
+    finSalePayCalc();
     var srcSel=document.getElementById('fin-sale-source'); if(srcSel)srcSel.value='VA Sale';
     cancelSaleEdit();
     finToggleSalesForm(true);
@@ -6487,6 +6550,8 @@ function editSale(id){
   document.getElementById('fin-sale-va').value=sale.va_name||'';
   document.getElementById('fin-sale-source').value=sale.sale_source||'VA Sale';
   document.getElementById('fin-sale-paid').value=sale.paid_status||'Balance';
+  document.getElementById('fin-sale-amount-paid').value=finPaidAmt(sale)||'';
+  finSalePayCalc();
   document.getElementById('fin-sale-notes').value=sale.notes||'';
   var titleEl=document.getElementById('fin-sale-form-title');
   if(titleEl){ titleEl.innerHTML=gIcon('pencil','#facc15',14)+' Editing sale — '+ctEsc(sale.client_name||''); titleEl.style.display=''; }
@@ -6795,9 +6860,9 @@ async function exportFinanceCSV(){
   if(dt) adsQuery=adsQuery.lte('spend_date',dt);
   var[{data:sales},{data:expenses},{data:adsLog}]=await Promise.all([salesQuery,expQuery,adsQuery]);
   var esc=function(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'; };
-  var rows=['SALES','Date,Client,Contact,Business,Email,Package,Video Type,Sales,VA,Status,Notes'];
+  var rows=['SALES','Date,Client,Contact,Business,Email,Package,Video Type,Total Amount,Amount Paid,Balance,VA,Status,Notes'];
   (sales||[]).forEach(function(o){
-    rows.push([o.order_date,o.client_name,o.contact,o.business,o.email,o.order_package,o.video_type,o.sales_amount,o.va_name,o.paid_status,o.notes].map(esc).join(','));
+    rows.push([o.order_date,o.client_name,o.contact,o.business,o.email,o.order_package,o.video_type,o.sales_amount,finPaidAmt(o),finBalAmt(o),o.va_name,o.paid_status,o.notes].map(esc).join(','));
   });
   rows.push('');
   rows.push('EXPENSES');
