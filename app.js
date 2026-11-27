@@ -6798,8 +6798,11 @@ async function loadFinancePage(){
   if(vaBoard){
     var perVa={};
     sales.forEach(function(o){
-      var name=(o.va_name||'').trim();
-      if(!name) return;
+      // Organic = lahat ng sale na Sale Source "Organic" (kahit may VA na naka-tag) + VA na "organic"
+      var raw=(o.va_name||'').trim();
+      var isOrg=o.sale_source==='Organic' || raw.toLowerCase()==='organic';
+      if(!raw && !isOrg) return;
+      var name=isOrg?'Organic':raw.charAt(0).toUpperCase()+raw.slice(1).toLowerCase();
       perVa[name]=perVa[name]||{sales:0,orders:0};
       perVa[name].sales+=Number(o.sales_amount)||0;
       perVa[name].orders+=finVideos(o);
