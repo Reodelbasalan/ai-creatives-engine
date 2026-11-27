@@ -5973,6 +5973,8 @@ function renderFinBalanceChip(sales){
 }
 
 // Payment helpers (amount_paid column; fallback sa paid_status para sa lumang records)
+function finVideos(o){ var v=parseInt(o.video_count,10); return v>0?v:1; }
+function finOrdersCount(rows){ return (rows||[]).reduce(function(t,o){ return t+finVideos(o); },0); }
 function finPaidAmt(o){
   if(o.paid_status==='Refunded') return 0;
   if(o.amount_paid!==null && o.amount_paid!==undefined && o.amount_paid!=='') return Number(o.amount_paid)||0;
@@ -5999,10 +6001,13 @@ function finSalePayFull(){ var t=document.getElementById('fin-sale-amount')?.val
 // sumulat; kung wala pang amount_paid column, ulitin nang wala ito
 async function finSaleWrite(fn,payload){
   var r=await fn(payload);
-  if(r.error && /amount_paid/i.test(r.error.message||'') && 'amount_paid' in payload){
-    var p2=Object.assign({},payload); delete p2.amount_paid;
-    r=await fn(p2);
-    if(!r.error) showNotif('Na-save, pero i-run muna ang sales-payments.sql sa Supabase para ma-save ang amount paid','error');
+  var tries=0;
+  while(r.error && tries<2){
+    var col=['amount_paid','video_count'].find(function(c){ return new RegExp(c,'i').test(r.error.message||'') && (c in payload); });
+    if(!col) break;
+    payload=Object.assign({},payload); delete payload[col]; tries++;
+    r=await fn(payload);
+    if(!r.error) showNotif('Na-save, pero i-run muna ang SQL para ma-save ang '+(col==='video_count'?'no. of videos':'amount paid'),'error');
   }
   return r;
 }
@@ -6041,7 +6046,7 @@ async function finRenderComparison(df,dt,curSales){
   var lbl=document.getElementById('fin-cmp-label'), val=document.getElementById('fin-cmp-val'),
       sub=document.getElementById('fin-cmp-sub'), best=document.getElementById('fin-best-sub');
   if(!val) return;
-  var{data,error}=await sb.from('sales_orders').select('order_date,sales_amount').order('order_date',{ascending:false}).limit(5000);
+  var{data,error}=await sb.from('sales_orders').select('*').order('order_date',{ascending:false}).limit(5000);
   if(error){ val.textContent='—'; sub.textContent=''; return; }
   data=data||[];
   var sumRange=function(a,b){ return data.reduce(function(s,o){ var d=o.order_date||''; return (d>=a&&d<=b)?s+(Number(o.sales_amount)||0):s; },0); };
@@ -6117,7 +6122,7 @@ async function finMcFetch(r){
   var s=q[0].data||[], e=q[1].data||[], ad=q[2].data||[];
   var sum=function(arr,f){ return arr.reduce(function(t,x){ return t+(Number(x[f])||0); },0); };
   var sales=sum(s,'sales_amount'), ads=sum(ad,'total_ads_spent'), other=sum(e,'amount'), msgs=sum(ad,'total_messages');
-  return {rows:s,sales:sales,orders:s.length,paid:s.reduce(function(t,o){ return t+finPaidAmt(o); },0),
+  return {rows:s,sales:sales,orders:finOrdersCount(s),paid:s.reduce(function(t,o){ return t+finPaidAmt(o); },0),
     balance:s.reduce(function(t,o){ return t+finBalAmt(o); },0),
     ads:ads,other:other,exp:ads+other,net:sales-ads-other,msgs:msgs,roas:(ads+other)>0?sales/(ads+other):0,cpm:(function(){ var c=ad.filter(function(x){return Number(x.cost_per_message)>0;}); return c.length?c.reduce(function(t,x){return t+Number(x.cost_per_message);},0)/c.length:0; })()};  // same as Avg Cost/Message card
 }
@@ -6179,7 +6184,7 @@ async function finRenderDeltas(ps,pe,prevSales,salesData,label){
   var exp=(r[0].data||[]).reduce(function(s,e){return s+(Number(e.amount)||0);},0);
   var ads=(r[1].data||[]).reduce(function(s,a){return s+(Number(a.total_ads_spent)||0);},0);
   var msgs=(r[1].data||[]).reduce(function(s,a){return s+(Number(a.total_messages)||0);},0);
-  var orders=salesData.filter(function(o){ return o.order_date>=ps&&o.order_date<=pe; }).length;
+  var orders=finOrdersCount(salesData.filter(function(o){ return o.order_date>=ps&&o.order_date<=pe; }));
   var prev={sales:prevSales,exp:exp+ads,net:prevSales-exp-ads,orders:orders,ads:ads,msgs:msgs,roas:(exp+ads)>0?prevSales/(exp+ads):0};
   var lab=label==='prev'?'prev':label;
   // ihambing yung current hanggang ngayon lang (hindi future days) — sales galing sa parehong window
@@ -6304,7 +6309,7 @@ function renderFinSalesTable(sales){
       +'<div style="color:var(--text3);font-size:11px">'+(sales.length-i)+'</div>'
       +'<div class="row-date">'+fmtDate(o.order_date)+'</div>'
       +'<div><div class="row-name">'+(o.client_name||'—')+'</div><div class="row-sub">'+subParts.join(' · ')+'</div></div>'
-      +'<div style="font-size:11px;color:var(--text2)">'+(o.order_package||'—')+'</div>'
+      +'<div style="font-size:11px;color:var(--text2)">'+(o.order_package||'—')+(finVideos(o)>1?'<div style="font-size:10px;color:var(--yellow);font-weight:700;margin-top:2px">'+finVideos(o)+' videos</div>':'')+'</div>'
       +'<div>'+amtCell+'</div>'
       +'<div style="font-size:11px;color:var(--text2)">'+(o.va_name||'—')+(o.sale_source==='Organic'?' <span style="font-size:9px;font-weight:700;color:#4ade80;border:1px solid rgba(74,222,128,0.35);border-radius:8px;padding:1px 6px;margin-left:3px">'+gIcon('sprout','#4ade80',11)+' Organic</span>':'')+'</div>'
       +'<div onclick="event.stopPropagation()">'+finStatusSelect(o,sc)+'</div>'
@@ -6347,7 +6352,7 @@ function finSwitchTab(tab){
 
 function finResetSaleForm(){
   cancelSaleEdit();
-  ['fin-sale-client','fin-sale-contact','fin-sale-business','fin-sale-email','fin-sale-videotype','fin-sale-amount','fin-sale-amount-paid','fin-sale-va','fin-sale-notes'].forEach(function(id){
+  ['fin-sale-client','fin-sale-contact','fin-sale-business','fin-sale-email','fin-sale-videotype','fin-sale-videos','fin-sale-amount','fin-sale-amount-paid','fin-sale-va','fin-sale-notes'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
   var pk=document.getElementById('fin-sale-package'); if(pk&&pk.options.length) pk.value=[].some.call(pk.options,function(o){return o.value==='Pro';})?'Pro':pk.options[0].value;
@@ -6518,6 +6523,7 @@ async function submitSale(){
     email:document.getElementById('fin-sale-email')?.value?.trim()||null,
     order_package:document.getElementById('fin-sale-package')?.value||null,
     video_type:document.getElementById('fin-sale-videotype')?.value?.trim()||null,
+    video_count:parseInt(document.getElementById('fin-sale-videos')?.value,10)||1,
     sales_amount:parseFloat(document.getElementById('fin-sale-amount')?.value)||0,
     va_name:document.getElementById('fin-sale-va')?.value?.trim()||null,
     sale_source:document.getElementById('fin-sale-source')?.value||'VA Sale',
@@ -6541,7 +6547,7 @@ async function submitSale(){
     }
     if(error){ showNotif('Error: '+error.message,'error'); return; }
     showNotif(editId?'Sale updated! ✓':'Sale saved! ✓','success');
-    ['fin-sale-client','fin-sale-contact','fin-sale-business','fin-sale-email','fin-sale-videotype','fin-sale-amount','fin-sale-amount-paid','fin-sale-va','fin-sale-notes'].forEach(function(id){
+    ['fin-sale-client','fin-sale-contact','fin-sale-business','fin-sale-email','fin-sale-videotype','fin-sale-videos','fin-sale-amount','fin-sale-amount-paid','fin-sale-va','fin-sale-notes'].forEach(function(id){
       var el=document.getElementById(id); if(el)el.value='';
     });
     finSalePayCalc();
@@ -6569,6 +6575,7 @@ function editSale(id){
   document.getElementById('fin-sale-email').value=sale.email||'';
   document.getElementById('fin-sale-package').value=sale.order_package||'Pro';
   document.getElementById('fin-sale-videotype').value=sale.video_type||'';
+  document.getElementById('fin-sale-videos').value=sale.video_count||'';
   document.getElementById('fin-sale-amount').value=sale.sales_amount||0;
   document.getElementById('fin-sale-va').value=sale.va_name||'';
   document.getElementById('fin-sale-source').value=sale.sale_source||'VA Sale';
@@ -6739,7 +6746,7 @@ async function loadFinancePage(){
   var elE=document.getElementById('fin-stat-expenses'); if(elE)elE.textContent=finPHP(allExpenses);
   var elES=document.getElementById('fin-stat-exp-sub'); if(elES)elES.innerHTML='Ads <b>'+finPHP(totalAds)+'</b> + Others <b>'+finPHP(totalExpenses)+'</b>';
   finRenderPayments(sales);
-  window._finCur={sales:totalSales,exp:allExpenses,net:net,orders:sales.length,ads:totalAds,msgs:totalMsgs,roas:allExpenses>0?totalSales/allExpenses:0};
+  window._finCur={sales:totalSales,exp:allExpenses,net:net,orders:finOrdersCount(sales),ads:totalAds,msgs:totalMsgs,roas:allExpenses>0?totalSales/allExpenses:0};
   finSyncCompareBtn();
   if(finCompareOn()) finRenderMonthCompare();
   finRenderComparison(df,dt,totalSales);
@@ -6747,7 +6754,7 @@ async function loadFinancePage(){
   var elA=document.getElementById('fin-stat-ads'); if(elA)elA.textContent=finPHP(totalAds);
   var elCpm=document.getElementById('fin-stat-cpm'); if(elCpm)elCpm.textContent=finPHP(avgCpm);
   var elMsgs=document.getElementById('fin-stat-msgs'); if(elMsgs)elMsgs.textContent=totalMsgs;
-  var elO=document.getElementById('fin-stat-orders'); if(elO)elO.textContent=sales.length;
+  var elO=document.getElementById('fin-stat-orders'); if(elO)elO.textContent=finOrdersCount(sales);
   var adRoas=totalAds>0?(totalSales/totalAds):0;
   // True ROAS = Total sales ÷ Total expenses (ads + iba pang gastos)
   var netRoas=allExpenses>0?totalSales/allExpenses:0;
@@ -6794,7 +6801,7 @@ async function loadFinancePage(){
       if(!name) return;
       perVa[name]=perVa[name]||{sales:0,orders:0};
       perVa[name].sales+=Number(o.sales_amount)||0;
-      perVa[name].orders++;
+      perVa[name].orders+=finVideos(o);
     });
     var vaNames=Object.keys(perVa).sort(function(a,b){return perVa[b].sales-perVa[a].sales;});
     vaBoard.innerHTML=vaNames.length?vaNames.map(function(name,i){
