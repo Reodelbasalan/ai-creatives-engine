@@ -6298,7 +6298,7 @@ function renderFinSalesTable(sales){
     var subParts=[o.business||o.contact,o.notes].filter(Boolean);
     var pd=finPaidAmt(o), bl=finBalAmt(o), tt=Number(o.sales_amount)||0;
     var amtCell='<div style="font-weight:650;color:var(--green)">'+finPHP(tt)+'</div>'
-      +(o.paid_status==='Refunded'?'':'<div class="fin-amt-sub"><span>Paid <b style="color:#4ade80">'+finPHP(pd)+'</b></span>'+(bl>0?'<span>Bal <b style="color:#f59e0b">'+finPHP(bl)+'</b></span><button type="button" class="fin-addpay" title="Add payment" onclick="event.stopPropagation();finAddPayment(\''+o.id+'\')">+ Bayad</button>':'')+'</div>'
+      +(o.paid_status==='Refunded'?'':'<div class="fin-amt-sub"><span>Paid <b style="color:#4ade80">'+finPHP(pd)+'</b></span>'+(bl>0?'<span>Bal <b style="color:#f59e0b">'+finPHP(bl)+'</b></span>':'')+'</div>'
       +'<div class="fin-amt-bar"><i style="width:'+(tt>0?Math.min(100,Math.round(pd/tt*100)):0)+'%"></i></div>');
     return '<div class="table-row" style="grid-template-columns:0.4fr 0.9fr 1.6fr 1fr 1.25fr 1fr 1fr 32px 32px 32px;cursor:pointer" onclick="editSale(\''+o.id+'\')" title="Click to view / edit">'
       +'<div style="color:var(--text3);font-size:11px">'+(sales.length-i)+'</div>'
