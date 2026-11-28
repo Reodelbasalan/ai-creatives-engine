@@ -6144,7 +6144,7 @@ async function finRenderMonthCompare(){
   var pa=partial(ra), pb=partial(rb);
   var money=function(v){ return finPHP(v); };
   var fmt={sales:money,exp:money,net:money,orders:function(v){return v;},videos:function(v){return v;},paid:money,balance:money,ads:money,msgs:function(v){return Math.round(v).toLocaleString();},roas:function(v){return v.toFixed(2)+'x';},cpm:money};
-  var M=[['sales','Total Sales','hand-coins','#4ade80',0],['exp','Total Expenses','receipt','#f87171',1],['net','Net Profit','coins','#facc15',0],['orders','Orders','list-checks','#f59e0b',0],['videos','Video Orders','chart-column','#facc15',0],
+  var M=[['sales','Total Sales','hand-coins','#4ade80',0],['exp','Total Expenses','receipt','#f87171',1],['net','Net Profit','coins','#facc15',0],['orders','Orders','list-checks','#f59e0b',0],['videos','Total Videos','chart-column','#facc15',0],
          ['paid','Total Paid','circle-check','#4ade80',0],['balance','Balance pa','clock','#f59e0b',1],['ads','Ads Spent','megaphone','#a78bfa',1],['msgs','Messages','phone','#f59e0b',0],['roas','True ROAS','trending-up','#4ade80',0],['cpm','Cost / Message','target','#a78bfa',1]];
   var dline=function(k,a,b,inv){
     var d=b-a, good=inv?d<0:d>0, cls=d===0?'fin-n':(good?'fin-g':'fin-r');
