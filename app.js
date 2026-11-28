@@ -5974,7 +5974,8 @@ function renderFinBalanceChip(sales){
 
 // Payment helpers (amount_paid column; fallback sa paid_status para sa lumang records)
 function finVideos(o){ var v=parseInt(o.video_count,10); return v>0?v:1; }
-function finOrdersCount(rows){ return (rows||[]).reduce(function(t,o){ return t+finVideos(o); },0); }
+function finVideosCount(rows){ return (rows||[]).reduce(function(t,o){ return t+finVideos(o); },0); }
+function finOrdersCount(rows){ return (rows||[]).length; }
 function finPaidAmt(o){
   if(o.paid_status==='Refunded') return 0;
   if(o.amount_paid!==null && o.amount_paid!==undefined && o.amount_paid!=='') return Number(o.amount_paid)||0;
@@ -6122,7 +6123,7 @@ async function finMcFetch(r){
   var s=q[0].data||[], e=q[1].data||[], ad=q[2].data||[];
   var sum=function(arr,f){ return arr.reduce(function(t,x){ return t+(Number(x[f])||0); },0); };
   var sales=sum(s,'sales_amount'), ads=sum(ad,'total_ads_spent'), other=sum(e,'amount'), msgs=sum(ad,'total_messages');
-  return {rows:s,sales:sales,orders:finOrdersCount(s),paid:s.reduce(function(t,o){ return t+finPaidAmt(o); },0),
+  return {rows:s,sales:sales,orders:finOrdersCount(s),videos:finVideosCount(s),paid:s.reduce(function(t,o){ return t+finPaidAmt(o); },0),
     balance:s.reduce(function(t,o){ return t+finBalAmt(o); },0),
     ads:ads,other:other,exp:ads+other,net:sales-ads-other,msgs:msgs,roas:(ads+other)>0?sales/(ads+other):0,cpm:(function(){ var c=ad.filter(function(x){return Number(x.cost_per_message)>0;}); return c.length?c.reduce(function(t,x){return t+Number(x.cost_per_message);},0)/c.length:0; })()};  // same as Avg Cost/Message card
 }
@@ -6142,8 +6143,8 @@ async function finRenderMonthCompare(){
   var partial=function(r){ return today>=r.from&&today<r.to?+today.slice(8):0; };
   var pa=partial(ra), pb=partial(rb);
   var money=function(v){ return finPHP(v); };
-  var fmt={sales:money,exp:money,net:money,orders:function(v){return v;},paid:money,balance:money,ads:money,msgs:function(v){return Math.round(v).toLocaleString();},roas:function(v){return v.toFixed(2)+'x';},cpm:money};
-  var M=[['sales','Total Sales','hand-coins','#4ade80',0],['exp','Total Expenses','receipt','#f87171',1],['net','Net Profit','coins','#facc15',0],['orders','Orders','list-checks','#f59e0b',0],
+  var fmt={sales:money,exp:money,net:money,orders:function(v){return v;},videos:function(v){return v;},paid:money,balance:money,ads:money,msgs:function(v){return Math.round(v).toLocaleString();},roas:function(v){return v.toFixed(2)+'x';},cpm:money};
+  var M=[['sales','Total Sales','hand-coins','#4ade80',0],['exp','Total Expenses','receipt','#f87171',1],['net','Net Profit','coins','#facc15',0],['orders','Orders','list-checks','#f59e0b',0],['videos','Video Orders','chart-column','#facc15',0],
          ['paid','Total Paid','circle-check','#4ade80',0],['balance','Balance pa','clock','#f59e0b',1],['ads','Ads Spent','megaphone','#a78bfa',1],['msgs','Messages','phone','#f59e0b',0],['roas','True ROAS','trending-up','#4ade80',0],['cpm','Cost / Message','target','#a78bfa',1]];
   var dline=function(k,a,b,inv){
     var d=b-a, good=inv?d<0:d>0, cls=d===0?'fin-n':(good?'fin-g':'fin-r');
@@ -6756,6 +6757,7 @@ async function loadFinancePage(){
   var elCpm=document.getElementById('fin-stat-cpm'); if(elCpm)elCpm.textContent=finPHP(avgCpm);
   var elMsgs=document.getElementById('fin-stat-msgs'); if(elMsgs)elMsgs.textContent=totalMsgs;
   var elO=document.getElementById('fin-stat-orders'); if(elO)elO.textContent=finOrdersCount(sales);
+  var elV=document.getElementById('fin-stat-videos'); if(elV)elV.textContent=finVideosCount(sales);
   var adRoas=totalAds>0?(totalSales/totalAds):0;
   // True ROAS = Total sales ÷ Total expenses (ads + iba pang gastos)
   var netRoas=allExpenses>0?totalSales/allExpenses:0;
@@ -6803,9 +6805,10 @@ async function loadFinancePage(){
       var isOrg=o.sale_source==='Organic' || raw.toLowerCase()==='organic';
       if(!raw && !isOrg) return;
       var name=isOrg?'Organic':raw.charAt(0).toUpperCase()+raw.slice(1).toLowerCase();
-      perVa[name]=perVa[name]||{sales:0,orders:0};
+      perVa[name]=perVa[name]||{sales:0,orders:0,videos:0};
       perVa[name].sales+=Number(o.sales_amount)||0;
-      perVa[name].orders+=finVideos(o);
+      perVa[name].orders++;
+      perVa[name].videos+=finVideos(o);
     });
     var vaNames=Object.keys(perVa).sort(function(a,b){return perVa[b].sales-perVa[a].sales;});
     vaBoard.innerHTML=vaNames.length?vaNames.map(function(name,i){
@@ -6816,7 +6819,7 @@ async function loadFinancePage(){
         +medal
         +'<div><div style="font-size:12px;font-weight:700;color:var(--text)">'+name+'</div>'
         +'<div style="font-size:11px;color:var(--green);font-weight:650">'+finPHP(v.sales)+'</div>'
-        +'<div style="font-size:10px;color:var(--text3)">'+v.orders+' order'+(v.orders===1?'':'s')+'</div></div>'
+        +'<div style="font-size:10px;color:var(--text3)">'+v.orders+' order'+(v.orders===1?'':'s')+' · '+v.videos+' video'+(v.videos===1?'':'s')+'</div></div>'
         +'</div>';
     }).join(''):'<div style="font-size:11.5px;color:var(--text3)">No VA-tagged sales in this period yet.</div>';
   }
