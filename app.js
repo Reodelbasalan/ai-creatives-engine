@@ -9288,7 +9288,7 @@ async function obUnpublish(id){
   }catch(e){ showNotif('Unpublish failed','error'); }
 }
 
-var obHistoryItems=[];
+var obHistoryItems=[], obHistCreatives={};
 
 async function loadObHistory(){
   var box=document.getElementById('ob-history-body');
@@ -9297,6 +9297,13 @@ async function loadObHistory(){
   try{
     var r=await sb.from('brand_creatives_log').select('*').order('created_at',{ascending:false}).limit(200);
     obHistoryItems=r.data||[];
+    // kunin yung kasalukuyang creative para pareho ang pangalan sa List
+    var ids=obHistoryItems.map(function(h){ return h.creative_id; }).filter(Boolean).filter(function(v,i,a){ return a.indexOf(v)===i; });
+    obHistCreatives={};
+    if(ids.length){
+      var c=await sb.from('brand_creatives').select('*').in('id',ids);
+      (c.data||[]).forEach(function(x){ obHistCreatives[x.id]=x; });
+    }
   }catch(e){ obHistoryItems=[]; }
   obRenderHistoryRows();
 }
@@ -9352,16 +9359,38 @@ function obRenderHistoryRows(){
     var editCell=h.creative_id
       ? '<div class="proj-row-del" title="Edit creative (winner tag, ads manager link, atbp.)" onclick="openObBrandDetailModal(\''+h.creative_id+'\')" style="color:var(--yellow)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>'
       : '<span style="color:#7a7a85">—</span>';
-    return '<div class="ob-hist-row">'
-      + '<div class="ob-hist-name">'+escapeHtml(h.page_name||'—')+'</div>'
+    var cr=obHistCreatives[h.creative_id];
+    var nm=(cr&&cr.page_name)||h.page_name||'—';
+    var subTxt=cr?[cr.format,cr.angle_hook].filter(Boolean).join(' · '):'';
+    // Reopen: kung ito yung pinakahuling "published" ng creative at Published pa rin siya
+    var latest=obHistoryItems.find(function(x){ return x.creative_id===h.creative_id; });
+    var canReopen=isPub && cr && cr.status==='Published' && latest===h;
+    var reopenBtn=canReopen?'<button type="button" class="ob-reopen" title="Ibalik sa List (hindi pa published)" onclick="obReopen(\''+h.creative_id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Reopen</button>':'';
+    return '<div class="ob-hist-row obh">'
+      + '<div style="min-width:0"><div class="ob-hist-name">'+escapeHtml(nm)+'</div>'+(subTxt?'<div class="ob-hist-sub">'+escapeHtml(subTxt)+'</div>':'')+'</div>'
       + '<div>'+badge+'</div>'
       + '<div>'+tagCell+'</div>'
       + '<div>'+linkCell+'</div>'
       + '<div class="ob-hist-actor">'+escapeHtml(h.actor_name||'Someone')+'</div>'
       + '<div class="ob-hist-date">'+when+'</div>'
-      + '<div>'+editCell+'</div>'
+      + '<div class="ob-hist-acts">'+reopenBtn+editCell+'</div>'
       + '</div>';
   }).join('');
+}
+
+// Reopen: ibalik sa List kung napindot by mistake ang Publish
+async function obReopen(id){
+  var cr=obHistCreatives[id]||{};
+  var ok=await uiDialog({title:'Reopen creative?',message:'Babalik sa List ang "'+(cr.page_name||'creative')+'" bilang Approved (hindi na published). Ma-log din ito sa History.',icon:'refresh-cw',iconColor:'251,146,60',okText:'Reopen'});
+  if(!ok) return;
+  try{
+    var r=await sb.from('brand_creatives').update({status:'Approved',published_at:null}).eq('id',id).select('id');
+    if(r.error) throw r.error;
+    if(!r.data||!r.data.length) throw new Error('Walang permiso o hindi nahanap ang creative');
+    await obLogHistory(id, cr.page_name||'', 'unpublished', cr);
+    showNotif('Reopened — nasa List na ulit','success');
+    await Promise.all([loadObHistory(), loadBrandCreatives()]);
+  }catch(e){ showNotif('Reopen failed: '+(e.message||e),'error'); }
 }
 
 async function obDeleteCreative(id){
@@ -14805,7 +14834,7 @@ function uiPickClose(){ if(uiPick){ uiPick.inp._dp.wrap.classList.remove('open')
 document.addEventListener('click',function(){ uiPickClose(); });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') uiPickClose(); });
 document.addEventListener('scroll',function(e){ if(uiPick && !uiPick.menu.contains(e.target)) uiPickClose(); },true);
-['page-finance','page-call-tracker'].forEach(function(id){
+['page-finance','page-call-tracker','page-brand'].forEach(function(id){
   var el=document.getElementById(id); if(!el) return;
   var run=function(){ el.querySelectorAll('input[type=date],input[type=time]').forEach(uiDateEnhance); };
   run(); new MutationObserver(run).observe(el,{childList:true,subtree:true});
